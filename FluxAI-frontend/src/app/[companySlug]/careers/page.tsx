@@ -1,5 +1,6 @@
 "use client"
 
+import { use } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -88,7 +89,8 @@ const jobs = [
     },
 ]
 
-export default function CareersPage({ params }: { params: { companySlug: string } }) {
+export default function CareersPage({ params }: { params: Promise<{ companySlug: string }> }) {
+    const { companySlug } = use(params);
     // In a real app, we'd fetch data based on params.companySlug
 
     return (
@@ -125,7 +127,7 @@ export default function CareersPage({ params }: { params: { companySlug: string 
                         </p>
                         <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
                             <Button size="lg" className="h-12 px-8 text-base rounded-full" asChild>
-                                <a href={`/${params.companySlug}/careers/alljobs`}>
+                                <a href={`/${companySlug}/careers/alljobs`}>
                                     View Open Positions
                                 </a>
                             </Button>
@@ -202,7 +204,7 @@ export default function CareersPage({ params }: { params: { companySlug: string 
                                                 </div>
                                             </div>
                                             <Button size="sm" variant="secondary" className="opacity-0 group-hover:opacity-100 transition-opacity" asChild>
-                                                <a href={`/${params.companySlug}/careers/${job.id}`}>
+                                                <a href={`/${companySlug}/careers/${job.id}`}>
                                                     Apply
                                                 </a>
                                             </Button>
@@ -239,7 +241,7 @@ export default function CareersPage({ params }: { params: { companySlug: string 
                             </ul>
 
                             <Button className="bg-white text-black hover:bg-white/90 font-medium h-11 px-8 rounded-full">
-                                <a href={`/${params.companySlug}/careers/alljobs`}>
+                                <a href={`/${companySlug}/careers/alljobs`}>
                                     View all jobs
                                 </a>
 

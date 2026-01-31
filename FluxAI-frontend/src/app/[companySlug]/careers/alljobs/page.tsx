@@ -1,5 +1,6 @@
 "use client"
 
+import { use } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -95,7 +96,8 @@ const jobsByDepartment = {
     ]
 }
 
-export default function AllJobsPage({ params }: { params: { companySlug: string } }) {
+export default function AllJobsPage({ params }: { params: Promise<{ companySlug: string }> }) {
+    const { companySlug } = use(params);
     return (
         <div className="min-h-screen bg-background text-foreground font-sans selection:bg-foreground/10">
             {/* 1. Header */}
@@ -108,7 +110,7 @@ export default function AllJobsPage({ params }: { params: { companySlug: string 
                         <span className="font-semibold text-lg tracking-tight">{companyData.name} Careers</span>
                     </div>
                     <Button variant="ghost" size="sm" asChild className="gap-2">
-                        <a href={`/${params.companySlug}/careers`}>
+                        <a href={`/${companySlug}/careers`}>
                             <ArrowLeft className="w-4 h-4" /> Back to Careers
                         </a>
                     </Button>
@@ -146,7 +148,7 @@ export default function AllJobsPage({ params }: { params: { companySlug: string 
                                                         </div>
                                                     </div>
                                                     <Button size="sm" variant="outline" className="opacity-0 group-hover:opacity-100 transition-opacity" asChild>
-                                                        <a href={`/${params.companySlug}/careers/${job.id}`}>
+                                                        <a href={`/${companySlug}/careers/${job.id}`}>
                                                             Apply
                                                         </a>
                                                     </Button>

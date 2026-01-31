@@ -60,7 +60,7 @@ export function AIInterviewInterface({ onComplete }: { onComplete: () => void })
                                 </span>
                                 <span className="font-mono">00:12 / 02:00</span>
                             </div>
-                            <Progress value={progress} className="h-1 bg-white/20" indicatorClassName="bg-red-500" />
+                            <Progress value={progress} className="h-1 bg-white/20 [&>div]:bg-red-500" />
                             <div className="flex justify-center pt-2">
                                 <Button size="lg" variant="secondary" className="rounded-full px-8" onClick={onComplete}>
                                     <Square className="w-4 h-4 mr-2 fill-current" /> Stop & Submit

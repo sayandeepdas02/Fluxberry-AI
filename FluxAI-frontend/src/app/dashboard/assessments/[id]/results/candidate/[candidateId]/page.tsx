@@ -1,12 +1,14 @@
 "use client"
 
+import { use } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, CheckCircle2, AlertCircle, Clock, Code, Video, FileText, Download, Share2 } from "lucide-react"
 import Link from "next/link"
 
-export default function CandidateResultPage({ params }: { params: { id: string, candidateId: string } }) {
+export default function CandidateResultPage({ params }: { params: Promise<{ id: string, candidateId: string }> }) {
+    const { id, candidateId } = use(params)
     // Mock data for a specific candidate
     const candidate = {
         name: "Arjun K.",
@@ -29,7 +31,7 @@ export default function CandidateResultPage({ params }: { params: { id: string, 
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/dashboard/assessments/${params.id}/results`}>
+                        <Link href={`/dashboard/assessments/${id}/results`}>
                             <ArrowLeft className="w-4 h-4" />
                         </Link>
                     </Button>

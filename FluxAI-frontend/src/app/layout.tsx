@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "../styles/globals.css";
 import { fontSans, fontMono } from "@/lib/fonts";
+import { AuthProvider } from "@/lib/context/auth-context";
 
 export const metadata: Metadata = {
     title: "FluxAI - Hire Smarter, Faster",
@@ -14,7 +15,11 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" className={`${fontSans.variable} ${fontMono.variable}`}>
-            <body>{children}</body>
+            <body>
+                <AuthProvider>
+                    {children}
+                </AuthProvider>
+            </body>
         </html>
     );
 }

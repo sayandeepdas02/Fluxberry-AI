@@ -2,17 +2,24 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/context/auth-context";
 
 export function SignUpForm() {
+    const router = useRouter();
+    const { signup } = useAuth();
     const [formData, setFormData] = useState({
         fullName: "",
         email: "",
+        companyName: "",
         password: "",
         confirmPassword: "",
         agreeToTerms: false,
     });
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type, checked } = e.target;
@@ -20,16 +27,44 @@ export function SignUpForm() {
             ...prev,
             [name]: type === "checkbox" ? checked : value,
         }));
+        setError(null);
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // UI-only: Navigate to success or dashboard
-        console.log("Sign up submitted:", formData);
+
+        // Validation
+        if (formData.password !== formData.confirmPassword) {
+            setError("Passwords do not match");
+            return;
+        }
+
+        if (formData.password.length < 8) {
+            setError("Password must be at least 8 characters");
+            return;
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        const result = await signup({
+            name: formData.fullName,
+            email: formData.email,
+            password: formData.password,
+            organizationName: formData.companyName || formData.fullName + "'s Organization",
+        });
+
+        if (result.success) {
+            router.push("/dashboard");
+        } else {
+            setError(result.error || "Signup failed");
+        }
+
+        setIsLoading(false);
     };
 
     const handleGoogleSignIn = () => {
-        // UI-only: No OAuth logic
+        // OAuth not implemented yet
         console.log("Google sign-in clicked");
     };
 
@@ -41,6 +76,13 @@ export function SignUpForm() {
                     Start hiring smarter with FluxAI
                 </p>
             </div>
+
+            {/* Error Message */}
+            {error && (
+                <div className="mb-4 p-3 rounded-md bg-destructive/10 text-destructive text-sm">
+                    {error}
+                </div>
+            )}
 
             {/* Google Sign In */}
             <button
@@ -104,6 +146,7 @@ export function SignUpForm() {
                         )}
                         placeholder="John Doe"
                         required
+                        disabled={isLoading}
                     />
                 </div>
 
@@ -125,6 +168,28 @@ export function SignUpForm() {
                         )}
                         placeholder="john@company.com"
                         required
+                        disabled={isLoading}
+                    />
+                </div>
+
+                {/* Company Name */}
+                <div>
+                    <label htmlFor="companyName" className="block text-sm font-medium mb-2">
+                        Company Name
+                    </label>
+                    <input
+                        type="text"
+                        id="companyName"
+                        name="companyName"
+                        value={formData.companyName}
+                        onChange={handleChange}
+                        className={cn(
+                            "w-full px-4 py-2.5 border rounded-md text-sm",
+                            "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
+                            "transition-colors border-border hover:border-foreground/50"
+                        )}
+                        placeholder="Acme Inc."
+                        disabled={isLoading}
                     />
                 </div>
 
@@ -146,6 +211,7 @@ export function SignUpForm() {
                         )}
                         placeholder="••••••••"
                         required
+                        disabled={isLoading}
                     />
                 </div>
 
@@ -170,6 +236,7 @@ export function SignUpForm() {
                         )}
                         placeholder="••••••••"
                         required
+                        disabled={isLoading}
                     />
                 </div>
 
@@ -183,6 +250,7 @@ export function SignUpForm() {
                         onChange={handleChange}
                         className="mt-1"
                         required
+                        disabled={isLoading}
                     />
                     <label htmlFor="agreeToTerms" className="text-sm text-muted-foreground">
                         I agree to the{" "}
@@ -197,8 +265,8 @@ export function SignUpForm() {
                 </div>
 
                 {/* Submit Button */}
-                <Button type="submit" className="w-full" size="lg">
-                    Create Account
+                <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                    {isLoading ? "Creating account..." : "Create Account"}
                 </Button>
             </form>
 
