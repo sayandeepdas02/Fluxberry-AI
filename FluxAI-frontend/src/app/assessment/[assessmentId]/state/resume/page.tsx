@@ -1,10 +1,12 @@
 "use client"
 
+import { use } from "react"
 import { Button } from "@/components/ui/button"
 import { PlayCircle, Clock } from "lucide-react"
 import Link from "next/link"
 
-export default function AssessmentResumePage({ params }: { params: { assessmentId: string } }) {
+export default function AssessmentResumePage({ params }: { params: Promise<{ assessmentId: string }> }) {
+    const { assessmentId } = use(params)
     return (
         <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6 font-sans">
             <div className="w-full max-w-md bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
@@ -29,7 +31,7 @@ export default function AssessmentResumePage({ params }: { params: { assessmentI
                     </div>
 
                     <Button size="lg" className="w-full" asChild>
-                        <Link href={`/assessment/${params.assessmentId}/round/1`}>
+                        <Link href={`/assessment/${assessmentId}/round/1`}>
                             Continue Assessment
                         </Link>
                     </Button>

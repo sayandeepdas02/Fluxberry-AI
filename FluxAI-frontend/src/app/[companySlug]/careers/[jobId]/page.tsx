@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, use } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -45,7 +45,8 @@ const jobData = {
     ]
 }
 
-export default function JobApplicationPage({ params }: { params: { companySlug: string, jobId: string } }) {
+export default function JobApplicationPage({ params }: { params: Promise<{ companySlug: string, jobId: string }> }) {
+    const { companySlug, jobId } = use(params);
     const [activeTab, setActiveTab] = useState<"details" | "form">("details")
 
     return (

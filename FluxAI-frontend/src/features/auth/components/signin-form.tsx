@@ -2,28 +2,45 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/context/auth-context";
 
 export function SignInForm() {
+    const router = useRouter();
+    const { login } = useAuth();
     const [formData, setFormData] = useState({
         email: "",
         password: "",
     });
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
+        setError(null);
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // UI-only: Navigate to dashboard
-        console.log("Sign in submitted:", formData);
+        setIsLoading(true);
+        setError(null);
+
+        const result = await login(formData);
+
+        if (result.success) {
+            router.push("/dashboard");
+        } else {
+            setError(result.error || "Invalid credentials");
+        }
+
+        setIsLoading(false);
     };
 
     const handleGoogleSignIn = () => {
-        // UI-only: No OAuth logic
+        // OAuth not implemented yet
         console.log("Google sign-in clicked");
     };
 
@@ -35,6 +52,13 @@ export function SignInForm() {
                     Sign in to your FluxAI account
                 </p>
             </div>
+
+            {/* Error Message */}
+            {error && (
+                <div className="mb-4 p-3 rounded-md bg-destructive/10 text-destructive text-sm">
+                    {error}
+                </div>
+            )}
 
             {/* Google Sign In */}
             <button
@@ -98,6 +122,7 @@ export function SignInForm() {
                         )}
                         placeholder="john@company.com"
                         required
+                        disabled={isLoading}
                     />
                 </div>
 
@@ -127,12 +152,13 @@ export function SignInForm() {
                         )}
                         placeholder="••••••••"
                         required
+                        disabled={isLoading}
                     />
                 </div>
 
                 {/* Submit Button */}
-                <Button type="submit" className="w-full" size="lg">
-                    Sign In
+                <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                    {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
             </form>
 

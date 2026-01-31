@@ -1,11 +1,8 @@
-import type { Metadata } from "next";
+"use client";
+
 import { Sidebar } from "@/features/dashboard/components/sidebar";
 import { DashboardHeader } from "@/features/dashboard/components/dashboard-header";
-
-export const metadata: Metadata = {
-    title: "Dashboard - FluxAI",
-    description: "Recruiter dashboard and analytics",
-};
+import { ProtectedRoute } from "@/lib/context/protected-route";
 
 export default function DashboardLayout({
     children,
@@ -13,13 +10,14 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <div className="flex min-h-screen bg-background">
-            <Sidebar />
-            <main className="flex-1 overflow-y-auto h-screen relative">
-                <DashboardHeader />
-
-                {children}
-            </main>
-        </div>
+        <ProtectedRoute>
+            <div className="flex min-h-screen bg-background">
+                <Sidebar />
+                <main className="flex-1 overflow-y-auto h-screen relative">
+                    <DashboardHeader />
+                    {children}
+                </main>
+            </div>
+        </ProtectedRoute>
     );
 }

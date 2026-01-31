@@ -24,7 +24,7 @@ export function ManageJobsView() {
 
                 {/* Jobs Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {SAMPLE_JOBS.map((job) => (
+                    {jobs.map((job) => (
                         <JobCard key={job.id} job={job} />
                     ))}
                 </div>

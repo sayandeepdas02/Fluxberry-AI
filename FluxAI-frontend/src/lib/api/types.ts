@@ -1,0 +1,143 @@
+// API Response Types (matching backend)
+
+export interface ApiResponse<T> {
+    success: boolean
+    data?: T
+    error?: {
+        code: string
+        message: string
+    }
+}
+
+// Auth Types
+export interface User {
+    id: string
+    email: string
+    name: string | null
+    organizationId: string | null
+    role: string | null
+}
+
+export interface AuthTokens {
+    accessToken: string
+    refreshToken?: string
+}
+
+export interface LoginResponse {
+    user: User
+    tokens: AuthTokens
+}
+
+export interface SignupResponse {
+    user: User
+    tokens: AuthTokens
+}
+
+// Organization Types
+export interface Organization {
+    id: string
+    name: string
+    slug: string
+    logoUrl: string | null
+    website: string | null
+    plan: string
+    memberCount: number
+    role?: string
+    createdAt: string
+}
+
+// Assessment Types
+export interface Assessment {
+    id: string
+    title: string
+    description: string | null
+    status: 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'ARCHIVED'
+    slug: string
+    passingScore: number
+    timeLimit: number
+    allowedAttempts: number
+    shuffleQuestions: boolean
+    showResults: boolean
+    proctoringEnabled: boolean
+    rounds: AssessmentRound[]
+    candidateCount?: number
+    completedCount?: number
+    createdAt: string
+    updatedAt: string
+}
+
+export interface AssessmentRound {
+    id: string
+    roundType: 'MCQ' | 'DSA' | 'AI'
+    order: number
+    enabled: boolean
+    timeLimit: number
+    config: Record<string, unknown>
+}
+
+// Question Types
+export interface Question {
+    id: string
+    type: 'MCQ' | 'DSA' | 'AI'
+    title: string
+    difficulty: 'EASY' | 'MEDIUM' | 'HARD'
+    topics: string[]
+    metadata: {
+        content?: string
+        options?: { id: string; text: string }[]
+        correctOptions?: string[]
+        starterCode?: string
+        testCases?: unknown[]
+    }
+}
+
+// Attempt Types
+export interface AssessmentAttempt {
+    id: string
+    assessmentId: string
+    candidateId: string
+    status: 'NOT_STARTED' | 'IN_PROGRESS' | 'SUBMITTED' | 'EVALUATED'
+    startedAt: string | null
+    submittedAt: string | null
+    currentRound: string | null
+    rounds: AttemptRound[]
+}
+
+export interface AttemptRound {
+    id: string
+    roundType: 'MCQ' | 'DSA' | 'AI'
+    status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED'
+    startedAt: string | null
+    submittedAt: string | null
+    timeSpentSeconds: number
+    answers: Record<string, unknown>
+}
+
+// Result Types
+export interface AttemptResult {
+    attempt: {
+        id: string
+        status: string
+        startedAt: string | null
+        submittedAt: string | null
+    }
+    rounds: RoundResult[]
+    totalScore: number
+    maxScore: number
+    percentage: number
+    proctoring?: {
+        totalEvents: number
+        flagged: boolean
+    }
+}
+
+export interface RoundResult {
+    roundType: string
+    status: string
+    timeSpentSeconds: number
+    evaluation: {
+        score: number
+        maxScore: number
+        metadata: Record<string, unknown>
+    } | null
+}
