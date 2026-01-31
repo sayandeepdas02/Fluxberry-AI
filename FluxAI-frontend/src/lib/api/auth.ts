@@ -9,7 +9,8 @@ export interface LoginInput {
 export interface SignupInput {
     email: string
     password: string
-    name: string
+    firstName: string
+    lastName: string
     organizationName: string
 }
 

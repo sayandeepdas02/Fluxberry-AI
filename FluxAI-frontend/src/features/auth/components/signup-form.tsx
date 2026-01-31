@@ -11,7 +11,8 @@ export function SignUpForm() {
     const router = useRouter();
     const { signup } = useAuth();
     const [formData, setFormData] = useState({
-        fullName: "",
+        firstName: "",
+        lastName: "",
         email: "",
         companyName: "",
         password: "",
@@ -44,14 +45,25 @@ export function SignUpForm() {
             return;
         }
 
+        if (!formData.firstName.trim()) {
+            setError("First name is required");
+            return;
+        }
+
+        if (!formData.lastName.trim()) {
+            setError("Last name is required");
+            return;
+        }
+
         setIsLoading(true);
         setError(null);
 
         const result = await signup({
-            name: formData.fullName,
+            firstName: formData.firstName.trim(),
+            lastName: formData.lastName.trim(),
             email: formData.email,
             password: formData.password,
-            organizationName: formData.companyName || formData.fullName + "'s Organization",
+            organizationName: formData.companyName || `${formData.firstName}'s Organization`,
         });
 
         if (result.success) {
@@ -128,26 +140,48 @@ export function SignUpForm() {
 
             {/* Sign Up Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Full Name */}
-                <div>
-                    <label htmlFor="fullName" className="block text-sm font-medium mb-2">
-                        Full Name
-                    </label>
-                    <input
-                        type="text"
-                        id="fullName"
-                        name="fullName"
-                        value={formData.fullName}
-                        onChange={handleChange}
-                        className={cn(
-                            "w-full px-4 py-2.5 border rounded-md text-sm",
-                            "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
-                            "transition-colors border-border hover:border-foreground/50"
-                        )}
-                        placeholder="John Doe"
-                        required
-                        disabled={isLoading}
-                    />
+                {/* Name Row */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label htmlFor="firstName" className="block text-sm font-medium mb-2">
+                            First Name
+                        </label>
+                        <input
+                            type="text"
+                            id="firstName"
+                            name="firstName"
+                            value={formData.firstName}
+                            onChange={handleChange}
+                            className={cn(
+                                "w-full px-4 py-2.5 border rounded-md text-sm",
+                                "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
+                                "transition-colors border-border hover:border-foreground/50"
+                            )}
+                            placeholder="John"
+                            required
+                            disabled={isLoading}
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="lastName" className="block text-sm font-medium mb-2">
+                            Last Name
+                        </label>
+                        <input
+                            type="text"
+                            id="lastName"
+                            name="lastName"
+                            value={formData.lastName}
+                            onChange={handleChange}
+                            className={cn(
+                                "w-full px-4 py-2.5 border rounded-md text-sm",
+                                "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
+                                "transition-colors border-border hover:border-foreground/50"
+                            )}
+                            placeholder="Doe"
+                            required
+                            disabled={isLoading}
+                        />
+                    </div>
                 </div>
 
                 {/* Work Email */}
