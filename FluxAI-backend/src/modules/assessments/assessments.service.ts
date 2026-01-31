@@ -20,13 +20,13 @@ export class AssessmentsService {
             data: {
                 organizationId,
                 title: input.title,
-                jobId: input.jobId,
-                status: 'DRAFT',
+                jobId: input.jobId ?? null,
+                // Default rounds created on schema level
                 rounds: {
                     create: [
-                        { roundType: 'MCQ', enabled: false, order: 1 },
-                        { roundType: 'DSA', enabled: false, order: 2 },
-                        { roundType: 'AI', enabled: false, order: 3 },
+                        { roundType: 'MCQ', enabled: false, order: 1, config: {} },
+                        { roundType: 'DSA', enabled: false, order: 2, config: {} },
+                        { roundType: 'AI', enabled: false, order: 3, config: {} },
                     ],
                 },
             },
@@ -50,7 +50,7 @@ export class AssessmentsService {
         ])
 
         return {
-            data: assessments.map((a) => this.formatAssessment(a)),
+            data: assessments.map(this.formatAssessment.bind(this)),
             total,
         }
     }

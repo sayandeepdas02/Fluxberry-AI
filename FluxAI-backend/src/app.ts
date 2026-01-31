@@ -22,8 +22,11 @@ export function createApp() {
 
     // Security middleware
     app.use(helmet())
+
+    // CORS configuration - flexible for development
+    const corsOrigins = process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000', 'http://localhost:3001']
     app.use(cors({
-        origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+        origin: corsOrigins,
         credentials: true,
     }))
 

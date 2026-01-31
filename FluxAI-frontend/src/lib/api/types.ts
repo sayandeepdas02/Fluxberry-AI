@@ -9,18 +9,25 @@ export interface ApiResponse<T> {
     }
 }
 
-// Auth Types
+// Auth Types (matching backend AuthUser, AuthTokens, AuthResponse)
+export interface AuthOrganization {
+    id: string
+    name: string
+    slug: string
+    role: string
+}
+
 export interface User {
     id: string
     email: string
-    name: string | null
-    organizationId: string | null
-    role: string | null
+    firstName: string
+    lastName: string
+    organization: AuthOrganization | null
 }
 
 export interface AuthTokens {
     accessToken: string
-    refreshToken?: string
+    expiresIn: number
 }
 
 export interface LoginResponse {
