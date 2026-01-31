@@ -1,0 +1,122 @@
+"use client";
+
+import { cn } from "@/lib/utils";
+import {
+    Briefcase,
+    ChevronRight,
+    Home,
+    LayoutDashboard,
+    Megaphone,
+    ExternalLink,
+    User,
+    ShoppingBag
+} from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+
+export function Sidebar() {
+    return (
+        <div className="w-64 h-screen border-r border-edge bg-background flex flex-col sticky top-0">
+            {/* Header: Workspace */}
+            <div className="p-4 pb-2">
+                <div className="flex items-center gap-3 mb-1 cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white">
+                        <User className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                            <span className="font-semibold text-sm truncate">Workspace Name</span>
+                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                    </div>
+                </div>
+                <div className="px-2 text-xs text-muted-foreground flex items-center gap-1.5">
+                    <span>Free Plan</span>
+                    <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
+                    <span>5 Members</span>
+                </div>
+            </div>
+
+            {/* Navigation */}
+            <div className="flex-1 overflow-auto py-6 px-3 space-y-6">
+                {/* Products Section */}
+                <div>
+                    <h3 className="px-2 text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider font-mono">
+                        Products
+                    </h3>
+
+                    <div className="space-y-4">
+                        {/* Flux ATS (Expanded) */}
+                        <div className="space-y-1">
+                            <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-foreground hover:text-foreground transition-colors group">
+                                <Briefcase className="w-4 h-4" />
+                                <span>Flux ATS</span>
+                            </button>
+
+                            <div className="ml-4 space-y-0.5 border-l border-border/50 pl-2">
+                                <Link
+                                    href="/dashboard"
+                                    className="flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-foreground bg-muted rounded-md"
+                                >
+                                    Home
+                                </Link>
+
+                                <Link
+                                    href="/dashboard/manage-jobs"
+                                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
+                                >
+                                    Manage Jobs
+                                </Link>
+
+                                <Link
+                                    href="/dashboard/candidate-pool"
+                                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
+                                >
+                                    Candidate Pool
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* Flux Hire (Expanded) */}
+                        <div className="space-y-1">
+                            <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-foreground hover:text-foreground transition-colors group">
+                                <ShoppingBag className="w-4 h-4" />
+                                <span>Flux Hire</span>
+                            </button>
+
+                            <div className="ml-4 space-y-0.5 border-l border-border/50 pl-2">
+                                <Link
+                                    href="/dashboard/analytics"
+                                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
+                                >
+                                    Analytics
+                                </Link>
+                                <Link
+                                    href="/dashboard/assessments"
+                                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
+                                >
+                                    Assessments
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-edge space-y-4">
+                <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                    <ExternalLink className="w-4 h-4" />
+                    <span>Public View</span>
+                </button>
+
+                <div className="flex items-center gap-2 px-2">
+                    <div className="w-5 h-5 bg-orange-500 rounded flex items-center justify-center">
+                        <span className="text-[10px] font-bold text-white">F</span>
+                    </div>
+                    <span className="font-semibold text-sm">Flux AI</span>
+                </div>
+            </div>
+        </div>
+    );
+}

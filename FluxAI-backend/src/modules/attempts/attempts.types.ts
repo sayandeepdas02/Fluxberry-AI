@@ -1,0 +1,62 @@
+import { z } from 'zod'
+
+// ============================================
+// REQUEST SCHEMAS
+// ============================================
+
+export const startAttemptSchema = z.object({
+    candidateEmail: z.string().email(),
+    candidateFirstName: z.string().optional(),
+    candidateLastName: z.string().optional(),
+})
+
+export const submitRoundSchema = z.object({
+    answers: z.record(z.unknown()),
+})
+
+export type StartAttemptInput = z.infer<typeof startAttemptSchema>
+export type SubmitRoundInput = z.infer<typeof submitRoundSchema>
+
+// ============================================
+// RESPONSE TYPES
+// ============================================
+
+export interface RoundAttemptResponse {
+    id: string
+    roundType: 'MCQ' | 'DSA' | 'AI'
+    status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED'
+    startedAt: Date | null
+    endedAt: Date | null
+}
+
+export interface AttemptResponse {
+    id: string
+    assessmentId: string
+    assessmentTitle: string
+    candidateId: string
+    status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'TIMED_OUT' | 'DISQUALIFIED'
+    startedAt: Date | null
+    submittedAt: Date | null
+    rounds: RoundAttemptResponse[]
+    createdAt: Date
+}
+
+export interface ProctoringEventInput {
+    roundType?: 'MCQ' | 'DSA' | 'AI'
+    eventType: 'TAB_SWITCH' | 'FACE_NOT_DETECTED' | 'MULTIPLE_FACES' | 'MIC_MUTED' | 'FULLSCREEN_EXIT'
+    severity?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+}
+
+export interface ProctoringEventResponse {
+    id: string
+    eventType: string
+    severity: string
+    roundType: string | null
+    createdAt: Date
+}
+
+export interface ProctoringSummaryResponse {
+    totalEvents: number
+    bySeverity: Record<string, number>
+    byType: Record<string, number>
+}
