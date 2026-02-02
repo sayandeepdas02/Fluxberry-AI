@@ -30,8 +30,13 @@ export function SignInForm() {
 
         const result = await login(formData);
 
-        if (result.success) {
-            router.push("/dashboard");
+        if (result.success && result.user) {
+            // Redirect based on onboarding status
+            if (result.user.onboardingCompleted) {
+                router.push("/dashboard");
+            } else {
+                router.push("/onboard/step-1");
+            }
         } else {
             setError(result.error || "Invalid credentials");
         }

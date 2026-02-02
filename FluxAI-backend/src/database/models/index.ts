@@ -99,6 +99,7 @@ export interface IUser extends Document {
     lastName: string
     authProvider?: string
     authProviderId?: string
+    onboardingCompleted: boolean
     createdAt: Date
     updatedAt: Date
 }
@@ -110,6 +111,7 @@ const UserSchema = new Schema<IUser>({
     lastName: { type: String, required: true },
     authProvider: { type: String },
     authProviderId: { type: String },
+    onboardingCompleted: { type: Boolean, default: false },
 }, { timestamps: true })
 
 export const User = mongoose.model<IUser>('User', UserSchema)

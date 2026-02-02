@@ -6,7 +6,7 @@ Production-grade backend API for FluxAI technical hiring assessment platform.
 
 - **Runtime:** Node.js 20+ with TypeScript
 - **Framework:** Express.js
-- **Database:** PostgreSQL with Prisma ORM
+- **Database:** MongoDB with Mongoose ODM
 - **Auth:** JWT-based authentication
 - **Validation:** Zod schema validation
 
@@ -20,18 +20,15 @@ npm install
 
 # 2. Set up environment
 cp .env.example .env
-# Edit .env with DATABASE_URL and JWT_SECRET
+# Edit .env with MONGODB_URI and JWT_SECRET
 
-# 3. Generate Prisma client
-npm run prisma:generate
+# 3. Start MongoDB (if not running)
+docker run -d -p 27017:27017 --name mongodb mongo:7
 
-# 4. Run database migration
-npx prisma migrate dev --name init
+# 4. Seed question bank (optional)
+npm run seed
 
-# 5. Seed question bank
-npm run prisma:seed
-
-# 6. Start development server
+# 5. Start development server
 npm run dev
 # Server runs at http://localhost:5001
 ```
@@ -51,6 +48,11 @@ GET /api/health
 | POST | `/api/auth/signup` | Public | Register + create org |
 | POST | `/api/auth/login` | Public | Login |
 | GET | `/api/auth/me` | Bearer | Current user |
+
+### Onboarding
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/onboarding/complete` | Bearer | Complete onboarding + update org |
 
 ### Organization
 | Method | Endpoint | Auth | Description |
@@ -84,44 +86,35 @@ GET /api/health
 
 ---
 
-## Round Configuration Rules (Strict 422)
-
-| Round | Requirement |
-|-------|-------------|
-| **MCQ** | Exactly 20 single-correct + 10 multi-correct |
-| **DSA** | Exactly 4 questions |
-| **AI** | Exactly 1 agent |
-
-### Publish Rules
-- Status must be `DRAFT`
-- At least one round enabled
-- All enabled rounds must be valid
-
----
-
 ## Project Structure
 
 ```
 FluxAI-backend/
-├── prisma/
-│   ├── schema.prisma
-│   └── seed.ts
 ├── src/
 │   ├── app.ts
 │   ├── server.ts
 │   ├── database/
-│   │   └── prisma.ts
+│   │   ├── mongodb.ts         # MongoDB connection
+│   │   └── models/
+│   │       └── index.ts       # Mongoose models
 │   ├── common/
 │   │   ├── guards/
 │   │   ├── middleware/
-│   │   ├── dto/
 │   │   └── utils/
-│   └── modules/
-│       ├── auth/
-│       ├── organizations/
-│       ├── assessments/
-│       ├── questions/
-│       └── rounds/
+│   ├── modules/
+│   │   ├── auth/
+│   │   ├── onboarding/        # NEW: User onboarding
+│   │   ├── organizations/
+│   │   ├── assessments/
+│   │   ├── questions/
+│   │   ├── attempts/
+│   │   ├── results/
+│   │   ├── proctoring/
+│   │   ├── evaluation/
+│   │   └── files/
+│   └── jobs/
+│       ├── queues/
+│       └── processors/
 └── package.json
 ```
 
@@ -133,8 +126,7 @@ FluxAI-backend/
 npm run dev          # Start dev server
 npm run build        # Build for production
 npm run start        # Run production build
-npm run prisma:seed  # Seed question bank
-npm run prisma:studio # Open Prisma Studio
+npm run seed         # Seed question bank
 ```
 
 ---
@@ -143,19 +135,28 @@ npm run prisma:studio # Open Prisma Studio
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `DATABASE_URL` | PostgreSQL connection | Yes |
+| `MONGODB_URI` | MongoDB connection string | Yes |
 | `JWT_SECRET` | JWT signing secret | Yes |
 | `PORT` | Server port | No (5001) |
 | `CORS_ORIGIN` | Frontend origin | No (localhost:3000) |
 
 ---
 
-## Seed Data
+## Database Models
 
-The seed script creates:
-- **32 MCQ questions** (20 single-correct, 12 multi-correct)
-- **6 DSA questions** (Two Sum, Reverse Linked List, Valid Parentheses, Maximum Subarray, Merge Two Sorted Lists, LRU Cache)
+| Model | Description |
+|-------|-------------|
+| `User` | User accounts with `onboardingCompleted` flag |
+| `Organization` | Workspaces/companies |
+| `OrganizationMember` | User-org membership with roles |
+| `Assessment` | Hiring assessments (embedded rounds) |
+| `Question` | Question bank (MCQ/DSA) |
+| `Candidate` | Assessment takers |
+| `AssessmentAttempt` | Attempt records (embedded round attempts) |
+| `ProctoringEvent` | Integrity signals |
+| `Evaluation` | Grading results |
+| `FileAsset` | Resume/video uploads |
 
 ---
 
-Built for FluxAI • Phase 1 + Phase 2
+Built for FluxAI • MongoDB + Mongoose

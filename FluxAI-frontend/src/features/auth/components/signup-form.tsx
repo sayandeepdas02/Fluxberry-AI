@@ -67,7 +67,7 @@ export function SignUpForm() {
         });
 
         if (result.success) {
-            router.push("/dashboard");
+            router.push("/onboard/step-1");
         } else {
             setError(result.error || "Signup failed");
         }

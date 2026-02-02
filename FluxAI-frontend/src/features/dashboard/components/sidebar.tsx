@@ -4,28 +4,40 @@ import { cn } from "@/lib/utils";
 import {
     Briefcase,
     ChevronRight,
-    Home,
-    LayoutDashboard,
-    Megaphone,
     ExternalLink,
     User,
     ShoppingBag
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useAuth } from "@/lib/context/auth-context";
 
 export function Sidebar() {
+    const { user } = useAuth();
+
+    // Get workspace name from user's organization or default
+    const workspaceName = user?.organization?.name || "Workspace";
+
+    // Generate initials for avatar
+    const getInitials = (name: string) => {
+        return name
+            .split(" ")
+            .map((word) => word[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2);
+    };
+
     return (
         <div className="w-64 h-screen border-r border-edge bg-background flex flex-col sticky top-0">
             {/* Header: Workspace */}
             <div className="p-4 pb-2">
                 <div className="flex items-center gap-3 mb-1 cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white">
-                        <User className="w-4 h-4" />
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                        {getInitials(workspaceName)}
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                            <span className="font-semibold text-sm truncate">Workspace Name</span>
+                            <span className="font-semibold text-sm truncate">{workspaceName}</span>
                             <ChevronRight className="w-4 h-4 text-muted-foreground" />
                         </div>
                     </div>

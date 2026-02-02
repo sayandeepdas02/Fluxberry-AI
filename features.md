@@ -30,10 +30,24 @@
 | `/signup` | Recruiter registration |
 | `/contact` | Contact form |
 
+---
+
+### User Onboarding ✅ NEW
+
+| Route | Description |
+|-------|-------------|
+| `/onboard/step-1` | Personal & company info |
+| `/onboard/step-2` | Product selection (ATS/Hire) |
+| `/onboard/step-3` | Workspace creation |
+
+**User Flows:**
+- **New user:** Signup → Onboarding (step-1 → step-2 → step-3) → Dashboard
+- **Returning user:** Sign in → Dashboard (if onboarding complete) or Onboarding (if not)
+
 **UX Behaviors:**
-- Clean, conversion-focused landing
-- Form validation with inline errors
-- Responsive design (mobile + desktop)
+- Multi-step wizard with progress indicator
+- Workspace name updates organization
+- Onboarding status persisted (`onboardingCompleted` flag)
 
 ---
 
@@ -50,37 +64,10 @@
 | `/dashboard/manage-jobs` | Job listing management |
 
 **UX Behaviors:**
-- Sidebar navigation with workspace switcher
+- Sidebar navigation with **dynamic workspace name** from user's organization
 - Data tables with search, filter, sort
 - Quick actions (edit, delete, duplicate)
 - Status badges (Draft, Active, Completed)
-
-**Guardrails:**
-- Assessment must have at least one enabled round
-- Time limits required for each round
-- Assessment deletion requires confirmation
-
----
-
-### Assessment Creation & Configuration
-
-| Route | Description |
-|-------|-------------|
-| `/dashboard/assessments/new` | Multi-step assessment builder |
-| `/dashboard/assessments/[id]/edit` | Edit existing assessment |
-
-**Configuration Options:**
-- Assessment title and description
-- Round configuration (MCQ, DSA, AI Interview)
-- Per-round time limits
-- Question pool selection
-- Enable/disable proctoring
-
-**UX Behaviors:**
-- Step-by-step wizard with progress indicator
-- Live preview of candidate experience
-- Save as draft at any step
-- Publish requires all validations passed
 
 ---
 
@@ -95,13 +82,6 @@
 | `/assessment/[id]/transition` | Between-round transition screen |
 | `/assessment/[id]/completed` | Submission confirmation |
 
-**UX Behaviors:**
-- Fullscreen enforcement during rounds
-- Countdown timer with warnings (15min, 5min, 1min)
-- Auto-save answers every 30 seconds
-- Graceful disconnection handling
-- No back navigation during active rounds
-
 **Guardrails:**
 - Cannot proceed without system check pass
 - Cannot skip rounds
@@ -112,37 +92,24 @@
 ### Proctoring & Integrity Signals
 
 **Implemented Signals:**
-- Tab switch detection (logged with timestamp)
+- Tab switch detection
 - Fullscreen exit detection
 - Face detection (single face required)
 - Multiple face detection
 - Microphone muting detection
 
-**UI Indicators:**
-- Warning toasts for violations
-- Violation counter visible to candidate
-- Violations logged and displayed in recruiter dashboard
-
----
-
-### Results & Analytics UI
-
-| Route | Description |
-|-------|-------------|
-| `/dashboard/assessments/[id]/results` | Candidate results table |
-| `/dashboard/assessments/[id]/results/[attemptId]` | Individual attempt detail |
-
-**Displayed Data:**
-- Per-round scores and status
-- Time spent per round
-- Proctoring violation summary
-- MCQ answer breakdown (correct/incorrect)
-- DSA code submission (read-only)
-- AI interview transcript reference
-
 ---
 
 ## 3. Backend Features
+
+### Tech Stack
+- **Runtime:** Node.js 20+ with TypeScript
+- **Framework:** Express.js
+- **Database:** MongoDB with Mongoose ODM ✅ **(Migrated from PostgreSQL/Prisma)**
+- **Auth:** JWT-based authentication
+- **Queue:** BullMQ + Redis
+
+---
 
 ### Auth & Organizations ✅
 
@@ -153,14 +120,13 @@
 | User signup with org creation | ✅ Done |
 | Role-based access (OWNER, ADMIN, RECRUITER) | ✅ Done |
 | Organization membership | ✅ Done |
-| Token refresh | ⏳ Planned |
+| **User onboarding tracking** | ✅ Done |
 
 **Endpoints:**
-- `POST /api/auth/signup`
-- `POST /api/auth/login`
+- `POST /api/auth/signup` — Returns `onboardingCompleted: false`
+- `POST /api/auth/login` — Returns user with onboarding status
 - `GET /api/auth/me`
-- `GET /api/organizations`
-- `GET /api/organizations/:id`
+- `POST /api/onboarding/complete` — Marks onboarding done, updates org
 
 ---
 
@@ -170,18 +136,7 @@
 |---------|--------|
 | CRUD assessments | ✅ Done |
 | Round configuration (MCQ, DSA, AI) | ✅ Done |
-| Question bank management | ✅ Done |
-| Question pool queries | ✅ Done |
-| Assessment publishing lifecycle | ✅ Done |
-
-**Endpoints:**
-- `POST /api/assessments`
-- `GET /api/assessments`
-- `GET /api/assessments/:id`
-- `PATCH /api/assessments/:id`
-- `DELETE /api/assessments/:id`
-- `POST /api/questions`
-- `GET /api/questions`
+| Question bank (embedded MCQ/DSA details) | ✅ Done |
 
 ---
 
@@ -191,18 +146,7 @@
 |---------|--------|
 | Start/resume attempts | ✅ Done |
 | Round state machine (FSM) | ✅ Done |
-| Server-side timestamps | ✅ Done |
-| One active attempt per candidate | ✅ Done |
 | Proctoring event ingestion | ✅ Done |
-| Proctoring summary aggregation | ✅ Done |
-
-**Endpoints:**
-- `POST /api/assessments/:id/attempts`
-- `GET /api/attempts/:id`
-- `POST /api/attempts/:id/rounds/:type/start`
-- `POST /api/attempts/:id/rounds/:type/submit`
-- `POST /api/attempts/:id/proctoring`
-- `GET /api/attempts/:id/proctoring/summary`
 
 ---
 
@@ -210,18 +154,10 @@
 
 | Feature | Status |
 |---------|--------|
-| MCQ auto-grading (exact match) | ✅ Done |
+| MCQ auto-grading | ✅ Done |
 | DSA placeholder scoring | ✅ Done |
 | AI interview placeholder | ✅ Done |
-| Immutable evaluation records | ✅ Done |
 | Assessment-level results | ✅ Done |
-| Attempt-level results | ✅ Done |
-
-**Endpoints:**
-- `GET /api/assessments/:id/results`
-- `GET /api/attempts/:id/result`
-
-**Note:** DSA test execution and AI scoring are async-ready but require integration with external services (code execution sandboxes, LLM APIs).
 
 ---
 
@@ -230,15 +166,8 @@
 | Feature | Status |
 |---------|--------|
 | S3-compatible pre-signed URLs | ✅ Done |
-| FileAsset metadata persistence | ✅ Done |
 | Resume attachment (≤5MB PDF) | ✅ Done |
 | Video attachment (≤500MB) | ✅ Done |
-| Ownership validation | ✅ Done |
-
-**Endpoints:**
-- `POST /api/files/upload-url`
-- `POST /api/attempts/:id/resume`
-- `POST /api/attempts/:id/rounds/:type/video`
 
 ---
 
@@ -248,16 +177,6 @@
 |---------|--------|
 | BullMQ + Redis infrastructure | ✅ Done |
 | Evaluation job queue | ✅ Done |
-| Notification job queue | ✅ Done |
-| Worker process | ✅ Done |
-| Exponential backoff retry | ✅ Done |
-| Dead-letter queue support | ✅ Done |
-
-**Job Types:**
-- `EVALUATE_MCQ` — Auto-grade MCQ submissions
-- `EVALUATE_DSA` — Create placeholder (execution TBD)
-- `EVALUATE_AI` — Create placeholder (LLM scoring TBD)
-- `SEND_INVITE_EMAIL` — Placeholder for email delivery
 
 ---
 
@@ -266,6 +185,7 @@
 | Domain | Status |
 |--------|--------|
 | **Auth & Organizations** | ✅ Done |
+| **User Onboarding Flow** | ✅ Done |
 | **Assessments CRUD** | ✅ Done |
 | **Question Bank** | ✅ Done |
 | **Candidate Attempts** | ✅ Done |
@@ -274,32 +194,25 @@
 | **Results APIs** | ✅ Done |
 | **File Storage** | ✅ Done |
 | **Background Jobs** | ✅ Done |
-| **DSA Code Execution** | 🚧 Stubbed (needs sandbox) |
-| **AI Interview Scoring** | 🚧 Stubbed (needs LLM) |
-| **Email Delivery** | 🚧 Stubbed (needs provider) |
-| **Payments / Billing** | ⏳ Post-MVP |
-| **ATS Integrations** | ⏳ Post-MVP |
+| **MongoDB Migration** | ✅ Done |
+| DSA Code Execution | 🚧 Stubbed |
+| AI Interview Scoring | 🚧 Stubbed |
+| Email Delivery | 🚧 Stubbed |
+| Payments / Billing | ⏳ Post-MVP |
+| ATS Integrations | ⏳ Post-MVP |
 
 ---
 
 ## 5. Out of Scope (Intentionally Not Built)
 
-The following features are **not** part of the current MVP:
-
 | Feature | Reason |
 |---------|--------|
 | **Resume parsing** | Requires ML/NLP integration |
-| **AI scoring intelligence** | Requires LLM integration (OpenAI, etc.) |
-| **Code execution sandbox** | Requires isolated runtime (Docker, Firecracker) |
-| **Payment processing** | Requires Stripe/billing integration |
-| **ATS integrations** | Requires Greenhouse/Lever webhooks |
-| **Email delivery** | Requires SendGrid/SES integration |
-| **Video recording storage** | S3 integration ready, delivery pipeline TBD |
-| **Real-time collaboration** | Not a core requirement |
-| **Mobile native apps** | Web-first approach |
-
-These features have clear integration points in the codebase and can be added incrementally.
+| **AI scoring intelligence** | Requires LLM integration |
+| **Code execution sandbox** | Requires isolated runtime |
+| **Payment processing** | Requires Stripe integration |
+| **Email delivery** | Requires SendGrid/SES |
 
 ---
 
-*Last updated: January 2026*
+*Last updated: February 2026*

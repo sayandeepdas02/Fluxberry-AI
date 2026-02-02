@@ -159,6 +159,7 @@ export class AuthService {
             email: user.email,
             firstName: user.firstName,
             lastName: user.lastName,
+            onboardingCompleted: user.onboardingCompleted,
             organization: organization
                 ? {
                     id: organization._id.toString(),

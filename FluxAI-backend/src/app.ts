@@ -12,6 +12,7 @@ import assessmentsRoutes from './modules/assessments/assessments.routes.js'
 import questionsRoutes from './modules/questions/questions.routes.js'
 import attemptsRoutes from './modules/attempts/attempts.routes.js'
 import filesRoutes from './modules/files/files.routes.js'
+import onboardingRoutes from './modules/onboarding/onboarding.routes.js'
 import { attemptsController } from './modules/attempts/attempts.controller.js'
 import { resultsController } from './modules/results/results.controller.js'
 import { filesController } from './modules/files/files.controller.js'
@@ -54,6 +55,9 @@ export function createApp() {
     // Phase 2: Assessments & Questions
     app.use('/api/assessments', assessmentsRoutes)
     app.use('/api/questions', questionsRoutes)
+
+    // Onboarding
+    app.use('/api/onboarding', onboardingRoutes)
 
     // Phase 3: Attempts & Proctoring
     app.post('/api/assessments/:assessmentId/attempts', (req, res, next) =>

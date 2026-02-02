@@ -41,6 +41,7 @@ export interface AuthUser {
     email: string
     firstName: string
     lastName: string
+    onboardingCompleted: boolean
     organization: AuthOrganization | null
 }
 
