@@ -1,4 +1,7 @@
+"use client";
+
 import { OnboardingProvider } from "@/features/onboarding/hooks/onboarding-context";
+import { ProtectedRoute } from "@/lib/context/protected-route";
 
 export default function OnboardingLayout({
     children,
@@ -6,8 +9,10 @@ export default function OnboardingLayout({
     children: React.ReactNode;
 }) {
     return (
-        <OnboardingProvider>
-            {children}
-        </OnboardingProvider>
+        <ProtectedRoute requireIncompleteOnboarding={true}>
+            <OnboardingProvider>
+                {children}
+            </OnboardingProvider>
+        </ProtectedRoute>
     );
 }

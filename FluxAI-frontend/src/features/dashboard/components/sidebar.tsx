@@ -1,18 +1,25 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
     Briefcase,
     ChevronRight,
     ExternalLink,
-    User,
+    UserPlus,
+    Settings,
+    LogOut,
     ShoppingBag
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/context/auth-context";
 
 export function Sidebar() {
-    const { user } = useAuth();
+    const router = useRouter();
+    const { user, logout } = useAuth();
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Get workspace name from user's organization or default
     const workspaceName = user?.organization?.name || "Workspace";
@@ -27,21 +34,86 @@ export function Sidebar() {
             .slice(0, 2);
     };
 
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false);
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleLogout = () => {
+        // Navigate first, then logout to prevent ProtectedRoute from redirecting to /signin
+        router.push("/");
+        // Small delay to allow navigation to start before clearing auth
+        setTimeout(() => {
+            logout();
+        }, 100);
+    };
+
     return (
         <div className="w-64 h-screen border-r border-edge bg-background flex flex-col sticky top-0">
-            {/* Header: Workspace */}
-            <div className="p-4 pb-2">
-                <div className="flex items-center gap-3 mb-1 cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors">
+            {/* Header: Workspace with Dropdown */}
+            <div className="p-4 pb-2 relative" ref={dropdownRef}>
+                <div
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="flex items-center gap-3 mb-1 cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors"
+                >
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
                         {getInitials(workspaceName)}
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                             <span className="font-semibold text-sm truncate">{workspaceName}</span>
-                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                            <ChevronRight className={cn(
+                                "w-4 h-4 text-muted-foreground transition-transform",
+                                isDropdownOpen && "rotate-90"
+                            )} />
                         </div>
                     </div>
                 </div>
+
+                {/* Dropdown Menu */}
+                {isDropdownOpen && (
+                    <div className="absolute left-2 right-2 top-full mt-1 bg-background border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+                        <div className="p-1">
+                            <button
+                                onClick={() => {
+                                    setIsDropdownOpen(false);
+                                    // TODO: Open invite modal
+                                }}
+                                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-muted rounded-md transition-colors"
+                            >
+                                <UserPlus className="w-4 h-4" />
+                                <span>+ Invite</span>
+                            </button>
+
+                            <Link
+                                href="/dashboard/settings"
+                                onClick={() => setIsDropdownOpen(false)}
+                                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-muted rounded-md transition-colors"
+                            >
+                                <Settings className="w-4 h-4" />
+                                <span>Settings</span>
+                            </Link>
+
+                            <div className="h-px bg-border my-1" />
+
+                            <button
+                                onClick={handleLogout}
+                                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-md transition-colors"
+                            >
+                                <LogOut className="w-4 h-4" />
+                                <span>Logout</span>
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 <div className="px-2 text-xs text-muted-foreground flex items-center gap-1.5">
                     <span>Free Plan</span>
                     <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
