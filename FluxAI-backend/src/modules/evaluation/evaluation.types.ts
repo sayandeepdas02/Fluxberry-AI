@@ -28,6 +28,7 @@ export interface MCQEvaluationMetadata {
         selectedOptions: number[]
         correctOptions: number[]
     }>
+    [key: string]: unknown
 }
 
 export interface DSAEvaluationMetadata {
@@ -35,6 +36,7 @@ export interface DSAEvaluationMetadata {
     code?: string
     language?: string
     status: 'PENDING' | 'EVALUATED'
+    [key: string]: unknown
 }
 
 export interface AIEvaluationMetadata {
@@ -42,6 +44,7 @@ export interface AIEvaluationMetadata {
     videoRef?: string
     summary?: string
     status: 'PENDING' | 'EVALUATED'
+    [key: string]: unknown
 }
 
 export const mcqAnswersSchema = z.record(z.array(z.number()))

@@ -1,6 +1,13 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import prisma from '../../database/prisma.js'
+import {
+    User,
+    Organization,
+    OrganizationMember,
+    IUser,
+    IOrganization,
+    MemberRoleType,
+} from '../../database/models/index.js'
 import { SignupInput, LoginInput, AuthResponse, AuthUser, AuthTokens, JwtPayload } from './auth.types.js'
 
 const SALT_ROUNDS = 10
@@ -9,13 +16,11 @@ const JWT_EXPIRES_IN_SECONDS = 7 * 24 * 60 * 60 // 7 days
 export class AuthService {
     /**
      * Register a new recruiter account
-     * Creates: User + Organization + OrganizationMember (as ADMIN)
+     * Creates: User + Organization + OrganizationMember (as OWNER)
      */
     async signup(input: SignupInput): Promise<AuthResponse> {
         // Check if user already exists
-        const existingUser = await prisma.user.findUnique({
-            where: { email: input.email },
-        })
+        const existingUser = await User.findOne({ email: input.email })
 
         if (existingUser) {
             const error = new Error('User with this email already exists') as Error & { statusCode: number; code: string }
@@ -31,38 +36,32 @@ export class AuthService {
         const slug = await this.generateUniqueSlug(input.organizationName)
 
         // Create organization
-        const organization = await prisma.organization.create({
-            data: {
-                name: input.organizationName,
-                slug,
-            },
+        const organization = await Organization.create({
+            name: input.organizationName,
+            slug,
         })
 
         // Create user
-        const user = await prisma.user.create({
-            data: {
-                email: input.email,
-                passwordHash,
-                firstName: input.firstName,
-                lastName: input.lastName,
-                authProvider: 'email',
-            },
+        const user = await User.create({
+            email: input.email,
+            passwordHash,
+            firstName: input.firstName,
+            lastName: input.lastName,
+            authProvider: 'email',
         })
 
         // Create organization membership (first member is OWNER)
-        const membership = await prisma.organizationMember.create({
-            data: {
-                userId: user.id,
-                organizationId: organization.id,
-                role: 'OWNER',
-            },
+        const membership = await OrganizationMember.create({
+            userId: user._id,
+            organizationId: organization._id,
+            role: 'OWNER',
         })
 
         // Generate tokens
         const tokens = this.generateTokens({
-            id: user.id,
+            id: user._id.toString(),
             email: user.email,
-            organizationId: organization.id,
+            organizationId: organization._id.toString(),
             role: membership.role,
         })
 
@@ -76,15 +75,7 @@ export class AuthService {
      * Login with email and password
      */
     async login(input: LoginInput): Promise<AuthResponse> {
-        const user = await prisma.user.findUnique({
-            where: { email: input.email },
-            include: {
-                memberships: {
-                    include: { organization: true },
-                    take: 1, // Get first/primary org for now
-                },
-            },
-        })
+        const user = await User.findOne({ email: input.email })
 
         if (!user || !user.passwordHash) {
             const error = new Error('Invalid email or password') as Error & { statusCode: number; code: string }
@@ -101,14 +92,15 @@ export class AuthService {
             throw error
         }
 
-        const membership = user.memberships[0]
-        const organization = membership?.organization ?? null
+        // Get first/primary organization membership
+        const membership = await OrganizationMember.findOne({ userId: user._id }).populate('organizationId')
+        const organization = membership?.organizationId as unknown as IOrganization | null
         const role = membership?.role ?? null
 
         const tokens = this.generateTokens({
-            id: user.id,
+            id: user._id.toString(),
             email: user.email,
-            organizationId: organization?.id ?? null,
+            organizationId: organization?._id?.toString() ?? null,
             role,
         })
 
@@ -122,15 +114,7 @@ export class AuthService {
      * Get current user from token payload
      */
     async getCurrentUser(userId: string): Promise<AuthUser> {
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
-            include: {
-                memberships: {
-                    include: { organization: true },
-                    take: 1,
-                },
-            },
-        })
+        const user = await User.findById(userId)
 
         if (!user) {
             const error = new Error('User not found') as Error & { statusCode: number; code: string }
@@ -139,8 +123,10 @@ export class AuthService {
             throw error
         }
 
-        const membership = user.memberships[0]
-        return this.formatUser(user, membership?.organization ?? null, membership?.role ?? null)
+        const membership = await OrganizationMember.findOne({ userId: user._id }).populate('organizationId')
+        const organization = membership?.organizationId as unknown as IOrganization | null
+
+        return this.formatUser(user, organization, membership?.role ?? null)
     }
 
     /**
@@ -164,18 +150,18 @@ export class AuthService {
      * Format user for response (exclude sensitive data)
      */
     private formatUser(
-        user: { id: string; email: string; firstName: string; lastName: string },
-        organization: { id: string; name: string; slug: string } | null,
-        role: string | null
+        user: IUser,
+        organization: IOrganization | null,
+        role: MemberRoleType | null
     ): AuthUser {
         return {
-            id: user.id,
+            id: user._id.toString(),
             email: user.email,
             firstName: user.firstName,
             lastName: user.lastName,
             organization: organization
                 ? {
-                    id: organization.id,
+                    id: organization._id.toString(),
                     name: organization.name,
                     slug: organization.slug,
                     role: role ?? 'RECRUITER',
@@ -197,7 +183,7 @@ export class AuthService {
         // Check if slug exists
         let slug = baseSlug
         let counter = 0
-        while (await prisma.organization.findUnique({ where: { slug } })) {
+        while (await Organization.findOne({ slug })) {
             counter++
             slug = `${baseSlug}-${counter}`
         }

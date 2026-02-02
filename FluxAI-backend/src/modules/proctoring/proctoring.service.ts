@@ -1,5 +1,10 @@
-import prisma from '../../database/prisma.js'
-import { RoundType, ProctoringEventType, EventSeverity } from '@prisma/client'
+import {
+    AssessmentAttempt,
+    ProctoringEvent,
+    RoundTypeValue,
+    ProctoringEventTypeValue,
+    EventSeverityType,
+} from '../../database/models/index.js'
 import {
     CreateProctoringEventInput,
     ProctoringEventResponse,
@@ -15,9 +20,7 @@ export class ProctoringService {
      */
     async logEvent(attemptId: string, input: CreateProctoringEventInput): Promise<ProctoringEventResponse> {
         // Verify attempt exists
-        const attempt = await prisma.assessmentAttempt.findUnique({
-            where: { id: attemptId },
-        })
+        const attempt = await AssessmentAttempt.findById(attemptId)
 
         if (!attempt) {
             const error = new Error('Attempt not found') as Error & { statusCode: number; code: string }
@@ -27,14 +30,11 @@ export class ProctoringService {
         }
 
         // Create event with server timestamp (append-only)
-        const event = await prisma.proctoringEvent.create({
-            data: {
-                attemptId,
-                roundType: input.roundType as RoundType | undefined,
-                eventType: input.eventType as ProctoringEventType,
-                severity: (input.severity as EventSeverity) || 'LOW',
-                createdAt: new Date(), // Server timestamp only
-            },
+        const event = await ProctoringEvent.create({
+            attemptId,
+            roundType: input.roundType as RoundTypeValue | undefined,
+            eventType: input.eventType as ProctoringEventTypeValue,
+            severity: (input.severity as EventSeverityType) || 'LOW',
         })
 
         return this.formatEvent(event)
@@ -45,9 +45,7 @@ export class ProctoringService {
      */
     async getSummary(attemptId: string): Promise<ProctoringSummaryResponse> {
         // Verify attempt exists
-        const attempt = await prisma.assessmentAttempt.findUnique({
-            where: { id: attemptId },
-        })
+        const attempt = await AssessmentAttempt.findById(attemptId)
 
         if (!attempt) {
             const error = new Error('Attempt not found') as Error & { statusCode: number; code: string }
@@ -56,10 +54,7 @@ export class ProctoringService {
             throw error
         }
 
-        const events = await prisma.proctoringEvent.findMany({
-            where: { attemptId },
-            orderBy: { createdAt: 'asc' },
-        })
+        const events = await ProctoringEvent.find({ attemptId }).sort({ createdAt: 1 })
 
         // Aggregate by severity
         const bySeverity: Record<string, number> = {}
@@ -82,17 +77,17 @@ export class ProctoringService {
      * Format event for response
      */
     private formatEvent(event: {
-        id: string
+        _id: { toString(): string }
         eventType: string
         severity: string
-        roundType: string | null
+        roundType?: string | null
         createdAt: Date
     }): ProctoringEventResponse {
         return {
-            id: event.id,
+            id: event._id.toString(),
             eventType: event.eventType,
             severity: event.severity,
-            roundType: event.roundType,
+            roundType: event.roundType ?? null,
             createdAt: event.createdAt,
         }
     }

@@ -1,6 +1,11 @@
 import { Job } from 'bullmq'
-import prisma from '../../database/prisma.js'
-import { Prisma } from '@prisma/client'
+import {
+    AssessmentAttempt,
+    Assessment,
+    Question,
+    Evaluation,
+    IQuestion,
+} from '../../database/models/index.js'
 import { EvaluationJobData, EvaluateMCQJob, EvaluateDSAJob, EvaluateAIJob } from '../queues/index.js'
 
 // ============================================
@@ -35,50 +40,47 @@ interface MCQQuestionResult {
     questionId: string
     correct: boolean
     selectedOptions: string[]
-    correctOptions: string[]
+    correctOptions: number[]
 }
 
 interface MCQEvaluationMetadata {
     questionResults: MCQQuestionResult[]
     totalQuestions: number
     correctCount: number
+    [key: string]: unknown
 }
 
 async function processMCQEvaluation(data: EvaluateMCQJob): Promise<void> {
     const { attemptId, answers } = data
 
-    // Get attempt with round info
-    const attempt = await prisma.assessmentAttempt.findUnique({
-        where: { id: attemptId },
-        include: {
-            assessment: {
-                include: {
-                    rounds: {
-                        where: { roundType: 'MCQ', enabled: true },
-                    },
-                },
-            },
-        },
-    })
+    // Get attempt with assessment
+    const attempt = await AssessmentAttempt.findById(attemptId)
 
     if (!attempt) {
         throw new Error(`Attempt not found: ${attemptId}`)
     }
 
-    const mcqRound = attempt.assessment.rounds[0]
+    const assessment = await Assessment.findById(attempt.assessmentId)
+
+    if (!assessment) {
+        throw new Error(`Assessment not found for attempt: ${attemptId}`)
+    }
+
+    const mcqRound = assessment.rounds.find(r => r.roundType === 'MCQ' && r.enabled)
     if (!mcqRound) {
         throw new Error(`MCQ round not found for attempt: ${attemptId}`)
     }
 
     // Get questions from the question pool
     const allQuestionIds = Object.keys(answers)
-    const questions = await prisma.question.findMany({
-        where: { id: { in: allQuestionIds } },
+    const questions = await Question.find({
+        _id: { $in: allQuestionIds },
+        type: 'MCQ',
     })
 
     // Build lookup map
-    const questionMap = new Map(
-        questions.map((q) => [q.id, q])
+    const questionMap = new Map<string, IQuestion>(
+        questions.map((q) => [q._id.toString(), q])
     )
 
     // Grade each answer
@@ -87,24 +89,23 @@ async function processMCQEvaluation(data: EvaluateMCQJob): Promise<void> {
 
     for (const questionId of allQuestionIds) {
         const question = questionMap.get(questionId)
-        if (!question) continue
+        if (!question || !question.mcqDetails) continue
 
         const selectedOptions = answers[questionId] || []
-        // correctOptions is stored in metadata JSON field
-        const questionMetadata = question.metadata as { correctOptions?: string[] } | null
-        const correctOptions = questionMetadata?.correctOptions || []
+        const correctOptions = question.mcqDetails.correctOptions
 
         // Exact match - arrays must be identical
+        const selectedArr = selectedOptions as unknown as number[]
         const isCorrect =
-            selectedOptions.length === correctOptions.length &&
-            selectedOptions.every((opt) => correctOptions.includes(opt))
+            selectedArr.length === correctOptions.length &&
+            selectedArr.every((opt: number) => correctOptions.includes(opt))
 
         if (isCorrect) correctCount++
 
         questionResults.push({
             questionId,
             correct: isCorrect,
-            selectedOptions,
+            selectedOptions: selectedOptions as string[],
             correctOptions,
         })
     }
@@ -119,19 +120,18 @@ async function processMCQEvaluation(data: EvaluateMCQJob): Promise<void> {
     }
 
     // Create immutable evaluation record (upsert to handle idempotency)
-    await prisma.evaluation.upsert({
-        where: {
-            attemptId_roundType: { attemptId, roundType: 'MCQ' },
-        },
-        create: {
+    const existingEval = await Evaluation.findOne({ attemptId, roundType: 'MCQ' })
+
+    if (!existingEval) {
+        await Evaluation.create({
             attemptId,
             roundType: 'MCQ',
             score,
             maxScore,
-            metadata: metadata as unknown as Prisma.InputJsonValue,
-        },
-        update: {}, // No updates - immutable
-    })
+            metadata: metadata as Record<string, unknown>,
+        })
+    }
+    // No updates - immutable
 }
 
 // ============================================
@@ -142,6 +142,7 @@ interface DSAEvaluationMetadata {
     code: string
     language: string
     status: 'PENDING' | 'GRADED'
+    [key: string]: unknown
 }
 
 async function processDSAEvaluation(data: EvaluateDSAJob): Promise<void> {
@@ -153,19 +154,17 @@ async function processDSAEvaluation(data: EvaluateDSAJob): Promise<void> {
         status: 'PENDING',
     }
 
-    await prisma.evaluation.upsert({
-        where: {
-            attemptId_roundType: { attemptId, roundType: 'DSA' },
-        },
-        create: {
+    const existingEval = await Evaluation.findOne({ attemptId, roundType: 'DSA' })
+
+    if (!existingEval) {
+        await Evaluation.create({
             attemptId,
             roundType: 'DSA',
             score: 0,
             maxScore: 100,
-            metadata: metadata as unknown as Prisma.InputJsonValue,
-        },
-        update: {},
-    })
+            metadata: metadata as Record<string, unknown>,
+        })
+    }
 }
 
 // ============================================
@@ -177,6 +176,7 @@ interface AIEvaluationMetadata {
     videoRef?: string
     summary: string
     status: 'PENDING' | 'GRADED'
+    [key: string]: unknown
 }
 
 async function processAIEvaluation(data: EvaluateAIJob): Promise<void> {
@@ -189,17 +189,15 @@ async function processAIEvaluation(data: EvaluateAIJob): Promise<void> {
         status: 'PENDING',
     }
 
-    await prisma.evaluation.upsert({
-        where: {
-            attemptId_roundType: { attemptId, roundType: 'AI' },
-        },
-        create: {
+    const existingEval = await Evaluation.findOne({ attemptId, roundType: 'AI' })
+
+    if (!existingEval) {
+        await Evaluation.create({
             attemptId,
             roundType: 'AI',
             score: 0,
             maxScore: 100,
-            metadata: metadata as unknown as Prisma.InputJsonValue,
-        },
-        update: {},
-    })
+            metadata: metadata as Record<string, unknown>,
+        })
+    }
 }

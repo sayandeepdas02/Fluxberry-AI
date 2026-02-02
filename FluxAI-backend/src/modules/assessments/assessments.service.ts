@@ -1,5 +1,10 @@
-import prisma from '../../database/prisma.js'
-import { Prisma } from '@prisma/client'
+import {
+    Assessment,
+    IAssessment,
+    IAssessmentRound,
+    RoundType,
+    RoundTypeValue,
+} from '../../database/models/index.js'
 import {
     CreateAssessmentInput,
     UpdateAssessmentInput,
@@ -16,21 +21,15 @@ export class AssessmentsService {
      */
     async create(organizationId: string, input: CreateAssessmentInput): Promise<AssessmentResponse> {
         // Create assessment with default rounds (all disabled)
-        const assessment = await prisma.assessment.create({
-            data: {
-                organizationId,
-                title: input.title,
-                jobId: input.jobId ?? null,
-                // Default rounds created on schema level
-                rounds: {
-                    create: [
-                        { roundType: 'MCQ', enabled: false, order: 1, config: {} },
-                        { roundType: 'DSA', enabled: false, order: 2, config: {} },
-                        { roundType: 'AI', enabled: false, order: 3, config: {} },
-                    ],
-                },
-            },
-            include: { rounds: { orderBy: { order: 'asc' } } },
+        const assessment = await Assessment.create({
+            organizationId,
+            title: input.title,
+            jobId: input.jobId,
+            rounds: [
+                { roundType: 'MCQ', enabled: false, order: 1, config: {} },
+                { roundType: 'DSA', enabled: false, order: 2, config: {} },
+                { roundType: 'AI', enabled: false, order: 3, config: {} },
+            ],
         })
 
         return this.formatAssessment(assessment)
@@ -41,12 +40,9 @@ export class AssessmentsService {
      */
     async list(organizationId: string): Promise<AssessmentListResponse> {
         const [assessments, total] = await Promise.all([
-            prisma.assessment.findMany({
-                where: { organizationId },
-                include: { rounds: { orderBy: { order: 'asc' } } },
-                orderBy: { createdAt: 'desc' },
-            }),
-            prisma.assessment.count({ where: { organizationId } }),
+            Assessment.find({ organizationId })
+                .sort({ createdAt: -1 }),
+            Assessment.countDocuments({ organizationId }),
         ])
 
         return {
@@ -59,10 +55,7 @@ export class AssessmentsService {
      * Get assessment by ID (with org check)
      */
     async getById(id: string, organizationId: string): Promise<AssessmentResponse> {
-        const assessment = await prisma.assessment.findFirst({
-            where: { id, organizationId },
-            include: { rounds: { orderBy: { order: 'asc' } } },
-        })
+        const assessment = await Assessment.findOne({ _id: id, organizationId })
 
         if (!assessment) {
             const error = new Error('Assessment not found') as Error & { statusCode: number; code: string }
@@ -81,11 +74,18 @@ export class AssessmentsService {
         // Verify assessment exists and belongs to org
         await this.getById(id, organizationId)
 
-        const assessment = await prisma.assessment.update({
-            where: { id },
-            data: input,
-            include: { rounds: { orderBy: { order: 'asc' } } },
-        })
+        const assessment = await Assessment.findByIdAndUpdate(
+            id,
+            { $set: input },
+            { new: true }
+        )
+
+        if (!assessment) {
+            const error = new Error('Assessment not found') as Error & { statusCode: number; code: string }
+            error.statusCode = 404
+            error.code = 'NOT_FOUND'
+            throw error
+        }
 
         return this.formatAssessment(assessment)
     }
@@ -105,23 +105,29 @@ export class AssessmentsService {
         }
 
         // Update each round
-        const roundTypes: ('MCQ' | 'DSA' | 'AI')[] = ['MCQ', 'DSA', 'AI']
+        const roundTypes: RoundTypeValue[] = ['MCQ', 'DSA', 'AI']
+
+        const assessmentDoc = await Assessment.findById(id)
+        if (!assessmentDoc) {
+            const error = new Error('Assessment not found') as Error & { statusCode: number; code: string }
+            error.statusCode = 404
+            error.code = 'NOT_FOUND'
+            throw error
+        }
 
         for (const roundType of roundTypes) {
             const roundConfig = input[roundType]
             if (roundConfig) {
-                await prisma.assessmentRound.update({
-                    where: {
-                        assessmentId_roundType: { assessmentId: id, roundType },
-                    },
-                    data: {
-                        enabled: roundConfig.enabled,
-                        order: roundConfig.order,
-                        config: roundConfig.config as unknown as Prisma.InputJsonValue,
-                    },
-                })
+                const roundIndex = assessmentDoc.rounds.findIndex(r => r.roundType === roundType)
+                if (roundIndex !== -1) {
+                    assessmentDoc.rounds[roundIndex].enabled = roundConfig.enabled
+                    assessmentDoc.rounds[roundIndex].order = roundConfig.order
+                    assessmentDoc.rounds[roundIndex].config = roundConfig.config as Record<string, unknown>
+                }
             }
         }
+
+        await assessmentDoc.save()
 
         return this.getById(id, organizationId)
     }
@@ -174,42 +180,26 @@ export class AssessmentsService {
         }
 
         // Transition to ACTIVE
-        const updated = await prisma.assessment.update({
-            where: { id },
-            data: { status: 'ACTIVE' },
-            include: { rounds: { orderBy: { order: 'asc' } } },
-        })
+        await Assessment.findByIdAndUpdate(id, { $set: { status: 'ACTIVE' } })
 
-        return this.formatAssessment(updated)
+        return this.getById(id, organizationId)
     }
 
     /**
      * Format assessment for response
      */
-    private formatAssessment(assessment: {
-        id: string
-        organizationId: string
-        jobId: string | null
-        title: string
-        status: string
-        rounds: Array<{
-            id: string
-            roundType: string
-            enabled: boolean
-            order: number
-            config: Prisma.JsonValue
-        }>
-        createdAt: Date
-        updatedAt: Date
-    }): AssessmentResponse {
+    private formatAssessment(assessment: IAssessment): AssessmentResponse {
+        // Sort rounds by order
+        const sortedRounds = [...assessment.rounds].sort((a, b) => a.order - b.order)
+
         return {
-            id: assessment.id,
-            organizationId: assessment.organizationId,
-            jobId: assessment.jobId,
+            id: assessment._id.toString(),
+            organizationId: assessment.organizationId.toString(),
+            jobId: assessment.jobId ?? null,
             title: assessment.title,
             status: assessment.status as 'DRAFT' | 'ACTIVE' | 'CLOSED',
-            rounds: assessment.rounds.map((r): RoundResponse => ({
-                id: r.id,
+            rounds: sortedRounds.map((r): RoundResponse => ({
+                id: r._id?.toString() ?? '',
                 roundType: r.roundType as 'MCQ' | 'DSA' | 'AI',
                 enabled: r.enabled,
                 order: r.order,

@@ -1,6 +1,5 @@
-import prisma from '../../database/prisma.js'
+import { Question, IQuestion } from '../../database/models/index.js'
 import { ListQuestionsQuery, QuestionResponse, QuestionListResponse } from './questions.types.js'
-import { Prisma } from '@prisma/client'
 
 export class QuestionsService {
     /**
@@ -8,32 +7,27 @@ export class QuestionsService {
      * Read-only - no mutations allowed
      */
     async list(query: ListQuestionsQuery): Promise<QuestionListResponse> {
-        const where: Prisma.QuestionWhereInput = {}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const filter: Record<string, any> = {}
 
         if (query.type) {
-            where.type = query.type
+            filter.type = query.type
         }
 
         if (query.difficulty) {
-            where.difficulty = query.difficulty
+            filter.difficulty = query.difficulty
         }
 
         if (query.topic) {
-            where.topics = { has: query.topic }
+            filter.topics = query.topic
         }
 
         const [questions, total] = await Promise.all([
-            prisma.question.findMany({
-                where,
-                include: {
-                    mcqDetails: true,
-                    dsaDetails: true,
-                },
-                take: query.limit,
-                skip: query.offset,
-                orderBy: { createdAt: 'desc' },
-            }),
-            prisma.question.count({ where }),
+            Question.find(filter)
+                .limit(query.limit)
+                .skip(query.offset)
+                .sort({ createdAt: -1 }),
+            Question.countDocuments(filter),
         ])
 
         return {
@@ -48,13 +42,7 @@ export class QuestionsService {
      * Get a single question by ID
      */
     async getById(id: string): Promise<QuestionResponse> {
-        const question = await prisma.question.findUnique({
-            where: { id },
-            include: {
-                mcqDetails: true,
-                dsaDetails: true,
-            },
-        })
+        const question = await Question.findById(id)
 
         if (!question) {
             const error = new Error('Question not found') as Error & { statusCode: number; code: string }
@@ -70,33 +58,16 @@ export class QuestionsService {
      * Get questions by IDs (for validation)
      */
     async getByIds(ids: string[]): Promise<QuestionResponse[]> {
-        const questions = await prisma.question.findMany({
-            where: { id: { in: ids } },
-            include: {
-                mcqDetails: true,
-                dsaDetails: true,
-            },
-        })
-
+        const questions = await Question.find({ _id: { $in: ids } })
         return questions.map((q) => this.formatQuestion(q))
     }
 
     /**
      * Format question for response
      */
-    private formatQuestion(question: {
-        id: string
-        type: string
-        title: string
-        difficulty: string
-        topics: string[]
-        metadata: Prisma.JsonValue
-        mcqDetails: { options: string[]; correctOptions: number[]; isMultiCorrect: boolean } | null
-        dsaDetails: { prompt: string; constraints: string | null; starterCode: Prisma.JsonValue; languagesSupported: string[] } | null
-        createdAt: Date
-    }): QuestionResponse {
+    private formatQuestion(question: IQuestion): QuestionResponse {
         return {
-            id: question.id,
+            id: question._id.toString(),
             type: question.type as 'MCQ' | 'DSA',
             title: question.title,
             difficulty: question.difficulty as 'EASY' | 'MEDIUM' | 'HARD',
@@ -112,7 +83,7 @@ export class QuestionsService {
             dsaDetails: question.dsaDetails
                 ? {
                     prompt: question.dsaDetails.prompt,
-                    constraints: question.dsaDetails.constraints,
+                    constraints: question.dsaDetails.constraints ?? null,
                     starterCode: question.dsaDetails.starterCode as Record<string, string>,
                     languagesSupported: question.dsaDetails.languagesSupported,
                 }

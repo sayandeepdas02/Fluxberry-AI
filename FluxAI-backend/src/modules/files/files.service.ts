@@ -1,5 +1,9 @@
-import prisma from '../../database/prisma.js'
-import { OwnerType, FileType } from '@prisma/client'
+import {
+    FileAsset,
+    AssessmentAttempt,
+    OwnerTypeValue,
+    FileTypeValue,
+} from '../../database/models/index.js'
 import {
     generateUploadUrl,
     generateStorageKey,
@@ -17,7 +21,7 @@ export class FilesService {
      * Validates file constraints and creates metadata record
      */
     async requestUploadUrl(
-        ownerType: OwnerType,
+        ownerType: OwnerTypeValue,
         ownerId: string,
         input: RequestUploadUrlInput,
         organizationId?: string
@@ -46,23 +50,21 @@ export class FilesService {
         const storageKey = generateStorageKey(ownerType, ownerId, fileType, extension)
 
         // Create file asset record (pending upload)
-        const fileAsset = await prisma.fileAsset.create({
-            data: {
-                organizationId,
-                ownerType,
-                ownerId,
-                fileType: fileType as FileType,
-                storageKey,
-                mimeType,
-                size,
-            },
+        const fileAsset = await FileAsset.create({
+            organizationId,
+            ownerType,
+            ownerId,
+            fileType: fileType as FileTypeValue,
+            storageKey,
+            mimeType,
+            size,
         })
 
         // Generate pre-signed URL
         const { uploadUrl } = await generateUploadUrl(storageKey, mimeType, size)
 
         return {
-            fileId: fileAsset.id,
+            fileId: fileAsset._id.toString(),
             uploadUrl,
             expiresIn: 15 * 60, // 15 minutes
         }
@@ -74,11 +76,9 @@ export class FilesService {
      */
     async attachResume(attemptId: string, fileId: string, candidateId: string): Promise<FileAssetResponse> {
         // Verify attempt exists and belongs to candidate
-        const attempt = await prisma.assessmentAttempt.findUnique({
-            where: { id: attemptId },
-        })
+        const attempt = await AssessmentAttempt.findById(attemptId)
 
-        if (!attempt || attempt.candidateId !== candidateId) {
+        if (!attempt || attempt.candidateId.toString() !== candidateId) {
             const error = new Error('Attempt not found') as Error & { statusCode: number; code: string }
             error.statusCode = 404
             error.code = 'NOT_FOUND'
@@ -86,9 +86,7 @@ export class FilesService {
         }
 
         // Verify file exists and is a resume owned by this candidate
-        const file = await prisma.fileAsset.findUnique({
-            where: { id: fileId },
-        })
+        const file = await FileAsset.findById(fileId)
 
         if (!file || file.ownerType !== 'CANDIDATE' || file.ownerId !== candidateId || file.fileType !== 'RESUME') {
             const error = new Error('Invalid file') as Error & { statusCode: number; code: string }
@@ -98,13 +96,11 @@ export class FilesService {
         }
 
         // Check if resume already attached (one per attempt)
-        const existingResume = await prisma.fileAsset.findFirst({
-            where: {
-                ownerType: 'CANDIDATE',
-                ownerId: candidateId,
-                fileType: 'RESUME',
-                id: { not: fileId },
-            },
+        const existingResume = await FileAsset.findOne({
+            ownerType: 'CANDIDATE',
+            ownerId: candidateId,
+            fileType: 'RESUME',
+            _id: { $ne: fileId },
         })
 
         if (existingResume) {
@@ -129,12 +125,9 @@ export class FilesService {
         _questionIndex?: number
     ): Promise<FileAssetResponse> {
         // Verify attempt and round
-        const attempt = await prisma.assessmentAttempt.findUnique({
-            where: { id: attemptId },
-            include: { rounds: true },
-        })
+        const attempt = await AssessmentAttempt.findById(attemptId)
 
-        if (!attempt || attempt.candidateId !== candidateId) {
+        if (!attempt || attempt.candidateId.toString() !== candidateId) {
             const error = new Error('Attempt not found') as Error & { statusCode: number; code: string }
             error.statusCode = 404
             error.code = 'NOT_FOUND'
@@ -150,9 +143,7 @@ export class FilesService {
         }
 
         // Verify file exists and is a video owned by this candidate
-        const file = await prisma.fileAsset.findUnique({
-            where: { id: fileId },
-        })
+        const file = await FileAsset.findById(fileId)
 
         if (!file || file.ownerType !== 'CANDIDATE' || file.ownerId !== candidateId || file.fileType !== 'VIDEO') {
             const error = new Error('Invalid file') as Error & { statusCode: number; code: string }
@@ -168,10 +159,7 @@ export class FilesService {
      * Get file by ID
      */
     async getById(fileId: string): Promise<FileAssetResponse | null> {
-        const file = await prisma.fileAsset.findUnique({
-            where: { id: fileId },
-        })
-
+        const file = await FileAsset.findById(fileId)
         return file ? this.formatFileAsset(file) : null
     }
 
@@ -179,14 +167,14 @@ export class FilesService {
      * Format file asset for response
      */
     private formatFileAsset(file: {
-        id: string
-        fileType: FileType
+        _id: { toString(): string }
+        fileType: FileTypeValue
         mimeType: string
         size: number
         createdAt: Date
     }): FileAssetResponse {
         return {
-            id: file.id,
+            id: file._id.toString(),
             fileType: file.fileType,
             mimeType: file.mimeType,
             size: file.size,

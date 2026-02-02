@@ -1,4 +1,9 @@
-import prisma from '../../database/prisma.js'
+import {
+    Organization,
+    OrganizationMember,
+    IOrganization,
+    MemberRoleType,
+} from '../../database/models/index.js'
 import { UpdateOrganizationInput, OrganizationResponse, OrganizationMemberResponse } from './organizations.types.js'
 
 export class OrganizationsService {
@@ -6,29 +11,32 @@ export class OrganizationsService {
      * Get all organizations the user belongs to
      */
     async getAll(userId: string): Promise<OrganizationResponse[]> {
-        const memberships = await prisma.organizationMember.findMany({
-            where: { userId },
-            include: {
-                organization: {
-                    include: {
-                        _count: { select: { members: true } },
-                    },
-                },
-            },
-            orderBy: { joinedAt: 'asc' },
-        })
+        const memberships = await OrganizationMember.find({ userId })
+            .populate('organizationId')
+            .sort({ joinedAt: 'asc' })
 
-        return memberships.map((m) => ({
-            id: m.organization.id,
-            name: m.organization.name,
-            slug: m.organization.slug,
-            logoUrl: m.organization.logoUrl,
-            website: m.organization.website,
-            plan: m.organization.plan,
-            memberCount: m.organization._count.members,
-            role: m.role,
-            createdAt: m.organization.createdAt,
-        }))
+        const results: OrganizationResponse[] = []
+
+        for (const m of memberships) {
+            const org = m.organizationId as unknown as IOrganization
+            if (!org) continue
+
+            const memberCount = await OrganizationMember.countDocuments({ organizationId: org._id })
+
+            results.push({
+                id: org._id.toString(),
+                name: org.name,
+                slug: org.slug,
+                logoUrl: org.logoUrl ?? null,
+                website: org.website ?? null,
+                plan: org.plan,
+                memberCount,
+                role: m.role,
+                createdAt: org.createdAt,
+            })
+        }
+
+        return results
     }
 
     /**
@@ -36,11 +44,7 @@ export class OrganizationsService {
      */
     async getById(organizationId: string, userId: string): Promise<OrganizationResponse> {
         // Verify user is a member of this organization
-        const membership = await prisma.organizationMember.findUnique({
-            where: {
-                userId_organizationId: { userId, organizationId },
-            },
-        })
+        const membership = await OrganizationMember.findOne({ userId, organizationId })
 
         if (!membership) {
             const error = new Error('Access denied') as Error & { statusCode: number; code: string }
@@ -49,12 +53,7 @@ export class OrganizationsService {
             throw error
         }
 
-        const org = await prisma.organization.findUnique({
-            where: { id: organizationId },
-            include: {
-                _count: { select: { members: true } },
-            },
-        })
+        const org = await Organization.findById(organizationId)
 
         if (!org) {
             const error = new Error('Organization not found') as Error & { statusCode: number; code: string }
@@ -63,14 +62,16 @@ export class OrganizationsService {
             throw error
         }
 
+        const memberCount = await OrganizationMember.countDocuments({ organizationId })
+
         return {
-            id: org.id,
+            id: org._id.toString(),
             name: org.name,
             slug: org.slug,
-            logoUrl: org.logoUrl,
-            website: org.website,
+            logoUrl: org.logoUrl ?? null,
+            website: org.website ?? null,
             plan: org.plan,
-            memberCount: org._count.members,
+            memberCount,
             role: membership.role,
             createdAt: org.createdAt,
         }
@@ -81,11 +82,7 @@ export class OrganizationsService {
      */
     async update(organizationId: string, userId: string, input: UpdateOrganizationInput): Promise<OrganizationResponse> {
         // Verify user is an OWNER or ADMIN of this organization
-        const membership = await prisma.organizationMember.findUnique({
-            where: {
-                userId_organizationId: { userId, organizationId },
-            },
-        })
+        const membership = await OrganizationMember.findOne({ userId, organizationId })
 
         if (!membership || (membership.role !== 'OWNER' && membership.role !== 'ADMIN')) {
             const error = new Error('Owner or Admin access required') as Error & { statusCode: number; code: string }
@@ -96,8 +93,9 @@ export class OrganizationsService {
 
         // Check if slug is unique (if being updated)
         if (input.slug) {
-            const existing = await prisma.organization.findFirst({
-                where: { slug: input.slug, NOT: { id: organizationId } },
+            const existing = await Organization.findOne({
+                slug: input.slug,
+                _id: { $ne: organizationId },
             })
             if (existing) {
                 const error = new Error('Slug is already in use') as Error & { statusCode: number; code: string }
@@ -107,22 +105,29 @@ export class OrganizationsService {
             }
         }
 
-        const org = await prisma.organization.update({
-            where: { id: organizationId },
-            data: input,
-            include: {
-                _count: { select: { members: true } },
-            },
-        })
+        const org = await Organization.findByIdAndUpdate(
+            organizationId,
+            { $set: input },
+            { new: true }
+        )
+
+        if (!org) {
+            const error = new Error('Organization not found') as Error & { statusCode: number; code: string }
+            error.statusCode = 404
+            error.code = 'NOT_FOUND'
+            throw error
+        }
+
+        const memberCount = await OrganizationMember.countDocuments({ organizationId })
 
         return {
-            id: org.id,
+            id: org._id.toString(),
             name: org.name,
             slug: org.slug,
-            logoUrl: org.logoUrl,
-            website: org.website,
+            logoUrl: org.logoUrl ?? null,
+            website: org.website ?? null,
             plan: org.plan,
-            memberCount: org._count.members,
+            memberCount,
             role: membership.role,
             createdAt: org.createdAt,
         }
@@ -133,11 +138,7 @@ export class OrganizationsService {
      */
     async getMembers(organizationId: string, userId: string): Promise<OrganizationMemberResponse[]> {
         // Verify user is a member of this organization
-        const membership = await prisma.organizationMember.findUnique({
-            where: {
-                userId_organizationId: { userId, organizationId },
-            },
-        })
+        const membership = await OrganizationMember.findOne({ userId, organizationId })
 
         if (!membership) {
             const error = new Error('Access denied') as Error & { statusCode: number; code: string }
@@ -146,31 +147,22 @@ export class OrganizationsService {
             throw error
         }
 
-        const members = await prisma.organizationMember.findMany({
-            where: { organizationId },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        email: true,
-                        firstName: true,
-                        lastName: true,
-                    },
-                },
-            },
-            orderBy: { joinedAt: 'asc' },
-        })
+        const members = await OrganizationMember.find({ organizationId })
+            .populate('userId', 'email firstName lastName')
+            .sort({ joinedAt: 'asc' })
 
-        return members.map((m) => ({
-            id: m.user.id,
-            email: m.user.email,
-            firstName: m.user.firstName,
-            lastName: m.user.lastName,
-            role: m.role,
-            joinedAt: m.joinedAt,
-        }))
+        return members.map((m) => {
+            const user = m.userId as unknown as { _id: string; email: string; firstName: string; lastName: string }
+            return {
+                id: user._id.toString(),
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                role: m.role as MemberRoleType,
+                joinedAt: m.joinedAt,
+            }
+        })
     }
 }
 
 export const organizationsService = new OrganizationsService()
-

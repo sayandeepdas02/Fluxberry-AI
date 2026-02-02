@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import { attemptsService } from './attempts.service.js'
 import { startAttemptSchema, submitRoundSchema } from './attempts.types.js'
 import { successResponse } from '../../common/utils/api-response.js'
-import { RoundType } from '@prisma/client'
+import { RoundTypeValue } from '../../database/models/index.js'
 
 export class AttemptsController {
     /**
@@ -48,7 +48,7 @@ export class AttemptsController {
                 return
             }
 
-            const attempt = await attemptsService.startRound(attemptId, roundType as RoundType)
+            const attempt = await attemptsService.startRound(attemptId, roundType as RoundTypeValue)
             res.json(successResponse(attempt))
         } catch (error) {
             next(error)
@@ -71,7 +71,7 @@ export class AttemptsController {
             }
 
             const input = submitRoundSchema.parse(req.body)
-            const attempt = await attemptsService.submitRound(attemptId, roundType as RoundType, input)
+            const attempt = await attemptsService.submitRound(attemptId, roundType as RoundTypeValue, input)
             res.json(successResponse(attempt))
         } catch (error) {
             next(error)

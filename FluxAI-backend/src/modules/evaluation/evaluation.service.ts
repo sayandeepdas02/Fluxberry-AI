@@ -1,5 +1,9 @@
-import prisma from '../../database/prisma.js'
-import { RoundType, Prisma } from '@prisma/client'
+import {
+    Assessment,
+    Question,
+    Evaluation,
+    RoundTypeValue,
+} from '../../database/models/index.js'
 import {
     EvaluationResult,
     MCQEvaluationMetadata,
@@ -17,44 +21,46 @@ export class EvaluationService {
         answers: Record<string, number[]>,
         assessmentId: string
     ): Promise<EvaluationResult> {
-        // Get assessment round config for question IDs
-        const assessmentRound = await prisma.assessmentRound.findUnique({
-            where: {
-                assessmentId_roundType: { assessmentId, roundType: 'MCQ' },
-            },
-        })
+        // Get assessment for round config
+        const assessment = await Assessment.findById(assessmentId)
 
-        if (!assessmentRound || !assessmentRound.config) {
+        if (!assessment) {
+            throw this.createError('Assessment not found', 404, 'NOT_FOUND')
+        }
+
+        const mcqRound = assessment.rounds.find(r => r.roundType === 'MCQ')
+        if (!mcqRound || !mcqRound.config) {
             throw this.createError('MCQ round not configured', 422, 'INVALID_CONFIG')
         }
 
-        const config = assessmentRound.config as {
-            singleCorrectQuestionIds: string[]
-            multiCorrectQuestionIds: string[]
+        const config = mcqRound.config as {
+            singleCorrectQuestionIds?: string[]
+            multiCorrectQuestionIds?: string[]
         }
 
         const allQuestionIds = [
-            ...config.singleCorrectQuestionIds,
-            ...config.multiCorrectQuestionIds,
+            ...(config.singleCorrectQuestionIds || []),
+            ...(config.multiCorrectQuestionIds || []),
         ]
 
         // Fetch correct answers from question bank
-        const questions = await prisma.mCQDetails.findMany({
-            where: { questionId: { in: allQuestionIds } },
+        const questions = await Question.find({
+            _id: { $in: allQuestionIds },
+            type: 'MCQ',
         })
 
-        const questionMap = new Map(questions.map((q) => [q.questionId, q]))
+        const questionMap = new Map(questions.map((q) => [q._id.toString(), q.mcqDetails]))
 
         // Grade each answer
         let correctCount = 0
         const questionResults: MCQEvaluationMetadata['questionResults'] = []
 
         for (const questionId of allQuestionIds) {
-            const question = questionMap.get(questionId)
-            if (!question) continue
+            const mcqDetails = questionMap.get(questionId)
+            if (!mcqDetails) continue
 
             const selectedOptions = answers[questionId] || []
-            const correctOptions = question.correctOptions
+            const correctOptions = mcqDetails.correctOptions
 
             // Exact match - arrays must be identical
             const isCorrect =
@@ -80,20 +86,18 @@ export class EvaluationService {
             questionResults,
         }
 
-        // Create immutable evaluation record
-        const evaluation = await prisma.evaluation.upsert({
-            where: {
-                attemptId_roundType: { attemptId, roundType: 'MCQ' },
-            },
-            create: {
+        // Create immutable evaluation record (upsert)
+        let evaluation = await Evaluation.findOne({ attemptId, roundType: 'MCQ' })
+
+        if (!evaluation) {
+            evaluation = await Evaluation.create({
                 attemptId,
                 roundType: 'MCQ',
                 score,
                 maxScore,
-                metadata: metadata as unknown as Prisma.InputJsonValue,
-            },
-            update: {}, // No updates - immutable
-        })
+                metadata,
+            })
+        }
 
         return this.formatEvaluation(evaluation)
     }
@@ -112,19 +116,17 @@ export class EvaluationService {
             status: 'PENDING',
         }
 
-        const evaluation = await prisma.evaluation.upsert({
-            where: {
-                attemptId_roundType: { attemptId, roundType: 'DSA' },
-            },
-            create: {
+        let evaluation = await Evaluation.findOne({ attemptId, roundType: 'DSA' })
+
+        if (!evaluation) {
+            evaluation = await Evaluation.create({
                 attemptId,
                 roundType: 'DSA',
                 score: 0, // Placeholder
                 maxScore: 100,
-                metadata: metadata as unknown as Prisma.InputJsonValue,
-            },
-            update: {}, // No updates - immutable until graded
-        })
+                metadata,
+            })
+        }
 
         return this.formatEvaluation(evaluation)
     }
@@ -144,19 +146,17 @@ export class EvaluationService {
             status: 'PENDING',
         }
 
-        const evaluation = await prisma.evaluation.upsert({
-            where: {
-                attemptId_roundType: { attemptId, roundType: 'AI' },
-            },
-            create: {
+        let evaluation = await Evaluation.findOne({ attemptId, roundType: 'AI' })
+
+        if (!evaluation) {
+            evaluation = await Evaluation.create({
                 attemptId,
                 roundType: 'AI',
                 score: 0, // Placeholder
                 maxScore: 100,
-                metadata: metadata as unknown as Prisma.InputJsonValue,
-            },
-            update: {}, // No updates - immutable until graded
-        })
+                metadata,
+            })
+        }
 
         return this.formatEvaluation(evaluation)
     }
@@ -165,11 +165,7 @@ export class EvaluationService {
      * Get evaluations for an attempt
      */
     async getByAttemptId(attemptId: string): Promise<EvaluationResult[]> {
-        const evaluations = await prisma.evaluation.findMany({
-            where: { attemptId },
-            orderBy: { roundType: 'asc' },
-        })
-
+        const evaluations = await Evaluation.find({ attemptId }).sort({ roundType: 1 })
         return evaluations.map((e) => this.formatEvaluation(e))
     }
 
@@ -177,15 +173,15 @@ export class EvaluationService {
      * Format evaluation for response
      */
     private formatEvaluation(evaluation: {
-        id: string
-        roundType: RoundType
+        _id: { toString(): string }
+        roundType: RoundTypeValue
         score: number
         maxScore: number
-        metadata: Prisma.JsonValue
+        metadata?: Record<string, unknown>
         evaluatedAt: Date
     }): EvaluationResult {
         return {
-            id: evaluation.id,
+            id: evaluation._id.toString(),
             roundType: evaluation.roundType,
             score: evaluation.score,
             maxScore: evaluation.maxScore,

@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
-import prisma from '../../database/prisma.js'
-import { MemberRole } from '@prisma/client'
+import { OrganizationMember, MemberRole, MemberRoleType } from '../../database/models/index.js'
 
 export interface AuthenticatedRequest extends Request {
     user?: {
@@ -77,7 +76,7 @@ export function requireOrganization(req: AuthenticatedRequest, res: Response, ne
 }
 
 // Role hierarchy: OWNER > ADMIN > RECRUITER
-const ROLE_HIERARCHY: Record<MemberRole, number> = {
+const ROLE_HIERARCHY: Record<MemberRoleType, number> = {
     OWNER: 3,
     ADMIN: 2,
     RECRUITER: 1,
@@ -90,7 +89,7 @@ const ROLE_HIERARCHY: Record<MemberRole, number> = {
  * 2. User's role meets minimum requirement (if specified)
  * 3. User's org membership is verified from database
  */
-export function requireOrgAccess(requiredRole?: MemberRole) {
+export function requireOrgAccess(requiredRole?: MemberRoleType) {
     return async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
         const user = req.user
 
@@ -111,13 +110,9 @@ export function requireOrgAccess(requiredRole?: MemberRole) {
         }
 
         // Verify membership from database (prevents stale JWT data)
-        const membership = await prisma.organizationMember.findUnique({
-            where: {
-                userId_organizationId: {
-                    userId: user.id,
-                    organizationId: user.organizationId,
-                },
-            },
+        const membership = await OrganizationMember.findOne({
+            userId: user.id,
+            organizationId: user.organizationId,
         })
 
         if (!membership) {
