@@ -12,6 +12,8 @@ FluxAI is a modern, full-stack platform for evaluating technical candidates thro
 |------------|-------------|
 | **Multi-round assessments** | MCQ → DSA → AI Interview pipeline |
 | **User onboarding flow** | Signup → Onboarding → Dashboard journey |
+| **Protected routes** | Auth-gated onboarding and dashboard |
+| **Workspace dropdown** | Invite, Settings, Logout from sidebar |
 | **Browser proctoring** | Tab-switch, fullscreen, face detection |
 | **Async evaluation** | BullMQ-based background processing |
 | **Dynamic workspaces** | Organization-based multi-tenancy |
@@ -151,6 +153,11 @@ FluxAI/
 ```
 /signin → /dashboard (if onboarding done)
         → /onboard/step-1 (if not)
+```
+
+### Logout
+```
+Workspace dropdown → Logout → / (landing page)
 ```
 
 ---

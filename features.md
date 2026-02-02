@@ -44,6 +44,11 @@
 - **New user:** Signup → Onboarding (step-1 → step-2 → step-3) → Dashboard
 - **Returning user:** Sign in → Dashboard (if onboarding complete) or Onboarding (if not)
 
+**Route Protection:**
+- Onboarding routes require auth + incomplete onboarding
+- Dashboard routes require auth + completed onboarding
+- Unauthenticated users → redirect to `/signin`
+
 **UX Behaviors:**
 - Multi-step wizard with progress indicator
 - Workspace name updates organization
@@ -65,6 +70,8 @@
 
 **UX Behaviors:**
 - Sidebar navigation with **dynamic workspace name** from user's organization
+- **Workspace dropdown** with: + Invite, Settings, Logout
+- Logout redirects to landing page `/`
 - Data tables with search, filter, sort
 - Quick actions (edit, delete, duplicate)
 - Status badges (Draft, Active, Completed)
