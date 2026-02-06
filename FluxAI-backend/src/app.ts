@@ -10,6 +10,7 @@ import authRoutes from './modules/auth/auth.routes.js'
 import organizationsRoutes from './modules/organizations/organizations.routes.js'
 import assessmentsRoutes from './modules/assessments/assessments.routes.js'
 import questionsRoutes from './modules/questions/questions.routes.js'
+import jobsRoutes from './modules/jobs/jobs.routes.js'
 import attemptsRoutes from './modules/attempts/attempts.routes.js'
 import filesRoutes from './modules/files/files.routes.js'
 import onboardingRoutes from './modules/onboarding/onboarding.routes.js'
@@ -55,6 +56,7 @@ export function createApp() {
     // Phase 2: Assessments & Questions
     app.use('/api/assessments', assessmentsRoutes)
     app.use('/api/questions', questionsRoutes)
+    app.use('/api/jobs', jobsRoutes)
 
     // Onboarding
     app.use('/api/onboarding', onboardingRoutes)

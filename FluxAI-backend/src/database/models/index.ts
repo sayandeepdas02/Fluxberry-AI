@@ -141,6 +141,42 @@ const OrganizationSchema = new Schema<IOrganization>({
 export const Organization = mongoose.model<IOrganization>('Organization', OrganizationSchema)
 
 // ============================================
+// JOB MODEL
+// ============================================
+export interface IJob extends Document {
+    _id: Types.ObjectId
+    organizationId: Types.ObjectId
+    title: string
+    description: string
+    department: string
+    location: string
+    type: 'FULL_TIME' | 'CONTRACT' | 'INTERNSHIP' | 'PART_TIME'
+    status: 'OPEN' | 'CLOSED' | 'DRAFT'
+    requirements?: string[]
+    salaryRange?: { min: number; max: number; currency: string }
+    createdAt: Date
+    updatedAt: Date
+}
+
+const JobSchema = new Schema<IJob>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    department: { type: String, required: true },
+    location: { type: String, required: true },
+    type: { type: String, enum: ['FULL_TIME', 'CONTRACT', 'INTERNSHIP', 'PART_TIME'], default: 'FULL_TIME' },
+    status: { type: String, enum: ['OPEN', 'CLOSED', 'DRAFT'], default: 'OPEN', index: true },
+    requirements: [{ type: String }],
+    salaryRange: {
+        min: { type: Number },
+        max: { type: Number },
+        currency: { type: String, default: 'USD' }
+    }
+}, { timestamps: true })
+
+export const Job = mongoose.model<IJob>('Job', JobSchema)
+
+// ============================================
 // ORGANIZATION MEMBER MODEL
 // ============================================
 export interface IOrganizationMember extends Document {

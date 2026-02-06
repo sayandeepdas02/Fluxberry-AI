@@ -7,20 +7,14 @@ import { MoreVertical } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-export interface Job {
-    id: string;
-    title: string;
-    requirements: string[]; // e.g. ["React JS", "Python", "3+ YOE"]
-    applicationCount: number;
-    isActive: boolean;
-}
+import { Job } from "@/lib/api/jobs";
 
 interface JobCardProps {
     job: Job;
 }
 
 export function JobCard({ job }: JobCardProps) {
-    const [isActive, setIsActive] = useState(job.isActive);
+    const [isActive, setIsActive] = useState(job.status === 'OPEN');
 
     return (
         <Card className={cn(
@@ -52,7 +46,7 @@ export function JobCard({ job }: JobCardProps) {
                         Requirements :
                     </span>
                     <div className="flex flex-wrap gap-2">
-                        {job.requirements.map((req) => (
+                        {job.requirements?.map((req) => (
                             <Badge
                                 key={req}
                                 variant="outline"
@@ -67,7 +61,7 @@ export function JobCard({ job }: JobCardProps) {
 
             {/* Footer: Stats */}
             <div className="flex items-center text-sm font-medium text-foreground/80">
-                <span>Total Applications : {job.applicationCount}</span>
+                <span>Total Applications : 0</span>
             </div>
         </Card>
     );
