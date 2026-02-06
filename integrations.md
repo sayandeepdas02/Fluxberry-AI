@@ -3,43 +3,43 @@
 This document lists all frontend features that are currently static (using mock data) and the corresponding backend APIs that are missing or incomplete. This serves as a roadmap for the next development phase.
 
 ## 1. Dashboard Analytics
-**Frontend Status:** Fully Mocked
+**Frontend Status:** ✅ Integrated
 - **Page:** `/dashboard/analytics`
 - **Component:** `AnalyticsView.tsx`
-- **Data:** Uses `kpiData`, `engagementTrendData`, `campaignPerformanceData` from local constants.
-- **Missing Backend:**
-    - `GET /api/analytics/kpis` (Total Reach, Engaged Candidates, ROI)
-    - `GET /api/analytics/trends` (Line charts for engagement)
-    - `GET /api/analytics/demographics` (Device, Location data)
+- **Data:** Uses `useAnalytics` hook connected to backend.
+- **Backend:**
+    - `GET /api/analytics/kpis` (Implemented)
+    - `GET /api/analytics/trends` (Implemented)
+    - `GET /api/analytics/demographics` (Implemented)
 
 ## 2. Job Management (ATS)
-**Frontend Status:** Fully Mocked
+**Frontend Status:** ✅ Integrated
 - **Page:** `/dashboard/manage-jobs`
-- **Component:** `ManageJobsView.tsx`, `JobCard.tsx`
-- **Data:** Uses `SAMPLE_JOBS` from `@/features/jobs/mocks/jobs`.
-- **Missing Backend:**
-    - `GET /api/jobs` (List all jobs)
-    - `POST /api/jobs` (Create new job)
-    - `GET /api/jobs/:id` (Get details)
-    - `PATCH /api/jobs/:id` (Update status/details)
+- **Component:** `ManageJobsView.tsx`
+- **Data:** Real data via `jobsService`.
+- **Backend:**
+    - `GET /api/jobs` (Implemented w/ pagination)
+    - `POST /api/jobs` (Implemented)
+    - `GET /api/jobs/:id` (Implemented)
 
 ## 3. Candidate Pool (CRM)
-**Frontend Status:** Fully Mocked
+**Frontend Status:** ✅ Integrated
 - **Page:** `/dashboard/candidate-pool`
 - **Component:** `CandidatePoolView.tsx`
-- **Data:** Uses `candidates` array from `@/features/candidate/mocks/candidates`.
-- **Missing Backend:**
-    - `GET /api/candidates` (List all known candidates across assessments)
-    - `GET /api/candidates/:id` (Candidate profile & history)
-    - **Note:** Currently candidates might only exist as `Attempts`. A dedicated `Candidate` entity might be needed.
+- **Data:** Real candidate data via `candidatesService`.
+- **Backend:**
+    - `GET /api/candidates` (Implemented w/ filtering)
+    - `GET /api/candidates/:id` (Implemented w/ history)
+    - **Entity:** `Candidate` model created and linked to attempts.
 
 ## 4. Public Career Pages
-**Frontend Status:** Fully Mocked
-- **Page:** `/[companySlug]/careers`
-- **Data:** Hardcoded company info, testimonials, and job lists in `page.tsx`.
-- **Missing Backend:**
-    - `GET /api/public/companies/:slug` (Fetcher public company details)
-    - `GET /api/public/companies/:slug/jobs` (List public jobs)
+**Frontend Status:** ✅ Integrated
+- **Page:** `/[companySlug]/careers` & `/[companySlug]/careers/[jobId]`
+- **Data:** Fetched via `publicApi`.
+- **Backend:**
+    - `GET /api/public/companies/:slug` (Implemented)
+    - `GET /api/public/companies/:slug/jobs` (Implemented)
+    - `GET /api/public/companies/:slug/jobs/:id` (Implemented)
 
 ## 5. Test Taker Experience
 **Frontend Status:** Partially Mocked
@@ -51,12 +51,12 @@ This document lists all frontend features that are currently static (using mock 
     - `RoundRenderer.tsx`: Relies on some mock logic for transition/state.
 
 ## 6. Dashboard Home
-**Frontend Status:** Mocked
+**Frontend Status:** ✅ Integrated
 - **Page:** `/dashboard`
 - **Component:** `DashboardOverview.tsx`
-- **Data:** Mock KPI and recent activity data.
-- **Missing Backend:**
-    - Aggregated API for "Active Jobs", "Total Candidates", etc. (Likely same as Analytics but summarized).
+- **Data:** Connected via `useDashboard` hook.
+- **Backend:**
+    - `/api/dashboard/summary` (Implemented - aggregates KPIs & recent candidates)
 
 ## 7. Miscellaneous Static Elements
 - **Invite Modal:** Code comment `// TODO: Open invite modal` in `Sidebar.tsx`. Needs implementation.

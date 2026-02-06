@@ -1,12 +1,12 @@
 import { Response, NextFunction } from 'express'
-import { jobsService } from './jobs.service.js'
-import { createJobSchema, updateJobSchema, listJobsQuerySchema } from './jobs.types.js'
+import { candidatesService } from './candidates.service.js'
+import { createCandidateSchema, updateCandidateSchema, listCandidatesQuerySchema } from './candidates.types.js'
 import { successResponse } from '../../common/utils/api-response.js'
 import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
 
-export class JobsController {
+export class CandidatesController {
     /**
-     * POST /api/jobs
+     * POST /api/candidates
      */
     async create(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
         try {
@@ -16,16 +16,16 @@ export class JobsController {
                 return
             }
 
-            const input = createJobSchema.parse(req.body)
-            const job = await jobsService.create(organizationId, input)
-            res.status(201).json(successResponse(job))
+            const input = createCandidateSchema.parse(req.body)
+            const candidate = await candidatesService.create(organizationId, input)
+            res.status(201).json(successResponse(candidate))
         } catch (error) {
             next(error)
         }
     }
 
     /**
-     * GET /api/jobs
+     * GET /api/candidates
      */
     async list(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
         try {
@@ -35,8 +35,8 @@ export class JobsController {
                 return
             }
 
-            const query = listJobsQuerySchema.parse(req.query)
-            const result = await jobsService.list(organizationId, query)
+            const query = listCandidatesQuerySchema.parse(req.query)
+            const result = await candidatesService.list(organizationId, query)
             res.json(successResponse(result))
         } catch (error) {
             next(error)
@@ -44,7 +44,7 @@ export class JobsController {
     }
 
     /**
-     * GET /api/jobs/:id
+     * GET /api/candidates/:id
      */
     async getById(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
         try {
@@ -55,15 +55,17 @@ export class JobsController {
             }
 
             const { id } = req.params
-            const job = await jobsService.getById(id, organizationId)
-            res.json(successResponse(job))
+            const candidate = await candidatesService.getById(id, organizationId)
+            const history = await candidatesService.getHistory(id, organizationId)
+
+            res.json(successResponse({ candidate, history }))
         } catch (error) {
             next(error)
         }
     }
 
     /**
-     * PATCH /api/jobs/:id
+     * PATCH /api/candidates/:id
      */
     async update(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
         try {
@@ -74,13 +76,13 @@ export class JobsController {
             }
 
             const { id } = req.params
-            const input = updateJobSchema.parse(req.body)
-            const job = await jobsService.update(id, organizationId, input)
-            res.json(successResponse(job))
+            const input = updateCandidateSchema.parse(req.body)
+            const candidate = await candidatesService.update(id, organizationId, input)
+            res.json(successResponse(candidate))
         } catch (error) {
             next(error)
         }
     }
 }
 
-export const jobsController = new JobsController()
+export const candidatesController = new CandidatesController()

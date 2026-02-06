@@ -37,9 +37,16 @@ export interface CreateJobInput {
 
 export interface UpdateJobInput extends Partial<CreateJobInput> { }
 
+export interface ListJobsQuery {
+    page?: number
+    limit?: number
+    status?: 'LIVE' | 'CLOSED' | 'DRAFT' | 'PAUSED'
+    search?: string
+}
+
 export const jobsApi = {
-    list: async (): Promise<ApiResponse<Job[]>> => {
-        return apiClient.get('/jobs')
+    list: async (query?: ListJobsQuery): Promise<ApiResponse<{ jobs: Job[], total: number, page: number, totalPages: number }>> => {
+        return apiClient.get('/jobs', { params: query })
     },
 
     getById: async (id: string): Promise<ApiResponse<Job>> => {

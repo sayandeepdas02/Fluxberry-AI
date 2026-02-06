@@ -5,21 +5,9 @@ import { LineChart } from "@/features/dashboard/components/line-chart"
 import { HorizontalBarChart } from "@/features/dashboard/components/horizontal-bar-chart"
 import { VerticalBarChart } from "@/features/dashboard/components/vertical-bar-chart"
 import { DonutChart } from "@/features/dashboard/components/donut-chart"
+import { useAnalytics } from "@/features/dashboard/hooks/use-analytics"
 
-// Analytics-specific mock data
-const kpiData = {
-    totalReach: { value: 24500, label: "Total Reach", trend: { direction: 'up', percentage: 18 } },
-    engagedCandidates: { value: 3200, label: "Engaged Candidates", trend: { direction: 'up', percentage: 12 } },
-    campaignROI: { value: 285, label: "Campaign ROI %", trend: { direction: 'up', percentage: 5 } },
-    avgTimeOnPage: { value: "2m 45s", label: "Avg Time on Page", trend: { direction: 'down', percentage: 2 } },
-}
-
-const engagementTrendData = {
-    months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    thisYear: [5000, 8500, 12000, 15000, 18500, 24500], // Representing views/reach
-    lastYear: [800, 1200, 1800, 2100, 2600, 3200],     // Representing items
-}
-
+// Keep this mock for now as we don't have Campaign entity
 const campaignPerformanceData = [
     { name: 'Senior Dev Outreach', value: 45 },
     { name: 'Q1 Hiring Drive', value: 30 },
@@ -28,21 +16,37 @@ const campaignPerformanceData = [
     { name: 'Other', value: 2 },
 ]
 
-const deviceTrafficData = [
-    { device: 'Desktop', count: 15200 },
-    { device: 'Mobile', count: 8200 },
-    { device: 'Tablet', count: 1100 },
-]
-
-const locationTrafficData = [
-    { country: 'United States', percentage: 45 },
-    { country: 'United Kingdom', percentage: 25 },
-    { country: 'Germany', percentage: 15 },
-    { country: 'Canada', percentage: 10 },
-    { country: 'Others', percentage: 5 },
-]
-
 export function AnalyticsView() {
+    const { kpis, trends, demographics, isLoading, error } = useAnalytics()
+
+    if (isLoading) {
+        return <div className="p-8 text-center text-muted-foreground">Loading analytics...</div>
+    }
+
+    if (error) {
+        return <div className="p-8 text-center text-destructive">Error: {error}</div>
+    }
+
+    // Transform trends for LineChart
+    // Assuming trends is [{ date: '2024-01-01', value: 10 }, ...]
+    // We need to map to "months" (or labels) and "thisYear"
+    const formattedTrends = {
+        months: trends.length > 0 ? trends.map(t => {
+            const d = new Date(t.date)
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        }) : ['No Data'],
+        thisYear: trends.length > 0 ? trends.map(t => t.value) : [0],
+        lastYear: trends.length > 0 ? trends.map(() => 0) : [0], // No historical data yet
+    }
+
+    // Fallback if KPIs are null
+    const safeKpis = kpis || {
+        activeJobs: { label: 'Active Jobs', value: 0, trend: 0, trendDirection: 'neutral' },
+        totalCandidates: { label: 'Total Candidates', value: 0, trend: 0, trendDirection: 'neutral' },
+        applications: { label: 'Total Applications', value: 0, trend: 0, trendDirection: 'neutral' },
+        awaitingReview: { label: 'Awaiting Review', value: 0, trend: 0, trendDirection: 'neutral' },
+    } as any
+
     return (
         <div className="flex flex-col space-y-6">
             <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-1">
@@ -54,24 +58,24 @@ export function AnalyticsView() {
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <KPICard
-                    title={kpiData.totalReach.label}
-                    value={kpiData.totalReach.value.toLocaleString()}
-                    trend={kpiData.totalReach.trend as any}
+                    title={safeKpis.activeJobs.label}
+                    value={safeKpis.activeJobs.value.toLocaleString()}
+                    trend={safeKpis.activeJobs.trend}
                 />
                 <KPICard
-                    title={kpiData.engagedCandidates.label}
-                    value={kpiData.engagedCandidates.value.toLocaleString()}
-                    trend={kpiData.engagedCandidates.trend as any}
+                    title={safeKpis.totalCandidates.label}
+                    value={safeKpis.totalCandidates.value.toLocaleString()}
+                    trend={safeKpis.totalCandidates.trend}
                 />
                 <KPICard
-                    title={kpiData.campaignROI.label}
-                    value={`${kpiData.campaignROI.value}%`}
-                    trend={kpiData.campaignROI.trend as any}
+                    title={safeKpis.applications.label}
+                    value={safeKpis.applications.value.toLocaleString()}
+                    trend={safeKpis.applications.trend}
                 />
                 <KPICard
-                    title={kpiData.avgTimeOnPage.label}
-                    value={kpiData.avgTimeOnPage.value}
-                    trend={kpiData.avgTimeOnPage.trend as any}
+                    title={safeKpis.awaitingReview.label}
+                    value={safeKpis.awaitingReview.value.toLocaleString()}
+                    trend={safeKpis.awaitingReview.trend}
                 />
             </div>
 
@@ -80,7 +84,7 @@ export function AnalyticsView() {
                 {/* Engagement Trend (Line Chart) */}
                 <div className="lg:col-span-2">
                     <LineChart
-                        data={engagementTrendData}
+                        data={formattedTrends}
                     />
                 </div>
 
@@ -95,10 +99,10 @@ export function AnalyticsView() {
             {/* Secondary Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
-                    <VerticalBarChart data={deviceTrafficData} />
+                    <VerticalBarChart data={demographics?.device.map(d => ({ device: d.label, count: d.value })) || []} />
                 </div>
                 <div className="lg:col-span-1">
-                    <DonutChart data={locationTrafficData} />
+                    <DonutChart data={demographics?.location.map(d => ({ country: d.label, percentage: d.percentage })) || []} />
                 </div>
             </div>
 

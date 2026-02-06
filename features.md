@@ -64,9 +64,9 @@
 | `/dashboard/assessments` | List all assessments |
 | `/dashboard/assessments/new` | Create new assessment wizard |
 | `/dashboard/assessments/[id]` | Assessment detail + candidate list |
-| `/dashboard/analytics` | Assessment performance analytics |
-| `/dashboard/candidate-pool` | Browse all candidates |
-| `/dashboard/manage-jobs` | Job listing management |
+| `/dashboard/analytics` | Assessment performance analytics (✅ Integrated) |
+| `/dashboard/candidate-pool` | Browse all candidates (✅ Integrated) |
+| `/dashboard/manage-jobs` | Job listing management (✅ Integrated) |
 
 **UX Behaviors:**
 - Sidebar navigation with **dynamic workspace name** from user's organization
@@ -184,6 +184,48 @@
 |---------|--------|
 | BullMQ + Redis infrastructure | ✅ Done |
 | Evaluation job queue | ✅ Done |
+
+---
+
+### Candidates & CRM ✅
+
+| Feature | Status |
+|---------|--------|
+| Create & Update Candidates | ✅ Done |
+| List with Filtering (Source, Search) | ✅ Done |
+| Candidate History (Attempts timeline) | ✅ Done |
+
+---
+
+### Jobs & ATS ✅
+
+| Feature | Status |
+|---------|--------|
+| Create Jobs | ✅ Done |
+| List with Pagination & Status Filter | ✅ Done |
+| Advanced Search | ✅ Done |
+
+---
+
+### Analytics & Dashboard ✅
+
+| Feature | Status |
+|---------|--------|
+| Aggregate KPIs (Reach, ROI, etc.) | ✅ Done |
+| Trend Analysis (Time-series) | ✅ Done |
+| Demographic breakdowns | ✅ Done |
+| Dashboard Overview Summary | ✅ Done |
+
+---
+
+### Public Career Pages ✅
+
+| Feature | Status |
+|---------|--------|
+| Public Company Profile (`/companies/:slug`) | ✅ Done |
+| Public Job Listing (`/companies/:slug/jobs`) | ✅ Done |
+| Job Detail View (`/jobs/:id`) | ✅ Done |
+| Application Form | ✅ Done (UI only, submit pending) |
 
 ---
 
