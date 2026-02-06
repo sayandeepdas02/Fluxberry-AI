@@ -151,7 +151,7 @@ export interface IJob extends Document {
     department: string
     location: string
     type: 'FULL_TIME' | 'CONTRACT' | 'INTERNSHIP' | 'PART_TIME'
-    status: 'OPEN' | 'CLOSED' | 'DRAFT'
+    status: 'LIVE' | 'CLOSED' | 'DRAFT' | 'PAUSED'
     requirements?: string[]
     salaryRange?: { min: number; max: number; currency: string }
     createdAt: Date
@@ -164,8 +164,8 @@ const JobSchema = new Schema<IJob>({
     description: { type: String, required: true },
     department: { type: String, required: true },
     location: { type: String, required: true },
-    type: { type: String, enum: ['FULL_TIME', 'CONTRACT', 'INTERNSHIP', 'PART_TIME'], default: 'FULL_TIME' },
-    status: { type: String, enum: ['OPEN', 'CLOSED', 'DRAFT'], default: 'OPEN', index: true },
+    type: { type: String, default: 'FULL_TIME' }, // relaxed enum for now or keep strict
+    status: { type: String, enum: ['LIVE', 'CLOSED', 'DRAFT', 'PAUSED'], default: 'LIVE', index: true },
     requirements: [{ type: String }],
     salaryRange: {
         min: { type: Number },
@@ -201,7 +201,62 @@ OrganizationMemberSchema.index({ userId: 1 })
 export const OrganizationMember = mongoose.model<IOrganizationMember>('OrganizationMember', OrganizationMemberSchema)
 
 // ============================================
-// ASSESSMENT MODEL (with embedded rounds)
+// CANDIDATE MODEL
+// ============================================
+export interface ICandidate extends Document {
+    _id: Types.ObjectId
+    organizationId: Types.ObjectId
+    email: string
+    firstName?: string
+    lastName?: string
+    phone?: string
+    source?: string
+    createdAt: Date
+    updatedAt: Date
+}
+
+const CandidateSchema = new Schema<ICandidate>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+    email: { type: String, required: true, index: true }, // Scoped uniqueness logic might be needed manually if organizationId + email is unique
+    firstName: { type: String },
+    lastName: { type: String },
+    phone: { type: String },
+    source: { type: String },
+}, { timestamps: true })
+
+// Compound index for unique email per organization
+CandidateSchema.index({ organizationId: 1, email: 1 }, { unique: true })
+
+export const Candidate = mongoose.model<ICandidate>('Candidate', CandidateSchema)
+
+// ============================================
+// ANALYTICS SNAPSHOT MODEL
+// ============================================
+export interface IAnalyticsSnapshot extends Document {
+    organizationId: Types.ObjectId
+    date: Date // simplified to YYYY-MM-DD
+    totalReach: number
+    engagedCandidates: number
+    roi: number
+    trends: Record<string, any> // Flexible JSON
+    createdAt: Date
+}
+
+const AnalyticsSnapshotSchema = new Schema<IAnalyticsSnapshot>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+    date: { type: Date, required: true },
+    totalReach: { type: Number, default: 0 },
+    engagedCandidates: { type: Number, default: 0 },
+    roi: { type: Number, default: 0 },
+    trends: { type: Schema.Types.Mixed, default: {} },
+}, { timestamps: { createdAt: true, updatedAt: false } })
+
+AnalyticsSnapshotSchema.index({ organizationId: 1, date: -1 })
+
+export const AnalyticsSnapshot = mongoose.model<IAnalyticsSnapshot>('AnalyticsSnapshot', AnalyticsSnapshotSchema)
+
+// ============================================
+// ASSESSMENT MODEL (with embedded rounds) -> No changes needed relative to context, but re-exporting below
 // ============================================
 export interface IAssessmentRound {
     _id?: Types.ObjectId
@@ -287,25 +342,6 @@ const QuestionSchema = new Schema<IQuestion>({
 }, { timestamps: { createdAt: true, updatedAt: false } })
 
 export const Question = mongoose.model<IQuestion>('Question', QuestionSchema)
-
-// ============================================
-// CANDIDATE MODEL
-// ============================================
-export interface ICandidate extends Document {
-    _id: Types.ObjectId
-    email: string
-    firstName?: string
-    lastName?: string
-    createdAt: Date
-}
-
-const CandidateSchema = new Schema<ICandidate>({
-    email: { type: String, required: true, unique: true, index: true },
-    firstName: { type: String },
-    lastName: { type: String },
-}, { timestamps: { createdAt: true, updatedAt: false } })
-
-export const Candidate = mongoose.model<ICandidate>('Candidate', CandidateSchema)
 
 // ============================================
 // ASSESSMENT ATTEMPT MODEL (with embedded round attempts)

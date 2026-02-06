@@ -99,6 +99,10 @@ FluxAI/
 │   │   │   ├── proctoring/
 │   │   │   ├── evaluation/
 │   │   │   ├── results/
+│   │   │   ├── candidates/   # Candidate management
+│   │   │   ├── analytics/    # KPIs & Reporting
+│   │   │   ├── dashboard/    # Dashboard aggregation
+│   │   │   ├── public/       # Public career APIs
 │   │   │   └── files/
 │   │   └── jobs/             # BullMQ workers
 │   └── package.json
@@ -139,6 +143,10 @@ FluxAI/
 | `GET /api/assessments` | List assessments |
 | `POST /api/assessments/:id/attempts` | Start candidate attempt |
 | `GET /api/attempts/:id/result` | Get attempt results |
+| `GET /api/jobs` | List & filter jobs |
+| `GET /api/candidates` | Manage candidate pool |
+| `GET /api/analytics` | Dashboard KPIs & trends |
+| `GET /api/public/companies/:slug` | Public career page |
 
 ---
 

@@ -1,0 +1,85 @@
+import { Candidate, ICandidate, AssessmentAttempt } from '../../database/models/index.js'
+import { CreateCandidateInput, UpdateCandidateInput, ListCandidatesQuery } from './candidates.types.js'
+
+class CandidatesService {
+    async create(organizationId: string, input: CreateCandidateInput): Promise<ICandidate> {
+        // Check if candidate exists in this org
+        const existing = await Candidate.findOne({ organizationId, email: input.email })
+        if (existing) {
+            throw { code: 'CONFLICT', message: 'Candidate with this email already exists in this organization' }
+        }
+
+        return Candidate.create({
+            organizationId,
+            ...input
+        })
+    }
+
+    async list(organizationId: string, query: ListCandidatesQuery): Promise<{ candidates: ICandidate[], total: number, page: number, totalPages: number }> {
+        const { page = 1, limit = 20, search, source } = query
+        const skip = (page - 1) * limit
+
+        const filter: any = { organizationId }
+
+        if (source) {
+            filter.source = source
+        }
+
+        if (search) {
+            filter.$or = [
+                { email: { $regex: search, $options: 'i' } },
+                { firstName: { $regex: search, $options: 'i' } },
+                { lastName: { $regex: search, $options: 'i' } }
+            ]
+        }
+
+        const [candidates, total] = await Promise.all([
+            Candidate.find(filter)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit),
+            Candidate.countDocuments(filter)
+        ])
+
+        return {
+            candidates,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit)
+        }
+    }
+
+    async getById(id: string, organizationId: string): Promise<ICandidate> {
+        const candidate = await Candidate.findOne({ _id: id, organizationId })
+        if (!candidate) {
+            throw { code: 'NOT_FOUND', message: 'Candidate not found' }
+        }
+        return candidate
+    }
+
+    async getHistory(id: string, organizationId: string): Promise<any> {
+        // Verify candidate exists
+        await this.getById(id, organizationId)
+
+        // Fetch attempts
+        const attempts = await AssessmentAttempt.find({ candidateId: id })
+            .populate('assessmentId', 'title status')
+            .sort({ createdAt: -1 })
+
+        return attempts
+    }
+
+    async update(id: string, organizationId: string, input: UpdateCandidateInput): Promise<ICandidate> {
+        const candidate = await Candidate.findOneAndUpdate(
+            { _id: id, organizationId },
+            { $set: input },
+            { new: true }
+        )
+        if (!candidate) {
+            throw { code: 'NOT_FOUND', message: 'Candidate not found' }
+        }
+        return candidate
+    }
+}
+
+export const candidatesService = new CandidatesService()

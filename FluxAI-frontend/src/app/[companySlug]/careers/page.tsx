@@ -5,17 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ExternalLink, Briefcase, MapPin, Building, Search, ArrowRight, Quote } from "lucide-react"
+import { usePublicCompany } from "@/features/public/hooks/use-public-company"
 
-// Mock Data for the company (would come from companySlug)
-const companyData = {
-    name: "Acme Corp",
-    slug: "acme",
-    tagline: "Build the future of space travel with us.",
-    description: "We are a team of explorers, engineers, and dreamers building the next generation of spacecraft. Join us in our mission to make humanity multi-planetary.",
-    logo: "A", // Placeholder
-}
-
-// Mock Testimonials
+// Mock Testimonials (Keep for now as we don't have this in DB)
 const testimonials = [
     {
         id: 1,
@@ -27,7 +19,7 @@ const testimonials = [
         id: 2,
         name: "David Park",
         role: "Product Manager",
-        quote: "FluxAI - wait, Acme Corp - moves fast. The culture is intense but incredibly rewarding. Best work of my life.",
+        quote: "Moves fast. The culture is intense but incredibly rewarding. Best work of my life.",
     },
     {
         id: 3,
@@ -37,61 +29,17 @@ const testimonials = [
     },
 ]
 
-// Mock Job Listings
-const jobs = [
-    {
-        id: "101",
-        title: "Senior Propulsion Engineer",
-        department: "Engineering",
-        location: "Los Angeles, CA",
-        type: "Full-time",
-        tags: ["Thermodynamics", "C++", "Hardware"],
-    },
-    {
-        id: "102",
-        title: "Staff Software Engineer, Flight Systems",
-        department: "Engineering",
-        location: "Remote",
-        type: "Full-time",
-        tags: ["Rust", "Real-time", "Embedded"],
-    },
-    {
-        id: "103",
-        title: "Product Designer, Core Experience",
-        department: "Design",
-        location: "New York, NY",
-        type: "Full-time",
-        tags: ["Figma", "Design Systems", "UX"],
-    },
-    {
-        id: "104",
-        title: "Marketing Manager",
-        department: "Marketing",
-        location: "Los Angeles, CA",
-        type: "Full-time",
-        tags: ["Growth", "Campaigns", "Social"],
-    },
-    {
-        id: "105",
-        title: "Engineering Manager",
-        department: "Engineering",
-        location: "Remote",
-        type: "Full-time",
-        tags: ["Leadership", "People", "Agile"],
-    },
-    {
-        id: "106",
-        title: "Recruiting Coordinator",
-        department: "People",
-        location: "Los Angeles, CA",
-        type: "Contract",
-        tags: ["Scheduling", "Ops"],
-    },
-]
-
 export default function CareersPage({ params }: { params: Promise<{ companySlug: string }> }) {
-    const { companySlug } = use(params);
-    // In a real app, we'd fetch data based on params.companySlug
+    const { companySlug } = use(params)
+    const { company, jobs, isLoading, error } = usePublicCompany(companySlug)
+
+    if (isLoading) {
+        return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Loading career page...</div>
+    }
+
+    if (error || !company) {
+        return <div className="min-h-screen flex items-center justify-center bg-background text-destructive">Company not found or error loading page.</div>
+    }
 
     return (
         <div className="min-h-screen bg-background text-foreground font-sans selection:bg-foreground/10">
@@ -99,10 +47,10 @@ export default function CareersPage({ params }: { params: Promise<{ companySlug:
             <header className="sticky top-0 z-50 w-full border-b border-edge bg-background/80 backdrop-blur-sm">
                 <div className="container mx-auto max-w-5xl px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-foreground text-background flex items-center justify-center font-bold text-lg">
-                            {companyData.logo}
+                        <div className="w-8 h-8 rounded-lg bg-foreground text-background flex items-center justify-center font-bold text-lg overflow-hidden">
+                            {company.logoUrl ? <img src={company.logoUrl} alt={company.name} className="w-full h-full object-cover" /> : company.name[0]}
                         </div>
-                        <span className="font-semibold text-lg tracking-tight">{companyData.name}</span>
+                        <span className="font-semibold text-lg tracking-tight">{company.name}</span>
                     </div>
                     <Button variant="outline" size="sm" asChild>
                         <a href="#open-roles">View Roles</a>
@@ -120,19 +68,16 @@ export default function CareersPage({ params }: { params: Promise<{ companySlug:
                             We are hiring
                         </Badge>
                         <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground">
-                            {companyData.tagline}
+                            Join {company.name}
                         </h1>
                         <p className="text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-                            {companyData.description}
+                            We are building the future. Join our team and help us make an impact.
                         </p>
                         <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
                             <Button size="lg" className="h-12 px-8 text-base rounded-full" asChild>
-                                <a href={`/${companySlug}/careers/alljobs`}>
+                                <a href="#open-roles">
                                     View Open Positions
                                 </a>
-                            </Button>
-                            <Button variant="ghost" size="lg" className="h-12 px-6 text-base rounded-full gap-2">
-                                Learn more <ArrowRight className="w-4 h-4" />
                             </Button>
                         </div>
                     </div>
@@ -191,34 +136,39 @@ export default function CareersPage({ params }: { params: Promise<{ companySlug:
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {jobs.map((job) => (
-                                <Card key={job.id} className="group hover:border-foreground/30 transition-colors cursor-pointer border-edge shadow-none">
-                                    <CardContent className="p-6">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div>
-                                                <h3 className="font-semibold text-lg group-hover:underline decoration-1 underline-offset-4">{job.title}</h3>
-                                                <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mt-1">
-                                                    <span className="flex items-center gap-1"><Building className="w-3.5 h-3.5" /> {job.department}</span>
-                                                    <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {job.location}</span>
-                                                    <span className="flex items-center gap-1"><Briefcase className="w-3.5 h-3.5" /> {job.type}</span>
+                            {jobs.length === 0 ? (
+                                <div className="col-span-2 text-center py-12 text-muted-foreground">
+                                    No open positions at the moment.
+                                </div>
+                            ) : (
+                                jobs.map((job) => (
+                                    <Card key={job._id} className="group hover:border-foreground/30 transition-colors cursor-pointer border-edge shadow-none">
+                                        <CardContent className="p-6">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div>
+                                                    <h3 className="font-semibold text-lg group-hover:underline decoration-1 underline-offset-4">{job.title}</h3>
+                                                    <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mt-1">
+                                                        {job.department && <span className="flex items-center gap-1"><Building className="w-3.5 h-3.5" /> {job.department}</span>}
+                                                        {job.location && <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {job.location}</span>}
+                                                        {job.type && <span className="flex items-center gap-1"><Briefcase className="w-3.5 h-3.5" /> {job.type}</span>}
+                                                    </div>
                                                 </div>
+                                                <Button size="sm" variant="secondary" className="opacity-0 group-hover:opacity-100 transition-opacity" asChild>
+                                                    <a href={`/${companySlug}/careers/${job._id}`}>
+                                                        Apply
+                                                    </a>
+                                                </Button>
                                             </div>
-                                            <Button size="sm" variant="secondary" className="opacity-0 group-hover:opacity-100 transition-opacity" asChild>
-                                                <a href={`/${companySlug}/careers/${job.id}`}>
-                                                    Apply
-                                                </a>
-                                            </Button>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2 mt-4">
-                                            {job.tags.map(tag => (
-                                                <Badge key={tag} variant="secondary" className="font-normal text-xs bg-muted text-muted-foreground hover:bg-muted">
-                                                    {tag}
+                                            <div className="flex flex-wrap gap-2 mt-4">
+                                                {/* Tags not in DB yet, using placeholder or derived */}
+                                                <Badge variant="secondary" className="font-normal text-xs bg-muted text-muted-foreground hover:bg-muted">
+                                                    New
                                                 </Badge>
-                                            ))}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))
+                            )}
                         </div>
                     </div>
                 </section>
@@ -241,7 +191,7 @@ export default function CareersPage({ params }: { params: Promise<{ companySlug:
                             </ul>
 
                             <Button className="bg-white text-black hover:bg-white/90 font-medium h-11 px-8 rounded-full">
-                                <a href={`/${companySlug}/careers/alljobs`}>
+                                <a href="#open-roles">
                                     View all jobs
                                 </a>
 
@@ -259,10 +209,10 @@ export default function CareersPage({ params }: { params: Promise<{ companySlug:
             <footer className="border-t border-edge py-12 bg-muted/10">
                 <div className="container mx-auto max-w-5xl px-6 flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="flex items-center gap-2 opacity-50">
-                        <div className="w-6 h-6 rounded bg-foreground text-background flex items-center justify-center font-bold text-xs">
-                            {companyData.logo}
+                        <div className="w-6 h-6 rounded bg-foreground text-background flex items-center justify-center font-bold text-xs overflow-hidden">
+                            {company.logoUrl ? <img src={company.logoUrl} alt={company.name} className="w-full h-full object-cover" /> : company.name[0]}
                         </div>
-                        <span className="font-semibold text-sm">{companyData.name} Careers</span>
+                        <span className="font-semibold text-sm">{company.name} Careers</span>
                     </div>
 
                     <div className="flex items-center gap-6 text-sm text-muted-foreground">
@@ -272,7 +222,7 @@ export default function CareersPage({ params }: { params: Promise<{ companySlug:
                     </div>
 
                     <div className="text-xs text-muted-foreground opacity-50">
-                        © 2024 {companyData.name}. All rights reserved.
+                        © {new Date().getFullYear()} {company.name}. All rights reserved.
                     </div>
                 </div>
             </footer>

@@ -10,9 +10,20 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { candidates } from "../mocks/candidates"
+import { useCandidates } from "@/features/candidate/hooks/use-candidates"
+import { format } from "date-fns"
 
 export function CandidatePoolView() {
+    const { candidates, total, isLoading, error } = useCandidates()
+
+    if (isLoading) {
+        return <div className="p-8 text-center text-muted-foreground">Loading candidates...</div>
+    }
+
+    if (error) {
+        return <div className="p-8 text-center text-destructive">Error: {error}</div>
+    }
+
     return (
         <div className="flex flex-col space-y-6">
             <div className="flex items-center justify-between">
@@ -32,7 +43,7 @@ export function CandidatePoolView() {
                 <div className="flex items-center space-x-2">
                     <span className="font-medium text-sm">All Candidates</span>
                     <Badge variant="neutral" className="rounded-full px-2 py-0.5 text-xs">
-                        {candidates.length}
+                        {total}
                     </Badge>
                 </div>
                 <div className="relative w-64">
@@ -40,8 +51,7 @@ export function CandidatePoolView() {
                     <input
                         type="text"
                         placeholder="Search candidates..."
-                        disabled
-                        className="w-full h-9 pl-9 pr-4 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors cursor-not-allowed placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+                        className="w-full h-9 pl-9 pr-4 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
                     />
                 </div>
             </div>
@@ -51,34 +61,40 @@ export function CandidatePoolView() {
                     <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-edge">
                             <TableHead className="w-[200px] text-muted-foreground font-medium">Candidate Name</TableHead>
-                            <TableHead className="text-muted-foreground font-medium">Contact</TableHead>
-                            <TableHead className="text-muted-foreground font-medium">Applied For</TableHead>
                             <TableHead className="text-muted-foreground font-medium">Email</TableHead>
-                            <TableHead className="text-muted-foreground font-medium">Experience</TableHead>
-                            <TableHead className="text-right text-muted-foreground font-medium">Resume</TableHead>
+                            <TableHead className="text-muted-foreground font-medium">Phone</TableHead>
+                            <TableHead className="text-muted-foreground font-medium">Source</TableHead>
+                            <TableHead className="text-right text-muted-foreground font-medium">Joined</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {candidates.map((candidate) => (
-                            <TableRow key={candidate.id} className="hover:bg-muted/50 border-b border-edge last:border-0 transition-colors">
-                                <TableCell className="font-medium text-foreground">{candidate.name}</TableCell>
-                                <TableCell className="text-muted-foreground">{candidate.contact}</TableCell>
-                                <TableCell>
-                                    <Badge variant="neutral" className="font-normal">
-                                        {candidate.role}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-muted-foreground">{candidate.email}</TableCell>
-                                <TableCell className="text-muted-foreground">{candidate.experience}</TableCell>
-                                <TableCell className="text-right">
-                                    <div className="flex justify-end">
-                                        <button className="p-2 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors group" title="View Resume">
-                                            <FileText className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                                        </button>
-                                    </div>
+                        {candidates.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                    No candidates found.
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        ) : (
+                            candidates.map((candidate) => (
+                                <TableRow key={candidate._id} className="hover:bg-muted/50 border-b border-edge last:border-0 transition-colors">
+                                    <TableCell className="font-medium text-foreground">
+                                        {candidate.firstName && candidate.lastName
+                                            ? `${candidate.firstName} ${candidate.lastName}`
+                                            : 'Unknown Name'}
+                                    </TableCell>
+                                    <TableCell className="text-muted-foreground">{candidate.email}</TableCell>
+                                    <TableCell className="text-muted-foreground">{candidate.phone || '-'}</TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline" className="font-normal text-muted-foreground">
+                                            {candidate.source || 'Direct'}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right text-muted-foreground">
+                                        {format(new Date(candidate.createdAt), 'MMM d, yyyy')}
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
                     </TableBody>
                 </Table>
             </div>

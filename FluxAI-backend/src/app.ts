@@ -14,6 +14,10 @@ import jobsRoutes from './modules/jobs/jobs.routes.js'
 import attemptsRoutes from './modules/attempts/attempts.routes.js'
 import filesRoutes from './modules/files/files.routes.js'
 import onboardingRoutes from './modules/onboarding/onboarding.routes.js'
+import candidatesRoutes from './modules/candidates/candidates.routes.js'
+import analyticsRoutes from './modules/analytics/analytics.routes.js'
+import dashboardRoutes from './modules/dashboard/dashboard.routes.js'
+import publicRoutes from './modules/public/public.routes.js'
 import { attemptsController } from './modules/attempts/attempts.controller.js'
 import { resultsController } from './modules/results/results.controller.js'
 import { filesController } from './modules/files/files.controller.js'
@@ -60,6 +64,7 @@ export function createApp() {
 
     // Onboarding
     app.use('/api/onboarding', onboardingRoutes)
+    app.use('/api/candidates', candidatesRoutes)
 
     // Phase 3: Attempts & Proctoring
     app.post('/api/assessments/:assessmentId/attempts', (req, res, next) =>
@@ -71,6 +76,12 @@ export function createApp() {
     app.get('/api/assessments/:assessmentId/results', authGuard, (req, res, next) =>
         resultsController.getAssessmentResults(req, res, next)
     )
+
+    // Analytics
+    app.use('/api/analytics', analyticsRoutes)
+    app.use('/api/dashboard', dashboardRoutes)
+    app.use('/api/public', publicRoutes)
+
     app.get('/api/attempts/:attemptId/result', (req, res, next) =>
         resultsController.getAttemptResult(req, res, next)
     )
