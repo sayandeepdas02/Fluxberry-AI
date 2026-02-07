@@ -12,11 +12,12 @@ import {
     ShoppingBag
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/context/auth-context";
 
 export function Sidebar() {
     const router = useRouter();
+    const pathname = usePathname();
     const { user, logout } = useAuth();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -53,6 +54,13 @@ export function Sidebar() {
         setTimeout(() => {
             logout();
         }, 100);
+    };
+
+    const isActive = (path: string) => {
+        if (path === "/dashboard") {
+            return pathname === path;
+        }
+        return pathname?.startsWith(path);
     };
 
     return (
@@ -140,21 +148,36 @@ export function Sidebar() {
                             <div className="ml-4 space-y-0.5 border-l border-border/50 pl-2">
                                 <Link
                                     href="/dashboard"
-                                    className="flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-foreground bg-muted rounded-md"
+                                    className={cn(
+                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                        isActive("/dashboard")
+                                            ? "text-foreground bg-muted"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                    )}
                                 >
                                     Home
                                 </Link>
 
                                 <Link
                                     href="/dashboard/manage-jobs"
-                                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
+                                    className={cn(
+                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                        isActive("/dashboard/manage-jobs")
+                                            ? "text-foreground bg-muted"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                    )}
                                 >
                                     Manage Jobs
                                 </Link>
 
                                 <Link
                                     href="/dashboard/candidate-pool"
-                                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
+                                    className={cn(
+                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                        isActive("/dashboard/candidate-pool")
+                                            ? "text-foreground bg-muted"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                    )}
                                 >
                                     Candidate Pool
                                 </Link>
@@ -171,13 +194,23 @@ export function Sidebar() {
                             <div className="ml-4 space-y-0.5 border-l border-border/50 pl-2">
                                 <Link
                                     href="/dashboard/analytics"
-                                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
+                                    className={cn(
+                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                        isActive("/dashboard/analytics")
+                                            ? "text-foreground bg-muted"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                    )}
                                 >
                                     Analytics
                                 </Link>
                                 <Link
                                     href="/dashboard/assessments"
-                                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
+                                    className={cn(
+                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                        isActive("/dashboard/assessments")
+                                            ? "text-foreground bg-muted"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                    )}
                                 >
                                     Assessments
                                 </Link>
