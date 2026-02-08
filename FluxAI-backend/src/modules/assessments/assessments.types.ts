@@ -45,6 +45,13 @@ export const roundConfigSchema = z.object({
     }).optional(),
 })
 
+// Invite candidates: max 50 emails per request for prototype
+const inviteEmailsSchema = z.object({
+    emails: z.array(z.string().email('Invalid email address')).min(1, 'At least one email required').max(50, 'Max 50 emails per request'),
+})
+export type InviteCandidatesInput = z.infer<typeof inviteEmailsSchema>
+export const inviteCandidatesSchema = inviteEmailsSchema
+
 export type CreateAssessmentInput = z.infer<typeof createAssessmentSchema>
 export type UpdateAssessmentInput = z.infer<typeof updateAssessmentSchema>
 export type MCQRoundConfig = z.infer<typeof mcqRoundConfigSchema>

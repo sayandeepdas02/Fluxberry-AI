@@ -68,4 +68,11 @@ export const assessmentsApi = {
     async publish(id: string) {
         return apiClient.patch<Assessment>(`/assessments/${id}`, { status: 'ACTIVE' })
     },
+
+    /**
+     * Invite candidates: enqueue invite emails for each address (assessment must be published).
+     */
+    async invite(assessmentId: string, payload: { emails: string[] }) {
+        return apiClient.post<{ invited: number; emails: string[] }>(`/assessments/${assessmentId}/invite`, payload)
+    },
 }

@@ -1,5 +1,6 @@
 import {
     Assessment,
+    Candidate,
     IAssessment,
     IAssessmentRound,
     RoundType,
@@ -9,11 +10,13 @@ import {
     CreateAssessmentInput,
     UpdateAssessmentInput,
     RoundConfigInput,
+    InviteCandidatesInput,
     AssessmentResponse,
     AssessmentListResponse,
     RoundResponse,
 } from './assessments.types.js'
 import { validateRoundsForPublish } from '../rounds/rounds.validators.js'
+import { enqueueNotificationJob } from '../../jobs/queues/index.js'
 
 export class AssessmentsService {
     /**
@@ -183,6 +186,55 @@ export class AssessmentsService {
         await Assessment.findByIdAndUpdate(id, { $set: { status: 'ACTIVE' } })
 
         return this.getById(id, organizationId)
+    }
+
+    /**
+     * Invite candidates to an assessment: ensure candidate records exist and enqueue invite emails.
+     * Assessment must be ACTIVE. Each email gets one SEND_INVITE_EMAIL job.
+     */
+    async inviteCandidates(
+        assessmentId: string,
+        organizationId: string,
+        input: InviteCandidatesInput
+    ): Promise<{ invited: number; emails: string[] }> {
+        const assessment = await Assessment.findOne({ _id: assessmentId, organizationId })
+        if (!assessment) {
+            const error = new Error('Assessment not found') as Error & { statusCode: number; code: string }
+            error.statusCode = 404
+            error.code = 'NOT_FOUND'
+            throw error
+        }
+        if (assessment.status !== 'ACTIVE') {
+            const error = new Error('Only published (ACTIVE) assessments can accept invites') as Error & { statusCode: number; code: string }
+            error.statusCode = 422
+            error.code = 'INVALID_STATUS'
+            throw error
+        }
+
+        const baseUrl = (process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'http://localhost:3000').replace(/\/$/, '')
+        const invited: string[] = []
+
+        for (const email of input.emails) {
+            const trimmed = email.trim().toLowerCase()
+            if (!trimmed) continue
+
+            let candidate = await Candidate.findOne({ organizationId, email: trimmed })
+            if (!candidate) {
+                candidate = await Candidate.create({ organizationId, email: trimmed })
+            }
+
+            const inviteLink = `${baseUrl}/assessment/${assessmentId}/start?email=${encodeURIComponent(trimmed)}`
+            await enqueueNotificationJob({
+                type: 'SEND_INVITE_EMAIL',
+                candidateEmail: trimmed,
+                assessmentId: assessmentId,
+                assessmentTitle: assessment.title,
+                inviteLink,
+            })
+            invited.push(trimmed)
+        }
+
+        return { invited: invited.length, emails: invited }
     }
 
     /**

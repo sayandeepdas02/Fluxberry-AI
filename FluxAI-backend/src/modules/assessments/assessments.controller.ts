@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express'
 import { assessmentsService } from './assessments.service.js'
-import { createAssessmentSchema, updateAssessmentSchema, roundConfigSchema } from './assessments.types.js'
+import { createAssessmentSchema, updateAssessmentSchema, roundConfigSchema, inviteCandidatesSchema } from './assessments.types.js'
 import { successResponse } from '../../common/utils/api-response.js'
 import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
 
@@ -115,6 +115,27 @@ export class AssessmentsController {
             const { id } = req.params
             const assessment = await assessmentsService.publish(id, organizationId)
             res.json(successResponse(assessment))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    /**
+     * POST /api/assessments/:id/invite
+     * Add candidate emails and enqueue invite emails (assessment must be ACTIVE).
+     */
+    async invite(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const organizationId = req.user?.organizationId
+            if (!organizationId) {
+                res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
+                return
+            }
+
+            const { id } = req.params
+            const input = inviteCandidatesSchema.parse(req.body)
+            const result = await assessmentsService.inviteCandidates(id, organizationId, input)
+            res.status(200).json(successResponse(result))
         } catch (error) {
             next(error)
         }

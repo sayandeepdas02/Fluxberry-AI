@@ -85,9 +85,11 @@ export async function enqueueEvaluationJob(data: EvaluationJobData): Promise<str
 }
 
 export async function enqueueNotificationJob(data: NotificationJobData): Promise<string> {
-    const job = await notificationQueue.add(data.type, data, {
-        jobId: `${data.type}-${Date.now()}`,
-    })
+    const jobId =
+        data.type === 'SEND_INVITE_EMAIL'
+            ? `${data.type}-${data.assessmentId}-${data.candidateEmail}-${Date.now()}`
+            : `${data.type}-${Date.now()}`
+    const job = await notificationQueue.add(data.type, data, { jobId })
     console.log(`📤 Enqueued ${data.type} job: ${job.id}`)
     return job.id || ''
 }

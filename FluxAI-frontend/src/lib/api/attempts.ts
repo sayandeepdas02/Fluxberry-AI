@@ -58,6 +58,6 @@ export const attemptsApi = {
         attemptId: string,
         event: { eventType: string; metadata?: Record<string, unknown> }
     ) {
-        return apiClient.post<void>(`/attempts/${attemptId}/proctoring`, event)
+        return apiClient.post<void>(`/attempts/${attemptId}/proctoring-events`, event)
     },
 }
