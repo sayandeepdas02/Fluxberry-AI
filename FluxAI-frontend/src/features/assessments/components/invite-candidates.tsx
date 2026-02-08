@@ -1,13 +1,77 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, Mail, Upload, Rocket } from "lucide-react"
+import { ArrowLeft, Upload, Rocket, Loader2, CheckCircle2, AlertCircle } from "lucide-react"
 import Link from "next/link"
+import { assessmentsApi } from "@/lib/api/assessments"
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function parseEmails(raw: string): string[] {
+    return raw
+        .split(/[\n,;]+/)
+        .map((s) => s.trim().toLowerCase())
+        .filter((s) => s.length > 0)
+}
+
+function validateEmails(emails: string[]): { valid: string[]; invalid: string[] } {
+    const valid: string[] = []
+    const invalid: string[] = []
+    const seen = new Set<string>()
+    for (const e of emails) {
+        if (seen.has(e)) continue
+        seen.add(e)
+        if (EMAIL_REGEX.test(e)) valid.push(e)
+        else invalid.push(e)
+    }
+    return { valid, invalid }
+}
 
 export function InviteCandidates({ assessmentId }: { assessmentId: string }) {
+    const [emailsRaw, setEmailsRaw] = useState("")
+    const [loading, setLoading] = useState(false)
+    const [success, setSuccess] = useState<number | null>(null)
+    const [error, setError] = useState<string | null>(null)
+
+    const handleSendInvites = async () => {
+        const parsed = parseEmails(emailsRaw)
+        const { valid, invalid } = validateEmails(parsed)
+
+        if (invalid.length > 0) {
+            setError(`Invalid email(s): ${invalid.slice(0, 5).join(", ")}${invalid.length > 5 ? "…" : ""}`)
+            return
+        }
+        if (valid.length === 0) {
+            setError("Enter at least one valid email address.")
+            return
+        }
+        if (valid.length > 50) {
+            setError("Maximum 50 emails per request.")
+            return
+        }
+
+        setError(null)
+        setSuccess(null)
+        setLoading(true)
+        try {
+            const res = await assessmentsApi.invite(assessmentId, { emails: valid })
+            if (res.success && res.data) {
+                setSuccess(res.data.invited)
+                setEmailsRaw("")
+            } else {
+                setError(res.error?.message || "Failed to send invites.")
+            }
+        } catch {
+            setError("Something went wrong. Try again.")
+        } finally {
+            setLoading(false)
+        }
+    }
+
     return (
         <div className="max-w-2xl mx-auto space-y-8 py-8">
             <div className="flex items-center gap-4">
@@ -29,16 +93,32 @@ export function InviteCandidates({ assessmentId }: { assessmentId: string }) {
                         <div>
                             <p className="font-semibold">Ready to launch!</p>
                             <p className="opacity-90 mt-1">
-                                Each candidate will receive a unique secure link. Based on your configuration, they will face <strong>Round 1 (MCQ)</strong> and <strong>Round 2 (DSA)</strong>.
+                                Each candidate will receive an email with a unique link. Enter up to 50 emails (comma or newline separated).
                             </p>
                         </div>
                     </div>
 
+                    {success !== null && (
+                        <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm">
+                            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                            <span>Invite emails queued for {success} candidate{success !== 1 ? "s" : ""}.</span>
+                        </div>
+                    )}
+                    {error && (
+                        <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
+                            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                            <span>{error}</span>
+                        </div>
+                    )}
+
                     <div className="space-y-4">
-                        <Label>Enter Email Addresses (comma separated)</Label>
+                        <Label>Enter Email Addresses (comma or newline separated)</Label>
                         <Textarea
                             placeholder="john@example.com, sarah@example.com, ..."
                             className="min-h-[150px] font-mono text-sm"
+                            value={emailsRaw}
+                            onChange={(e) => setEmailsRaw(e.target.value)}
+                            disabled={loading}
                         />
                     </div>
 
@@ -51,22 +131,30 @@ export function InviteCandidates({ assessmentId }: { assessmentId: string }) {
                         </div>
                     </div>
 
-                    <div className="border-2 border-dashed border-muted-foreground/20 rounded-lg p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-muted/50 transition-colors">
-                        <Upload className="w-8 h-8 text-muted-foreground mb-3" />
+                    <div className="border-2 border-dashed border-muted-foreground/20 rounded-lg p-8 flex flex-col items-center justify-center text-center text-muted-foreground">
+                        <Upload className="w-8 h-8 mb-3" />
                         <p className="text-sm font-medium">Upload CSV</p>
-                        <p className="text-xs text-muted-foreground">Drag and drop or click to upload</p>
+                        <p className="text-xs mt-1">Drag and drop or click to upload (coming soon)</p>
                     </div>
 
                     <div className="pt-4 flex justify-end gap-3">
                         <Button variant="outline" asChild>
-                            <Link href="/dashboard/assessments">
-                                Save as Draft
-                            </Link>
+                            <Link href="/dashboard/assessments">Save as Draft</Link>
                         </Button>
-                        <Button className="bg-foreground text-background hover:bg-foreground/90 gap-2" asChild>
-                            <Link href="/dashboard/assessments">
-                                <Rocket className="w-4 h-4" /> Launch Assessment
-                            </Link>
+                        <Button
+                            className="bg-foreground text-background hover:bg-foreground/90 gap-2"
+                            onClick={handleSendInvites}
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" /> Sending…
+                                </>
+                            ) : (
+                                <>
+                                    <Rocket className="w-4 h-4" /> Send Test Link
+                                </>
+                            )}
                         </Button>
                     </div>
                 </CardContent>
