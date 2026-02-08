@@ -16,6 +16,7 @@ import {
     RoundQuestionResponse,
 } from './attempts.types.js'
 import { evaluationService } from '../evaluation/evaluation.service.js'
+import { enqueueEvaluationJob } from '../../jobs/queues/index.js'
 
 export class AttemptsService {
     /**
@@ -231,6 +232,14 @@ export class AttemptsService {
             } else if (roundType === 'DSA') {
                 const submission = (answers as { code?: string; language?: string }) ?? {}
                 await evaluationService.createDSAPlaceholder(attemptId, submission)
+                await enqueueEvaluationJob({
+                    type: 'EVALUATE_DSA',
+                    attemptId,
+                    submission: {
+                        code: submission.code ?? '',
+                        language: submission.language ?? 'python',
+                    },
+                })
             } else if (roundType === 'AI') {
                 const refs = (answers as { transcriptRef?: string; videoRef?: string }) ?? {}
                 await evaluationService.createAIPlaceholder(attemptId, refs)

@@ -7,8 +7,9 @@ const router = Router()
 // All routes require authentication
 router.use(authGuard)
 
-// Read-only question bank endpoints
 router.get('/', (req, res, next) => questionsController.list(req, res, next))
 router.get('/:id', (req, res, next) => questionsController.getById(req, res, next))
+router.post('/', (req, res, next) => questionsController.create(req, res, next))
+router.patch('/:id', (req, res, next) => questionsController.update(req, res, next))
 
 export default router

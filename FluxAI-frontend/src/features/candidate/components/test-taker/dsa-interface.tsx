@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import type { RoundQuestionDSA } from "@/lib/api/attempts"
+import { publicApi, type RunCodeResponse } from "@/lib/api/public"
+import { Loader2, Play, ChevronDown, ChevronUp } from "lucide-react"
 
 const DEFAULT_LANGUAGE = "python"
 
@@ -22,6 +24,29 @@ export function DSAInterface({
             : ""
     )
     const [language] = useState(problem?.languagesSupported?.[0] ?? DEFAULT_LANGUAGE)
+    const [runLoading, setRunLoading] = useState(false)
+    const [runResult, setRunResult] = useState<RunCodeResponse | null>(null)
+    const [runError, setRunError] = useState<string | null>(null)
+    const [outputOpen, setOutputOpen] = useState(true)
+
+    const handleRunCode = async () => {
+        setRunError(null)
+        setRunResult(null)
+        setRunLoading(true)
+        try {
+            const res = await publicApi.runCode({ code, language, stdin: "" })
+            if (res.success && res.data) {
+                setRunResult(res.data)
+                setOutputOpen(true)
+            } else {
+                setRunError(res.error?.message ?? "Run failed")
+            }
+        } catch {
+            setRunError("Run failed")
+        } finally {
+            setRunLoading(false)
+        }
+    }
 
     const handleSubmit = () => {
         onComplete({ code, language })
@@ -75,13 +100,71 @@ export function DSAInterface({
                     spellCheck={false}
                 />
                 <div className="h-14 bg-[#252526] border-t border-[#3e3e42] flex items-center justify-between px-4">
-                    <Button variant="ghost" size="sm" className="text-white hover:bg-[#3e3e42] hover:text-white">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-white hover:bg-[#3e3e42] hover:text-white gap-2"
+                        onClick={handleRunCode}
+                        disabled={runLoading}
+                    >
+                        {runLoading ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                            <Play className="w-4 h-4" />
+                        )}
                         Run Code
                     </Button>
                     <Button size="sm" onClick={handleSubmit} className="bg-green-600 hover:bg-green-700 text-white border-0">
                         Submit Solution
                     </Button>
                 </div>
+
+                {(runResult != null || runError != null) && (
+                    <div className="border-t border-[#3e3e42] bg-[#252526]">
+                        <button
+                            type="button"
+                            className="w-full px-4 py-2 flex items-center justify-between text-left text-xs text-neutral-400 hover:text-white"
+                            onClick={() => setOutputOpen((o) => !o)}
+                        >
+                            <span>Output</span>
+                            {outputOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+                        </button>
+                        {outputOpen && (
+                            <div className="px-4 pb-4 pt-0 font-mono text-sm max-h-40 overflow-auto">
+                                {runError && (
+                                    <pre className="text-red-400 whitespace-pre-wrap">{runError}</pre>
+                                )}
+                                {runResult && (
+                                    <div className="space-y-2 text-neutral-300">
+                                        {runResult.compileError && (
+                                            <div>
+                                                <span className="text-amber-400">Compile:</span>
+                                                <pre className="whitespace-pre-wrap mt-0.5">{runResult.compileError}</pre>
+                                            </div>
+                                        )}
+                                        {runResult.stdout && (
+                                            <div>
+                                                <span className="text-green-400">Stdout:</span>
+                                                <pre className="whitespace-pre-wrap mt-0.5">{runResult.stdout || "(empty)"}</pre>
+                                            </div>
+                                        )}
+                                        {runResult.stderr && (
+                                            <div>
+                                                <span className="text-amber-400">Stderr:</span>
+                                                <pre className="whitespace-pre-wrap mt-0.5">{runResult.stderr}</pre>
+                                            </div>
+                                        )}
+                                        <div className="text-neutral-500 text-xs">
+                                            {runResult.statusDescription}
+                                            {runResult.timeSeconds != null && ` · ${runResult.timeSeconds}s`}
+                                            {runResult.memoryKb != null && ` · ${runResult.memoryKb} KB`}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     )

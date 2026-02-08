@@ -16,4 +16,8 @@ router.get('/companies/:slug/jobs/:jobId', (req, res, next) =>
     publicController.getJob(req, res, next)
 )
 
+router.post('/run-code', (req, res, next) =>
+    publicController.runCode(req, res, next)
+)
+
 export default router
