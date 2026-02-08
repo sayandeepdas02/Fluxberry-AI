@@ -62,7 +62,11 @@ export function InviteCandidates({ assessmentId }: { assessmentId: string }) {
             if (res.success && res.data) {
                 setStatus("ACTIVE")
             } else {
-                setError(res.error?.message ?? "Failed to publish.")
+                const msg = res.error?.message ?? "Failed to publish."
+                const details = res.error && 'details' in res.error && Array.isArray(res.error.details)
+                    ? (res.error.details as { message?: string }[]).map((d) => d.message).filter(Boolean).join(" ")
+                    : ""
+                setError(details ? `${msg} ${details}` : msg)
             }
         } catch {
             setError("Failed to publish. Try again.")

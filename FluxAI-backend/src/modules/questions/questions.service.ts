@@ -123,10 +123,25 @@ export class QuestionsService {
     }
 
     /**
-     * Get questions by IDs (for validation)
+     * Get questions by IDs or slugs (for validation).
+     * Supports both MongoDB ObjectIds and string slugs (e.g. from frontend mock bank).
      */
     async getByIds(ids: string[]): Promise<QuestionResponse[]> {
-        const questions = await Question.find({ _id: { $in: ids } })
+        if (ids.length === 0) return []
+        const objectId = (await import('mongoose')).Types.ObjectId
+        const validObjectIds: unknown[] = []
+        const slugIds: string[] = []
+        for (const id of ids) {
+            if (objectId.isValid(id) && String(new objectId(id)) === id) {
+                validObjectIds.push(id)
+            } else {
+                slugIds.push(id)
+            }
+        }
+        const orConditions: Record<string, unknown>[] = []
+        if (validObjectIds.length) orConditions.push({ _id: { $in: validObjectIds } })
+        if (slugIds.length) orConditions.push({ slug: { $in: slugIds } })
+        const questions = await Question.find(orConditions.length ? { $or: orConditions } : { _id: { $in: [] } })
         return questions.map((q) => this.formatQuestion(q))
     }
 
@@ -135,7 +150,7 @@ export class QuestionsService {
      */
     private formatQuestion(question: IQuestion): QuestionResponse {
         return {
-            id: question._id.toString(),
+            id: (question.slug ?? question._id.toString()) as string,
             type: question.type as 'MCQ' | 'DSA',
             title: question.title,
             difficulty: question.difficulty as 'EASY' | 'MEDIUM' | 'HARD',

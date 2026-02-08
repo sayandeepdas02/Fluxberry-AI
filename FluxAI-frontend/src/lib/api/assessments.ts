@@ -27,6 +27,13 @@ export interface UpdateAssessmentInput {
     proctoringEnabled?: boolean
 }
 
+/** Payload for PUT /assessments/:id/rounds - config per round for publish validation */
+export interface RoundConfigInput {
+    MCQ?: { enabled: boolean; order: number; config: { singleCorrectQuestionIds: string[]; multiCorrectQuestionIds: string[] } | null }
+    DSA?: { enabled: boolean; order: number; config: { questionIds: string[] } | null }
+    AI?: { enabled: boolean; order: number; config: { agentId: string } | null }
+}
+
 export const assessmentsApi = {
     /**
      * List all assessments for the organization
@@ -54,6 +61,13 @@ export const assessmentsApi = {
      */
     async update(id: string, input: UpdateAssessmentInput) {
         return apiClient.patch<Assessment>(`/assessments/${id}`, input)
+    },
+
+    /**
+     * Configure rounds for an assessment (DRAFT only). Persist enabled rounds and config for publish.
+     */
+    async configureRounds(id: string, input: RoundConfigInput) {
+        return apiClient.put<Assessment>(`/assessments/${id}/rounds`, input)
     },
 
     /**

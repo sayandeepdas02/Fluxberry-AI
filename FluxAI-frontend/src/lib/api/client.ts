@@ -99,6 +99,13 @@ class ApiClient {
         })
     }
 
+    async put<T>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {
+        return this.request<T>(endpoint, {
+            method: 'PUT',
+            body: body ? JSON.stringify(body) : undefined,
+        })
+    }
+
     async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
         return this.request<T>(endpoint, { method: 'DELETE' })
     }
