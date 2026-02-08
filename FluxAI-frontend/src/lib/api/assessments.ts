@@ -64,10 +64,10 @@ export const assessmentsApi = {
     },
 
     /**
-     * Publish an assessment (set status to ACTIVE)
+     * Publish an assessment (set status to ACTIVE). Must be DRAFT.
      */
     async publish(id: string) {
-        return apiClient.patch<Assessment>(`/assessments/${id}`, { status: 'ACTIVE' })
+        return apiClient.post<Assessment>(`/assessments/${id}/publish`)
     },
 
     /**
