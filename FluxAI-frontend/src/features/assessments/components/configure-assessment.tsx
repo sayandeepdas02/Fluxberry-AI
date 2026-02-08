@@ -1,18 +1,21 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { ArrowLeft, Clock, Code2, FileText, Video, AlertTriangle, CheckCircle2, Settings2, User } from "lucide-react"
-import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { assessmentsApi, type RoundConfigInput } from "@/lib/api/assessments"
 import { MCQSelector } from "@/features/assessments/components/mcq-selector"
 import { DSASelector } from "@/features/assessments/components/dsa-selector"
 import { mcqBank, dsaBank, aiAgents } from "@/features/assessments/mocks/question-bank"
 
 export function ConfigureAssessment({ assessmentId }: { assessmentId: string }) {
+    const router = useRouter()
     // Round Toggle State
     const [rounds, setRounds] = useState({
         mcq: true,
@@ -29,6 +32,10 @@ export function ConfigureAssessment({ assessmentId }: { assessmentId: string }) 
     const [showMcqModal, setShowMcqModal] = useState(false)
     const [showDsaModal, setShowDsaModal] = useState(false)
 
+    // Save and continue
+    const [isSaving, setIsSaving] = useState(false)
+    const [saveError, setSaveError] = useState<string | null>(null)
+
     // Validation
     const isMcqValid = !rounds.mcq || (mcqConfig.mode === 'default' || mcqConfig.selectedIds.length === 30) // 20+10
     const isDsaValid = !rounds.dsa || dsaConfig.length === 4
@@ -37,6 +44,50 @@ export function ConfigureAssessment({ assessmentId }: { assessmentId: string }) 
 
     // Prevent empty assessment
     const hasAtLeastOneRound = rounds.mcq || rounds.dsa || rounds.ai
+
+    function buildMcqConfig(): { singleCorrectQuestionIds: string[]; multiCorrectQuestionIds: string[] } {
+        if (mcqConfig.mode === 'default') {
+            const single = mcqBank.filter(q => q.type === 'Single').slice(0, 20).map(q => q.id)
+            const multi = mcqBank.filter(q => q.type === 'Multi').slice(0, 10).map(q => q.id)
+            return { singleCorrectQuestionIds: single, multiCorrectQuestionIds: multi }
+        }
+        const selected = mcqBank.filter(q => mcqConfig.selectedIds.includes(q.id))
+        const single = selected.filter(q => q.type === 'Single').slice(0, 20).map(q => q.id)
+        const multi = selected.filter(q => q.type === 'Multi').slice(0, 10).map(q => q.id)
+        return { singleCorrectQuestionIds: single, multiCorrectQuestionIds: multi }
+    }
+
+    async function handleContinueToInvite() {
+        if (!isAllValid || !hasAtLeastOneRound) return
+        setSaveError(null)
+        setIsSaving(true)
+        try {
+            const payload: RoundConfigInput = {
+                MCQ: {
+                    enabled: rounds.mcq,
+                    order: 1,
+                    config: rounds.mcq ? buildMcqConfig() : null,
+                },
+                DSA: {
+                    enabled: rounds.dsa,
+                    order: 2,
+                    config: rounds.dsa && dsaConfig.length === 4 ? { questionIds: dsaConfig } : null,
+                },
+                AI: {
+                    enabled: rounds.ai,
+                    order: 3,
+                    config: rounds.ai && aiConfig ? { agentId: aiConfig } : null,
+                },
+            }
+            await assessmentsApi.configureRounds(assessmentId, payload)
+            router.push(`/dashboard/assessments/${assessmentId}/invite`)
+        } catch (e: unknown) {
+            const message = e && typeof e === 'object' && 'message' in e ? String((e as { message: unknown }).message) : 'Failed to save configuration'
+            setSaveError(message)
+        } finally {
+            setIsSaving(false)
+        }
+    }
 
     return (
         <div className="max-w-4xl mx-auto space-y-8 py-8 px-4">
@@ -228,6 +279,11 @@ export function ConfigureAssessment({ assessmentId }: { assessmentId: string }) 
             </div>
 
             {/* Footer */}
+            {saveError && (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+                    {saveError}
+                </div>
+            )}
             <div className="flex justify-end pt-4 gap-4 border-t border-neutral-100 mt-8">
                 <Button variant="ghost" asChild>
                     <Link href="/dashboard/assessments/new">Back</Link>
@@ -235,14 +291,10 @@ export function ConfigureAssessment({ assessmentId }: { assessmentId: string }) 
                 <Button
                     variant={isAllValid && hasAtLeastOneRound ? "default" : "secondary"}
                     className={cn(isAllValid && hasAtLeastOneRound ? "bg-neutral-900 hover:bg-neutral-800" : "opacity-50 cursor-not-allowed")}
-                    disabled={!isAllValid || !hasAtLeastOneRound}
-                    asChild={isAllValid && hasAtLeastOneRound}
+                    disabled={!isAllValid || !hasAtLeastOneRound || isSaving}
+                    onClick={isAllValid && hasAtLeastOneRound ? handleContinueToInvite : undefined}
                 >
-                    {isAllValid && hasAtLeastOneRound ? (
-                        <Link href={`/dashboard/assessments/${assessmentId}/invite`}>Continue to Invite</Link>
-                    ) : (
-                        <span>Continue to Invite</span>
-                    )}
+                    {isSaving ? "Saving…" : "Continue to Invite"}
                 </Button>
             </div>
 

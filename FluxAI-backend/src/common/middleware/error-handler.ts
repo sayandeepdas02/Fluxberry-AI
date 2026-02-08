@@ -30,10 +30,11 @@ export function errorHandler(
         return
     }
 
-    // Handle known app errors
+    // Handle known app errors (include details when present, e.g. publish validation)
     if (err.statusCode) {
+        const errWithDetails = err as AppError & { details?: unknown }
         res.status(err.statusCode).json(
-            errorResponse(err.code || ErrorCodes.INTERNAL_ERROR, err.message)
+            errorResponse(err.code || ErrorCodes.INTERNAL_ERROR, err.message, errWithDetails.details)
         )
         return
     }

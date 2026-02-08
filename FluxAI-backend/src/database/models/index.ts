@@ -319,6 +319,8 @@ export interface IDSADetails {
 
 export interface IQuestion extends Document {
     _id: Types.ObjectId
+    /** Optional stable id for lookup (e.g. seed IDs matching frontend mock bank) */
+    slug?: string
     type: QuestionTypeValue
     title: string
     difficulty: DifficultyType
@@ -330,6 +332,7 @@ export interface IQuestion extends Document {
 }
 
 const QuestionSchema = new Schema<IQuestion>({
+    slug: { type: String, sparse: true, unique: true },
     type: { type: String, enum: Object.values(QuestionType), required: true, index: true },
     title: { type: String, required: true },
     difficulty: { type: String, enum: Object.values(Difficulty), required: true, index: true },
