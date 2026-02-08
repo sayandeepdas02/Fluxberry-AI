@@ -28,7 +28,21 @@ class PublicController {
         try {
             const { slug, jobId } = req.params
             const data = await publicService.getJob(slug, jobId)
-            successResponse(res, 'Job retrieved', data)
+            res.json(successResponse(data))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    /**
+     * POST /api/public/run-code — run code via Judge0 (for DSA "Run Code" in UI)
+     * Body: { code: string, language: string, stdin?: string }
+     */
+    async runCode(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { code, language, stdin } = req.body ?? {}
+            const data = await publicService.runCode({ code: code ?? '', language: language ?? 'python', stdin })
+            res.json(successResponse(data))
         } catch (error) {
             next(error)
         }
