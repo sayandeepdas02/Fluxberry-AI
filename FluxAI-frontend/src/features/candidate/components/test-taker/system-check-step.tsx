@@ -6,8 +6,11 @@ import { Label } from "@/components/ui/label"
 import { CheckCircle2, Camera, Mic, Monitor, Wifi, Loader2, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { getAttemptId } from "@/features/candidate/lib/attempt-storage"
 
 export function SystemCheckStep({ assessmentId }: { assessmentId: string }) {
+    const router = useRouter()
     const [checking, setChecking] = useState(true)
     const [checks, setChecks] = useState({
         camera: false,
@@ -16,6 +19,13 @@ export function SystemCheckStep({ assessmentId }: { assessmentId: string }) {
         network: false
     })
     const [consent, setConsent] = useState(false)
+
+    useEffect(() => {
+        if (!getAttemptId(assessmentId)) {
+            router.replace(`/assessment/${assessmentId}/start`)
+            return
+        }
+    }, [assessmentId, router])
 
     useEffect(() => {
         // Simulate checking process

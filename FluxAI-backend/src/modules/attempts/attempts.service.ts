@@ -2,8 +2,8 @@ import {
     Assessment,
     Candidate,
     AssessmentAttempt,
+    Question,
     IAssessmentAttempt,
-    IRoundAttempt,
     RoundTypeValue,
     AttemptStatusType,
     RoundStatusType,
@@ -13,7 +13,9 @@ import {
     SubmitRoundInput,
     AttemptResponse,
     RoundAttemptResponse,
+    RoundQuestionResponse,
 } from './attempts.types.js'
+import { evaluationService } from '../evaluation/evaluation.service.js'
 
 export class AttemptsService {
     /**
@@ -39,12 +41,15 @@ export class AttemptsService {
             throw error
         }
 
-        // Find or create candidate
-        let candidate = await Candidate.findOne({ email: input.candidateEmail })
+        const organizationId = assessment.organizationId
+
+        // Find or create candidate (scoped to assessment's org)
+        let candidate = await Candidate.findOne({ organizationId, email: input.candidateEmail.trim().toLowerCase() })
 
         if (!candidate) {
             candidate = await Candidate.create({
-                email: input.candidateEmail,
+                organizationId,
+                email: input.candidateEmail.trim().toLowerCase(),
                 firstName: input.candidateFirstName,
                 lastName: input.candidateLastName,
             })
@@ -213,7 +218,102 @@ export class AttemptsService {
 
         await attempt.save()
 
+        // Trigger evaluation (sync) so scores exist for results
+        const assessmentId = attempt.assessmentId.toString()
+        const answers = roundAttempt.answers as Record<string, unknown> | undefined
+        try {
+            if (roundType === 'MCQ' && answers) {
+                await evaluationService.evaluateMCQ(
+                    attemptId,
+                    answers as Record<string, number[]>,
+                    assessmentId
+                )
+            } else if (roundType === 'DSA') {
+                const submission = (answers as { code?: string; language?: string }) ?? {}
+                await evaluationService.createDSAPlaceholder(attemptId, submission)
+            } else if (roundType === 'AI') {
+                const refs = (answers as { transcriptRef?: string; videoRef?: string }) ?? {}
+                await evaluationService.createAIPlaceholder(attemptId, refs)
+            }
+        } catch (err) {
+            console.error(`Evaluation failed for attempt ${attemptId} round ${roundType}:`, err)
+            // Don't fail the submit; evaluation can be retried later
+        }
+
         return this.getById(attemptId)
+    }
+
+    /**
+     * Get questions for a round (candidate-facing: MCQ options only, no correct answers)
+     */
+    async getRoundQuestions(attemptId: string, roundType: RoundTypeValue): Promise<RoundQuestionResponse[]> {
+        const attempt = await AssessmentAttempt.findById(attemptId)
+        if (!attempt) {
+            const error = new Error('Attempt not found') as Error & { statusCode: number; code: string }
+            error.statusCode = 404
+            error.code = 'NOT_FOUND'
+            throw error
+        }
+
+        const assessment = await Assessment.findById(attempt.assessmentId)
+        if (!assessment) {
+            const error = new Error('Assessment not found') as Error & { statusCode: number; code: string }
+            error.statusCode = 404
+            error.code = 'NOT_FOUND'
+            throw error
+        }
+
+        const round = assessment.rounds.find((r) => r.roundType === roundType)
+        if (!round || !round.config) {
+            const error = new Error('Round not configured') as Error & { statusCode: number; code: string }
+            error.statusCode = 422
+            error.code = 'INVALID_CONFIG'
+            throw error
+        }
+
+        const config = round.config as Record<string, unknown>
+        let questionIds: string[] = []
+
+        if (roundType === 'MCQ') {
+            const single = (config.singleCorrectQuestionIds as string[]) || []
+            const multi = (config.multiCorrectQuestionIds as string[]) || []
+            questionIds = [...single, ...multi]
+        } else if (roundType === 'DSA') {
+            questionIds = (config.questionIds as string[]) || []
+        }
+        // AI round has no question bank in config (agent/questions TBD)
+
+        if (questionIds.length === 0) {
+            return []
+        }
+
+        const questions = await Question.find({ _id: { $in: questionIds } }).sort({ createdAt: 1 })
+
+        return questions.map((q) => {
+            if (q.type === 'MCQ' && q.mcqDetails) {
+                return {
+                    id: q._id.toString(),
+                    type: 'MCQ' as const,
+                    title: q.title,
+                    difficulty: q.difficulty,
+                    options: q.mcqDetails.options,
+                    isMultiCorrect: q.mcqDetails.isMultiCorrect ?? false,
+                }
+            }
+            if (q.type === 'DSA' && q.dsaDetails) {
+                return {
+                    id: q._id.toString(),
+                    type: 'DSA' as const,
+                    title: q.title,
+                    difficulty: q.difficulty,
+                    prompt: q.dsaDetails.prompt ?? '',
+                    constraints: q.dsaDetails.constraints ?? null,
+                    starterCode: (q.dsaDetails.starterCode as Record<string, string>) ?? {},
+                    languagesSupported: q.dsaDetails.languagesSupported ?? [],
+                }
+            }
+            return null
+        }).filter((q): q is RoundQuestionResponse => q !== null)
     }
 
     /**

@@ -77,6 +77,29 @@ export class AttemptsController {
             next(error)
         }
     }
+
+    /**
+     * GET /api/attempts/:attemptId/rounds/:roundType/questions
+     * Candidate-facing: returns questions for the round (MCQ without correct answers)
+     */
+    async getRoundQuestions(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { attemptId, roundType } = req.params
+
+            if (!['MCQ', 'DSA', 'AI'].includes(roundType)) {
+                res.status(400).json({
+                    success: false,
+                    error: { code: 'INVALID_INPUT', message: 'Invalid round type' },
+                })
+                return
+            }
+
+            const questions = await attemptsService.getRoundQuestions(attemptId, roundType as RoundTypeValue)
+            res.json(successResponse(questions))
+        } catch (error) {
+            next(error)
+        }
+    }
 }
 
 export const attemptsController = new AttemptsController()
