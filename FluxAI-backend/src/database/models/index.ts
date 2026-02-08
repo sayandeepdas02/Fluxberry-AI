@@ -303,11 +303,18 @@ export interface IMCQDetails {
     isMultiCorrect: boolean
 }
 
+export interface IDSATestCase {
+    stdin: string
+    expectedStdout: string
+}
+
 export interface IDSADetails {
     prompt: string
     constraints?: string
     starterCode: Record<string, string>
     languagesSupported: string[]
+    /** Test cases for Judge0 evaluation (hidden from candidate). */
+    testCases?: IDSATestCase[]
 }
 
 export interface IQuestion extends Document {
@@ -338,6 +345,10 @@ const QuestionSchema = new Schema<IQuestion>({
         constraints: { type: String },
         starterCode: { type: Schema.Types.Mixed },
         languagesSupported: [{ type: String }],
+        testCases: [{
+            stdin: { type: String },
+            expectedStdout: { type: String },
+        }],
     },
 }, { timestamps: { createdAt: true, updatedAt: false } })
 

@@ -27,6 +27,15 @@ export interface PublicJob {
     createdAt: string
 }
 
+export interface RunCodeResponse {
+    stdout: string
+    stderr: string
+    statusDescription: string
+    timeSeconds: number | null
+    memoryKb: number | null
+    compileError: string | null
+}
+
 export const publicApi = {
     getCompany: async (slug: string): Promise<ApiResponse<PublicCompany>> => {
         return apiClient.get(`/public/companies/${slug}`)
@@ -38,5 +47,10 @@ export const publicApi = {
 
     getJob: async (slug: string, jobId: string): Promise<ApiResponse<PublicJob>> => {
         return apiClient.get(`/public/companies/${slug}/jobs/${jobId}`)
-    }
+    },
+
+    /** Run code via Judge0 (for DSA "Run Code" in UI). No auth required. */
+    runCode: async (body: { code: string; language: string; stdin?: string }): Promise<ApiResponse<RunCodeResponse>> => {
+        return apiClient.post('/public/run-code', body)
+    },
 }
