@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Users, CheckCircle2, Copy, Loader2, MoreHorizontal, ArrowRight, Clock, Calendar } from "lucide-react"
+import { Plus, Users, CheckCircle2, Copy, Loader2, MoreHorizontal, ArrowRight, Clock, Calendar, Briefcase } from "lucide-react"
 import Link from "next/link"
 import { useAssessments } from "@/lib/hooks/use-assessments"
 import { formatDistanceToNow } from "date-fns"
@@ -14,78 +14,8 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-// Fallback mock data when API is not available
-const mockAssessments = [
-    {
-        id: "101",
-        title: "Senior Frontend Engineer",
-        description: "Technical assessment for Senior React Developer role focusing on system design and performance.",
-        status: "ACTIVE" as const,
-        slug: "senior-frontend",
-        passingScore: 70,
-        timeLimit: 60,
-        allowedAttempts: 1,
-        shuffleQuestions: false,
-        showResults: true,
-        proctoringEnabled: true,
-        rounds: [
-            { id: "1", roundType: "MCQ" as const, order: 1, enabled: true, timeLimit: 30, config: {} },
-            { id: "2", roundType: "DSA" as const, order: 2, enabled: true, timeLimit: 30, config: {} },
-        ],
-        candidateCount: 124,
-        completedCount: 86,
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
-        updatedAt: new Date().toISOString(),
-    },
-    {
-        id: "102",
-        title: "Backend Developer (Go)",
-        description: "Evaluate Go proficiency, concurrency patterns, and API design skills.",
-        status: "DRAFT" as const,
-        slug: "backend-go",
-        passingScore: 70,
-        timeLimit: 45,
-        allowedAttempts: 1,
-        shuffleQuestions: false,
-        showResults: true,
-        proctoringEnabled: true,
-        rounds: [
-            { id: "3", roundType: "DSA" as const, order: 1, enabled: true, timeLimit: 45, config: {} },
-        ],
-        candidateCount: 0,
-        completedCount: 0,
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
-        updatedAt: new Date().toISOString(),
-    },
-    {
-        id: "103",
-        title: "Full Stack Internship 2024",
-        description: "Comprehensive assessment covering basic frontend, node.js backend, and problem solving.",
-        status: "ARCHIVED" as const,
-        slug: "fullstack-intern-2024",
-        passingScore: 60,
-        timeLimit: 90,
-        allowedAttempts: 1,
-        shuffleQuestions: true,
-        showResults: true,
-        proctoringEnabled: true,
-        rounds: [
-            { id: "4", roundType: "MCQ" as const, order: 1, enabled: true, timeLimit: 30, config: {} },
-            { id: "5", roundType: "DSA" as const, order: 2, enabled: true, timeLimit: 30, config: {} },
-            { id: "6", roundType: "AI" as const, order: 3, enabled: true, timeLimit: 30, config: {} },
-        ],
-        candidateCount: 850,
-        completedCount: 720,
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString(),
-        updatedAt: new Date().toISOString(),
-    },
-]
-
 export function AssessmentsList() {
-    const { assessments: apiAssessments, isLoading, error } = useAssessments()
-
-    // Use API data if available, else fallback to mock
-    const assessments = apiAssessments.length > 0 ? apiAssessments : mockAssessments
+    const { assessments, isLoading, error } = useAssessments()
 
     const getStatusVariant = (status: string) => {
         switch (status) {
@@ -145,13 +75,25 @@ export function AssessmentsList() {
 
             {error && !isLoading && (
                 <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 text-orange-800 dark:border-orange-900/30 dark:bg-orange-900/10 dark:text-orange-300">
-                    <p className="text-sm font-medium">Viewing demo data. Connect to backend for live updates.</p>
+                    <p className="text-sm font-medium">Could not load assessments. Check your connection and try again.</p>
+                </div>
+            )}
+
+            {!isLoading && assessments.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-20 gap-4 rounded-lg border border-dashed border-border bg-muted/20">
+                    <Briefcase className="w-12 h-12 text-muted-foreground" />
+                    <p className="text-muted-foreground font-medium">No assessments yet</p>
+                    <p className="text-sm text-muted-foreground/80 text-center max-w-sm">Create your first assessment to start screening candidates.</p>
+                    <Button asChild>
+                        <Link href="/dashboard/assessments/new">New Assessment</Link>
+                    </Button>
                 </div>
             )}
 
             {/* Grid */}
+            {!isLoading && assessments.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {!isLoading && assessments.map((assessment) => (
+                {assessments.map((assessment) => (
                     <Card key={assessment.id} className="group relative flex flex-col overflow-hidden border-border/50 bg-card/50 hover:bg-card hover:border-border hover:shadow-md transition-all duration-300">
                         {/* Status Stripe */}
                         <div className={`absolute top-0 left-0 w-1 h-full transition-colors duration-300
@@ -252,10 +194,8 @@ export function AssessmentsList() {
                         </CardContent>
                     </Card>
                 ))}
-
-                {/* Empty State / Create New Card (Optional, or just keep the top button) */}
-                {/* We could add a "New Assessment" card here if desired, but top button is usually enough. */}
             </div>
+            )}
         </div>
     )
 }

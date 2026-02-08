@@ -3,6 +3,7 @@ import { Assessment } from './types'
 
 export interface CreateAssessmentInput {
     title: string
+    jobId?: string
     description?: string
     passingScore?: number
     timeLimit?: number

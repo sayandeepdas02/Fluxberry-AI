@@ -15,20 +15,39 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ArrowLeft, Briefcase, ChevronRight, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { assessmentsApi } from "@/lib/api/assessments";
 
 export function CreateAssessment() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [title, setTitle] = useState("");
+    const [jobId, setJobId] = useState<string>("");
 
-    const handleCreate = async (e: React.FormEvent) => {
+    const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setError(null);
+        const trimmedTitle = title.trim();
+        if (!trimmedTitle) {
+            setError("Title is required.");
+            return;
+        }
         setIsLoading(true);
-
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        // Redirect to configuration (mock ID)
-        router.push("/dashboard/assessments/123/configure");
+        try {
+            const res = await assessmentsApi.create({
+                title: trimmedTitle,
+                jobId: jobId || undefined,
+            });
+            if (res.success && res.data?.id) {
+                router.push(`/dashboard/assessments/${res.data.id}/configure`);
+                return;
+            }
+            setError(res.error?.message ?? "Failed to create assessment.");
+        } catch {
+            setError("Failed to create assessment.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -53,19 +72,26 @@ export function CreateAssessment() {
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleCreate} className="space-y-6">
+                        {error && (
+                            <div className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                                {error}
+                            </div>
+                        )}
                         <div className="space-y-2">
                             <Label htmlFor="title">Assessment Title</Label>
                             <Input
                                 id="title"
                                 placeholder="e.g. Senior Frontend Engineer Screening"
                                 required
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
                             />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <Label htmlFor="job">Linked Job Post</Label>
-                                <Select required>
+                                <Select value={jobId} onValueChange={setJobId}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select a job..." />
                                     </SelectTrigger>
