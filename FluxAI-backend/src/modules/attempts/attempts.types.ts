@@ -60,3 +60,26 @@ export interface ProctoringSummaryResponse {
     bySeverity: Record<string, number>
     byType: Record<string, number>
 }
+
+// Questions for candidate (MCQ: options only, no correct answers)
+export interface RoundQuestionMCQ {
+    id: string
+    type: 'MCQ'
+    title: string
+    difficulty: string
+    options: string[]
+    isMultiCorrect: boolean
+}
+
+export interface RoundQuestionDSA {
+    id: string
+    type: 'DSA'
+    title: string
+    difficulty: string
+    prompt: string
+    constraints: string | null
+    starterCode: Record<string, string>
+    languagesSupported: string[]
+}
+
+export type RoundQuestionResponse = RoundQuestionMCQ | RoundQuestionDSA

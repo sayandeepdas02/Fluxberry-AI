@@ -5,10 +5,19 @@ import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Camera, User, BadgeCheck, Shield, ChevronRight, FileText } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { getAttemptId } from "@/features/candidate/lib/attempt-storage"
 
 export function IdentityCheckStep({ assessmentId }: { assessmentId: string }) {
+    const router = useRouter()
     const [confirmed, setConfirmed] = useState(false)
+
+    useEffect(() => {
+        if (!getAttemptId(assessmentId)) {
+            router.replace(`/assessment/${assessmentId}/start`)
+        }
+    }, [assessmentId, router])
 
     return (
         <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6 font-sans">
@@ -108,7 +117,7 @@ export function IdentityCheckStep({ assessmentId }: { assessmentId: string }) {
                             onClick={() => setConfirmed(true)}
                             asChild
                         >
-                            <Link href={`/assessment/${assessmentId}/round/1`}>
+                            <Link href={`/assessment/${assessmentId}/round/0`}>
                                 Confirm & Start Round 1 <ChevronRight className="w-4 h-4 ml-2" />
                             </Link>
                         </Button>

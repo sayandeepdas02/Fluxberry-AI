@@ -10,6 +10,29 @@ export interface SubmitRoundInput {
     answers: Record<string, unknown>
 }
 
+// Candidate-facing round question (MCQ: options only, no correct answers)
+export interface RoundQuestionMCQ {
+    id: string
+    type: 'MCQ'
+    title: string
+    difficulty: string
+    options: string[]
+    isMultiCorrect: boolean
+}
+
+export interface RoundQuestionDSA {
+    id: string
+    type: 'DSA'
+    title: string
+    difficulty: string
+    prompt: string
+    constraints: string | null
+    starterCode: Record<string, string>
+    languagesSupported: string[]
+}
+
+export type RoundQuestionResponse = RoundQuestionMCQ | RoundQuestionDSA
+
 export const attemptsApi = {
     /**
      * Start or resume an assessment attempt
@@ -42,6 +65,13 @@ export const attemptsApi = {
             `/attempts/${attemptId}/rounds/${roundType}/submit`,
             input
         )
+    },
+
+    /**
+     * Get questions for a round (candidate-facing; MCQ without correct answers)
+     */
+    async getRoundQuestions(attemptId: string, roundType: string) {
+        return apiClient.get<RoundQuestionResponse[]>(`/attempts/${attemptId}/rounds/${roundType}/questions`)
     },
 
     /**

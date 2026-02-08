@@ -11,6 +11,7 @@ const router = Router()
 router.get('/:attemptId', (req, res, next) => attemptsController.getById(req, res, next))
 
 // Round operations
+router.get('/:attemptId/rounds/:roundType/questions', (req, res, next) => attemptsController.getRoundQuestions(req, res, next))
 router.post('/:attemptId/rounds/:roundType/start', (req, res, next) => attemptsController.startRound(req, res, next))
 router.post('/:attemptId/rounds/:roundType/submit', (req, res, next) => attemptsController.submitRound(req, res, next))
 
