@@ -58,6 +58,11 @@ export function createApp() {
     app.use('/api/organization', organizationsRoutes) // Legacy: current org from JWT
 
     // Phase 2: Assessments & Questions
+    // IMPORTANT: Public candidate endpoint MUST be registered BEFORE the protected assessments routes
+    // Otherwise the authGuard in assessmentsRoutes will reject candidate requests
+    app.post('/api/assessments/:assessmentId/attempts', (req, res, next) =>
+        attemptsController.startOrResume(req, res, next)
+    )
     app.use('/api/assessments', assessmentsRoutes)
     app.use('/api/questions', questionsRoutes)
     app.use('/api/jobs', jobsRoutes)
@@ -67,9 +72,6 @@ export function createApp() {
     app.use('/api/candidates', candidatesRoutes)
 
     // Phase 3: Attempts & Proctoring
-    app.post('/api/assessments/:assessmentId/attempts', (req, res, next) =>
-        attemptsController.startOrResume(req, res, next)
-    )
     app.use('/api/attempts', attemptsRoutes)
 
     // Phase 4: Results (assessment-level requires auth)

@@ -96,7 +96,7 @@ export const attemptsApi = {
      * Get assessment public details
      */
     async getAssessment(id: string) {
-        return apiClient.get<{ organizationId: string }>(`/assessments/${id}`)
+        return apiClient.get<{ id: string; title: string; organizationId: string; rounds: any[] }>(`/public/assessments/${id}`)
     },
 
     /**

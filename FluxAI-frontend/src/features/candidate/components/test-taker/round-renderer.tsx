@@ -6,7 +6,7 @@ import { SecureShell } from "./secure-shell"
 import { MCQInterface } from "./mcq-interface"
 import { DSAInterface } from "./dsa-interface"
 import { AIInterviewInterface } from "./ai-interview-interface"
-import { getAttemptId, getRoundTypes } from "@/features/candidate/lib/attempt-storage"
+import { getAttemptId, getRoundTypes, setRoundTypes } from "@/features/candidate/lib/attempt-storage"
 import { attemptsApi, RoundQuestionResponse } from "@/lib/api/attempts"
 import { AttemptRound } from "@/lib/api/types"
 
@@ -19,7 +19,6 @@ const ROUND_TITLES: Record<string, string> = {
 export function RoundRenderer({ assessmentId, roundId }: { assessmentId: string; roundId: string }) {
     const router = useRouter()
     const attemptId = getAttemptId(assessmentId)
-    const roundTypes = getRoundTypes(assessmentId)
 
     const [questions, setQuestions] = useState<RoundQuestionResponse[] | null>(null)
     const [loading, setLoading] = useState(true)
@@ -29,14 +28,35 @@ export function RoundRenderer({ assessmentId, roundId }: { assessmentId: string;
     const [startedAt, setStartedAt] = useState<string | null>(null)
     const [timeLimit, setTimeLimit] = useState<number | null>(null)
 
+    // Round types - start with session storage value, fallback fetch if null
+    const [roundTypes, setRoundTypesState] = useState<string[] | null>(() => getRoundTypes(assessmentId))
+
     const roundIndex = parseInt(roundId, 10)
     const roundType = roundTypes?.[roundIndex] ?? null
 
     useEffect(() => {
-        if (!attemptId || !roundTypes) {
+        if (!attemptId) {
             router.replace(`/assessment/${assessmentId}/start`)
             return
         }
+
+        // If roundTypes is missing (e.g., after page refresh), fetch from API
+        if (!roundTypes) {
+            attemptsApi.getById(attemptId).then(res => {
+                if (res.success && res.data && res.data.rounds.length > 0) {
+                    const types = res.data.rounds.map((r: AttemptRound) => r.roundType)
+                    setRoundTypes(assessmentId, types)
+                    setRoundTypesState(types)
+                } else {
+                    // No attempt data, redirect to start
+                    router.replace(`/assessment/${assessmentId}/start`)
+                }
+            }).catch(() => {
+                router.replace(`/assessment/${assessmentId}/start`)
+            })
+            return
+        }
+
         if (roundIndex < 0 || roundIndex >= roundTypes.length || !roundType) {
             setLoading(false)
             setError("Invalid round")
