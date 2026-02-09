@@ -191,7 +191,7 @@ export function IdentityCheckStep({ assessmentId }: { assessmentId: string }) {
                             asChild={!uploading}
                         >
                             {!uploading ? (
-                                <Link href={`/assessment/${assessmentId}/round/1`}>
+                                <Link href={`/assessment/${assessmentId}/round/0`}>
                                     Confirm & Start Round 1 <ChevronRight className="w-4 h-4 ml-2" />
                                 </Link>
                             ) : (

@@ -32,8 +32,7 @@ export function RoundRenderer({ assessmentId, roundId }: { assessmentId: string;
     const [startedAt, setStartedAt] = useState<string | null>(null)
     const [timeLimit, setTimeLimit] = useState<number | null>(null)
 
-    // URL uses 1-based round numbers (round/1, round/2, round/3)
-    const roundIndex = parseInt(roundId, 10) - 1
+    const roundIndex = parseInt(roundId, 10)
     const roundType = roundTypes?.[roundIndex] ?? null
 
     // Read from sessionStorage only after mount (client-side only)

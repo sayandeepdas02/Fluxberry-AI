@@ -49,7 +49,6 @@ export function useOpenAIRealtime({
     const audioElementRef = useRef<HTMLAudioElement | null>(null)
     const sessionStartTimeRef = useRef<number>(0)
     const handleRealtimeEventRef = useRef<(event: Record<string, unknown>) => void>(() => {})
-    const responseCreateSentRef = useRef(false)
 
     const updateConnectionState = useCallback((state: ConnectionState) => {
         setConnectionState(state)
@@ -111,12 +110,12 @@ export function useOpenAIRealtime({
             dataChannelRef.current = dc
 
             dc.onopen = () => {
-                // Send session configuration (GA shape). Server will reply with session.updated.
+                // Send session configuration (GA shape: type, instructions, audio.output.voice)
                 dc.send(JSON.stringify({
                     type: 'session.update',
                     session: {
                         type: 'realtime',
-                        model,
+                        modalities: ['text', 'audio'],
                         instructions: systemPrompt,
                         input_audio_transcription: { model: 'whisper-1' },
                         turn_detection: { type: 'server_vad' },
@@ -125,14 +124,12 @@ export function useOpenAIRealtime({
                         },
                     },
                 }))
-                // response.create is sent when we get session.created/session.updated (see handleRealtimeEvent).
-                // Fallback: if server never sends those events, trigger after 2.5s so the AI still speaks first.
+                // Trigger AI to speak first: without this, model only responds after user speaks (Server VAD)
                 setTimeout(() => {
-                    if (!responseCreateSentRef.current && dataChannelRef.current?.readyState === 'open') {
-                        responseCreateSentRef.current = true
+                    if (dataChannelRef.current?.readyState === 'open') {
                         dataChannelRef.current.send(JSON.stringify({ type: 'response.create' }))
                     }
-                }, 2500)
+                }, 800)
             }
 
             dc.onmessage = (event) => {
@@ -203,15 +200,6 @@ export function useOpenAIRealtime({
         }
 
         switch (event.type) {
-            case 'session.created':
-            case 'session.updated':
-                // Session is ready. Trigger AI to speak first (once).
-                if (!responseCreateSentRef.current && dataChannelRef.current?.readyState === 'open') {
-                    responseCreateSentRef.current = true
-                    dataChannelRef.current.send(JSON.stringify({ type: 'response.create' }))
-                }
-                break
-
             case 'response.output_audio_transcript.delta':
             case 'response.audio_transcript.delta':
                 setIsAISpeaking(true)
