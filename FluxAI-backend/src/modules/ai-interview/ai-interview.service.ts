@@ -87,7 +87,7 @@ class AIInterviewService {
                 const config = getAgentConfig(agentType)
 
                 // Generate new ephemeral token for reconnection
-                const ephemeralToken = await this.createEphemeralToken(config.model)
+                const ephemeralToken = await this.createEphemeralToken(config.model, config.systemPrompt, config.voice)
 
                 return {
                     sessionId: aiRound.aiSessionId,
@@ -110,8 +110,8 @@ class AIInterviewService {
         const sessionId = `ai_sess_${uuidv4()}`
         const now = new Date()
 
-        // Create ephemeral token from OpenAI Realtime API
-        const ephemeralToken = await this.createEphemeralToken(config.model)
+        // Create ephemeral token from OpenAI Realtime API (with system prompt for session)
+        const ephemeralToken = await this.createEphemeralToken(config.model, config.systemPrompt, config.voice)
 
         // Update round with session info
         aiRound.aiSessionId = sessionId
@@ -142,35 +142,46 @@ class AIInterviewService {
     }
 
     /**
-     * Create ephemeral token for OpenAI Realtime API
+     * Create ephemeral client secret for OpenAI Realtime API (WebRTC).
+     * Uses POST /v1/realtime/client_secrets per OpenAI docs.
      */
-    private async createEphemeralToken(model: string): Promise<string> {
+    private async createEphemeralToken(model: string, instructions: string, voice: string): Promise<string> {
+        const apiKey = process.env.OPENAI_API_KEY
+        if (!apiKey) {
+            console.error('OPENAI_API_KEY is not set')
+            return ''
+        }
         try {
-            // Use OpenAI's session token endpoint for Realtime API
-            // This creates a short-lived token for WebRTC connection
-            const response = await fetch('https://api.openai.com/v1/realtime/sessions', {
+            const response = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+                    'Authorization': `Bearer ${apiKey}`,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    model,
-                    voice: 'alloy',
+                    expires_after: { anchor: 'created_at', seconds: 3600 },
+                    session: {
+                        type: 'realtime',
+                        model,
+                        instructions,
+                        audio: {
+                            output: { voice },
+                        },
+                    },
                 }),
             })
 
             if (!response.ok) {
-                throw new Error(`OpenAI API error: ${response.status}`)
+                const errText = await response.text()
+                console.error('OpenAI client_secrets error:', response.status, errText)
+                throw new Error(`OpenAI API error: ${response.status} ${errText}`)
             }
 
-            const data = await response.json() as { client_secret?: { value: string } }
-            return data.client_secret?.value || ''
+            const data = (await response.json()) as { value?: string }
+            return data.value ?? ''
         } catch (error) {
             console.error('Failed to create ephemeral token:', error)
-            // V1: Return empty string and let frontend handle fallback
-            // V2: Implement proper error handling and retry
-            return ''
+            throw error
         }
     }
 

@@ -173,7 +173,7 @@ export function getAgentConfig(agentType: AgentTypeValue) {
         agentType,
         systemPrompt: getAgentPrompt(agentType),
         durationSeconds: 15 * 60, // 15 minutes (V1 hardcoded)
-        model: 'gpt-4o-realtime-preview',
-        voice: 'alloy', // OpenAI voice for TTS
+        model: 'gpt-realtime', // GA model name per https://developers.openai.com/api/docs/guides/realtime
+        voice: 'alloy', // OpenAI voice: alloy, echo, fable, onyx, nova, shimmer (or marin in docs)
     }
 }

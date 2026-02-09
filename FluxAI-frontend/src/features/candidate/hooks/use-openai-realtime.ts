@@ -134,8 +134,8 @@ export function useOpenAIRealtime({
             const offer = await pc.createOffer()
             await pc.setLocalDescription(offer)
 
-            // Send offer to OpenAI Realtime API
-            const response = await fetch(`https://api.openai.com/v1/realtime?model=${model}`, {
+            // GA: WebRTC SDP exchange is POST /v1/realtime/calls (not ?model= in URL)
+            const response = await fetch('https://api.openai.com/v1/realtime/calls', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${ephemeralToken}`,
@@ -175,18 +175,19 @@ export function useOpenAIRealtime({
         const timestamp = Date.now() - sessionStartTimeRef.current
 
         switch (event.type) {
+            case 'response.output_audio_transcript.delta':
             case 'response.audio_transcript.delta':
-                // AI is speaking
                 setIsAISpeaking(true)
                 break
 
+            case 'response.output_audio_transcript.done':
             case 'response.audio_transcript.done':
-                // AI finished speaking
                 setIsAISpeaking(false)
-                if (event.transcript && typeof event.transcript === 'string') {
+                const aiText = (event.transcript ?? (event as { output_audio_transcript?: string }).output_audio_transcript) as string | undefined
+                if (aiText && typeof aiText === 'string') {
                     addTranscriptEntry({
                         speaker: 'AI',
-                        text: event.transcript,
+                        text: aiText,
                         timestamp,
                     })
                 }

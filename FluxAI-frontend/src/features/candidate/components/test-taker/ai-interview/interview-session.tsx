@@ -274,39 +274,47 @@ export function InterviewSession({
                 )}
             </div>
 
-            {/* Controls */}
+            {/* Controls — icons use text-inherit so they're visible on dark theme */}
             <div className="flex items-center justify-center gap-5 px-6 py-5 border-t border-neutral-800 bg-neutral-900/50">
                 <Button
                     variant="outline"
                     size="lg"
                     onClick={toggleMute}
+                    aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
+                    title={isMuted ? 'Unmute' : 'Mute'}
                     className={`rounded-full w-14 h-14 transition-all ${isMuted ? 'bg-red-500/20 border-red-500 hover:bg-red-500/30' : 'hover:bg-neutral-800'}`}
                 >
-                    {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                    {isMuted ? <MicOff className="w-6 h-6 text-inherit" /> : <Mic className="w-6 h-6 text-inherit" />}
                 </Button>
                 <Button
                     variant="outline"
                     size="lg"
                     onClick={toggleVideo}
+                    aria-label={isVideoOff ? 'Turn video on' : 'Turn video off'}
+                    title={isVideoOff ? 'Video on' : 'Video off'}
                     className={`rounded-full w-14 h-14 transition-all ${isVideoOff ? 'bg-red-500/20 border-red-500 hover:bg-red-500/30' : 'hover:bg-neutral-800'}`}
                 >
-                    {isVideoOff ? <VideoOff className="w-6 h-6" /> : <Video className="w-6 h-6" />}
+                    {isVideoOff ? <VideoOff className="w-6 h-6 text-inherit" /> : <Video className="w-6 h-6 text-inherit" />}
                 </Button>
                 <Button
                     variant="default"
                     size="lg"
                     onClick={handleEndCall}
+                    aria-label="End call"
+                    title="End call"
                     className="rounded-full w-16 h-16 bg-red-600 hover:bg-red-700 transition-colors shadow-lg"
                 >
-                    <Phone className="w-6 h-6 rotate-[135deg]" />
+                    <Phone className="w-6 h-6 rotate-[135deg] text-inherit" />
                 </Button>
                 <Button
                     variant="outline"
                     size="lg"
                     onClick={() => setShowTranscript(!showTranscript)}
+                    aria-label={showTranscript ? 'Hide transcript' : 'Show transcript'}
+                    title={showTranscript ? 'Hide transcript' : 'Show transcript'}
                     className={`rounded-full w-14 h-14 transition-all ${showTranscript ? 'bg-orange-500/20 border-orange-500 hover:bg-orange-500/30' : 'hover:bg-neutral-800'}`}
                 >
-                    <MessageSquare className="w-6 h-6" />
+                    <MessageSquare className="w-6 h-6 text-inherit" />
                 </Button>
             </div>
         </div>
