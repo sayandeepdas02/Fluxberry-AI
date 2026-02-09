@@ -6,7 +6,9 @@ import {
     Question,
     IAssessmentAttempt,
     RoundTypeValue,
+    AttemptStatus,
     AttemptStatusType,
+    RoundStatus,
     RoundStatusType,
     QuestionStatus,
     QuestionStatusType,
@@ -176,9 +178,9 @@ export class AttemptsService {
 
             roundsToCreate.push({
                 roundType: r.roundType,
-                status: 'NOT_STARTED',
+                status: RoundStatus.NOT_STARTED,
                 timingMode,
-                timeLimit,
+                timeLimit: timeLimit ?? undefined,
                 questions: questionSnapshots,
                 currentQuestionIndex: 0,
                 perQuestionTimeLimit,
@@ -190,7 +192,7 @@ export class AttemptsService {
         const attempt = await AssessmentAttempt.create({
             assessmentId,
             candidateId: candidate._id,
-            status: 'NOT_STARTED',
+            status: AttemptStatus.NOT_STARTED,
             rounds: roundsToCreate,
         })
 
@@ -247,8 +249,12 @@ export class AttemptsService {
             throw error
         }
 
-        if (roundAttempt.status !== 'NOT_STARTED') {
-            const error = new Error('Round already started') as Error & { statusCode: number; code: string }
+        // Idempotent: if round already IN_PROGRESS, return success (e.g. page refresh on AI round)
+        if (roundAttempt.status === 'IN_PROGRESS') {
+            return this.getById(attemptId)
+        }
+        if (roundAttempt.status === 'COMPLETED' || roundAttempt.status === 'SKIPPED') {
+            const error = new Error('Round already completed') as Error & { statusCode: number; code: string }
             error.statusCode = 422
             error.code = 'INVALID_STATUS'
             throw error
@@ -592,8 +598,11 @@ export class AttemptsService {
         if (timeExpired) {
             // Time expired: mark question as EXPIRED, do not save answer, advance to next
             if (questionAttempt) {
-                questionAttempt.status = QuestionStatus.EXPIRED
-                questionAttempt.endedAt = new Date(new Date(questionAttempt.startedAt).getTime() + perQuestionTimeLimit * 1000)
+                const startedAt = questionAttempt.startedAt
+                if (startedAt) {
+                    questionAttempt.status = QuestionStatus.EXPIRED
+                    questionAttempt.endedAt = new Date(new Date(startedAt).getTime() + perQuestionTimeLimit * 1000)
+                }
             }
 
             const nextQuestionIndex = questionIndex + 1
