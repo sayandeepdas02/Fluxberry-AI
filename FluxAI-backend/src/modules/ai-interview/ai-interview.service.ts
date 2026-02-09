@@ -9,6 +9,7 @@ import OpenAI from 'openai'
 import { v4 as uuidv4 } from 'uuid'
 import {
     AssessmentAttempt,
+    Candidate,
     AISessionStatus,
     AgentType,
     RoundStatus,
@@ -81,19 +82,22 @@ class AIInterviewService {
                 await attempt.save()
                 // Fall through to create new session
             } else {
-                // Return existing session info
-                // V2: Would reconnect to existing session
+                // Return existing session info (reconnection)
                 const agentType = (aiRound.agentType || AgentType.GENERAL) as AgentTypeValue
                 const config = getAgentConfig(agentType)
-
-                // Generate new ephemeral token for reconnection
-                const ephemeralToken = await this.createEphemeralToken(config.model, config.systemPrompt, config.voice)
-
+                let systemPrompt = config.systemPrompt
+                try {
+                    const candidate = await Candidate.findById(attempt.candidateId)
+                    if (candidate?.firstName) {
+                        systemPrompt += `\n\nThe candidate's first name is ${candidate.firstName}. When you greet them, use their name (e.g. "Hey ${candidate.firstName}").`
+                    }
+                } catch { /* ignore */ }
+                const ephemeralToken = await this.createEphemeralToken(config.model, systemPrompt, config.voice)
                 return {
                     sessionId: aiRound.aiSessionId,
                     ephemeralToken,
                     agentType: config.agentType,
-                    systemPrompt: config.systemPrompt,
+                    systemPrompt,
                     durationSeconds: config.durationSeconds,
                     startedAt: aiRound.startedAt?.toISOString() || new Date().toISOString(),
                     model: config.model,
@@ -106,12 +110,23 @@ class AIInterviewService {
         const agentType: AgentTypeValue = (input.agentType as AgentTypeValue) || AgentType.GENERAL
         const config = getAgentConfig(agentType)
 
+        // Get candidate name for personalized greeting
+        let systemPrompt = config.systemPrompt
+        try {
+            const candidate = await Candidate.findById(attempt.candidateId)
+            if (candidate?.firstName) {
+                systemPrompt += `\n\nThe candidate's first name is ${candidate.firstName}. When you greet them, use their name (e.g. "Hey ${candidate.firstName}").`
+            }
+        } catch {
+            // Ignore; use default prompt without name
+        }
+
         // Generate session ID
         const sessionId = `ai_sess_${uuidv4()}`
         const now = new Date()
 
         // Create ephemeral token from OpenAI Realtime API (with system prompt for session)
-        const ephemeralToken = await this.createEphemeralToken(config.model, config.systemPrompt, config.voice)
+        const ephemeralToken = await this.createEphemeralToken(config.model, systemPrompt, config.voice)
 
         // Update round with session info
         aiRound.aiSessionId = sessionId
@@ -133,7 +148,7 @@ class AIInterviewService {
             sessionId,
             ephemeralToken,
             agentType: config.agentType,
-            systemPrompt: config.systemPrompt,
+            systemPrompt,
             durationSeconds: config.durationSeconds,
             startedAt: now.toISOString(),
             model: config.model,

@@ -152,10 +152,20 @@ export function RoundRenderer({ assessmentId, roundId }: { assessmentId: string;
         if (!attemptId || !roundType) return
         try {
             const res = await attemptsApi.submitRound(attemptId, roundType, { answers })
-            if (res.success) handleNextRound()
-            else setError(res.error?.message ?? "Submit failed")
+            if (res.success) {
+                handleNextRound()
+                return
+            }
+            // After ending AI interview, treat "round not started" / "already submitted" as success
+            // so user is sent to the thank-you page instead of seeing an error
+            if (res.error?.code === 'INVALID_STATUS' || res.error?.code === 'ALREADY_SUBMITTED') {
+                handleNextRound()
+                return
+            }
+            setError(res.error?.message ?? "Submit failed")
         } catch {
-            setError("Submit failed")
+            // On network/other error, still go to completed so user isn't stuck
+            handleNextRound()
         }
     }
 
