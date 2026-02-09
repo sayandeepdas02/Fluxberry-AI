@@ -72,6 +72,9 @@ export function MCQInterface({
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
     }, [attemptId])
 
+    // Keep handleSubmit ref current for timer callback
+    const handleSubmitRef = useRef<(isTimeout?: boolean) => void>(() => { })
+
     // Calculate remaining time from backend startedAt
     useEffect(() => {
         if (!startedAt || timeLimit <= 0) return
@@ -84,7 +87,7 @@ export function MCQInterface({
             if (remaining <= 0) {
                 // Time expired - auto-submit
                 if (timerRef.current) clearInterval(timerRef.current)
-                handleSubmit(true)
+                handleSubmitRef.current(true)
             }
         }, 100)
 
@@ -138,6 +141,11 @@ export function MCQInterface({
             setIsSubmitting(false)
         }
     }, [attemptId, roundIndex, currentQuestionIndex, selectedOptions, isSubmitting, onRoundComplete])
+
+    // Keep handleSubmitRef current so timer can call latest version
+    useEffect(() => {
+        handleSubmitRef.current = handleSubmit
+    }, [handleSubmit])
 
     const toggleOption = (optionIndex: number) => {
         if (isSubmitting) return

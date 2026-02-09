@@ -13,6 +13,10 @@ export const FILE_LIMITS = {
         maxSize: 500 * 1024 * 1024, // 500MB
         allowedMimeTypes: ['video/mp4', 'video/webm'],
     },
+    AI_RECORDING: {
+        maxSize: 500 * 1024 * 1024, // 500MB
+        allowedMimeTypes: ['audio/webm', 'audio/mp4', 'audio/mpeg', 'video/webm', 'video/mp4'],
+    },
 }
 
 // ============================================
@@ -50,7 +54,7 @@ export interface UploadUrlResponse {
 
 export interface FileAssetResponse {
     id: string
-    fileType: 'RESUME' | 'VIDEO'
+    fileType: 'RESUME' | 'VIDEO' | 'AI_RECORDING'
     mimeType: string
     size: number
     createdAt: Date

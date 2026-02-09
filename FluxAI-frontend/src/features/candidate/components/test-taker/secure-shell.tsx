@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Clock, AlertCircle } from "lucide-react"
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
+import { TimingMode } from "@/lib/api/types"
 
 export function SecureShell({
     children,
@@ -14,6 +15,7 @@ export function SecureShell({
     roundTotal,
     startedAt,
     timeLimit,
+    timingMode = 'PER_QUESTION', // Default to per-question (no navbar timer)
 }: {
     children: React.ReactNode,
     title: string,
@@ -21,12 +23,16 @@ export function SecureShell({
     roundTotal: number,
     startedAt: string | null,
     timeLimit: number | null, // minutes
+    timingMode?: TimingMode, // NEW: determines which timer is shown
 }) {
     const [elapsedSeconds, setElapsedSeconds] = useState(0)
     const [warnings, setWarnings] = useState(0)
 
+    // Only run timer if we're in PER_ROUND mode (AI rounds)
+    const showNavbarTimer = timingMode === 'PER_ROUND'
+
     useEffect(() => {
-        if (!startedAt) return
+        if (!startedAt || !showNavbarTimer) return
 
         const startTime = new Date(startedAt).getTime()
         const updateTimer = () => {
@@ -37,7 +43,7 @@ export function SecureShell({
         updateTimer()
         const timer = setInterval(updateTimer, 1000)
         return () => clearInterval(timer)
-    }, [startedAt])
+    }, [startedAt, showNavbarTimer])
 
     // Mock proctoring events - keep existing logic
     useEffect(() => {
@@ -78,14 +84,17 @@ export function SecureShell({
                 </div>
 
                 <div className="flex items-center gap-6">
-                    <div className={cn(
-                        "flex items-center gap-2 px-3 py-1.5 rounded-full font-mono text-sm font-medium transition-colors",
-                        isOver ? "bg-red-100 text-red-600" :
-                            remaining < 300 ? "bg-amber-100 text-amber-600" : "bg-neutral-100 text-neutral-600"
-                    )}>
-                        <Clock className="w-4 h-4" />
-                        <span>{limitSeconds > 0 ? formatTime(remaining) : formatTime(elapsedSeconds)}</span>
-                    </div>
+                    {/* Only show navbar timer for PER_ROUND mode (AI rounds) */}
+                    {showNavbarTimer && (
+                        <div className={cn(
+                            "flex items-center gap-2 px-3 py-1.5 rounded-full font-mono text-sm font-medium transition-colors",
+                            isOver ? "bg-red-100 text-red-600" :
+                                remaining < 300 ? "bg-amber-100 text-amber-600" : "bg-neutral-100 text-neutral-600"
+                        )}>
+                            <Clock className="w-4 h-4" />
+                            <span>{limitSeconds > 0 ? formatTime(remaining) : formatTime(elapsedSeconds)}</span>
+                        </div>
+                    )}
 
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5 text-xs text-green-600 font-medium px-2 py-1 bg-green-50 rounded border border-green-100">

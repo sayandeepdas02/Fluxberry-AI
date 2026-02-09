@@ -18,6 +18,7 @@ import candidatesRoutes from './modules/candidates/candidates.routes.js'
 import analyticsRoutes from './modules/analytics/analytics.routes.js'
 import dashboardRoutes from './modules/dashboard/dashboard.routes.js'
 import publicRoutes from './modules/public/public.routes.js'
+import aiInterviewRoutes from './modules/ai-interview/ai-interview.routes.js'
 import { attemptsController } from './modules/attempts/attempts.controller.js'
 import { resultsController } from './modules/results/results.controller.js'
 import { filesController } from './modules/files/files.controller.js'
@@ -73,6 +74,7 @@ export function createApp() {
 
     // Phase 3: Attempts & Proctoring
     app.use('/api/attempts', attemptsRoutes)
+    app.use('/api/attempts', aiInterviewRoutes) // AI Interview APIs
 
     // Phase 4: Results (assessment-level requires auth)
     app.get('/api/assessments/:assessmentId/results', authGuard, (req, res, next) =>

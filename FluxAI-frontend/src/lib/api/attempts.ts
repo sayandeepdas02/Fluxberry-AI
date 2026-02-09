@@ -188,5 +188,88 @@ export const attemptsApi = {
             fileId
         })
     },
+
+    // ============================================
+    // AI Interview APIs (V1)
+    // ============================================
+
+    /**
+     * Start AI interview session
+     */
+    async startAISession(attemptId: string, agentType?: string) {
+        return apiClient.post<AISessionStartResponse>(
+            `/attempts/${attemptId}/ai/start`,
+            agentType ? { agentType } : {}
+        )
+    },
+
+    /**
+     * End AI interview session
+     */
+    async endAISession(attemptId: string, sessionId: string, reason: AISessionEndReason) {
+        return apiClient.post<AISessionEndResponse>(
+            `/attempts/${attemptId}/ai/end`,
+            { sessionId, reason }
+        )
+    },
+
+    /**
+     * Save transcript entries
+     */
+    async saveTranscript(attemptId: string, sessionId: string, entries: TranscriptEntry[]) {
+        return apiClient.post<{ entryCount: number }>(
+            `/attempts/${attemptId}/ai/transcript`,
+            { sessionId, entries }
+        )
+    },
+
+    /**
+     * Get AI session details (for recruiter review)
+     */
+    async getAISessionDetails(attemptId: string) {
+        return apiClient.get<AISessionDetails>(
+            `/attempts/${attemptId}/ai/details`
+        )
+    },
 }
 
+// AI Interview Types
+export interface AISessionStartResponse {
+    sessionId: string
+    ephemeralToken: string
+    agentType: string
+    systemPrompt: string
+    durationSeconds: number
+    startedAt: string
+    model: string
+    voice: string
+}
+
+export interface AISessionEndResponse {
+    sessionId: string
+    status: string
+    duration: number
+    endedAt: string
+}
+
+export interface TranscriptEntry {
+    speaker: 'AI' | 'CANDIDATE'
+    text: string
+    timestamp: number
+}
+
+export interface AISessionDetails {
+    sessionId: string | null
+    status: string | null
+    agentType: string | null
+    transcript: TranscriptEntry[]
+    mediaAssets: {
+        audioAssetId?: string
+        videoAssetId?: string
+    } | null
+    duration: number | null
+    startedAt: string | null
+    endedAt: string | null
+}
+
+export type AISessionEndReason = 'COMPLETED' | 'TIMEOUT' | 'CANDIDATE_EXIT' | 'ERROR'
