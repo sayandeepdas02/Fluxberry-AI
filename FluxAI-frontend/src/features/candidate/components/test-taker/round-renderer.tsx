@@ -18,7 +18,11 @@ const ROUND_TITLES: Record<string, string> = {
 
 export function RoundRenderer({ assessmentId, roundId }: { assessmentId: string; roundId: string }) {
     const router = useRouter()
-    const attemptId = getAttemptId(assessmentId)
+
+    // Hydration fix: don't read sessionStorage during SSR
+    const [hasMounted, setHasMounted] = useState(false)
+    const [attemptId, setAttemptId] = useState<string | null>(null)
+    const [roundTypes, setRoundTypesState] = useState<string[] | null>(null)
 
     const [questions, setQuestions] = useState<RoundQuestionResponse[] | null>(null)
     const [loading, setLoading] = useState(true)
@@ -28,13 +32,20 @@ export function RoundRenderer({ assessmentId, roundId }: { assessmentId: string;
     const [startedAt, setStartedAt] = useState<string | null>(null)
     const [timeLimit, setTimeLimit] = useState<number | null>(null)
 
-    // Round types - start with session storage value, fallback fetch if null
-    const [roundTypes, setRoundTypesState] = useState<string[] | null>(() => getRoundTypes(assessmentId))
-
     const roundIndex = parseInt(roundId, 10)
     const roundType = roundTypes?.[roundIndex] ?? null
 
+    // Read from sessionStorage only after mount (client-side only)
     useEffect(() => {
+        setAttemptId(getAttemptId(assessmentId))
+        setRoundTypesState(getRoundTypes(assessmentId))
+        setHasMounted(true)
+    }, [assessmentId])
+
+    useEffect(() => {
+        // Wait until client-side mount before doing anything
+        if (!hasMounted) return
+
         if (!attemptId) {
             router.replace(`/assessment/${assessmentId}/start`)
             return
@@ -103,7 +114,7 @@ export function RoundRenderer({ assessmentId, roundId }: { assessmentId: string;
         }
         init()
         return () => { cancelled = true }
-    }, [assessmentId, attemptId, roundId, roundIndex, roundType, roundTypes, router])
+    }, [assessmentId, attemptId, roundId, roundIndex, roundType, roundTypes, router, hasMounted])
 
     const handleNextRound = () => {
         if (roundIndex < (roundTypes?.length ?? 0) - 1) {
@@ -148,7 +159,14 @@ export function RoundRenderer({ assessmentId, roundId }: { assessmentId: string;
         }
     }
 
-    if (!attemptId || !roundTypes) return null
+    // Show loading during SSR and initial mount
+    if (!hasMounted || !attemptId || !roundTypes) {
+        return (
+            <div className="p-10 text-center text-neutral-500">
+                Loading round…
+            </div>
+        )
+    }
     if (error || roundType === null) {
         return (
             <div className="p-10 text-center">
@@ -166,6 +184,11 @@ export function RoundRenderer({ assessmentId, roundId }: { assessmentId: string;
 
     const title = ROUND_TITLES[roundType] ?? roundType
 
+    // Determine timing mode based on round type
+    // MCQ & DSA: per-question timing (no navbar timer)
+    // AI: per-round timing (session timer in navbar)
+    const timingMode = roundType === 'AI' ? 'PER_ROUND' : 'PER_QUESTION'
+
     return (
         <SecureShell
             title={title}
@@ -173,6 +196,7 @@ export function RoundRenderer({ assessmentId, roundId }: { assessmentId: string;
             roundTotal={roundTypes.length}
             startedAt={startedAt}
             timeLimit={timeLimit}
+            timingMode={timingMode as 'PER_QUESTION' | 'PER_ROUND'}
         >
             {roundType === "MCQ" && (
                 <MCQInterface

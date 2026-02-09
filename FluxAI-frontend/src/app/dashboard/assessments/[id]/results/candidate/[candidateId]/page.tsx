@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, CheckCircle2, AlertCircle, Clock, Code, Video, FileText, Download, Share2, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { resultsApi, type AttemptResultResponse } from "@/lib/api/results"
+import { AIInterviewViewer } from "@/features/dashboard/components/ai-interview-viewer"
 
 const ROUND_ICONS: Record<string, React.ReactNode> = {
     MCQ: <FileText className="w-4 h-4" />,
@@ -87,10 +88,10 @@ export default function CandidateResultPage({ params }: { params: Promise<{ id: 
         statusLabel === "Strong Hire"
             ? "bg-green-100 text-green-700 border-green-200"
             : statusLabel === "Reject"
-              ? "bg-red-100 text-red-700 border-red-200"
-              : statusLabel === "Consider"
-                ? "bg-yellow-100 text-yellow-700 border-yellow-200"
-                : "bg-muted text-muted-foreground"
+                ? "bg-red-100 text-red-700 border-red-200"
+                : statusLabel === "Consider"
+                    ? "bg-yellow-100 text-yellow-700 border-yellow-200"
+                    : "bg-muted text-muted-foreground"
     const hasProctoringFlags = result.proctoringSummary.totalEvents > 0
 
     return (
@@ -148,9 +149,8 @@ export default function CandidateResultPage({ params }: { params: Promise<{ id: 
                                 return (
                                     <div key={round.roundType} className="flex flex-col items-center gap-2 bg-background p-2 flex-1">
                                         <div
-                                            className={`w-10 h-10 rounded-full flex items-center justify-center border-4 border-white shadow-sm ${
-                                                isDone ? "bg-green-100 text-green-600" : "bg-muted text-muted-foreground"
-                                            }`}
+                                            className={`w-10 h-10 rounded-full flex items-center justify-center border-4 border-white shadow-sm ${isDone ? "bg-green-100 text-green-600" : "bg-muted text-muted-foreground"
+                                                }`}
                                         >
                                             {ROUND_ICONS[round.roundType] ?? <FileText className="w-5 h-5" />}
                                         </div>
@@ -235,6 +235,11 @@ export default function CandidateResultPage({ params }: { params: Promise<{ id: 
                     )
                 })}
             </div>
+
+            {/* AI Interview Section (if applicable) */}
+            {result.rounds.some(r => r.roundType === 'AI') && (
+                <AIInterviewViewer attemptId={attemptId} />
+            )}
 
             {/* Proctoring */}
             <Card>

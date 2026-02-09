@@ -94,8 +94,31 @@ export type OwnerTypeValue = typeof OwnerType[keyof typeof OwnerType]
 export const FileType = {
     RESUME: 'RESUME',
     VIDEO: 'VIDEO',
+    AI_RECORDING: 'AI_RECORDING',
 } as const
 export type FileTypeValue = typeof FileType[keyof typeof FileType]
+
+// AI Interview Agent Types
+export const AgentType = {
+    FRONTEND_ENGINEER: 'FRONTEND_ENGINEER',
+    BACKEND_ENGINEER: 'BACKEND_ENGINEER',
+    FULLSTACK_ENGINEER: 'FULLSTACK_ENGINEER',
+    DEVOPS: 'DEVOPS',
+    QA: 'QA',
+    GENERAL: 'GENERAL',
+} as const
+export type AgentTypeValue = typeof AgentType[keyof typeof AgentType]
+
+// AI Interview Session Status
+export const AISessionStatus = {
+    NOT_STARTED: 'NOT_STARTED',
+    IN_PROGRESS: 'IN_PROGRESS',
+    COMPLETED: 'COMPLETED',
+    TIMEOUT: 'TIMEOUT',
+    CANDIDATE_EXIT: 'CANDIDATE_EXIT',
+    FAILED: 'FAILED',
+} as const
+export type AISessionStatusType = typeof AISessionStatus[keyof typeof AISessionStatus]
 
 // ============================================
 // USER MODEL
@@ -380,6 +403,13 @@ export interface IQuestionAttempt {
     status: QuestionStatusType
 }
 
+// AI Interview Transcript Entry
+export interface IAITranscriptEntry {
+    speaker: 'AI' | 'CANDIDATE'
+    text: string
+    timestamp: number // milliseconds from session start
+}
+
 export interface IRoundAttempt {
     _id?: Types.ObjectId
     roundType: RoundTypeValue
@@ -388,14 +418,22 @@ export interface IRoundAttempt {
     endedAt?: Date
     answers?: Record<string, unknown>
     questions?: any[] // Snapshot of questions
-    timeLimit?: number // Snapshot of time limit (minutes)
+    timingMode: 'PER_QUESTION' | 'PER_ROUND' // NEW: determines which timer is active
+    timeLimit?: number // Snapshot of time limit (minutes) - only for PER_ROUND
     // Per-question tracking (V1)
     currentQuestionIndex: number
-    perQuestionTimeLimit: number // seconds
+    perQuestionTimeLimit: number // seconds - only for PER_QUESTION
     questionAttempts: IQuestionAttempt[]
-    // AI session fields
+    // AI Interview fields (V1)
     aiSessionId?: string
-    recordingUrl?: string
+    aiSessionStatus?: AISessionStatusType
+    agentType?: AgentTypeValue
+    transcript?: IAITranscriptEntry[]
+    aiMediaAssets?: {
+        audioAssetId?: string
+        videoAssetId?: string
+    }
+    aiDurationSeconds?: number
 }
 
 export interface IAssessmentAttempt extends Document {
@@ -426,14 +464,26 @@ const RoundAttemptSchema = new Schema<IRoundAttempt>({
     endedAt: { type: Date },
     answers: { type: Schema.Types.Mixed },
     questions: { type: Schema.Types.Mixed }, // Snapshot of questions
-    timeLimit: { type: Number, default: 0 }, // Snapshot of time limit (minutes)
+    timingMode: { type: String, enum: ['PER_QUESTION', 'PER_ROUND'], default: 'PER_QUESTION' }, // NEW
+    timeLimit: { type: Number, default: 0 }, // Snapshot of time limit (minutes) - only for PER_ROUND
     // Per-question tracking (V1)
     currentQuestionIndex: { type: Number, default: 0 },
-    perQuestionTimeLimit: { type: Number, default: 0 }, // seconds
+    perQuestionTimeLimit: { type: Number, default: 0 }, // seconds - only for PER_QUESTION
     questionAttempts: [QuestionAttemptSchema],
-    // AI session fields
+    // AI Interview fields (V1)
     aiSessionId: { type: String },
-    recordingUrl: { type: String },
+    aiSessionStatus: { type: String, enum: Object.values(AISessionStatus) },
+    agentType: { type: String, enum: Object.values(AgentType) },
+    transcript: [{
+        speaker: { type: String, enum: ['AI', 'CANDIDATE'], required: true },
+        text: { type: String, required: true },
+        timestamp: { type: Number, required: true },
+    }],
+    aiMediaAssets: {
+        audioAssetId: { type: String },
+        videoAssetId: { type: String },
+    },
+    aiDurationSeconds: { type: Number },
 }, { _id: true })
 
 const AssessmentAttemptSchema = new Schema<IAssessmentAttempt>({

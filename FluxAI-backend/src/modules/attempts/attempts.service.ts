@@ -107,13 +107,26 @@ export class AttemptsService {
         const roundsToCreate = []
         for (const r of enabledRounds) {
             const config = r.config as Record<string, any> || {}
-            let timeLimit = config.duration ? Number(config.duration) : 0 // Assuming duration is in minutes
 
-            // Fallback default durations if not set (for V1 safety)
-            if (!timeLimit) {
-                if (r.roundType === 'MCQ') timeLimit = 45
-                if (r.roundType === 'DSA') timeLimit = 60
-                if (r.roundType === 'AI') timeLimit = 15
+            // Determine timing mode based on round type
+            // MCQ & DSA: per-question timing (no round-level timer)
+            // AI: per-round timing (session-level timer)
+            let timingMode: 'PER_QUESTION' | 'PER_ROUND' = 'PER_QUESTION'
+            let timeLimit: number | null = null
+            let perQuestionTimeLimit = 0 // seconds
+
+            if (r.roundType === 'MCQ') {
+                timingMode = 'PER_QUESTION'
+                timeLimit = null // NO round-level timer for MCQ
+                perQuestionTimeLimit = 20 // 20 seconds per question
+            } else if (r.roundType === 'DSA') {
+                timingMode = 'PER_QUESTION'
+                timeLimit = null // NO round-level timer for DSA
+                perQuestionTimeLimit = 30 * 60 // 30 minutes per question
+            } else if (r.roundType === 'AI') {
+                timingMode = 'PER_ROUND'
+                timeLimit = config.duration ? Number(config.duration) : 15 // 15 minutes default
+                perQuestionTimeLimit = 0 // NO per-question timer for AI
             }
 
             let questionSnapshots: any[] = []
@@ -154,12 +167,6 @@ export class AttemptsService {
             }
             // AI rounds don't have question bank yet
 
-            // Set per-question time limits based on round type (V1 locked values)
-            let perQuestionTimeLimit = 0 // seconds
-            if (r.roundType === 'MCQ') perQuestionTimeLimit = 20 // 20 seconds per MCQ
-            if (r.roundType === 'DSA') perQuestionTimeLimit = 30 * 60 // 30 minutes per DSA
-            if (r.roundType === 'AI') perQuestionTimeLimit = 0 // AI has session-level timing only
-
             // Initialize question attempts array
             const questionAttempts = questionSnapshots.map((q, idx) => ({
                 questionId: q.id,
@@ -170,6 +177,7 @@ export class AttemptsService {
             roundsToCreate.push({
                 roundType: r.roundType,
                 status: 'NOT_STARTED',
+                timingMode,
                 timeLimit,
                 questions: questionSnapshots,
                 currentQuestionIndex: 0,
@@ -653,6 +661,7 @@ export class AttemptsService {
                 status: r.status as RoundStatusType,
                 startedAt: r.startedAt ?? null,
                 endedAt: r.endedAt ?? null,
+                timingMode: (r.timingMode || (r.roundType === 'AI' ? 'PER_ROUND' : 'PER_QUESTION')) as 'PER_QUESTION' | 'PER_ROUND',
                 timeLimit: r.timeLimit ?? null,
                 currentQuestionIndex: r.currentQuestionIndex ?? 0,
                 perQuestionTimeLimit: r.perQuestionTimeLimit ?? 0,

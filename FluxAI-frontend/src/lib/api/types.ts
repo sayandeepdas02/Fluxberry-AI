@@ -112,6 +112,9 @@ export interface AssessmentAttempt {
     rounds: AttemptRound[]
 }
 
+// Timing mode determines which timer to display
+export type TimingMode = 'PER_QUESTION' | 'PER_ROUND'
+
 export interface AttemptRound {
     id: string
     roundType: 'MCQ' | 'DSA' | 'AI'
@@ -119,7 +122,9 @@ export interface AttemptRound {
     startedAt: string | null
     submittedAt: string | null
     timeSpentSeconds: number
-    timeLimit: number | null
+    timingMode: TimingMode // NEW: determines which timer is shown
+    timeLimit: number | null // Only valid for PER_ROUND
+    perQuestionTimeLimit?: number // Only valid for PER_QUESTION
     answers: Record<string, unknown>
 }
 

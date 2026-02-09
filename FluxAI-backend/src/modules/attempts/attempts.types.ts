@@ -23,6 +23,12 @@ export type SubmitRoundInput = z.infer<typeof submitRoundSchema>
 export type SubmitAnswerInput = z.infer<typeof submitAnswerSchema>
 
 // ============================================
+// TIMING MODE
+// ============================================
+
+export type TimingMode = 'PER_QUESTION' | 'PER_ROUND'
+
+// ============================================
 // RESPONSE TYPES
 // ============================================
 
@@ -40,10 +46,11 @@ export interface RoundAttemptResponse {
     status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'EXPIRED'
     startedAt: Date | null
     endedAt: Date | null
-    timeLimit: number | null // Duration in minutes
+    timingMode: TimingMode // NEW: determines which timer to display
+    timeLimit: number | null // Duration in minutes (only valid for PER_ROUND)
     // Per-question tracking (V1)
     currentQuestionIndex: number
-    perQuestionTimeLimit: number // seconds
+    perQuestionTimeLimit: number // seconds (only valid for PER_QUESTION)
     questionAttempts: QuestionAttemptResponse[]
     totalQuestions: number
 }
