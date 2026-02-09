@@ -8,7 +8,7 @@ class PublicController {
         try {
             const { slug } = req.params
             const data = await publicService.getCompanyBySlug(slug)
-            successResponse(res, 'Company data retrieved', data)
+            res.json(successResponse(data))
         } catch (error) {
             next(error)
         }
@@ -18,7 +18,7 @@ class PublicController {
         try {
             const { slug } = req.params
             const data = await publicService.getCompanyJobs(slug)
-            successResponse(res, 'Company jobs retrieved', data)
+            res.json(successResponse(data))
         } catch (error) {
             next(error)
         }
@@ -28,6 +28,16 @@ class PublicController {
         try {
             const { slug, jobId } = req.params
             const data = await publicService.getJob(slug, jobId)
+            res.json(successResponse(data))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async getAssessment(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params
+            const data = await publicService.getAssessment(id)
             res.json(successResponse(data))
         } catch (error) {
             next(error)

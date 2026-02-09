@@ -1,4 +1,4 @@
-import { Organization } from '../../database/models/index.js'
+import { Organization, Assessment } from '../../database/models/index.js'
 import { jobsService } from '../jobs/jobs.service.js'
 import { getJudge0LanguageId, runCode as judge0RunCode } from '../../services/judge0/judge0.client.js'
 
@@ -33,6 +33,36 @@ class PublicService {
             return job
         } catch (error) {
             throw { code: 'NOT_FOUND', message: 'Job not found' }
+        }
+    }
+
+    /**
+     * Get public assessment details (for start page)
+     */
+    async getAssessment(id: string) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mongoose = await import('mongoose')
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            throw { code: 'INVALID_INPUT', message: 'Invalid assessment ID' }
+        }
+
+        const assessment = await Assessment.findById(id).select('title organizationId rounds status')
+        if (!assessment) {
+            throw { code: 'NOT_FOUND', message: 'Assessment not found' }
+        }
+
+        if (assessment.status !== 'ACTIVE') {
+            throw { code: 'INVALID_STATUS', message: 'Assessment is not active' }
+        }
+
+        return {
+            id: assessment._id,
+            title: assessment.title,
+            organizationId: assessment.organizationId,
+            rounds: assessment.rounds.filter(r => r.enabled).map(r => ({
+                roundType: r.roundType,
+                order: r.order
+            }))
         }
     }
 
