@@ -27,6 +27,7 @@ export interface RoundAttemptResponse {
     status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED'
     startedAt: Date | null
     endedAt: Date | null
+    timeLimit: number | null // Duration in minutes
 }
 
 export interface AttemptResponse {

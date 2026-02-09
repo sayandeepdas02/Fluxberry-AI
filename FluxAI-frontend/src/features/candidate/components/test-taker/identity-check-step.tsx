@@ -1,112 +1,185 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Label } from "@/components/ui/label"
-import { Camera, User, BadgeCheck, Shield, ChevronRight, FileText } from "lucide-react"
+import { CheckCircle2, ChevronRight, FileText, Upload, Loader2, AlertCircle } from "lucide-react"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { getAttemptId } from "@/features/candidate/lib/attempt-storage"
+import { getAttemptId, getCandidateName, getCandidateId } from "@/features/candidate/lib/attempt-storage"
+import { attemptsApi } from "@/lib/api/attempts"
 
 export function IdentityCheckStep({ assessmentId }: { assessmentId: string }) {
     const router = useRouter()
-    const [confirmed, setConfirmed] = useState(false)
+    const attemptId = getAttemptId(assessmentId)
+    const candidateName = getCandidateName(assessmentId) || "Candidate"
+
+    const [uploading, setUploading] = useState(false)
+    const [resumeName, setResumeName] = useState<string | null>(null)
+    const [error, setError] = useState<string | null>(null)
+    const [mounted, setMounted] = useState(false)
+    const [stream, setStream] = useState<MediaStream | null>(null)
+    const videoRef = useRef<HTMLVideoElement>(null)
 
     useEffect(() => {
+        setMounted(true)
         if (!getAttemptId(assessmentId)) {
             router.replace(`/assessment/${assessmentId}/start`)
         }
     }, [assessmentId, router])
 
+    useEffect(() => {
+        let mounted = true
+        async function initCamera() {
+            try {
+                const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                if (mounted) setStream(mediaStream)
+            } catch (err) {
+                console.error("Failed to access camera", err)
+            }
+        }
+        initCamera()
+        return () => {
+            mounted = false
+            if (stream) stream.getTracks().forEach(t => t.stop())
+        }
+    }, [])
+
+    useEffect(() => {
+        if (videoRef.current && stream) {
+            videoRef.current.srcObject = stream
+        }
+    }, [stream])
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        if (file.size > 5 * 1024 * 1024) {
+            setError("File size must be less than 5MB")
+            return
+        }
+        if (file.type !== "application/pdf") {
+            setError("Only PDF files are allowed")
+            return
+        }
+
+        setError(null)
+        setUploading(true)
+        const candidateId = getCandidateId(assessmentId)
+
+        try {
+            if (!attemptId || !candidateId) throw new Error("Session invalid")
+
+            await attemptsApi.uploadResume(attemptId, candidateId, assessmentId, file)
+            setResumeName(file.name)
+        } catch (err) {
+            console.error(err)
+            setError(err instanceof Error ? err.message : "Failed to upload resume")
+        } finally {
+            setUploading(false)
+        }
+    }
+
+    if (!mounted || !attemptId) return null
+
     return (
         <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6 font-sans">
             <div className="w-full max-w-4xl bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden flex flex-col md:flex-row">
 
-                {/* Left: Camera Preview */}
-                <div className="w-full md:w-1/2 bg-black p-6 flex flex-col justify-between relative overflow-hidden group">
-                    {/* Mock Camera Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/60 z-10" />
-
-                    <div className="relative z-20 flex justify-between items-start">
-                        <Badge variant="outline" className="bg-white/10 text-white border-white/20 backdrop-blur-md">
-                            <Camera className="w-3 h-3 mr-2" /> Live Preview
-                        </Badge>
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
-                    </div>
-
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <Camera className="w-16 h-16 text-white/10" />
-                    </div>
-
-                    <div className="relative z-20 text-center">
-                        <p className="text-white/60 text-xs mb-2">Ensure your face is clearly visible</p>
-                        <div className="w-48 h-48 border-2 border-white/20 rounded-full mx-auto relative">
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-4 bg-white/50" />
-                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0.5 h-4 bg-white/50" />
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-0.5 bg-white/50" />
-                            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-0.5 bg-white/50" />
+                {/* Left Panel: Camera Preview */}
+                <div className="w-full md:w-1/2 bg-neutral-900 p-8 flex flex-col items-center justify-center text-white relative">
+                    <div className="bg-neutral-800 w-full aspect-[4/3] rounded-lg flex items-center justify-center border border-neutral-700 relative overflow-hidden">
+                        {stream ? (
+                            <video
+                                ref={videoRef}
+                                autoPlay
+                                playsInline
+                                muted
+                                className="w-full h-full object-cover transform scale-x-[-1]"
+                            />
+                        ) : (
+                            <div className="text-neutral-500 text-sm flex flex-col items-center gap-2">
+                                <div className="w-12 h-12 rounded-full bg-neutral-700 flex items-center justify-center">
+                                    <span className="text-xl font-bold text-white">{candidateName.charAt(0)}</span>
+                                </div>
+                                <span>Camera Loading...</span>
+                            </div>
+                        )}
+                        <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-[10px] font-medium border border-green-500/30">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-50 animate-pulse" />
+                            REC
                         </div>
                     </div>
+                    <p className="mt-6 text-neutral-400 text-sm text-center">
+                        Please ensure your face is clearly visible within the frame.
+                    </p>
                 </div>
 
-                {/* Right: Confirmation */}
+                {/* Right Panel: Verification */}
                 <div className="w-full md:w-1/2 p-8 flex flex-col">
-                    <div className="flex-1 space-y-6">
-                        <div>
-                            <h1 className="text-2xl font-bold text-neutral-900 mb-2">Confirm Identity</h1>
-                            <p className="text-neutral-500 text-sm">
-                                Please confirm your details before starting the secure assessment.
-                            </p>
-                        </div>
+                    <div className="mb-6">
+                        <h2 className="text-xl font-bold text-neutral-900">Identity Verification</h2>
+                        <p className="text-neutral-500 text-sm mt-1">Confirm your details before starting.</p>
+                    </div>
 
-                        <div className="space-y-4">
-                            <div className="flex items-start gap-4 p-4 rounded-lg bg-neutral-50 border border-neutral-100">
-                                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
-                                    <User className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1">Candidate Name</label>
-                                    <p className="font-medium text-neutral-900">Arjun K.</p>
-                                </div>
+                    <div className="space-y-6 flex-1">
+
+                        {/* Name Info */}
+                        <div className="flex items-start gap-4 p-4 rounded-lg bg-neutral-50 border border-neutral-100">
+                            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0">
+                                {candidateName.charAt(0)}
                             </div>
-
-                            <div className="flex items-start gap-4 p-4 rounded-lg bg-neutral-50 border border-neutral-100">
-                                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 flex-shrink-0">
-                                    <BadgeCheck className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1">Verification Status</label>
-                                    <div className="flex items-center gap-1.5 text-green-600 font-medium text-sm">
-                                        <BadgeCheck className="w-4 h-4" /> System Check Passed
-                                    </div>
-                                </div>
+                            <div>
+                                <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wider block mb-1">Candidate Name</label>
+                                <p className="font-medium text-neutral-900">{candidateName}</p>
                             </div>
-
-                            <div className="space-y-2 pt-2">
-                                <Label className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Resume (Optional)</Label>
-                                <div className="border-2 border-dashed border-neutral-200 rounded-lg p-6 text-center hover:bg-neutral-50 transition-colors cursor-pointer group">
-                                    <div className="flex flex-col items-center gap-2">
-                                        <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center group-hover:bg-white group-hover:shadow-sm transition-all">
-                                            <FileText className="w-4 h-4 text-neutral-400" />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <p className="text-sm font-medium text-neutral-700">Upload Resume</p>
-                                            <p className="text-xs text-neutral-400">PDF, DOCX up to 5MB</p>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div className="ml-auto">
+                                <CheckCircle2 className="w-5 h-5 text-green-600" />
                             </div>
                         </div>
 
-                        <div className="bg-amber-50 rounded-lg p-4 border border-amber-100 flex gap-3">
-                            <Shield className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                            <div className="space-y-1">
-                                <p className="text-sm font-semibold text-amber-900">Identity Verification</p>
-                                <p className="text-xs text-amber-800 leading-relaxed">
-                                    A photo will be captured at the start of the assessment to verify your identity against your application.
-                                </p>
+                        {/* Resume Upload */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-neutral-900">Upload Resume (Optional)</label>
+                            <div className="border-2 border-dashed border-neutral-200 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-neutral-50 transition-colors relative">
+                                <input
+                                    type="file"
+                                    accept="application/pdf"
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
+                                    onChange={handleFileUpload}
+                                    disabled={uploading}
+                                />
+                                {uploading ? (
+                                    <div className="flex flex-col items-center gap-2 text-neutral-500 relative z-20">
+                                        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                                        <span className="text-xs font-medium">Uploading...</span>
+                                    </div>
+                                ) : resumeName ? (
+                                    <div className="flex flex-col items-center gap-2 relative z-20">
+                                        <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600">
+                                            <FileText className="w-5 h-5" />
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <p className="text-sm font-medium text-neutral-900">{resumeName}</p>
+                                            <p className="text-xs text-green-600 font-medium">Upload Complete</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="relative z-20 pointer-events-none">
+                                        <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-500 mb-2 mx-auto">
+                                            <Upload className="w-5 h-5" />
+                                        </div>
+                                        <p className="text-sm text-neutral-900 font-medium">Click to upload PDF</p>
+                                        <p className="text-xs text-neutral-500 mt-1">Max 5MB</p>
+                                    </div>
+                                )}
                             </div>
+                            {error && (
+                                <div className="flex items-center gap-2 text-xs text-red-600 mt-2">
+                                    <AlertCircle className="w-3 h-3" />
+                                    <span>{error}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -114,15 +187,18 @@ export function IdentityCheckStep({ assessmentId }: { assessmentId: string }) {
                         <Button
                             size="lg"
                             className="w-full h-12 text-base"
-                            onClick={() => setConfirmed(true)}
-                            asChild
+                            disabled={uploading}
+                            asChild={!uploading}
                         >
-                            <Link href={`/assessment/${assessmentId}/round/0`}>
-                                Confirm & Start Round 1 <ChevronRight className="w-4 h-4 ml-2" />
-                            </Link>
+                            {!uploading ? (
+                                <Link href={`/assessment/${assessmentId}/round/0`}>
+                                    Confirm & Start Round 1 <ChevronRight className="w-4 h-4 ml-2" />
+                                </Link>
+                            ) : (
+                                <span>Uploading...</span>
+                            )}
                         </Button>
                     </div>
-
                 </div>
             </div>
         </div>

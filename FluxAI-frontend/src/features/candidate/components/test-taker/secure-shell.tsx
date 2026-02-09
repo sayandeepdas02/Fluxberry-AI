@@ -12,26 +12,52 @@ export function SecureShell({
     title,
     roundIndex,
     roundTotal,
-    duration,
+    startedAt,
+    timeLimit,
 }: {
     children: React.ReactNode,
     title: string,
     roundIndex: number,
     roundTotal: number,
-    duration: string,
-
+    startedAt: string | null,
+    timeLimit: number | null, // minutes
 }) {
+    const [elapsedSeconds, setElapsedSeconds] = useState(0)
     const [warnings, setWarnings] = useState(0)
 
-    // Mock random proctoring events
+    useEffect(() => {
+        if (!startedAt) return
+
+        const startTime = new Date(startedAt).getTime()
+        const updateTimer = () => {
+            const now = Date.now()
+            setElapsedSeconds(Math.floor((now - startTime) / 1000))
+        }
+
+        updateTimer()
+        const timer = setInterval(updateTimer, 1000)
+        return () => clearInterval(timer)
+    }, [startedAt])
+
+    // Mock proctoring events - keep existing logic
     useEffect(() => {
         const timer = setInterval(() => {
-            if (Math.random() > 0.8) {
+            if (Math.random() > 0.95) { // Reduce frequency
                 setWarnings(w => Math.min(w + 1, 3))
             }
-        }, 15000)
+        }, 30000)
         return () => clearInterval(timer)
     }, [])
+
+    const formatTime = (seconds: number) => {
+        const m = Math.floor(seconds / 60)
+        const s = seconds % 60
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+    }
+
+    const limitSeconds = (timeLimit || 0) * 60
+    const remaining = Math.max(0, limitSeconds - elapsedSeconds)
+    const isOver = limitSeconds > 0 && remaining === 0
 
     return (
         <div className="min-h-screen bg-neutral-50 flex flex-col font-sans">
@@ -52,18 +78,22 @@ export function SecureShell({
                 </div>
 
                 <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2 text-neutral-600 bg-neutral-100 px-3 py-1.5 rounded-full">
+                    <div className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 rounded-full font-mono text-sm font-medium transition-colors",
+                        isOver ? "bg-red-100 text-red-600" :
+                            remaining < 300 ? "bg-amber-100 text-amber-600" : "bg-neutral-100 text-neutral-600"
+                    )}>
                         <Clock className="w-4 h-4" />
-                        <span className="font-mono text-sm font-medium">{duration}</span>
+                        <span>{limitSeconds > 0 ? formatTime(remaining) : formatTime(elapsedSeconds)}</span>
                     </div>
 
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5 text-xs text-green-600 font-medium px-2 py-1 bg-green-50 rounded border border-green-100">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-50 animate-pulse" />
                             Camera ON
                         </div>
                         <div className="flex items-center gap-1.5 text-xs text-green-600 font-medium px-2 py-1 bg-green-50 rounded border border-green-100">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-50 animate-pulse" />
                             Mic ON
                         </div>
                     </div>

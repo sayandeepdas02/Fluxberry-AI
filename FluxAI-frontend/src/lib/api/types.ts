@@ -119,6 +119,7 @@ export interface AttemptRound {
     startedAt: string | null
     submittedAt: string | null
     timeSpentSeconds: number
+    timeLimit: number | null
     answers: Record<string, unknown>
 }
 

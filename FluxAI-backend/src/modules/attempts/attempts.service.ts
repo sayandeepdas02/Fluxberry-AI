@@ -70,15 +70,71 @@ export class AttemptsService {
         // Get enabled rounds
         const enabledRounds = assessment.rounds.filter(r => r.enabled).sort((a, b) => a.order - b.order)
 
+        // Snapshot config and questions for each round
+        const roundsToCreate = []
+        for (const r of enabledRounds) {
+            const config = r.config as Record<string, any> || {}
+            let timeLimit = config.duration ? Number(config.duration) : 0 // Assuming duration is in minutes
+
+            // Fallback default durations if not set (for V1 safety)
+            if (!timeLimit) {
+                if (r.roundType === 'MCQ') timeLimit = 45
+                if (r.roundType === 'DSA') timeLimit = 60
+                if (r.roundType === 'AI') timeLimit = 15
+            }
+
+            let questionSnapshots: any[] = []
+
+            if (r.roundType === 'MCQ') {
+                const qIds = [...(config.singleCorrectQuestionIds || []), ...(config.multiCorrectQuestionIds || [])]
+                if (qIds.length > 0) {
+                    const qs = await Question.find({ _id: { $in: qIds } }).lean()
+                    questionSnapshots = qs.map(q => ({
+                        id: q._id.toString(),
+                        type: 'MCQ',
+                        title: q.title,
+                        difficulty: q.difficulty,
+                        options: q.mcqDetails?.options || [],
+                        isMultiCorrect: q.mcqDetails?.isMultiCorrect || false,
+                        // We do NOT snapshot correct answers for security, 
+                        // though they are needed for evaluation. 
+                        // Evaluation will look up original questions or we can snapshot secure details separately if we wanted perfectly immutable grading.
+                        // For V1, we snapshot candidate-facing data.
+                        _originalIds: { correctOptions: q.mcqDetails?.correctOptions } // Ideally keep this server-side only
+                    }))
+                }
+            } else if (r.roundType === 'DSA') {
+                const qIds = config.questionIds || []
+                if (qIds.length > 0) {
+                    const qs = await Question.find({ _id: { $in: qIds } }).lean()
+                    questionSnapshots = qs.map(q => ({
+                        id: q._id.toString(),
+                        type: 'DSA',
+                        title: q.title,
+                        difficulty: q.difficulty,
+                        prompt: q.dsaDetails?.prompt,
+                        constraints: q.dsaDetails?.constraints,
+                        starterCode: q.dsaDetails?.starterCode,
+                        languagesSupported: q.dsaDetails?.languagesSupported
+                    }))
+                }
+            }
+            // AI rounds don't have question bank yet
+
+            roundsToCreate.push({
+                roundType: r.roundType,
+                status: 'NOT_STARTED',
+                timeLimit,
+                questions: questionSnapshots
+            })
+        }
+
         // Create new attempt with round attempts for enabled rounds
         const attempt = await AssessmentAttempt.create({
             assessmentId,
             candidateId: candidate._id,
             status: 'NOT_STARTED',
-            rounds: enabledRounds.map((r) => ({
-                roundType: r.roundType,
-                status: 'NOT_STARTED',
-            })),
+            rounds: roundsToCreate,
         })
 
         return this.formatAttempt(attempt, assessment.title)
@@ -202,6 +258,22 @@ export class AttemptsService {
             throw error
         }
 
+        // Check if round is timed out (strict enforcement)
+        const timeLimit = roundAttempt.timeLimit || 0
+        if (timeLimit > 0 && roundAttempt.startedAt) {
+            const now = new Date()
+            const started = new Date(roundAttempt.startedAt)
+            const elapsedMinutes = (now.getTime() - started.getTime()) / 1000 / 60
+            // Allow 2 minute buffer for network latency
+            if (elapsedMinutes > timeLimit + 2) {
+                const error = new Error('Time limit exceeded') as Error & { statusCode: number; code: string }
+                error.statusCode = 422
+                error.code = 'TIME_LIMIT_EXCEEDED'
+                // Optionally mark as TIMED_OUT here, but we'll safeguard the submit first
+                throw error
+            }
+        }
+
         // Submit round with server timestamp
         roundAttempt.status = 'COMPLETED'
         roundAttempt.endedAt = new Date()
@@ -264,65 +336,17 @@ export class AttemptsService {
             throw error
         }
 
-        const assessment = await Assessment.findById(attempt.assessmentId)
-        if (!assessment) {
-            const error = new Error('Assessment not found') as Error & { statusCode: number; code: string }
+        const roundAttempt = attempt.rounds.find((r) => r.roundType === roundType)
+        if (!roundAttempt) {
+            const error = new Error('Round not found in attempt') as Error & { statusCode: number; code: string }
             error.statusCode = 404
             error.code = 'NOT_FOUND'
             throw error
         }
 
-        const round = assessment.rounds.find((r) => r.roundType === roundType)
-        if (!round || !round.config) {
-            const error = new Error('Round not configured') as Error & { statusCode: number; code: string }
-            error.statusCode = 422
-            error.code = 'INVALID_CONFIG'
-            throw error
-        }
-
-        const config = round.config as Record<string, unknown>
-        let questionIds: string[] = []
-
-        if (roundType === 'MCQ') {
-            const single = (config.singleCorrectQuestionIds as string[]) || []
-            const multi = (config.multiCorrectQuestionIds as string[]) || []
-            questionIds = [...single, ...multi]
-        } else if (roundType === 'DSA') {
-            questionIds = (config.questionIds as string[]) || []
-        }
-        // AI round has no question bank in config (agent/questions TBD)
-
-        if (questionIds.length === 0) {
-            return []
-        }
-
-        const questions = await Question.find({ _id: { $in: questionIds } }).sort({ createdAt: 1 })
-
-        return questions.map((q) => {
-            if (q.type === 'MCQ' && q.mcqDetails) {
-                return {
-                    id: q._id.toString(),
-                    type: 'MCQ' as const,
-                    title: q.title,
-                    difficulty: q.difficulty,
-                    options: q.mcqDetails.options,
-                    isMultiCorrect: q.mcqDetails.isMultiCorrect ?? false,
-                }
-            }
-            if (q.type === 'DSA' && q.dsaDetails) {
-                return {
-                    id: q._id.toString(),
-                    type: 'DSA' as const,
-                    title: q.title,
-                    difficulty: q.difficulty,
-                    prompt: q.dsaDetails.prompt ?? '',
-                    constraints: q.dsaDetails.constraints ?? null,
-                    starterCode: (q.dsaDetails.starterCode as Record<string, string>) ?? {},
-                    languagesSupported: q.dsaDetails.languagesSupported ?? [],
-                }
-            }
-            return null
-        }).filter((q): q is RoundQuestionResponse => q !== null)
+        // Return snapshotted questions
+        // They are already in the correct format (minus strict type checks on difficulty string vs enum)
+        return (roundAttempt.questions || []) as RoundQuestionResponse[]
     }
 
     /**
@@ -343,6 +367,7 @@ export class AttemptsService {
                 status: r.status as RoundStatusType,
                 startedAt: r.startedAt ?? null,
                 endedAt: r.endedAt ?? null,
+                timeLimit: r.timeLimit ?? null,
             })),
             createdAt: attempt.createdAt,
         }

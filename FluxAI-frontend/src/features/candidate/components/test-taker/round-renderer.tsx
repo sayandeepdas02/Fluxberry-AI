@@ -8,17 +8,12 @@ import { DSAInterface } from "./dsa-interface"
 import { AIInterviewInterface } from "./ai-interview-interface"
 import { getAttemptId, getRoundTypes } from "@/features/candidate/lib/attempt-storage"
 import { attemptsApi, RoundQuestionResponse } from "@/lib/api/attempts"
+import { AttemptRound } from "@/lib/api/types"
 
 const ROUND_TITLES: Record<string, string> = {
     MCQ: "Technical MCQ",
     DSA: "Hands-on Coding",
     AI: "AI Video Interview",
-}
-
-const ROUND_DURATIONS: Record<string, string> = {
-    MCQ: "45:00",
-    DSA: "60:00",
-    AI: "15:00",
 }
 
 export function RoundRenderer({ assessmentId, roundId }: { assessmentId: string; roundId: string }) {
@@ -29,6 +24,10 @@ export function RoundRenderer({ assessmentId, roundId }: { assessmentId: string;
     const [questions, setQuestions] = useState<RoundQuestionResponse[] | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+
+    // Timer state
+    const [startedAt, setStartedAt] = useState<string | null>(null)
+    const [timeLimit, setTimeLimit] = useState<number | null>(null)
 
     const roundIndex = parseInt(roundId, 10)
     const roundType = roundTypes?.[roundIndex] ?? null
@@ -47,12 +46,32 @@ export function RoundRenderer({ assessmentId, roundId }: { assessmentId: string;
         let cancelled = false
         async function init() {
             try {
-                const startRes = await attemptsApi.startRound(attemptId, roundType)
+                // 1. Start the round (idempotent)
+                const startRes = await attemptsApi.startRound(attemptId!, roundType!)
                 if (!startRes.success && startRes.error?.code !== "INVALID_STATUS") {
                     if (!cancelled) setError(startRes.error?.message ?? "Failed to start round")
                     return
                 }
-                const res = await attemptsApi.getRoundQuestions(attemptId, roundType)
+
+                // 2. Refresh attempt state to get time limits
+                const attemptRes = await attemptsApi.getById(attemptId!)
+                if (!attemptRes.success || !attemptRes.data) {
+                    if (!cancelled) setError("Failed to load attempt details")
+                    return
+                }
+
+                // Find current round attempt
+                const currentRoundAttempt = attemptRes.data.rounds.find(
+                    (r: AttemptRound) => r.roundType === roundType && r.status !== 'NOT_STARTED'
+                )
+
+                if (currentRoundAttempt) {
+                    setStartedAt(currentRoundAttempt.startedAt)
+                    setTimeLimit(currentRoundAttempt.timeLimit)
+                }
+
+                // 3. Get questions (snapshotted)
+                const res = await attemptsApi.getRoundQuestions(attemptId!, roundType!)
                 if (cancelled) return
                 if (res.success && res.data) setQuestions(res.data)
                 else setQuestions([])
@@ -124,14 +143,14 @@ export function RoundRenderer({ assessmentId, roundId }: { assessmentId: string;
     }
 
     const title = ROUND_TITLES[roundType] ?? roundType
-    const duration = ROUND_DURATIONS[roundType] ?? "00:00"
 
     return (
         <SecureShell
             title={title}
             roundIndex={roundIndex + 1}
             roundTotal={roundTypes.length}
-            duration={duration}
+            startedAt={startedAt}
+            timeLimit={timeLimit}
         >
             {roundType === "MCQ" && (
                 <MCQInterface
