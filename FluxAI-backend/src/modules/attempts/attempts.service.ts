@@ -587,44 +587,54 @@ export class AttemptsService {
 
         // Check time limit (only if question was started and has time limit)
         const perQuestionTimeLimit = roundAttempt.perQuestionTimeLimit ?? 0
-        if (questionAttempt?.startedAt && perQuestionTimeLimit > 0) {
-            const elapsed = now.getTime() - new Date(questionAttempt.startedAt).getTime()
-            const limitMs = perQuestionTimeLimit * 1000
+        const timeExpired = !!(questionAttempt?.startedAt && perQuestionTimeLimit > 0 && (now.getTime() - new Date(questionAttempt.startedAt).getTime() > perQuestionTimeLimit * 1000))
 
-            if (elapsed > limitMs) {
-                // Time expired - mark as expired
-                if (questionAttempt) {
-                    questionAttempt.status = QuestionStatus.EXPIRED
-                    questionAttempt.endedAt = new Date(new Date(questionAttempt.startedAt).getTime() + limitMs)
+        if (timeExpired) {
+            // Time expired: mark question as EXPIRED, do not save answer, advance to next
+            if (questionAttempt) {
+                questionAttempt.status = QuestionStatus.EXPIRED
+                questionAttempt.endedAt = new Date(new Date(questionAttempt.startedAt).getTime() + perQuestionTimeLimit * 1000)
+            }
+
+            const nextQuestionIndex = questionIndex + 1
+            const isRoundComplete = nextQuestionIndex >= questions.length
+
+            if (isRoundComplete) {
+                roundAttempt.status = 'COMPLETED'
+                roundAttempt.endedAt = now
+                const allComplete = attempt.rounds.every(r => r.status === 'COMPLETED')
+                if (allComplete) {
+                    attempt.status = 'COMPLETED'
+                    attempt.submittedAt = now
                 }
+            } else {
+                roundAttempt.currentQuestionIndex = nextQuestionIndex
+            }
 
-                const error = new Error('Question time expired') as Error & { statusCode: number; code: string }
-                error.statusCode = 400
-                error.code = 'TIME_EXPIRED'
-                throw error
+            await attempt.save()
+            return {
+                success: true,
+                nextQuestionIndex: isRoundComplete ? null : nextQuestionIndex,
+                roundComplete: isRoundComplete,
             }
         }
 
-        // Save answer
+        // Save answer (within time)
         if (questionAttempt) {
             questionAttempt.answer = input.answer
             questionAttempt.status = QuestionStatus.COMPLETED
             questionAttempt.endedAt = now
         }
 
-        // Also save to legacy answers map for compatibility
         if (!roundAttempt.answers) roundAttempt.answers = {}
         roundAttempt.answers[question.id] = input.answer
 
-        // Advance to next question
         const nextQuestionIndex = questionIndex + 1
         const isRoundComplete = nextQuestionIndex >= questions.length
 
         if (isRoundComplete) {
             roundAttempt.status = 'COMPLETED'
             roundAttempt.endedAt = now
-
-            // Check if all rounds complete
             const allComplete = attempt.rounds.every(r => r.status === 'COMPLETED')
             if (allComplete) {
                 attempt.status = 'COMPLETED'
