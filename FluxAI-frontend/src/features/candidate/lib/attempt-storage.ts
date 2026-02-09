@@ -31,8 +31,30 @@ export function setRoundTypes(assessmentId: string, roundTypes: string[]): void 
     sessionStorage.setItem(`${PREFIX}rounds_${assessmentId}`, JSON.stringify(roundTypes))
 }
 
+export function getCandidateId(assessmentId: string): string | null {
+    if (typeof window === 'undefined') return null
+    return sessionStorage.getItem(`${PREFIX}candidate_${assessmentId}`)
+}
+
+export function setCandidateId(assessmentId: string, candidateId: string): void {
+    if (typeof window === 'undefined') return
+    sessionStorage.setItem(`${PREFIX}candidate_${assessmentId}`, candidateId)
+}
+
+export function getCandidateName(assessmentId: string): string | null {
+    if (typeof window === 'undefined') return null
+    return sessionStorage.getItem(`${PREFIX}candidate_name_${assessmentId}`)
+}
+
+export function setCandidateName(assessmentId: string, name: string): void {
+    if (typeof window === 'undefined') return
+    sessionStorage.setItem(`${PREFIX}candidate_name_${assessmentId}`, name)
+}
+
 export function clearAttempt(assessmentId: string): void {
     if (typeof window === 'undefined') return
     sessionStorage.removeItem(`${PREFIX}id_${assessmentId}`)
     sessionStorage.removeItem(`${PREFIX}rounds_${assessmentId}`)
+    sessionStorage.removeItem(`${PREFIX}candidate_${assessmentId}`)
+    sessionStorage.removeItem(`${PREFIX}candidate_name_${assessmentId}`)
 }

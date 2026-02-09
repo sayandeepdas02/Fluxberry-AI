@@ -1,6 +1,7 @@
 import {
     Assessment,
     Candidate,
+    AssessmentAttempt,
     IAssessment,
     IAssessmentRound,
     RoundType,
@@ -77,6 +78,15 @@ export class AssessmentsService {
         // Verify assessment exists and belongs to org
         await this.getById(id, organizationId)
 
+        // Block edits if attempts exist
+        const hasAttempts = await AssessmentAttempt.exists({ assessmentId: id })
+        if (hasAttempts) {
+            const error = new Error('Cannot edit assessment with existing attempts') as Error & { statusCode: number; code: string }
+            error.statusCode = 422
+            error.code = 'INVALID_OPERATION'
+            throw error
+        }
+
         const assessment = await Assessment.findByIdAndUpdate(
             id,
             { $set: input },
@@ -104,6 +114,15 @@ export class AssessmentsService {
             const error = new Error('Cannot modify rounds of a published assessment') as Error & { statusCode: number; code: string }
             error.statusCode = 422
             error.code = 'INVALID_STATUS'
+            throw error
+        }
+
+        // Block edits if attempts exist (redundant if strictly DRAFT but safer)
+        const hasAttempts = await AssessmentAttempt.exists({ assessmentId: id })
+        if (hasAttempts) {
+            const error = new Error('Cannot modify rounds when attempts exist') as Error & { statusCode: number; code: string }
+            error.statusCode = 422
+            error.code = 'INVALID_OPERATION'
             throw error
         }
 

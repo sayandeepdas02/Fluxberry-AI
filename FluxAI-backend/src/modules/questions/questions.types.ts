@@ -37,7 +37,7 @@ const dsaDetailsBodySchema = z.object({
     testCases: z.array(dsaTestCaseSchema).optional(),
 })
 
-export const createQuestionBodySchema = z.object({
+const baseQuestionBodySchema = z.object({
     type: z.enum(['MCQ', 'DSA']),
     title: z.string().min(1),
     difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']),
@@ -45,7 +45,9 @@ export const createQuestionBodySchema = z.object({
     metadata: z.record(z.unknown()).optional().nullable(),
     mcqDetails: mcqDetailsBodySchema.optional(),
     dsaDetails: dsaDetailsBodySchema.optional(),
-}).refine(
+})
+
+export const createQuestionBodySchema = baseQuestionBodySchema.refine(
     (data) => {
         if (data.type === 'MCQ') return data.mcqDetails != null
         if (data.type === 'DSA') return data.dsaDetails != null
@@ -54,7 +56,7 @@ export const createQuestionBodySchema = z.object({
     { message: 'MCQ requires mcqDetails, DSA requires dsaDetails', path: ['type'] }
 )
 
-export const updateQuestionBodySchema = createQuestionBodySchema.partial().extend({
+export const updateQuestionBodySchema = baseQuestionBodySchema.partial().extend({
     type: z.enum(['MCQ', 'DSA']).optional(),
     title: z.string().min(1).optional(),
     difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']).optional(),

@@ -3,7 +3,8 @@ import { AssessmentAttempt, AttemptResult } from './types'
 
 export interface StartAttemptInput {
     candidateEmail: string
-    candidateName?: string
+    candidateFirstName?: string
+    candidateLastName?: string
 }
 
 export interface SubmitRoundInput {
@@ -89,5 +90,48 @@ export const attemptsApi = {
         event: { eventType: string; metadata?: Record<string, unknown> }
     ) {
         return apiClient.post<void>(`/attempts/${attemptId}/proctoring-events`, event)
+    },
+
+    /**
+     * Get assessment public details
+     */
+    async getAssessment(id: string) {
+        return apiClient.get<{ organizationId: string }>(`/assessments/${id}`)
+    },
+
+    /**
+     * Upload and attach resume
+     */
+    async uploadResume(attemptId: string, candidateId: string, assessmentId: string, file: File) {
+        // 1. Get organization ID (or infer/skip if backend handles it)
+        const assessRes = await apiClient.get<{ organizationId: string }>(`/assessments/${assessmentId}`)
+        if (!assessRes.success || !assessRes.data) throw new Error('Failed to get assessment details')
+        const organizationId = assessRes.data.organizationId
+
+        // 2. Request upload URL
+        const urlRes = await apiClient.post<{ fileId: string; uploadUrl: string }>('/files/upload-url', {
+            candidateId,
+            organizationId,
+            fileType: 'RESUME',
+            mimeType: file.type || 'application/pdf',
+            size: file.size
+        })
+        if (!urlRes.success || !urlRes.data) throw new Error(urlRes.error?.message || 'Failed to get upload URL')
+
+        const { fileId, uploadUrl } = urlRes.data
+
+        // 3. Upload file to S3
+        const upload = await fetch(uploadUrl, {
+            method: 'PUT',
+            body: file,
+            headers: { 'Content-Type': file.type || 'application/pdf' }
+        })
+        if (!upload.ok) throw new Error('Failed to upload file to storage')
+
+        // 4. Attach to attempt
+        return apiClient.post(`/attempts/${attemptId}/resume`, {
+            candidateId,
+            fileId
+        })
     },
 }

@@ -3,21 +3,24 @@
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { CheckCircle2, Camera, Mic, Monitor, Wifi, Loader2, ArrowRight } from "lucide-react"
+import { CheckCircle2, Camera, Mic, Monitor, Wifi, Loader2, ArrowRight, AlertTriangle } from "lucide-react"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { getAttemptId } from "@/features/candidate/lib/attempt-storage"
 
 export function SystemCheckStep({ assessmentId }: { assessmentId: string }) {
     const router = useRouter()
-    const [checking, setChecking] = useState(true)
+    const [checking, setChecking] = useState(false)
     const [checks, setChecks] = useState({
         camera: false,
         mic: false,
         screen: false,
         network: false
     })
+    const [error, setError] = useState<string | null>(null)
+    const [stream, setStream] = useState<MediaStream | null>(null)
+    const videoRef = useRef<HTMLVideoElement>(null)
     const [consent, setConsent] = useState(false)
 
     useEffect(() => {
@@ -28,13 +31,54 @@ export function SystemCheckStep({ assessmentId }: { assessmentId: string }) {
     }, [assessmentId, router])
 
     useEffect(() => {
-        // Simulate checking process
-        const timer = setTimeout(() => {
+        // Cleanup stream on unmount
+        return () => {
+            if (stream) {
+                stream.getTracks().forEach(t => t.stop())
+            }
+        }
+    }, [stream])
+
+    useEffect(() => {
+        if (videoRef.current && stream) {
+            videoRef.current.srcObject = stream
+        }
+    }, [stream])
+
+    const startChecks = async () => {
+        setChecking(true)
+        setError(null)
+        try {
+            // 1. Network Check
+            const online = navigator.onLine
+            setChecks(c => ({ ...c, network: online }))
+            if (!online) throw new Error("No internet connection detected.")
+
+            // 2. Screen Check
+            const fullscreenSupported = document.fullscreenEnabled
+            setChecks(c => ({ ...c, screen: fullscreenSupported }))
+            if (!fullscreenSupported) throw new Error("Fullscreen mode is not supported by your browser.")
+
+            // 3. Media Check
+            const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            setStream(mediaStream)
+            setChecks(c => ({ ...c, camera: true, mic: true })) // Assume success if stream obtained
+
+        } catch (err) {
+            console.error(err)
+            setError(err instanceof Error ? err.message : "System check failed. Please ensure camera/mic permissions are allowed.")
+        } finally {
             setChecking(false)
-            setChecks({ camera: true, mic: true, screen: true, network: true })
-        }, 2000)
-        return () => clearTimeout(timer)
+        }
+    }
+
+    // Auto-start checks on mount? Maybe not, better to let user click "Start Check" or auto-start.
+    // Let's auto-start for smooth UX, but handle errors gracefully.
+    useEffect(() => {
+        startChecks()
     }, [])
+
+    const allPassed = checks.camera && checks.mic && checks.screen && checks.network
 
     return (
         <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6 font-sans">
@@ -49,25 +93,34 @@ export function SystemCheckStep({ assessmentId }: { assessmentId: string }) {
 
                 <div className="p-8 space-y-6">
 
-                    {/* Camera Preview Mock */}
+                    {/* Camera Preview */}
                     <div className="bg-neutral-900 rounded-lg aspect-video flex items-center justify-center relative overflow-hidden group">
-                        {checking ? (
-                            <div className="flex flex-col items-center gap-2 text-neutral-400">
-                                <Loader2 className="w-8 h-8 animate-spin" />
-                                <span className="text-xs">Initializing hardware...</span>
-                            </div>
-                        ) : checks.camera ? (
-                            <div className="w-full h-full bg-neutral-800 flex flex-col items-center justify-center text-neutral-500 relative">
-                                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50" />
-                                <Camera className="w-12 h-12 mb-2 opacity-50" />
-                                <span className="text-sm">Camera Stream Active</span>
-                                <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-[10px] font-medium border border-green-500/30">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                    LIVE
-                                </div>
+                        {stream ? (
+                            <video
+                                ref={videoRef}
+                                autoPlay
+                                playsInline
+                                muted
+                                className="w-full h-full object-cover transform scale-x-[-1]"
+                            />
+                        ) : error ? (
+                            <div className="flex flex-col items-center gap-2 text-red-400 p-4 text-center">
+                                <AlertTriangle className="w-8 h-8" />
+                                <span className="text-xs">{error}</span>
+                                <Button variant="outline" size="sm" onClick={startChecks} className="mt-2 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300">Retry</Button>
                             </div>
                         ) : (
-                            <span className="text-red-500 flex items-center gap-2"><Camera className="w-5 h-5" /> Camera Access Denied</span>
+                            <div className="flex flex-col items-center gap-2 text-neutral-400">
+                                <Loader2 className="w-8 h-8 animate-spin" />
+                                <span className="text-xs">Requesting permissions...</span>
+                            </div>
+                        )}
+
+                        {stream && (
+                            <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-[10px] font-medium border border-green-500/30">
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                LIVE
+                            </div>
                         )}
                     </div>
 
@@ -86,7 +139,7 @@ export function SystemCheckStep({ assessmentId }: { assessmentId: string }) {
                                 id="terms"
                                 checked={consent}
                                 onCheckedChange={(c) => setConsent(c as boolean)}
-                                disabled={checking}
+                                disabled={checking || !allPassed}
                             />
                             <div className="grid gap-1.5 leading-none">
                                 <Label
@@ -105,12 +158,18 @@ export function SystemCheckStep({ assessmentId }: { assessmentId: string }) {
                     <Button
                         size="lg"
                         className="w-full h-12 text-base shadow-sm"
-                        disabled={checking || !consent}
-                        asChild
+                        disabled={checking || !consent || !allPassed}
+                        asChild={!checking && consent && allPassed}
                     >
-                        <Link href={`/assessment/${assessmentId}/identity-check`}>
-                            Proceed to Identity Check <ArrowRight className="w-4 h-4 ml-2" />
-                        </Link>
+                        {(!checking && consent && allPassed) ? (
+                            <Link href={`/assessment/${assessmentId}/identity-check`}>
+                                Proceed to Identity Check <ArrowRight className="w-4 h-4 ml-2" />
+                            </Link>
+                        ) : (
+                            <span className="flex items-center gap-2">
+                                Proceed to Identity Check <ArrowRight className="w-4 h-4" />
+                            </span>
+                        )}
                     </Button>
 
                 </div>

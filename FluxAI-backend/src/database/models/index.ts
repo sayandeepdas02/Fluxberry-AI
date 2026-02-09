@@ -367,6 +367,8 @@ export interface IRoundAttempt {
     startedAt?: Date
     endedAt?: Date
     answers?: Record<string, unknown>
+    questions?: any[] // Snapshot of questions
+    timeLimit?: number // Snapshot of time limit (minutes)
 }
 
 export interface IAssessmentAttempt extends Document {
@@ -387,6 +389,8 @@ const RoundAttemptSchema = new Schema<IRoundAttempt>({
     startedAt: { type: Date },
     endedAt: { type: Date },
     answers: { type: Schema.Types.Mixed },
+    questions: { type: Schema.Types.Mixed }, // Snapshot of questions
+    timeLimit: { type: Number, default: 0 }, // Snapshot of time limit
 }, { _id: true })
 
 const AssessmentAttemptSchema = new Schema<IAssessmentAttempt>({

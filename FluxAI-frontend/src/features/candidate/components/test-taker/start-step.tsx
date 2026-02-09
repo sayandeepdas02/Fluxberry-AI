@@ -8,13 +8,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ShieldAlert, Play, Loader2, AlertCircle } from "lucide-react"
 import { attemptsApi } from "@/lib/api/attempts"
-import { setAttemptId, setRoundTypes } from "@/features/candidate/lib/attempt-storage"
+import { setAttemptId, setRoundTypes, setCandidateId, setCandidateName } from "@/features/candidate/lib/attempt-storage"
 
 export function StartStep({ assessmentId }: { assessmentId: string }) {
     const router = useRouter()
     const searchParams = useSearchParams()
     const emailFromUrl = searchParams.get("email")?.trim() ?? ""
 
+    const [name, setName] = useState("")
     const [email, setEmail] = useState(emailFromUrl)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -24,18 +25,37 @@ export function StartStep({ assessmentId }: { assessmentId: string }) {
     }, [emailFromUrl])
 
     const handleStart = async () => {
-        const trimmed = email.trim().toLowerCase()
-        if (!trimmed) {
-            setError("Please enter the email address this invite was sent to.")
+        const trimmedEmail = email.trim().toLowerCase()
+        const trimmedName = name.trim()
+
+        if (!trimmedEmail) {
+            setError("Please enter your email address.")
             return
         }
+        if (!trimmedName) {
+            setError("Please enter your full name.")
+            return
+        }
+
         setError(null)
         setLoading(true)
+
+        // rudimentary split
+        const nameParts = trimmedName.split(' ')
+        const firstName = nameParts[0]
+        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : ''
+
         try {
-            const res = await attemptsApi.startOrResume(assessmentId, { candidateEmail: trimmed })
+            const res = await attemptsApi.startOrResume(assessmentId, {
+                candidateEmail: trimmedEmail,
+                candidateFirstName: firstName,
+                candidateLastName: lastName
+            })
             if (res.success && res.data) {
-                const attempt = res.data as { id: string; rounds: { roundType: string }[] }
+                const attempt = res.data as { id: string; candidateId: string; rounds: { roundType: string }[] }
                 setAttemptId(assessmentId, attempt.id)
+                setCandidateId(assessmentId, attempt.candidateId)
+                setCandidateName(assessmentId, trimmedName)
                 setRoundTypes(
                     assessmentId,
                     attempt.rounds.map((r) => r.roundType)
@@ -68,22 +88,36 @@ export function StartStep({ assessmentId }: { assessmentId: string }) {
                         Assessment
                     </h1>
                     <p className="text-neutral-500 text-sm">
-                        Enter the email address this invite was sent to, then start when you&apos;re ready.
+                        Enter your details to begin the assessment.
                     </p>
                 </div>
 
                 <div className="p-8 space-y-6">
-                    <div className="space-y-2">
-                        <Label htmlFor="email">Email address</Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            placeholder="you@example.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            disabled={loading}
-                            className="font-mono"
-                        />
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Full Name</Label>
+                            <Input
+                                id="name"
+                                type="text"
+                                placeholder="Jane Doe"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                disabled={loading}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Email address</Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                placeholder="you@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                disabled={loading}
+                                className="font-mono"
+                            />
+                        </div>
                     </div>
 
                     {error && (
