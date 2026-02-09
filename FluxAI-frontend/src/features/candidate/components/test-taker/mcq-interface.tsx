@@ -31,10 +31,12 @@ export function MCQInterface({
     const [timeLimit, setTimeLimit] = useState(20) // seconds
     const [timeLeft, setTimeLeft] = useState(20)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [timeExpired, setTimeExpired] = useState(false) // lock UI as soon as timer hits 0
     const [error, setError] = useState<string | null>(null)
 
     const hasStartedQuestion = useRef(false)
     const timerRef = useRef<NodeJS.Timeout | null>(null)
+    const hasFiredExpiry = useRef(false)
 
     const currentQuestion = questions[currentQuestionIndex]
 
@@ -75,7 +77,7 @@ export function MCQInterface({
     // Keep handleSubmit ref current for timer callback
     const handleSubmitRef = useRef<(isTimeout?: boolean) => void>(() => { })
 
-    // Calculate remaining time from backend startedAt
+    // Calculate remaining time from backend startedAt; at 0 lock UI and auto-submit once
     useEffect(() => {
         if (!startedAt || timeLimit <= 0) return
 
@@ -84,9 +86,13 @@ export function MCQInterface({
             const remaining = Math.max(0, timeLimit - elapsed)
             setTimeLeft(remaining)
 
-            if (remaining <= 0) {
-                // Time expired - auto-submit
-                if (timerRef.current) clearInterval(timerRef.current)
+            if (remaining <= 0 && !hasFiredExpiry.current) {
+                hasFiredExpiry.current = true
+                if (timerRef.current) {
+                    clearInterval(timerRef.current)
+                    timerRef.current = null
+                }
+                setTimeExpired(true) // freeze UI immediately: no more answers, submit disabled
                 handleSubmitRef.current(true)
             }
         }, 100)
@@ -100,7 +106,10 @@ export function MCQInterface({
         if (isSubmitting) return
         setIsSubmitting(true)
 
-        if (timerRef.current) clearInterval(timerRef.current)
+        if (timerRef.current) {
+            clearInterval(timerRef.current)
+            timerRef.current = null
+        }
 
         try {
             const answer = selectedOptions
@@ -115,21 +124,22 @@ export function MCQInterface({
                 if (res.data.roundComplete) {
                     onRoundComplete()
                 } else if (res.data.nextQuestionIndex !== null) {
-                    // Move to next question
                     setCurrentQuestionIndex(res.data.nextQuestionIndex)
                     setSelectedOptions([])
                     setStartedAt(null)
+                    setTimeExpired(false)
                     hasStartedQuestion.current = false
+                    hasFiredExpiry.current = false
                 }
             } else {
-                // Handle error
                 const errorCode = res.error?.code
                 if (errorCode === 'TIME_EXPIRED') {
-                    // Already expired - move to next
                     setCurrentQuestionIndex(prev => prev + 1)
                     setSelectedOptions([])
                     setStartedAt(null)
+                    setTimeExpired(false)
                     hasStartedQuestion.current = false
+                    hasFiredExpiry.current = false
                 } else {
                     setError(res.error?.message || 'Submit failed')
                 }
@@ -147,8 +157,10 @@ export function MCQInterface({
         handleSubmitRef.current = handleSubmit
     }, [handleSubmit])
 
+    const locked = timeExpired || isSubmitting
+
     const toggleOption = (optionIndex: number) => {
-        if (isSubmitting) return
+        if (locked) return
 
         if (currentQuestion.isMultiCorrect) {
             setSelectedOptions(prev => {
@@ -194,7 +206,7 @@ export function MCQInterface({
                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${timerBg}`}>
                         <div className={`w-2 h-2 rounded-full ${timeLeft <= 5 ? 'bg-red-500 animate-pulse' : 'bg-neutral-400'}`} />
                         <span className={`text-sm font-mono font-medium ${timerColor}`}>
-                            {timeLeft}s
+                            {timeExpired ? '0s' : `${timeLeft}s`}
                         </span>
                     </div>
                 </div>
@@ -216,11 +228,11 @@ export function MCQInterface({
                             key={i}
                             type="button"
                             onClick={() => toggleOption(i)}
-                            disabled={isSubmitting}
+                            disabled={locked}
                             className={`w-full flex items-center gap-3 p-4 border rounded-lg text-left transition-colors group ${selectedOptions.includes(i)
                                 ? "border-neutral-900 bg-neutral-100"
                                 : "border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50"
-                                } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                } ${locked ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
                         >
                             {currentQuestion.isMultiCorrect ? (
                                 <div
@@ -254,11 +266,11 @@ export function MCQInterface({
                 )}
             </div>
 
-            {/* Footer - Submit only, no back navigation */}
+            {/* Footer - Submit only, no back navigation; frozen when time's up */}
             <div className="flex items-center justify-end pt-8 border-t border-neutral-100 mt-auto">
                 <Button
                     onClick={() => handleSubmit(false)}
-                    disabled={isSubmitting}
+                    disabled={locked}
                     className="bg-neutral-900 hover:bg-neutral-800"
                 >
                     {isSubmitting ? 'Submitting...' : 'Submit Answer'}
