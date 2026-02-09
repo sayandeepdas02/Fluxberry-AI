@@ -1,6 +1,6 @@
 import { ApiResponse } from './types'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9001/api'
 
 // Token storage helpers
 const TOKEN_KEY = 'fluxai_token'

@@ -104,7 +104,7 @@ export function RoundTransition({
 
                     {/* Start Button */}
                     <Button size="lg" className="w-full h-12 text-base group" asChild>
-                        <Link href={`/assessment/${assessmentId}/round/${nextRoundIndex}`}>
+                        <Link href={`/assessment/${assessmentId}/round/${nextRoundIndex + 1}`}>
                             Start Round {nextRoundIndex + 1} <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                         </Link>
                     </Button>
