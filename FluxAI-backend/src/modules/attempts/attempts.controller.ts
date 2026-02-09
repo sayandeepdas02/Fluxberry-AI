@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { attemptsService } from './attempts.service.js'
-import { startAttemptSchema, submitRoundSchema } from './attempts.types.js'
+import { startAttemptSchema, submitRoundSchema, submitAnswerSchema } from './attempts.types.js'
 import { successResponse } from '../../common/utils/api-response.js'
 import { RoundTypeValue } from '../../database/models/index.js'
 
@@ -100,6 +100,86 @@ export class AttemptsController {
             next(error)
         }
     }
+
+    // ============================================
+    // Per-Question APIs (V1)
+    // ============================================
+
+    /**
+     * GET /api/attempts/:attemptId/rounds/:roundIndex/current-question
+     * Get current question for resume scenarios
+     */
+    async getCurrentQuestion(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { attemptId, roundIndex } = req.params
+            const roundIdx = parseInt(roundIndex, 10)
+
+            if (isNaN(roundIdx) || roundIdx < 0) {
+                res.status(400).json({
+                    success: false,
+                    error: { code: 'INVALID_INPUT', message: 'Invalid round index' },
+                })
+                return
+            }
+
+            const result = await attemptsService.getCurrentQuestion(attemptId, roundIdx)
+            res.json(successResponse(result))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    /**
+     * POST /api/attempts/:attemptId/rounds/:roundIndex/questions/:questionIndex/start
+     * Start the timer for a specific question
+     */
+    async startQuestion(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { attemptId, roundIndex, questionIndex } = req.params
+            const roundIdx = parseInt(roundIndex, 10)
+            const questionIdx = parseInt(questionIndex, 10)
+
+            if (isNaN(roundIdx) || roundIdx < 0 || isNaN(questionIdx) || questionIdx < 0) {
+                res.status(400).json({
+                    success: false,
+                    error: { code: 'INVALID_INPUT', message: 'Invalid round or question index' },
+                })
+                return
+            }
+
+            const result = await attemptsService.startQuestion(attemptId, roundIdx, questionIdx)
+            res.json(successResponse(result))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    /**
+     * POST /api/attempts/:attemptId/rounds/:roundIndex/questions/:questionIndex/submit
+     * Submit answer for a specific question
+     */
+    async submitAnswer(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { attemptId, roundIndex, questionIndex } = req.params
+            const roundIdx = parseInt(roundIndex, 10)
+            const questionIdx = parseInt(questionIndex, 10)
+
+            if (isNaN(roundIdx) || roundIdx < 0 || isNaN(questionIdx) || questionIdx < 0) {
+                res.status(400).json({
+                    success: false,
+                    error: { code: 'INVALID_INPUT', message: 'Invalid round or question index' },
+                })
+                return
+            }
+
+            const input = submitAnswerSchema.parse(req.body)
+            const result = await attemptsService.submitAnswer(attemptId, roundIdx, questionIdx, input)
+            res.json(successResponse(result))
+        } catch (error) {
+            next(error)
+        }
+    }
 }
 
 export const attemptsController = new AttemptsController()
+

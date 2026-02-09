@@ -4,7 +4,7 @@
 
 export interface RoundResultResponse {
     roundType: 'MCQ' | 'DSA' | 'AI'
-    status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED'
+    status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'EXPIRED'
     score: number | null
     maxScore: number | null
     percentage: number | null

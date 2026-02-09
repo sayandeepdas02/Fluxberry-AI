@@ -56,8 +56,17 @@ export const RoundStatus = {
     IN_PROGRESS: 'IN_PROGRESS',
     COMPLETED: 'COMPLETED',
     SKIPPED: 'SKIPPED',
+    EXPIRED: 'EXPIRED',
 } as const
 export type RoundStatusType = typeof RoundStatus[keyof typeof RoundStatus]
+
+export const QuestionStatus = {
+    NOT_STARTED: 'NOT_STARTED',
+    IN_PROGRESS: 'IN_PROGRESS',
+    COMPLETED: 'COMPLETED',
+    EXPIRED: 'EXPIRED',
+} as const
+export type QuestionStatusType = typeof QuestionStatus[keyof typeof QuestionStatus]
 
 export const ProctoringEventType = {
     TAB_SWITCH: 'TAB_SWITCH',
@@ -360,6 +369,17 @@ export const Question = mongoose.model<IQuestion>('Question', QuestionSchema)
 // ============================================
 // ASSESSMENT ATTEMPT MODEL (with embedded round attempts)
 // ============================================
+
+// Per-question attempt tracking
+export interface IQuestionAttempt {
+    questionId: string
+    questionIndex: number
+    startedAt?: Date
+    endedAt?: Date
+    answer?: unknown
+    status: QuestionStatusType
+}
+
 export interface IRoundAttempt {
     _id?: Types.ObjectId
     roundType: RoundTypeValue
@@ -369,6 +389,13 @@ export interface IRoundAttempt {
     answers?: Record<string, unknown>
     questions?: any[] // Snapshot of questions
     timeLimit?: number // Snapshot of time limit (minutes)
+    // Per-question tracking (V1)
+    currentQuestionIndex: number
+    perQuestionTimeLimit: number // seconds
+    questionAttempts: IQuestionAttempt[]
+    // AI session fields
+    aiSessionId?: string
+    recordingUrl?: string
 }
 
 export interface IAssessmentAttempt extends Document {
@@ -383,6 +410,15 @@ export interface IAssessmentAttempt extends Document {
     updatedAt: Date
 }
 
+const QuestionAttemptSchema = new Schema<IQuestionAttempt>({
+    questionId: { type: String, required: true },
+    questionIndex: { type: Number, required: true },
+    startedAt: { type: Date },
+    endedAt: { type: Date },
+    answer: { type: Schema.Types.Mixed },
+    status: { type: String, enum: Object.values(QuestionStatus), default: QuestionStatus.NOT_STARTED },
+}, { _id: false })
+
 const RoundAttemptSchema = new Schema<IRoundAttempt>({
     roundType: { type: String, enum: Object.values(RoundType), required: true },
     status: { type: String, enum: Object.values(RoundStatus), default: RoundStatus.NOT_STARTED },
@@ -390,7 +426,14 @@ const RoundAttemptSchema = new Schema<IRoundAttempt>({
     endedAt: { type: Date },
     answers: { type: Schema.Types.Mixed },
     questions: { type: Schema.Types.Mixed }, // Snapshot of questions
-    timeLimit: { type: Number, default: 0 }, // Snapshot of time limit
+    timeLimit: { type: Number, default: 0 }, // Snapshot of time limit (minutes)
+    // Per-question tracking (V1)
+    currentQuestionIndex: { type: Number, default: 0 },
+    perQuestionTimeLimit: { type: Number, default: 0 }, // seconds
+    questionAttempts: [QuestionAttemptSchema],
+    // AI session fields
+    aiSessionId: { type: String },
+    recordingUrl: { type: String },
 }, { _id: true })
 
 const AssessmentAttemptSchema = new Schema<IAssessmentAttempt>({
