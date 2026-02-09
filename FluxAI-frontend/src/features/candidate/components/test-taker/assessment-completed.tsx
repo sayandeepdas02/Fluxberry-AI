@@ -16,9 +16,14 @@ export function AssessmentCompleted() {
                 </div>
 
                 <div className="space-y-4">
-                    <h1 className="text-3xl font-bold tracking-tight text-neutral-900">Assessment Submitted!</h1>
+                    <h1 className="text-3xl font-bold tracking-tight text-neutral-900">
+                        INTERVIEW OVER, THANKS!
+                    </h1>
+                    <p className="text-lg font-medium text-neutral-700">
+                        THE HR WILL GET BACK TO YOU.
+                    </p>
                     <p className="text-neutral-500 leading-relaxed">
-                        Thank you for completing the assessment. Your responses have been securely recorded and sent to the hiring team.
+                        Your responses have been securely recorded and sent to the hiring team.
                     </p>
                 </div>
 

@@ -48,6 +48,7 @@ export function useOpenAIRealtime({
     const localStreamRef = useRef<MediaStream | null>(null)
     const audioElementRef = useRef<HTMLAudioElement | null>(null)
     const sessionStartTimeRef = useRef<number>(0)
+    const handleRealtimeEventRef = useRef<(event: Record<string, unknown>) => void>(() => {})
 
     const updateConnectionState = useCallback((state: ConnectionState) => {
         setConnectionState(state)
@@ -56,6 +57,9 @@ export function useOpenAIRealtime({
 
     const addTranscriptEntry = useCallback((entry: TranscriptEntry) => {
         setTranscript(prev => {
+            // Dedupe: same speaker + same text (e.g. from both response.output_audio_transcript.done and conversation.item.done)
+            const last = prev[prev.length - 1]
+            if (last && last.speaker === entry.speaker && last.text === entry.text) return prev
             const updated = [...prev, entry]
             onTranscriptUpdate?.(updated)
             return updated
@@ -106,25 +110,32 @@ export function useOpenAIRealtime({
             dataChannelRef.current = dc
 
             dc.onopen = () => {
-                // Send session configuration
+                // Send session configuration (GA shape: type, instructions, audio.output.voice)
                 dc.send(JSON.stringify({
                     type: 'session.update',
                     session: {
+                        type: 'realtime',
                         modalities: ['text', 'audio'],
                         instructions: systemPrompt,
-                        voice,
-                        input_audio_format: 'pcm16',
-                        output_audio_format: 'pcm16',
                         input_audio_transcription: { model: 'whisper-1' },
                         turn_detection: { type: 'server_vad' },
+                        audio: {
+                            output: { voice },
+                        },
                     },
                 }))
+                // Trigger AI to speak first: without this, model only responds after user speaks (Server VAD)
+                setTimeout(() => {
+                    if (dataChannelRef.current?.readyState === 'open') {
+                        dataChannelRef.current.send(JSON.stringify({ type: 'response.create' }))
+                    }
+                }, 800)
             }
 
             dc.onmessage = (event) => {
                 try {
-                    const data = JSON.parse(event.data)
-                    handleRealtimeEvent(data)
+                    const data = JSON.parse(event.data) as Record<string, unknown>
+                    handleRealtimeEventRef.current(data)
                 } catch (e) {
                     console.error('Failed to parse realtime event:', e)
                 }
@@ -174,6 +185,20 @@ export function useOpenAIRealtime({
     const handleRealtimeEvent = useCallback((event: Record<string, unknown>) => {
         const timestamp = Date.now() - sessionStartTimeRef.current
 
+        const getAiTranscript = (): string | undefined => {
+            if (typeof event.transcript === 'string') return event.transcript
+            const o = event as { output_audio_transcript?: string; transcript?: string }
+            if (typeof o.output_audio_transcript === 'string') return o.output_audio_transcript
+            const item = event.item as { role?: string; content?: Array<{ type?: string; transcript?: string; text?: string }> } | undefined
+            if (item?.content?.length) {
+                for (const part of item.content) {
+                    if (typeof part.transcript === 'string') return part.transcript
+                    if (typeof part.text === 'string') return part.text
+                }
+            }
+            return undefined
+        }
+
         switch (event.type) {
             case 'response.output_audio_transcript.delta':
             case 'response.audio_transcript.delta':
@@ -183,23 +208,42 @@ export function useOpenAIRealtime({
             case 'response.output_audio_transcript.done':
             case 'response.audio_transcript.done':
                 setIsAISpeaking(false)
-                const aiText = (event.transcript ?? (event as { output_audio_transcript?: string }).output_audio_transcript) as string | undefined
-                if (aiText && typeof aiText === 'string') {
+                const aiTextDone = getAiTranscript()
+                if (aiTextDone?.trim()) {
                     addTranscriptEntry({
                         speaker: 'AI',
-                        text: aiText,
+                        text: aiTextDone.trim(),
                         timestamp,
                     })
                 }
                 break
 
+            case 'conversation.item.done':
+                // GA: assistant message transcript is in item.content[].transcript
+                const item = event.item as { role?: string; content?: Array<{ type?: string; transcript?: string; text?: string }> } | undefined
+                if (item?.role === 'assistant' && item.content?.length) {
+                    setIsAISpeaking(false)
+                    for (const part of item.content) {
+                        const t = part.transcript ?? part.text
+                        if (typeof t === 'string' && t.trim()) {
+                            addTranscriptEntry({
+                                speaker: 'AI',
+                                text: t.trim(),
+                                timestamp,
+                            })
+                            break
+                        }
+                    }
+                }
+                break
+
             case 'conversation.item.input_audio_transcription.completed':
-                // Candidate finished speaking
                 setIsCandidateSpeaking(false)
-                if (event.transcript && typeof event.transcript === 'string') {
+                const candidateText = typeof event.transcript === 'string' ? event.transcript : undefined
+                if (candidateText?.trim()) {
                     addTranscriptEntry({
                         speaker: 'CANDIDATE',
-                        text: event.transcript,
+                        text: candidateText.trim(),
                         timestamp,
                     })
                 }
@@ -219,6 +263,10 @@ export function useOpenAIRealtime({
                 break
         }
     }, [addTranscriptEntry, onError])
+
+    useEffect(() => {
+        handleRealtimeEventRef.current = handleRealtimeEvent
+    }, [handleRealtimeEvent])
 
     const disconnect = useCallback(() => {
         // Close data channel
