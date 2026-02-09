@@ -1,19 +1,159 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { ChevronRight } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import type { RoundQuestionMCQ } from "@/lib/api/attempts"
+import { attemptsApi } from "@/lib/api/attempts"
 
-export function MCQInterface({
-    questions,
-    onComplete,
-}: {
+interface MCQInterfaceProps {
+    attemptId: string
+    roundIndex: number
     questions: RoundQuestionMCQ[]
-    onComplete: (answers: Record<string, number[]>) => void
-}) {
-    const [currentQ, setCurrentQ] = useState(0)
-    const [selected, setSelected] = useState<Record<string, number[]>>({})
+    onRoundComplete: () => void
+}
+
+/**
+ * MCQ Interface with per-question timer (V1)
+ * - Shows ONE question at a time
+ * - 20-second countdown timer (derived from backend)
+ * - NO back navigation
+ * - Auto-advance on timeout or submit
+ */
+export function MCQInterface({
+    attemptId,
+    roundIndex,
+    questions,
+    onRoundComplete,
+}: MCQInterfaceProps) {
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+    const [selectedOptions, setSelectedOptions] = useState<number[]>([])
+    const [startedAt, setStartedAt] = useState<Date | null>(null)
+    const [timeLimit, setTimeLimit] = useState(20) // seconds
+    const [timeLeft, setTimeLeft] = useState(20)
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+
+    const hasStartedQuestion = useRef(false)
+    const timerRef = useRef<NodeJS.Timeout | null>(null)
+
+    const currentQuestion = questions[currentQuestionIndex]
+
+    // Start question timer on mount / question change
+    useEffect(() => {
+        if (!currentQuestion || hasStartedQuestion.current) return
+
+        async function startQuestion() {
+            hasStartedQuestion.current = true
+            try {
+                const res = await attemptsApi.startQuestion(attemptId, roundIndex, currentQuestionIndex)
+                if (res.success && res.data) {
+                    setStartedAt(new Date(res.data.startedAt))
+                    setTimeLimit(res.data.perQuestionTimeLimit)
+                    setTimeLeft(res.data.perQuestionTimeLimit)
+                }
+            } catch (err) {
+                console.error('Failed to start question:', err)
+                // Fallback: use default timer
+                setStartedAt(new Date())
+            }
+        }
+        startQuestion()
+    }, [attemptId, roundIndex, currentQuestionIndex, currentQuestion])
+
+    // Log tab switch events (proctoring)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                attemptsApi.logProctoringEvent(attemptId, { eventType: 'TAB_SWITCH' })
+                    .catch(console.error)
+            }
+        }
+        document.addEventListener('visibilitychange', handleVisibilityChange)
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }, [attemptId])
+
+    // Calculate remaining time from backend startedAt
+    useEffect(() => {
+        if (!startedAt || timeLimit <= 0) return
+
+        timerRef.current = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - startedAt.getTime()) / 1000)
+            const remaining = Math.max(0, timeLimit - elapsed)
+            setTimeLeft(remaining)
+
+            if (remaining <= 0) {
+                // Time expired - auto-submit
+                if (timerRef.current) clearInterval(timerRef.current)
+                handleSubmit(true)
+            }
+        }, 100)
+
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current)
+        }
+    }, [startedAt, timeLimit])
+
+    const handleSubmit = useCallback(async (isTimeout = false) => {
+        if (isSubmitting) return
+        setIsSubmitting(true)
+
+        if (timerRef.current) clearInterval(timerRef.current)
+
+        try {
+            const answer = selectedOptions
+            const res = await attemptsApi.submitAnswer(
+                attemptId,
+                roundIndex,
+                currentQuestionIndex,
+                answer
+            )
+
+            if (res.success && res.data) {
+                if (res.data.roundComplete) {
+                    onRoundComplete()
+                } else if (res.data.nextQuestionIndex !== null) {
+                    // Move to next question
+                    setCurrentQuestionIndex(res.data.nextQuestionIndex)
+                    setSelectedOptions([])
+                    setStartedAt(null)
+                    hasStartedQuestion.current = false
+                }
+            } else {
+                // Handle error
+                const errorCode = res.error?.code
+                if (errorCode === 'TIME_EXPIRED') {
+                    // Already expired - move to next
+                    setCurrentQuestionIndex(prev => prev + 1)
+                    setSelectedOptions([])
+                    setStartedAt(null)
+                    hasStartedQuestion.current = false
+                } else {
+                    setError(res.error?.message || 'Submit failed')
+                }
+            }
+        } catch (err) {
+            console.error('Submit error:', err)
+            setError('Submit failed. Please try again.')
+        } finally {
+            setIsSubmitting(false)
+        }
+    }, [attemptId, roundIndex, currentQuestionIndex, selectedOptions, isSubmitting, onRoundComplete])
+
+    const toggleOption = (optionIndex: number) => {
+        if (isSubmitting) return
+
+        if (currentQuestion.isMultiCorrect) {
+            setSelectedOptions(prev => {
+                if (prev.includes(optionIndex)) {
+                    return prev.filter(i => i !== optionIndex)
+                } else {
+                    return [...prev, optionIndex].sort((a, b) => a - b)
+                }
+            })
+        } else {
+            setSelectedOptions([optionIndex])
+        }
+    }
 
     if (questions.length === 0) {
         return (
@@ -23,73 +163,72 @@ export function MCQInterface({
         )
     }
 
-    const q = questions[currentQ]
-    const selectedForQ = selected[q.id] ?? []
-
-    const toggleOption = (optionIndex: number) => {
-        if (q.isMultiCorrect) {
-            setSelected((prev) => {
-                const arr = prev[q.id] ?? []
-                const next = arr.includes(optionIndex)
-                    ? arr.filter((i) => i !== optionIndex)
-                    : [...arr, optionIndex].sort((a, b) => a - b)
-                return { ...prev, [q.id]: next }
-            })
-        } else {
-            setSelected((prev) => ({ ...prev, [q.id]: [optionIndex] }))
-        }
+    if (!currentQuestion) {
+        return (
+            <div className="p-8 text-center text-neutral-500">
+                Loading next question...
+            </div>
+        )
     }
 
-    const handleSubmit = () => {
-        const answers: Record<string, number[]> = {}
-        questions.forEach((question) => {
-            const sel = selected[question.id]
-            answers[question.id] = Array.isArray(sel) ? sel : []
-        })
-        onComplete(answers)
-    }
+    // Timer color based on time left
+    const timerColor = timeLeft <= 5 ? 'text-red-600' : timeLeft <= 10 ? 'text-orange-500' : 'text-neutral-700'
+    const timerBg = timeLeft <= 5 ? 'bg-red-50' : timeLeft <= 10 ? 'bg-orange-50' : 'bg-neutral-100'
 
     return (
         <div className="max-w-3xl mx-auto w-full p-8 flex flex-col h-full justify-between">
-            <div className="space-y-8">
-                <div className="flex items-center justify-between text-sm text-neutral-500">
-                    <span>Question {currentQ + 1} of {questions.length}</span>
-                    <span>{q.isMultiCorrect ? "Multi Select" : "Single Select"}</span>
+            <div className="space-y-6">
+                {/* Header with progress and timer */}
+                <div className="flex items-center justify-between">
+                    <span className="text-sm text-neutral-500">
+                        Question {currentQuestionIndex + 1} of {questions.length}
+                    </span>
+                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${timerBg}`}>
+                        <div className={`w-2 h-2 rounded-full ${timeLeft <= 5 ? 'bg-red-500 animate-pulse' : 'bg-neutral-400'}`} />
+                        <span className={`text-sm font-mono font-medium ${timerColor}`}>
+                            {timeLeft}s
+                        </span>
+                    </div>
                 </div>
 
+                {/* Question type indicator */}
+                <div className="text-xs text-neutral-400 uppercase tracking-wider">
+                    {currentQuestion.isMultiCorrect ? "Multi Select" : "Single Select"}
+                </div>
+
+                {/* Question */}
                 <h2 className="text-xl font-medium text-neutral-900 leading-relaxed">
-                    {q.title}
+                    {currentQuestion.title}
                 </h2>
 
+                {/* Options */}
                 <div className="space-y-3">
-                    {q.options.map((opt, i) => (
+                    {currentQuestion.options.map((opt, i) => (
                         <button
                             key={i}
                             type="button"
                             onClick={() => toggleOption(i)}
-                            className={`w-full flex items-center gap-3 p-4 border rounded-lg text-left transition-colors group ${
-                                selectedForQ.includes(i)
-                                    ? "border-neutral-900 bg-neutral-100"
-                                    : "border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50"
-                            }`}
+                            disabled={isSubmitting}
+                            className={`w-full flex items-center gap-3 p-4 border rounded-lg text-left transition-colors group ${selectedOptions.includes(i)
+                                ? "border-neutral-900 bg-neutral-100"
+                                : "border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50"
+                                } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            {q.isMultiCorrect ? (
+                            {currentQuestion.isMultiCorrect ? (
                                 <div
-                                    className={`w-4 h-4 rounded border flex items-center justify-center ${
-                                        selectedForQ.includes(i) ? "border-neutral-900 bg-neutral-900" : "border-neutral-300"
-                                    }`}
+                                    className={`w-4 h-4 rounded border flex items-center justify-center ${selectedOptions.includes(i) ? "border-neutral-900 bg-neutral-900" : "border-neutral-300"
+                                        }`}
                                 >
-                                    {selectedForQ.includes(i) && (
+                                    {selectedOptions.includes(i) && (
                                         <span className="text-white text-[10px]">✓</span>
                                     )}
                                 </div>
                             ) : (
                                 <div
-                                    className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                                        selectedForQ.includes(i) ? "border-neutral-900 bg-neutral-900" : "border-neutral-300"
-                                    }`}
+                                    className={`w-4 h-4 rounded-full border flex items-center justify-center ${selectedOptions.includes(i) ? "border-neutral-900 bg-neutral-900" : "border-neutral-300"
+                                        }`}
                                 >
-                                    {selectedForQ.includes(i) && (
+                                    {selectedOptions.includes(i) && (
                                         <span className="w-2 h-2 rounded-full bg-white" />
                                     )}
                                 </div>
@@ -98,26 +237,24 @@ export function MCQInterface({
                         </button>
                     ))}
                 </div>
+
+                {/* Error message */}
+                {error && (
+                    <div className="text-red-600 text-sm p-3 bg-red-50 rounded-lg">
+                        {error}
+                    </div>
+                )}
             </div>
 
-            <div className="flex items-center justify-between pt-8 border-t border-neutral-100 mt-auto">
+            {/* Footer - Submit only, no back navigation */}
+            <div className="flex items-center justify-end pt-8 border-t border-neutral-100 mt-auto">
                 <Button
-                    variant="ghost"
-                    disabled={currentQ === 0}
-                    onClick={() => setCurrentQ((c) => c - 1)}
+                    onClick={() => handleSubmit(false)}
+                    disabled={isSubmitting}
+                    className="bg-neutral-900 hover:bg-neutral-800"
                 >
-                    Previous
+                    {isSubmitting ? 'Submitting...' : 'Submit Answer'}
                 </Button>
-
-                {currentQ < questions.length - 1 ? (
-                    <Button onClick={() => setCurrentQ((c) => c + 1)}>
-                        Next Question <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                ) : (
-                    <Button onClick={handleSubmit} className="bg-neutral-900 hover:bg-neutral-800">
-                        Submit Section
-                    </Button>
-                )}
             </div>
         </div>
     )

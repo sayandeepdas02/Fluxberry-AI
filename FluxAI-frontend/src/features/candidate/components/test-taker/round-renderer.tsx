@@ -107,8 +107,10 @@ export function RoundRenderer({ assessmentId, roundId }: { assessmentId: string;
 
     const handleNextRound = () => {
         if (roundIndex < (roundTypes?.length ?? 0) - 1) {
-            router.push(`/assessment/${assessmentId}/round/${roundIndex + 1}`)
+            // Navigate to transition page between rounds (no auto-jump)
+            router.push(`/assessment/${assessmentId}/transition/${roundIndex}`)
         } else {
+            // Last round completed
             router.push(`/assessment/${assessmentId}/completed`)
         }
     }
@@ -174,14 +176,18 @@ export function RoundRenderer({ assessmentId, roundId }: { assessmentId: string;
         >
             {roundType === "MCQ" && (
                 <MCQInterface
+                    attemptId={attemptId}
+                    roundIndex={roundIndex}
                     questions={questions?.filter((q): q is import("@/lib/api/attempts").RoundQuestionMCQ => q.type === "MCQ") ?? []}
-                    onComplete={handleMCQComplete}
+                    onRoundComplete={handleNextRound}
                 />
             )}
             {roundType === "DSA" && (
                 <DSAInterface
+                    attemptId={attemptId}
+                    roundIndex={roundIndex}
                     questions={questions?.filter((q): q is import("@/lib/api/attempts").RoundQuestionDSA => q.type === "DSA") ?? []}
-                    onComplete={handleDSAComplete}
+                    onRoundComplete={handleNextRound}
                 />
             )}
             {roundType === "AI" && (

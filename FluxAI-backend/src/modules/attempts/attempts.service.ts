@@ -8,6 +8,8 @@ import {
     RoundTypeValue,
     AttemptStatusType,
     RoundStatusType,
+    QuestionStatus,
+    QuestionStatusType,
 } from '../../database/models/index.js'
 
 /**
@@ -37,9 +39,14 @@ function buildQuestionQuery(ids: string[]): Record<string, unknown> {
 import {
     StartAttemptInput,
     SubmitRoundInput,
+    SubmitAnswerInput,
     AttemptResponse,
     RoundAttemptResponse,
     RoundQuestionResponse,
+    QuestionAttemptResponse,
+    CurrentQuestionResponse,
+    StartQuestionResponse,
+    SubmitAnswerResponse,
 } from './attempts.types.js'
 import { evaluationService } from '../evaluation/evaluation.service.js'
 import { enqueueEvaluationJob } from '../../jobs/queues/index.js'
@@ -147,11 +154,27 @@ export class AttemptsService {
             }
             // AI rounds don't have question bank yet
 
+            // Set per-question time limits based on round type (V1 locked values)
+            let perQuestionTimeLimit = 0 // seconds
+            if (r.roundType === 'MCQ') perQuestionTimeLimit = 20 // 20 seconds per MCQ
+            if (r.roundType === 'DSA') perQuestionTimeLimit = 30 * 60 // 30 minutes per DSA
+            if (r.roundType === 'AI') perQuestionTimeLimit = 0 // AI has session-level timing only
+
+            // Initialize question attempts array
+            const questionAttempts = questionSnapshots.map((q, idx) => ({
+                questionId: q.id,
+                questionIndex: idx,
+                status: QuestionStatus.NOT_STARTED,
+            }))
+
             roundsToCreate.push({
                 roundType: r.roundType,
                 status: 'NOT_STARTED',
                 timeLimit,
-                questions: questionSnapshots
+                questions: questionSnapshots,
+                currentQuestionIndex: 0,
+                perQuestionTimeLimit,
+                questionAttempts,
             })
         }
 
@@ -376,6 +399,243 @@ export class AttemptsService {
     }
 
     /**
+     * Get current question for a round (for resume scenarios)
+     */
+    async getCurrentQuestion(attemptId: string, roundIndex: number): Promise<CurrentQuestionResponse> {
+        const attempt = await AssessmentAttempt.findById(attemptId)
+        if (!attempt) {
+            const error = new Error('Attempt not found') as Error & { statusCode: number; code: string }
+            error.statusCode = 404
+            error.code = 'NOT_FOUND'
+            throw error
+        }
+
+        const roundAttempt = attempt.rounds[roundIndex]
+        if (!roundAttempt) {
+            const error = new Error('Round not found') as Error & { statusCode: number; code: string }
+            error.statusCode = 404
+            error.code = 'NOT_FOUND'
+            throw error
+        }
+
+        const questions = roundAttempt.questions || []
+        const currentIdx = roundAttempt.currentQuestionIndex ?? 0
+        const currentQuestion = questions[currentIdx]
+
+        if (!currentQuestion) {
+            const error = new Error('No more questions in round') as Error & { statusCode: number; code: string }
+            error.statusCode = 400
+            error.code = 'ROUND_COMPLETE'
+            throw error
+        }
+
+        const questionAttempt = roundAttempt.questionAttempts?.find(qa => qa.questionIndex === currentIdx)
+
+        return {
+            questionIndex: currentIdx,
+            questionId: currentQuestion.id,
+            question: currentQuestion as RoundQuestionResponse,
+            startedAt: questionAttempt?.startedAt ?? null,
+            perQuestionTimeLimit: roundAttempt.perQuestionTimeLimit ?? 0,
+            totalQuestions: questions.length,
+            roundType: roundAttempt.roundType as RoundTypeValue,
+        }
+    }
+
+    /**
+     * Start a question timer (backend authoritative timestamp)
+     * - Idempotent: returns existing startedAt if already started
+     */
+    async startQuestion(attemptId: string, roundIndex: number, questionIndex: number): Promise<StartQuestionResponse> {
+        const attempt = await AssessmentAttempt.findById(attemptId)
+        if (!attempt) {
+            const error = new Error('Attempt not found') as Error & { statusCode: number; code: string }
+            error.statusCode = 404
+            error.code = 'NOT_FOUND'
+            throw error
+        }
+
+        const roundAttempt = attempt.rounds[roundIndex]
+        if (!roundAttempt) {
+            const error = new Error('Round not found') as Error & { statusCode: number; code: string }
+            error.statusCode = 404
+            error.code = 'NOT_FOUND'
+            throw error
+        }
+
+        // Validate question index matches current
+        if (roundAttempt.currentQuestionIndex !== questionIndex) {
+            const error = new Error(`Invalid question index. Current: ${roundAttempt.currentQuestionIndex}, Requested: ${questionIndex}`) as Error & { statusCode: number; code: string }
+            error.statusCode = 400
+            error.code = 'INVALID_QUESTION_INDEX'
+            throw error
+        }
+
+        const questions = roundAttempt.questions || []
+        const question = questions[questionIndex]
+        if (!question) {
+            const error = new Error('Question not found') as Error & { statusCode: number; code: string }
+            error.statusCode = 404
+            error.code = 'NOT_FOUND'
+            throw error
+        }
+
+        // Find or create question attempt
+        let questionAttempt = roundAttempt.questionAttempts?.find(qa => qa.questionIndex === questionIndex)
+
+        if (questionAttempt?.startedAt) {
+            // Already started, return existing (idempotent)
+            return {
+                questionIndex,
+                questionId: question.id,
+                startedAt: questionAttempt.startedAt,
+                perQuestionTimeLimit: roundAttempt.perQuestionTimeLimit ?? 0,
+            }
+        }
+
+        // Start the question
+        const now = new Date()
+
+        // Initialize questionAttempts array if not exists
+        if (!roundAttempt.questionAttempts) {
+            roundAttempt.questionAttempts = []
+        }
+
+        if (!questionAttempt) {
+            questionAttempt = {
+                questionId: question.id,
+                questionIndex,
+                status: QuestionStatus.IN_PROGRESS,
+                startedAt: now,
+            }
+            roundAttempt.questionAttempts.push(questionAttempt)
+        } else {
+            questionAttempt.status = QuestionStatus.IN_PROGRESS
+            questionAttempt.startedAt = now
+        }
+
+        // Start round if not already
+        if (roundAttempt.status === 'NOT_STARTED') {
+            roundAttempt.status = 'IN_PROGRESS'
+            roundAttempt.startedAt = now
+            // Also start the attempt if not started
+            if (attempt.status === 'NOT_STARTED') {
+                attempt.status = 'IN_PROGRESS'
+                attempt.startedAt = now
+            }
+        }
+
+        await attempt.save()
+
+        return {
+            questionIndex,
+            questionId: question.id,
+            startedAt: now,
+            perQuestionTimeLimit: roundAttempt.perQuestionTimeLimit ?? 0,
+        }
+    }
+
+    /**
+     * Submit answer for a question (with backend time enforcement)
+     * - Validates time limit hasn't exceeded
+     * - Auto-advances to next question
+     */
+    async submitAnswer(attemptId: string, roundIndex: number, questionIndex: number, input: SubmitAnswerInput): Promise<SubmitAnswerResponse> {
+        const attempt = await AssessmentAttempt.findById(attemptId)
+        if (!attempt) {
+            const error = new Error('Attempt not found') as Error & { statusCode: number; code: string }
+            error.statusCode = 404
+            error.code = 'NOT_FOUND'
+            throw error
+        }
+
+        const roundAttempt = attempt.rounds[roundIndex]
+        if (!roundAttempt) {
+            const error = new Error('Round not found') as Error & { statusCode: number; code: string }
+            error.statusCode = 404
+            error.code = 'NOT_FOUND'
+            throw error
+        }
+
+        // Validate question index matches current
+        if (roundAttempt.currentQuestionIndex !== questionIndex) {
+            const error = new Error(`Cannot submit: not current question. Current: ${roundAttempt.currentQuestionIndex}`) as Error & { statusCode: number; code: string }
+            error.statusCode = 400
+            error.code = 'INVALID_QUESTION_INDEX'
+            throw error
+        }
+
+        const questions = roundAttempt.questions || []
+        const question = questions[questionIndex]
+        if (!question) {
+            const error = new Error('Question not found') as Error & { statusCode: number; code: string }
+            error.statusCode = 404
+            error.code = 'NOT_FOUND'
+            throw error
+        }
+
+        const questionAttempt = roundAttempt.questionAttempts?.find(qa => qa.questionIndex === questionIndex)
+        const now = new Date()
+
+        // Check time limit (only if question was started and has time limit)
+        const perQuestionTimeLimit = roundAttempt.perQuestionTimeLimit ?? 0
+        if (questionAttempt?.startedAt && perQuestionTimeLimit > 0) {
+            const elapsed = now.getTime() - new Date(questionAttempt.startedAt).getTime()
+            const limitMs = perQuestionTimeLimit * 1000
+
+            if (elapsed > limitMs) {
+                // Time expired - mark as expired
+                if (questionAttempt) {
+                    questionAttempt.status = QuestionStatus.EXPIRED
+                    questionAttempt.endedAt = new Date(new Date(questionAttempt.startedAt).getTime() + limitMs)
+                }
+
+                const error = new Error('Question time expired') as Error & { statusCode: number; code: string }
+                error.statusCode = 400
+                error.code = 'TIME_EXPIRED'
+                throw error
+            }
+        }
+
+        // Save answer
+        if (questionAttempt) {
+            questionAttempt.answer = input.answer
+            questionAttempt.status = QuestionStatus.COMPLETED
+            questionAttempt.endedAt = now
+        }
+
+        // Also save to legacy answers map for compatibility
+        if (!roundAttempt.answers) roundAttempt.answers = {}
+        roundAttempt.answers[question.id] = input.answer
+
+        // Advance to next question
+        const nextQuestionIndex = questionIndex + 1
+        const isRoundComplete = nextQuestionIndex >= questions.length
+
+        if (isRoundComplete) {
+            roundAttempt.status = 'COMPLETED'
+            roundAttempt.endedAt = now
+
+            // Check if all rounds complete
+            const allComplete = attempt.rounds.every(r => r.status === 'COMPLETED')
+            if (allComplete) {
+                attempt.status = 'COMPLETED'
+                attempt.submittedAt = now
+            }
+        } else {
+            roundAttempt.currentQuestionIndex = nextQuestionIndex
+        }
+
+        await attempt.save()
+
+        return {
+            success: true,
+            nextQuestionIndex: isRoundComplete ? null : nextQuestionIndex,
+            roundComplete: isRoundComplete,
+        }
+    }
+
+    /**
      * Format attempt for response
      */
     private formatAttempt(attempt: IAssessmentAttempt, assessmentTitle: string): AttemptResponse {
@@ -394,6 +654,16 @@ export class AttemptsService {
                 startedAt: r.startedAt ?? null,
                 endedAt: r.endedAt ?? null,
                 timeLimit: r.timeLimit ?? null,
+                currentQuestionIndex: r.currentQuestionIndex ?? 0,
+                perQuestionTimeLimit: r.perQuestionTimeLimit ?? 0,
+                questionAttempts: (r.questionAttempts || []).map((qa): QuestionAttemptResponse => ({
+                    questionId: qa.questionId,
+                    questionIndex: qa.questionIndex,
+                    startedAt: qa.startedAt ?? null,
+                    endedAt: qa.endedAt ?? null,
+                    status: qa.status as QuestionStatusType,
+                })),
+                totalQuestions: (r.questions || []).length,
             })),
             createdAt: attempt.createdAt,
         }
@@ -401,3 +671,4 @@ export class AttemptsService {
 }
 
 export const attemptsService = new AttemptsService()
+

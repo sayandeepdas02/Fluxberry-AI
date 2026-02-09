@@ -34,6 +34,30 @@ export interface RoundQuestionDSA {
 
 export type RoundQuestionResponse = RoundQuestionMCQ | RoundQuestionDSA
 
+// Per-question API types (V1)
+export interface StartQuestionResponse {
+    questionIndex: number
+    questionId: string
+    startedAt: string
+    perQuestionTimeLimit: number // seconds
+}
+
+export interface SubmitAnswerResponse {
+    success: boolean
+    nextQuestionIndex: number | null
+    roundComplete: boolean
+}
+
+export interface CurrentQuestionResponse {
+    questionIndex: number
+    questionId: string
+    question: RoundQuestionResponse
+    startedAt: string | null
+    perQuestionTimeLimit: number // seconds
+    totalQuestions: number
+    roundType: 'MCQ' | 'DSA' | 'AI'
+}
+
 export const attemptsApi = {
     /**
      * Start or resume an assessment attempt
@@ -99,6 +123,36 @@ export const attemptsApi = {
         return apiClient.get<{ id: string; title: string; organizationId: string; rounds: any[] }>(`/public/assessments/${id}`)
     },
 
+    // ===========================================
+    // Per-Question APIs (V1)
+    // ===========================================
+
+    /**
+     * Get current question for a round (for resume scenarios)
+     */
+    async getCurrentQuestion(attemptId: string, roundIndex: number) {
+        return apiClient.get<CurrentQuestionResponse>(`/attempts/${attemptId}/rounds/${roundIndex}/current-question`)
+    },
+
+    /**
+     * Start the timer for a specific question
+     */
+    async startQuestion(attemptId: string, roundIndex: number, questionIndex: number) {
+        return apiClient.post<StartQuestionResponse>(
+            `/attempts/${attemptId}/rounds/${roundIndex}/questions/${questionIndex}/start`
+        )
+    },
+
+    /**
+     * Submit answer for a specific question
+     */
+    async submitAnswer(attemptId: string, roundIndex: number, questionIndex: number, answer: unknown) {
+        return apiClient.post<SubmitAnswerResponse>(
+            `/attempts/${attemptId}/rounds/${roundIndex}/questions/${questionIndex}/submit`,
+            { answer }
+        )
+    },
+
     /**
      * Upload and attach resume
      */
@@ -135,3 +189,4 @@ export const attemptsApi = {
         })
     },
 }
+
