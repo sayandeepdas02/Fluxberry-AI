@@ -73,6 +73,28 @@ export type NotificationJobData = SendInviteEmailJob | SendResultEmailJob
 export const notificationQueue = new Queue<NotificationJobData>('notification', queueOptions)
 
 // ============================================
+// AI INTERVIEW PROCESSING QUEUE
+// ============================================
+
+export interface ProcessAIResponseJob {
+    type: 'PROCESS_AI_RESPONSE'
+    attemptId: string
+    sessionId: string
+    questionId: string
+    storageKey: string
+}
+
+export interface SynthesizeAIInterviewJob {
+    type: 'SYNTHESIZE_AI_INTERVIEW'
+    attemptId: string
+    sessionId: string
+}
+
+export type AIInterviewJobData = ProcessAIResponseJob | SynthesizeAIInterviewJob
+
+export const aiInterviewQueue = new Queue<AIInterviewJobData>('ai-interview', queueOptions)
+
+// ============================================
 // JOB PRODUCERS
 // ============================================
 
@@ -90,6 +112,15 @@ export async function enqueueNotificationJob(data: NotificationJobData): Promise
             ? `${data.type}-${data.assessmentId}-${data.candidateEmail}-${Date.now()}`
             : `${data.type}-${Date.now()}`
     const job = await notificationQueue.add(data.type, data, { jobId })
+    console.log(`📤 Enqueued ${data.type} job: ${job.id}`)
+    return job.id || ''
+}
+
+export async function enqueueAIInterviewJob(data: AIInterviewJobData): Promise<string> {
+    const jobId = data.type === 'PROCESS_AI_RESPONSE'
+        ? `${data.type}-${data.sessionId}-${data.questionId}-${Date.now()}`
+        : `${data.type}-${data.sessionId}-${Date.now()}`
+    const job = await aiInterviewQueue.add(data.type, data, { jobId })
     console.log(`📤 Enqueued ${data.type} job: ${job.id}`)
     return job.id || ''
 }

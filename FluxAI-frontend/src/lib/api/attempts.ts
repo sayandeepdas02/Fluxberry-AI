@@ -190,11 +190,11 @@ export const attemptsApi = {
     },
 
     // ============================================
-    // AI Interview APIs (V1)
+    // AI Interview APIs (V2 — Async Recording)
     // ============================================
 
     /**
-     * Start AI interview session
+     * Start AI interview session — returns questions
      */
     async startAISession(attemptId: string, agentType?: string) {
         return apiClient.post<AISessionStartResponse>(
@@ -214,35 +214,79 @@ export const attemptsApi = {
     },
 
     /**
-     * Save transcript entries
+     * Initialize upload for a question response (get pre-signed URL)
      */
-    async saveTranscript(attemptId: string, sessionId: string, entries: TranscriptEntry[]) {
-        return apiClient.post<{ entryCount: number }>(
-            `/attempts/${attemptId}/ai/transcript`,
-            { sessionId, entries }
+    async initAIUpload(attemptId: string, sessionId: string, questionId: string, mimeType: string = 'video/webm') {
+        return apiClient.post<InitUploadResponse>(
+            `/attempts/${attemptId}/ai/upload/init`,
+            { sessionId, questionId, mimeType }
         )
     },
 
     /**
-     * Get AI session details (for recruiter review)
+     * Mark upload as complete and trigger processing
+     */
+    async completeAIUpload(attemptId: string, sessionId: string, questionId: string, durationSeconds: number) {
+        return apiClient.post<CompleteUploadResponse>(
+            `/attempts/${attemptId}/ai/upload/complete`,
+            { sessionId, questionId, durationSeconds }
+        )
+    },
+
+    /**
+     * Complete the entire AI interview session
+     */
+    async completeAISession(attemptId: string, sessionId: string) {
+        return apiClient.post<CompleteSessionResponse>(
+            `/attempts/${attemptId}/ai/complete`,
+            { sessionId }
+        )
+    },
+
+    /**
+     * Get AI session details (legacy compat)
      */
     async getAISessionDetails(attemptId: string) {
         return apiClient.get<AISessionDetails>(
             `/attempts/${attemptId}/ai/details`
         )
     },
+
+    /**
+     * Get full AI interview results (recruiter view)
+     */
+    async getAIResults(attemptId: string) {
+        return apiClient.get<AIInterviewResultsResponse>(
+            `/attempts/${attemptId}/ai/results`
+        )
+    },
+
+    /**
+     * Get signed video URL for a specific question response
+     */
+    async getAIResponseVideo(attemptId: string, questionId: string) {
+        return apiClient.get<{ downloadUrl: string }>(
+            `/attempts/${attemptId}/ai/responses/${questionId}/video`
+        )
+    },
 }
 
-// AI Interview Types
+// ============================================
+// AI Interview Types (V2)
+// ============================================
+
+export interface AIQuestionConfig {
+    id: string
+    text: string
+    prepSeconds: number
+    answerSeconds: number
+}
+
 export interface AISessionStartResponse {
     sessionId: string
-    ephemeralToken: string
-    agentType: string
-    systemPrompt: string
-    durationSeconds: number
-    startedAt: string
-    model: string
-    voice: string
+    questions: AIQuestionConfig[]
+    consentRecordedAt: string
+    totalDurationEstimate: number
 }
 
 export interface AISessionEndResponse {
@@ -250,6 +294,53 @@ export interface AISessionEndResponse {
     status: string
     duration: number
     endedAt: string
+}
+
+export interface InitUploadResponse {
+    uploadUrl: string
+    uploadId: string
+    storageKey: string
+    expiresIn: number
+}
+
+export interface CompleteUploadResponse {
+    questionId: string
+    status: string
+}
+
+export interface CompleteSessionResponse {
+    sessionId: string
+    status: string
+    totalResponses: number
+}
+
+export interface AIResponseResult {
+    questionId: string
+    questionText: string
+    questionIndex: number
+    durationSeconds: number
+    status: string
+    transcript: string | null
+    analysis: {
+        summary: string[]
+        keyPoints: string[]
+        skillsObserved: string[]
+        relevance: string
+    } | null
+}
+
+export interface AIInterviewResultsResponse {
+    sessionId: string
+    status: string
+    synthesis: {
+        overallSummary: string
+        strengths: string[]
+        gaps: string[]
+        suggestedFollowUps: string[]
+    } | null
+    responses: AIResponseResult[]
+    consent: { recordedAt: string } | null
+    aiDisclosure: string
 }
 
 export interface TranscriptEntry {
@@ -270,6 +361,9 @@ export interface AISessionDetails {
     duration: number | null
     startedAt: string | null
     endedAt: string | null
+    questions: AIQuestionConfig[]
+    consentRecordedAt: string | null
 }
 
 export type AISessionEndReason = 'COMPLETED' | 'TIMEOUT' | 'CANDIDATE_EXIT' | 'ERROR'
+

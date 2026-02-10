@@ -2,6 +2,7 @@ import { Worker } from 'bullmq'
 import { redisConnection } from './redis.js'
 import { processEvaluationJob } from './processors/evaluation.processor.js'
 import { processNotificationJob } from './processors/notification.processor.js'
+import { processAIInterviewJob } from './processors/ai-interview.processor.js'
 
 console.log('🚀 Starting FluxAI Worker...')
 
@@ -64,6 +65,37 @@ notificationWorker.on('error', (err) => {
 })
 
 // ============================================
+// AI INTERVIEW PROCESSING WORKER
+// ============================================
+
+const aiInterviewWorker = new Worker(
+    'ai-interview',
+    async (job) => {
+        await processAIInterviewJob(job)
+    },
+    {
+        connection: redisConnection,
+        concurrency: 3,
+        limiter: {
+            max: 5,
+            duration: 1000,
+        },
+    }
+)
+
+aiInterviewWorker.on('completed', (job) => {
+    console.log(`✅ AI Interview job ${job.id} completed`)
+})
+
+aiInterviewWorker.on('failed', (job, err) => {
+    console.error(`❌ AI Interview job ${job?.id} failed:`, err.message)
+})
+
+aiInterviewWorker.on('error', (err) => {
+    console.error('AI Interview worker error:', err.message)
+})
+
+// ============================================
 // GRACEFUL SHUTDOWN
 // ============================================
 
@@ -71,6 +103,7 @@ async function shutdown() {
     console.log('Shutting down workers...')
     await evaluationWorker.close()
     await notificationWorker.close()
+    await aiInterviewWorker.close()
     await redisConnection.quit()
     console.log('Workers shut down gracefully')
     process.exit(0)
@@ -82,3 +115,5 @@ process.on('SIGINT', shutdown)
 console.log('👷 Workers started:')
 console.log('   - evaluation (concurrency: 5)')
 console.log('   - notification (concurrency: 3)')
+console.log('   - ai-interview (concurrency: 3)')
+

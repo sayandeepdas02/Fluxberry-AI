@@ -1,80 +1,92 @@
 /**
- * AI Interview Service
+ * AI Interview Service — V2 (Async Recording + Processing)
  * 
- * Handles AI interview session management, transcript storage, and media handling.
- * V1: OpenAI Realtime API integration with ephemeral token generation.
+ * Handles:
+ * - Session lifecycle (start → upload → complete)
+ * - Per-question video upload (pre-signed URLs)
+ * - Post-upload processing enqueue
+ * - Results retrieval for recruiter dashboard
  */
 
-import OpenAI from 'openai'
 import { v4 as uuidv4 } from 'uuid'
 import {
     AssessmentAttempt,
+    Assessment,
     Candidate,
     AISessionStatus,
+    AIResponseStatus,
     AgentType,
     RoundStatus,
+    AIInterviewResponse,
+    AIInterviewSynthesis,
     type AgentTypeValue,
-    type IAITranscriptEntry,
 } from '../../database/models/index.js'
-import { getAgentConfig } from './agent-prompts.js'
+import {
+    generateUploadUrl,
+    generateStorageKey,
+    generateDownloadUrl,
+} from '../storage/s3.client.js'
+import { enqueueAIInterviewJob } from '../../jobs/queues/index.js'
 import type {
     StartAISessionInput,
     EndAISessionInput,
-    SaveTranscriptInput,
+    InitUploadInput,
+    CompleteUploadInput,
+    CompleteSessionInput,
     StartAISessionResponse,
     EndAISessionResponse,
-    SaveTranscriptResponse,
+    InitUploadResponse,
+    CompleteUploadResponse,
+    CompleteSessionResponse,
+    AIInterviewResultsResponse,
+    AIQuestionConfig,
 } from './ai-interview.types.js'
 
-class AIInterviewService {
-    private _openai: OpenAI | null = null
+const AI_DISCLOSURE_TEXT = 'This interview was recorded and processed using AI-assisted tools. All outputs are informational signals and do not constitute hiring decisions. A human reviewer must evaluate all results before taking any action.'
 
-    private get openai(): OpenAI {
-        if (!this._openai) {
-            this._openai = new OpenAI({
-                apiKey: process.env.OPENAI_API_KEY,
-            })
-        }
-        return this._openai
-    }
+// Default questions if none configured in assessment
+const DEFAULT_QUESTIONS: AIQuestionConfig[] = [
+    { id: 'q1', text: 'Tell me about yourself and your relevant experience.', prepSeconds: 30, answerSeconds: 180 },
+    { id: 'q2', text: 'Describe a challenging technical problem you solved recently.', prepSeconds: 30, answerSeconds: 180 },
+    { id: 'q3', text: 'How do you approach debugging a complex production issue?', prepSeconds: 30, answerSeconds: 180 },
+    { id: 'q4', text: 'Tell me about a project you are most proud of and why.', prepSeconds: 30, answerSeconds: 180 },
+    { id: 'q5', text: 'Where do you see your career heading in the next few years?', prepSeconds: 30, answerSeconds: 120 },
+]
+
+class AIInterviewService {
+    // ────── SESSION LIFECYCLE ──────
 
     /**
      * Start AI interview session
-     * Creates ephemeral token for WebRTC connection
+     * - Loads or generates questions
+     * - Records consent timestamp
+     * - Returns questions for frontend
      */
     async startSession(
         attemptId: string,
         input: StartAISessionInput
     ): Promise<StartAISessionResponse> {
-        // Find attempt and AI round
         const attempt = await AssessmentAttempt.findById(attemptId)
         if (!attempt) {
-            const error = new Error('Attempt not found') as Error & { statusCode: number }
-            error.statusCode = 404
-            throw error
+            throw this.createError('Attempt not found', 404, 'NOT_FOUND')
         }
 
-        // Find AI round
         const aiRoundIndex = attempt.rounds.findIndex(r => r.roundType === 'AI')
         if (aiRoundIndex === -1) {
-            const error = new Error('No AI round in this assessment') as Error & { statusCode: number }
-            error.statusCode = 400
-            throw error
+            throw this.createError('No AI round in this assessment', 400, 'INVALID_CONFIG')
         }
 
         const aiRound = attempt.rounds[aiRoundIndex]
 
         // Check if session already in progress (idempotent)
         if (aiRound.aiSessionId && aiRound.aiSessionStatus === AISessionStatus.IN_PROGRESS) {
-            // Check if session is stale (> 20 minutes old)
             const sessionAge = aiRound.startedAt
                 ? (Date.now() - new Date(aiRound.startedAt).getTime()) / 1000
                 : 0
-            const MAX_SESSION_DURATION = 20 * 60 // 20 minutes
+            const MAX_SESSION_DURATION = 30 * 60 // 30 minutes
 
             if (sessionAge > MAX_SESSION_DURATION) {
-                // Auto-expire the stale session
-                console.log(`[AI Session] Auto-expiring stale session ${aiRound.aiSessionId} (age: ${Math.floor(sessionAge / 60)}min)`)
+                // Auto-expire stale session
                 aiRound.aiSessionStatus = AISessionStatus.TIMEOUT
                 aiRound.status = RoundStatus.COMPLETED
                 aiRound.endedAt = new Date()
@@ -82,61 +94,60 @@ class AIInterviewService {
                 await attempt.save()
                 // Fall through to create new session
             } else {
-                // Return existing session info (reconnection)
-                const agentType = (aiRound.agentType || AgentType.HR_GENERAL) as AgentTypeValue
-                const config = getAgentConfig(agentType)
-                let systemPrompt = config.systemPrompt
-                try {
-                    const candidate = await Candidate.findById(attempt.candidateId)
-                    if (candidate?.firstName) {
-                        systemPrompt += `\n\nThe candidate's first name is ${candidate.firstName}. When you greet them, use their name (e.g. "Hey ${candidate.firstName}").`
-                    }
-                } catch { /* ignore */ }
-                const ephemeralToken = await this.createEphemeralToken(config.model, systemPrompt, config.voice)
+                // Return existing session (reconnection/resume)
+                const questions = aiRound.aiQuestions || DEFAULT_QUESTIONS
+                const totalDuration = questions.reduce((sum, q) => sum + q.prepSeconds + q.answerSeconds, 0)
+
+                // Ensure response docs exist (they may be missing if a previous startSession crashed)
+                const existingCount = await AIInterviewResponse.countDocuments({ sessionId: aiRound.aiSessionId })
+                if (existingCount === 0) {
+                    const responseDocs = questions.map((q, idx) => ({
+                        attemptId: attempt._id,
+                        sessionId: aiRound.aiSessionId,
+                        questionId: q.id,
+                        questionIndex: idx,
+                        questionText: q.text,
+                        storageKey: '',
+                        durationSeconds: 0,
+                        status: AIResponseStatus.PENDING_UPLOAD,
+                    }))
+                    await AIInterviewResponse.insertMany(responseDocs)
+                }
+
                 return {
                     sessionId: aiRound.aiSessionId,
-                    ephemeralToken,
-                    agentType: config.agentType,
-                    systemPrompt,
-                    durationSeconds: config.durationSeconds,
-                    startedAt: aiRound.startedAt?.toISOString() || new Date().toISOString(),
-                    model: config.model,
-                    voice: config.voice,
+                    questions,
+                    consentRecordedAt: aiRound.aiConsentRecordedAt?.toISOString() || new Date().toISOString(),
+                    totalDurationEstimate: totalDuration,
                 }
             }
         }
 
-        // Determine agent type
-        const agentType: AgentTypeValue = (input.agentType as AgentTypeValue) || AgentType.HR_GENERAL
-        const config = getAgentConfig(agentType)
+        // Load questions from assessment config or use defaults
+        const assessment = await Assessment.findById(attempt.assessmentId)
+        const aiRoundConfig = assessment?.rounds.find(r => r.roundType === 'AI')?.config as
+            { questions?: AIQuestionConfig[] } | undefined
 
-        // Get candidate name for personalized greeting
-        let systemPrompt = config.systemPrompt
-        try {
-            const candidate = await Candidate.findById(attempt.candidateId)
-            if (candidate?.firstName) {
-                systemPrompt += `\n\nThe candidate's first name is ${candidate.firstName}. When you greet them, use their name (e.g. "Hey ${candidate.firstName}").`
-            }
-        } catch {
-            // Ignore; use default prompt without name
-        }
+        const questions = aiRoundConfig?.questions?.length
+            ? aiRoundConfig.questions
+            : DEFAULT_QUESTIONS
 
-        // Generate session ID
+        // Generate session
         const sessionId = `ai_sess_${uuidv4()}`
         const now = new Date()
 
-        // Create ephemeral token from OpenAI Realtime API (with system prompt for session)
-        const ephemeralToken = await this.createEphemeralToken(config.model, systemPrompt, config.voice)
-
-        // Update round with session info
+        // Update round
         aiRound.aiSessionId = sessionId
         aiRound.aiSessionStatus = AISessionStatus.IN_PROGRESS
-        aiRound.agentType = agentType
+        aiRound.agentType = (input.agentType as AgentTypeValue) || AgentType.HR_GENERAL
         aiRound.status = RoundStatus.IN_PROGRESS
         aiRound.startedAt = now
+        aiRound.aiConsentRecordedAt = now
+        aiRound.aiQuestions = questions
+        aiRound.aiRestartUsed = false
         aiRound.transcript = []
 
-        // Also start the attempt if not started
+        // Start attempt if not started
         if (attempt.status === 'NOT_STARTED') {
             attempt.status = 'IN_PROGRESS'
             attempt.startedAt = now
@@ -144,226 +155,346 @@ class AIInterviewService {
 
         await attempt.save()
 
+        // Create AIInterviewResponse placeholders for each question
+        const responseDocs = questions.map((q, idx) => ({
+            attemptId: attempt._id,
+            sessionId,
+            questionId: q.id,
+            questionIndex: idx,
+            questionText: q.text,
+            storageKey: '', // Will be set on upload init
+            durationSeconds: 0,
+            status: AIResponseStatus.PENDING_UPLOAD,
+        }))
+        await AIInterviewResponse.insertMany(responseDocs)
+
+        const totalDuration = questions.reduce((sum, q) => sum + q.prepSeconds + q.answerSeconds, 0)
+
         return {
             sessionId,
-            ephemeralToken,
-            agentType: config.agentType,
-            systemPrompt,
-            durationSeconds: config.durationSeconds,
-            startedAt: now.toISOString(),
-            model: config.model,
-            voice: config.voice,
+            questions,
+            consentRecordedAt: now.toISOString(),
+            totalDurationEstimate: totalDuration,
         }
     }
 
+    // ────── UPLOAD ──────
+
     /**
-     * Create ephemeral client secret for OpenAI Realtime API (WebRTC).
-     * Uses POST /v1/realtime/client_secrets per OpenAI docs.
+     * Initialize upload for a question response
+     * Returns pre-signed S3 URL
      */
-    private async createEphemeralToken(model: string, instructions: string, voice: string): Promise<string> {
-        const apiKey = process.env.OPENAI_API_KEY
-        if (!apiKey) {
-            console.error('OPENAI_API_KEY is not set')
-            return ''
+    async initUpload(
+        attemptId: string,
+        input: InitUploadInput
+    ): Promise<InitUploadResponse> {
+        const { sessionId, questionId, mimeType } = input
+
+        // Verify session ownership
+        const attempt = await AssessmentAttempt.findById(attemptId)
+        if (!attempt) throw this.createError('Attempt not found', 404, 'NOT_FOUND')
+
+        const aiRound = attempt.rounds.find(r => r.roundType === 'AI')
+        if (!aiRound || aiRound.aiSessionId !== sessionId) {
+            throw this.createError('Invalid session', 400, 'INVALID_SESSION')
         }
-        try {
-            const response = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    expires_after: { anchor: 'created_at', seconds: 3600 },
-                    session: {
-                        type: 'realtime',
-                        model,
-                        modalities: ['text', 'audio'],
-                        instructions,
-                        audio: {
-                            input: {
-                                transcription: { model: 'whisper-1' },
-                            },
-                            output: { voice },
-                        },
-                    },
-                }),
+
+        // Find or create response doc (self-healing if startSession didn't create docs)
+        let response = await AIInterviewResponse.findOne({ sessionId, questionId })
+        if (!response) {
+            // Look up question from round config to create the doc
+            const questionConfig = aiRound.aiQuestions?.find(q => q.id === questionId)
+            const questionIndex = aiRound.aiQuestions?.findIndex(q => q.id === questionId) ?? 0
+            response = await AIInterviewResponse.create({
+                attemptId: attempt._id,
+                sessionId,
+                questionId,
+                questionIndex,
+                questionText: questionConfig?.text || `Question ${questionIndex + 1}`,
+                storageKey: '',
+                durationSeconds: 0,
+                status: AIResponseStatus.PENDING_UPLOAD,
             })
+        }
+        if (response.status !== AIResponseStatus.PENDING_UPLOAD) {
+            throw this.createError('Upload already completed for this question', 409, 'ALREADY_UPLOADED')
+        }
 
-            if (!response.ok) {
-                const errText = await response.text()
-                console.error('OpenAI client_secrets error:', response.status, errText)
-                throw new Error(`OpenAI API error: ${response.status} ${errText}`)
-            }
+        // Generate storage key
+        const extension = mimeType.includes('mp4') ? 'mp4' : 'webm'
+        const candidateId = attempt.candidateId.toString()
+        const storageKey = generateStorageKey('CANDIDATE', candidateId, 'AI_RECORDING', extension)
 
-            const data = (await response.json()) as { value?: string }
-            return data.value ?? ''
-        } catch (error) {
-            console.error('Failed to create ephemeral token:', error)
-            throw error
+        // Update response with storage key
+        response.storageKey = storageKey
+        await response.save()
+
+        // Generate pre-signed URL
+        const size = 500 * 1024 * 1024 // Allow up to 500MB
+        const { uploadUrl } = await generateUploadUrl(storageKey, mimeType, size)
+
+        return {
+            uploadUrl,
+            uploadId: response._id.toString(),
+            storageKey,
+            expiresIn: 15 * 60,
         }
     }
 
     /**
-     * End AI interview session
+     * Mark upload as complete and enqueue processing
+     */
+    async completeUpload(
+        attemptId: string,
+        input: CompleteUploadInput
+    ): Promise<CompleteUploadResponse> {
+        const { sessionId, questionId, durationSeconds } = input
+
+        const response = await AIInterviewResponse.findOne({ sessionId, questionId })
+        if (!response) throw this.createError('Response not found', 404, 'NOT_FOUND')
+        if (!response.storageKey) throw this.createError('Upload not initialized', 400, 'INVALID_STATE')
+
+        // Idempotent: if already uploaded/processing, return success
+        if (response.status !== AIResponseStatus.PENDING_UPLOAD) {
+            return { questionId, status: response.status }
+        }
+
+        response.status = AIResponseStatus.UPLOADED
+        response.durationSeconds = durationSeconds
+        await response.save()
+
+        // Enqueue processing job
+        await enqueueAIInterviewJob({
+            type: 'PROCESS_AI_RESPONSE',
+            attemptId: attemptId,
+            sessionId,
+            questionId,
+            storageKey: response.storageKey,
+        })
+
+        return { questionId, status: response.status }
+    }
+
+    // ────── SESSION COMPLETION ──────
+
+    /**
+     * Mark session as complete — called after all questions uploaded
+     */
+    async completeSession(
+        attemptId: string,
+        input: CompleteSessionInput
+    ): Promise<CompleteSessionResponse> {
+        const { sessionId } = input
+
+        const attempt = await AssessmentAttempt.findById(attemptId)
+        if (!attempt) throw this.createError('Attempt not found', 404, 'NOT_FOUND')
+
+        const aiRound = attempt.rounds.find(r => r.roundType === 'AI')
+        if (!aiRound || aiRound.aiSessionId !== sessionId) {
+            throw this.createError('Invalid session', 400, 'INVALID_SESSION')
+        }
+
+        // Count responses
+        const responses = await AIInterviewResponse.find({ sessionId })
+        const uploadedCount = responses.filter(r =>
+            r.status !== AIResponseStatus.PENDING_UPLOAD
+        ).length
+
+        // Update round status
+        const now = new Date()
+        aiRound.aiSessionStatus = AISessionStatus.COMPLETED
+        aiRound.status = RoundStatus.COMPLETED
+        aiRound.endedAt = now
+        aiRound.aiDurationSeconds = aiRound.startedAt
+            ? Math.floor((now.getTime() - new Date(aiRound.startedAt).getTime()) / 1000)
+            : 0
+
+        await attempt.save()
+
+        // Create synthesis placeholder
+        await AIInterviewSynthesis.findOneAndUpdate(
+            { sessionId },
+            {
+                attemptId: attempt._id,
+                sessionId,
+                totalQuestions: responses.length,
+                processedQuestions: 0,
+                status: 'PENDING',
+            },
+            { upsert: true, new: true }
+        )
+
+        return {
+            sessionId,
+            status: 'COMPLETED',
+            totalResponses: uploadedCount,
+        }
+    }
+
+    /**
+     * End AI session (legacy compat + candidate exit)
      */
     async endSession(
         attemptId: string,
         input: EndAISessionInput
     ): Promise<EndAISessionResponse> {
         const attempt = await AssessmentAttempt.findById(attemptId)
-        if (!attempt) {
-            const error = new Error('Attempt not found') as Error & { statusCode: number }
-            error.statusCode = 404
-            throw error
-        }
+        if (!attempt) throw this.createError('Attempt not found', 404, 'NOT_FOUND')
 
         const aiRound = attempt.rounds.find(r => r.roundType === 'AI')
-        if (!aiRound || aiRound.aiSessionId !== input.sessionId) {
-            const error = new Error('Invalid session') as Error & { statusCode: number }
-            error.statusCode = 400
-            throw error
+        if (!aiRound || !aiRound.aiSessionId) {
+            throw this.createError('No active AI session', 400, 'INVALID_STATE')
         }
 
         const now = new Date()
-        const startedAt = aiRound.startedAt || now
-        const duration = Math.floor((now.getTime() - startedAt.getTime()) / 1000)
-
-        // Map reason to status
-        const statusMap: Record<string, typeof AISessionStatus[keyof typeof AISessionStatus]> = {
-            'COMPLETED': AISessionStatus.COMPLETED,
-            'TIMEOUT': AISessionStatus.TIMEOUT,
-            'CANDIDATE_EXIT': AISessionStatus.CANDIDATE_EXIT,
-            'ERROR': AISessionStatus.FAILED,
+        const statusMap: Record<string, string> = {
+            COMPLETED: AISessionStatus.COMPLETED,
+            TIMEOUT: AISessionStatus.TIMEOUT,
+            CANDIDATE_EXIT: AISessionStatus.CANDIDATE_EXIT,
+            ERROR: AISessionStatus.FAILED,
         }
 
-        aiRound.aiSessionStatus = statusMap[input.reason] || AISessionStatus.COMPLETED
-        aiRound.status = input.reason === 'COMPLETED' || input.reason === 'TIMEOUT'
-            ? RoundStatus.COMPLETED
-            : RoundStatus.SKIPPED
+        aiRound.aiSessionStatus = (statusMap[input.reason] || AISessionStatus.COMPLETED) as typeof aiRound.aiSessionStatus
+        aiRound.status = RoundStatus.COMPLETED
         aiRound.endedAt = now
-        aiRound.aiDurationSeconds = duration
+        aiRound.aiDurationSeconds = aiRound.startedAt
+            ? Math.floor((now.getTime() - new Date(aiRound.startedAt).getTime()) / 1000)
+            : 0
 
         await attempt.save()
 
+        // Also complete the session if reason is COMPLETED
+        if (input.reason === 'COMPLETED') {
+            try {
+                await this.completeSession(attemptId, { sessionId: input.sessionId })
+            } catch {
+                // Swallow — may already be completed
+            }
+        }
+
         return {
             sessionId: input.sessionId,
-            status: aiRound.aiSessionStatus,
-            duration,
+            status: aiRound.aiSessionStatus || AISessionStatus.COMPLETED,
+            duration: aiRound.aiDurationSeconds || 0,
             endedAt: now.toISOString(),
         }
     }
 
+    // ────── RESULTS (RECRUITER) ──────
+
     /**
-     * Save transcript entries
+     * Get full AI interview results for recruiter dashboard
      */
-    async saveTranscript(
-        attemptId: string,
-        input: SaveTranscriptInput
-    ): Promise<SaveTranscriptResponse> {
+    async getInterviewResults(attemptId: string): Promise<AIInterviewResultsResponse> {
         const attempt = await AssessmentAttempt.findById(attemptId)
-        if (!attempt) {
-            const error = new Error('Attempt not found') as Error & { statusCode: number }
-            error.statusCode = 404
-            throw error
-        }
+        if (!attempt) throw this.createError('Attempt not found', 404, 'NOT_FOUND')
 
         const aiRound = attempt.rounds.find(r => r.roundType === 'AI')
-        if (!aiRound || aiRound.aiSessionId !== input.sessionId) {
-            const error = new Error('Invalid session') as Error & { statusCode: number }
-            error.statusCode = 400
-            throw error
+        if (!aiRound || !aiRound.aiSessionId) {
+            return {
+                sessionId: '',
+                status: 'NOT_STARTED',
+                synthesis: null,
+                responses: [],
+                consent: null,
+                aiDisclosure: AI_DISCLOSURE_TEXT,
+            }
         }
 
-        // Merge new entries with existing (dedupe by timestamp)
-        const existingTimestamps = new Set(
-            (aiRound.transcript || []).map(e => e.timestamp)
-        )
+        const sessionId = aiRound.aiSessionId
 
-        // Validate and filter entries: must have text, speaker, and valid timestamp
-        const validNewEntries = input.entries.filter(e =>
-            e.text &&
-            e.text.trim().length > 0 &&
-            e.speaker &&
-            typeof e.timestamp === 'number' &&
-            e.timestamp >= 0 &&
-            !existingTimestamps.has(e.timestamp)
-        )
+        // Get all responses
+        const responses = await AIInterviewResponse.find({ sessionId }).sort({ questionIndex: 1 })
 
-        if (!aiRound.transcript) {
-            aiRound.transcript = []
-        }
-
-        aiRound.transcript.push(...validNewEntries as IAITranscriptEntry[])
-        aiRound.transcript.sort((a, b) => a.timestamp - b.timestamp)
-
-        await attempt.save()
+        // Get synthesis
+        const synthesis = await AIInterviewSynthesis.findOne({ sessionId })
 
         return {
-            entryCount: aiRound.transcript.length,
+            sessionId,
+            status: aiRound.aiSessionStatus || 'NOT_STARTED',
+            synthesis: synthesis && synthesis.status === 'COMPLETED'
+                ? {
+                    overallSummary: synthesis.overallSummary,
+                    strengths: synthesis.strengths,
+                    gaps: synthesis.gaps,
+                    suggestedFollowUps: synthesis.suggestedFollowUps,
+                }
+                : null,
+            responses: responses.map(r => ({
+                questionId: r.questionId,
+                questionText: r.questionText,
+                questionIndex: r.questionIndex,
+                durationSeconds: r.durationSeconds,
+                status: r.status,
+                transcript: r.transcript || null,
+                analysis: r.analysis
+                    ? {
+                        summary: r.analysis.summary,
+                        keyPoints: r.analysis.keyPoints,
+                        skillsObserved: r.analysis.skillsObserved,
+                        relevance: r.analysis.relevance,
+                    }
+                    : null,
+            })),
+            consent: aiRound.aiConsentRecordedAt
+                ? { recordedAt: aiRound.aiConsentRecordedAt.toISOString() }
+                : null,
+            aiDisclosure: AI_DISCLOSURE_TEXT,
         }
     }
 
     /**
-     * Save media asset reference
+     * Get signed download URL for a response video
      */
-    async saveMediaAsset(
-        attemptId: string,
-        sessionId: string,
-        mediaType: 'AUDIO' | 'VIDEO',
-        assetId: string
-    ): Promise<void> {
+    async getResponseVideoUrl(attemptId: string, questionId: string): Promise<{ downloadUrl: string }> {
         const attempt = await AssessmentAttempt.findById(attemptId)
-        if (!attempt) {
-            const error = new Error('Attempt not found') as Error & { statusCode: number }
-            error.statusCode = 404
-            throw error
-        }
+        if (!attempt) throw this.createError('Attempt not found', 404, 'NOT_FOUND')
 
         const aiRound = attempt.rounds.find(r => r.roundType === 'AI')
-        if (!aiRound || aiRound.aiSessionId !== sessionId) {
-            const error = new Error('Invalid session') as Error & { statusCode: number }
-            error.statusCode = 400
-            throw error
+        if (!aiRound?.aiSessionId) throw this.createError('No AI session', 400, 'INVALID_STATE')
+
+        const response = await AIInterviewResponse.findOne({
+            sessionId: aiRound.aiSessionId,
+            questionId,
+        })
+        if (!response || !response.storageKey) {
+            throw this.createError('Video not found', 404, 'NOT_FOUND')
         }
 
-        if (!aiRound.aiMediaAssets) {
-            aiRound.aiMediaAssets = {}
-        }
-
-        if (mediaType === 'AUDIO') {
-            aiRound.aiMediaAssets.audioAssetId = assetId
-        } else {
-            aiRound.aiMediaAssets.videoAssetId = assetId
-        }
-
-        await attempt.save()
+        const { downloadUrl } = await generateDownloadUrl(response.storageKey)
+        return { downloadUrl }
     }
 
     /**
-     * Get AI interview session details (for recruiter dashboard)
+     * Get session details (legacy compat)
      */
     async getSessionDetails(attemptId: string) {
         const attempt = await AssessmentAttempt.findById(attemptId)
-        if (!attempt) {
-            return null
-        }
+        if (!attempt) throw this.createError('Attempt not found', 404, 'NOT_FOUND')
 
         const aiRound = attempt.rounds.find(r => r.roundType === 'AI')
-        if (!aiRound) {
-            return null
-        }
 
         return {
-            sessionId: aiRound.aiSessionId,
-            status: aiRound.aiSessionStatus,
-            agentType: aiRound.agentType,
-            transcript: aiRound.transcript || [],
-            mediaAssets: aiRound.aiMediaAssets,
-            duration: aiRound.aiDurationSeconds,
-            startedAt: aiRound.startedAt,
-            endedAt: aiRound.endedAt,
+            sessionId: aiRound?.aiSessionId || null,
+            status: aiRound?.aiSessionStatus || null,
+            agentType: aiRound?.agentType || null,
+            transcript: aiRound?.transcript || [],
+            mediaAssets: aiRound?.aiMediaAssets || null,
+            duration: aiRound?.aiDurationSeconds || null,
+            startedAt: aiRound?.startedAt?.toISOString() || null,
+            endedAt: aiRound?.endedAt?.toISOString() || null,
+            questions: aiRound?.aiQuestions || [],
+            consentRecordedAt: aiRound?.aiConsentRecordedAt?.toISOString() || null,
         }
+    }
+
+    // ────── HELPERS ──────
+
+    private createError(message: string, statusCode: number, code: string) {
+        const error = new Error(message) as Error & { statusCode: number; code: string }
+        error.statusCode = statusCode
+        error.code = code
+        return error
     }
 }
 

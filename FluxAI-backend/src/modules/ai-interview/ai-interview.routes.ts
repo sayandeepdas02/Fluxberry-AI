@@ -1,52 +1,37 @@
 /**
- * AI Interview Routes
+ * AI Interview Routes — V2 (Async Recording + Processing)
  */
 
 import { Router } from 'express'
-import multer from 'multer'
-import path from 'path'
 import { aiInterviewController } from './ai-interview.controller.js'
+import { authGuard } from '../../common/guards/auth.guard.js'
 
 const router = Router()
 
-// Configure multer for media uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, path.join(process.cwd(), 'uploads', 'ai-recordings'))
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-        const ext = path.extname(file.originalname)
-        cb(null, `ai-recording-${uniqueSuffix}${ext}`)
-    },
-})
+// ─── Candidate-facing routes (no auth — candidate uses attempt token) ───
 
-const upload = multer({
-    storage,
-    limits: {
-        fileSize: 500 * 1024 * 1024, // 500MB max (video can be large)
-    },
-    fileFilter: (req, file, cb) => {
-        const allowedMimes = [
-            'audio/webm',
-            'audio/mp4',
-            'audio/mpeg',
-            'video/webm',
-            'video/mp4',
-        ]
-        if (allowedMimes.includes(file.mimetype)) {
-            cb(null, true)
-        } else {
-            cb(new Error('Invalid file type. Only audio/video files are allowed.'))
-        }
-    },
-})
-
-// AI Interview routes (nested under /attempts/:attemptId)
+// Start session + get questions
 router.post('/:attemptId/ai/start', aiInterviewController.startSession.bind(aiInterviewController))
+
+// End session
 router.post('/:attemptId/ai/end', aiInterviewController.endSession.bind(aiInterviewController))
-router.post('/:attemptId/ai/transcript', aiInterviewController.saveTranscript.bind(aiInterviewController))
-router.post('/:attemptId/ai/media', upload.single('file'), aiInterviewController.uploadMedia.bind(aiInterviewController))
+
+// Upload flow
+router.post('/:attemptId/ai/upload/init', aiInterviewController.initUpload.bind(aiInterviewController))
+router.post('/:attemptId/ai/upload/complete', aiInterviewController.completeUpload.bind(aiInterviewController))
+
+// Complete session (after all uploads)
+router.post('/:attemptId/ai/complete', aiInterviewController.completeSession.bind(aiInterviewController))
+
+// Session details (legacy compat)
 router.get('/:attemptId/ai/details', aiInterviewController.getSessionDetails.bind(aiInterviewController))
+
+// ─── Recruiter-facing routes (auth required) ───
+
+// Full AI interview results
+router.get('/:attemptId/ai/results', authGuard, aiInterviewController.getResults.bind(aiInterviewController))
+
+// Signed video download URL for a specific question response
+router.get('/:attemptId/ai/responses/:questionId/video', authGuard, aiInterviewController.getResponseVideo.bind(aiInterviewController))
 
 export default router

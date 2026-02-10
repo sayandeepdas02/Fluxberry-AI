@@ -31,8 +31,8 @@ export function InterviewComplete({
             icon: CheckCircle2,
             iconColor: 'text-green-500',
             bgColor: 'bg-green-500/10',
-            title: 'Interview Completed',
-            description: 'Thank you for completing the AI interview. Your responses have been recorded.',
+            title: 'Congrats! The Test is Over 🎉',
+            description: 'You have successfully completed the AI interview. Your responses have been recorded and submitted.',
         },
         TIMEOUT: {
             icon: Clock,
@@ -83,9 +83,9 @@ export function InterviewComplete({
                 {/* Next Steps */}
                 <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 text-left">
                     <h3 className="font-medium mb-2">What happens next?</h3>
-                    <ul className="text-sm text-neutral-400 space-y-1">
+                    <ul className="text-sm text-neutral-400 space-y-2">
                         <li>• Your interview recording is being processed</li>
-                        <li>• The hiring team will review your responses</li>
+                        <li>• The <span className="text-white font-medium">Talent Acquisition team</span> will review your responses and get back to you</li>
                         <li>• You'll receive updates via email</li>
                     </ul>
                 </div>

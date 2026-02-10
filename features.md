@@ -244,9 +244,9 @@
 | **File Storage** | ✅ Done |
 | **Background Jobs** | ✅ Done |
 | **MongoDB Migration** | ✅ Done |
-| DSA Code Execution | 🚧 Stubbed |
+| DSA Code Execution | ✅ Implemented (Run Only) |
 | AI Interview Scoring | 🚧 Stubbed |
-| Email Delivery | 🚧 Stubbed |
+| Email Delivery | 🚧 Stubbed (Logged) |
 | Payments / Billing | ⏳ Post-MVP |
 | ATS Integrations | ⏳ Post-MVP |
 
@@ -265,3 +265,90 @@
 ---
 
 *Last updated: February 2026*
+
+---
+
+## 6. Round 3 (AI Interview) Status & Integration Guide
+
+### Current Status: 🚧 Disconnected UI Shell
+
+As of the latest update, **Round 3 (AI Interview) is currently partially implemented as a UI shell.**
+
+- **Frontend:** The `InterviewSession` component renders the camera feed, microphone controls, and a placeholder for the AI avatar. It **does not** connect to any AI service (OpenAI, Ribbon, etc.).
+- **Backend:** The `startSession` endpoint generates a local session ID but **does not** initiate a session with an external AI provider.
+- **Data:** Transcripts are **not generated or saved**.
+
+This state allows for the UI flow to be demonstrated (Round 1 -> Round 2 -> Round 3) without incurring costs or requiring valid API keys for a specific provider.
+
+### Integration Guide: Adding an AI Agent (e.g., Ribbon AI)
+
+To fully enable the AI Interview, you need to integrate a provider. Here is the recommended approach:
+
+#### Backend Integration
+
+1.  **Select a Provider Strategy**:
+    - Decide if you will use a direct API (like OpenAI Realtime) or a managed platform (like Ribbon AI/Vapi).
+    - Acquire necessary API keys and Webhook secrets.
+
+2.  **Update `AIInterviewService`**:
+    - Modify `src/modules/ai-interview/ai-interview.service.ts`.
+    - **Implement `startSession`**: Call your provider's API to create a session token or URL.
+      ```typescript
+      // Example:
+      const session = await ribbonApi.createSession({
+          candidateName: candidate.name,
+          resumeUrl: candidate.resumeUrl,
+          questions: generatedQuestions
+      });
+      return { sessionId: session.id, token: session.clientToken, ... };
+      ```
+    - **Implement Webhooks** (Optional but recommended):
+      - Create a new controller (e.g., `ai-interview.controller.ts`) to handle webhook events (transcripts, completion).
+      - Verify signatures to ensure security.
+
+3.  **Update Types**:
+    - Update `StartAISessionResponse` in `src/modules/ai-interview/ai-interview.types.ts` to include any necessary client-side tokens or URLs.
+
+#### Frontend Integration
+
+1.  **Update `attempts.ts`**:
+    - Sync `AISessionStartResponse` with the backend's new return type.
+
+2.  **Modify `InterviewSession`**:
+    - Update `src/features/candidate/components/test-taker/ai-interview/interview-session.tsx`.
+    - **Add Provider SDK**: Install and import the provider's client SDK (e.g., `@ribbon-ai/react-sdk`).
+    - **Initialize Connection**: Use the token/URL from `startAISession` response to connect.
+    - **Handle Events**:
+      - `onConnect`: Set status to "Live".
+      - `onTranscript`: Update the transcript state.
+      - `onDisconnect`: Handle end of interview.
+
+3.  **Media Handling**:
+    - Ensure your provider supports the browser's `MediaStream`. Most WebRTC-based providers (like OpenAI/Vapi) handle this automatically or require you to pass the stream track.
+
+4.  **Testing**:
+    - Use the `/assessment/[id]/round` route to test the full flow.
+    - Verify that audio/video permissions are requested and that the AI responds to voice input.
+
+---
+
+## 7. System Limitations & Stubbed Features
+
+This section explicitly lists features that are **Partially Implemented** or **Stubbed** to clarify the current system capabilities.
+
+| Feature Area | Status | Description |
+|--------------|--------|-------------|
+| **AI Interview (Round 3)** | 🚧 **Disconnected** | The UI is fully functional (camera, mic, avatar), but it **does not** connect to an AI provider. No conversation happens, and no transcript is saved. |
+| **DSA Round** | ⚠️ **Run Only** | Candidates can write code and click "Run" to execute it against Judge0 (if configured). However, **"Submit"** creates a placeholder score (0%) because test case execution logic is stubbed. |
+| **Job Applications** | 🚧 **UI Only** | The public job application form exists (`/jobs/:id`), but the **"Submit Application"** button is not hooked up to the backend. No candidate or application record is created. |
+| **Email Notifications** | 🛑 **Stubbed** | The system **does not send real emails**. Password resets, invite links, and notifications are logged to the backend console/logs for development purposes. |
+| **Payments** | 🛑 **Placeholder** | The "Manage Billing" and "Upgrade" buttons are visual placeholders. No Stripe/payment integration exists. |
+
+**What is Working (End-to-End):**
+- ✅ Recruiter Auth (Signup, Login, Onboarding)
+- ✅ Assessment Creation & Management
+- ✅ Candidate Link Generation & System Check
+- ✅ Round 1 (MCQ) taking & Auto-grading
+- ✅ Round 2 (DSA) entering code & running it (output visible)
+- ✅ Round 3 (AI) entering the room (video/audio works)
+- ✅ Candidate Results Dashboard (scores and status updates)

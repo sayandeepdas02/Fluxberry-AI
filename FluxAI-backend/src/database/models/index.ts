@@ -117,6 +117,25 @@ export const AISessionStatus = {
 } as const
 export type AISessionStatusType = typeof AISessionStatus[keyof typeof AISessionStatus]
 
+// AI Interview Response Status
+export const AIResponseStatus = {
+    PENDING_UPLOAD: 'PENDING_UPLOAD',
+    UPLOADED: 'UPLOADED',
+    PROCESSING: 'PROCESSING',
+    PROCESSED: 'PROCESSED',
+    FAILED: 'FAILED',
+} as const
+export type AIResponseStatusType = typeof AIResponseStatus[keyof typeof AIResponseStatus]
+
+// AI Interview Synthesis Status
+export const AISynthesisStatus = {
+    PENDING: 'PENDING',
+    PROCESSING: 'PROCESSING',
+    COMPLETED: 'COMPLETED',
+    FAILED: 'FAILED',
+} as const
+export type AISynthesisStatusType = typeof AISynthesisStatus[keyof typeof AISynthesisStatus]
+
 // ============================================
 // USER MODEL
 // ============================================
@@ -431,6 +450,10 @@ export interface IRoundAttempt {
         videoAssetId?: string
     }
     aiDurationSeconds?: number
+    // AI Interview V2 fields
+    aiConsentRecordedAt?: Date
+    aiQuestions?: { id: string; text: string; prepSeconds: number; answerSeconds: number }[]
+    aiRestartUsed?: boolean
 }
 
 export interface IAssessmentAttempt extends Document {
@@ -481,6 +504,15 @@ const RoundAttemptSchema = new Schema<IRoundAttempt>({
         videoAssetId: { type: String },
     },
     aiDurationSeconds: { type: Number },
+    // AI Interview V2 fields
+    aiConsentRecordedAt: { type: Date },
+    aiQuestions: [{
+        id: { type: String, required: true },
+        text: { type: String, required: true },
+        prepSeconds: { type: Number, default: 30 },
+        answerSeconds: { type: Number, default: 180 },
+    }],
+    aiRestartUsed: { type: Boolean, default: false },
 }, { _id: true })
 
 const AssessmentAttemptSchema = new Schema<IAssessmentAttempt>({
@@ -572,3 +604,104 @@ FileAssetSchema.index({ ownerType: 1, ownerId: 1 })
 FileAssetSchema.index({ organizationId: 1 })
 
 export const FileAsset = mongoose.model<IFileAsset>('FileAsset', FileAssetSchema)
+
+// ============================================
+// AI INTERVIEW RESPONSE MODEL (one per question per session)
+// ============================================
+export interface IAITranscriptSegment {
+    start: number
+    end: number
+    text: string
+}
+
+export interface IAIResponseAnalysis {
+    version: string
+    summary: string[]
+    keyPoints: string[]
+    skillsObserved: string[]
+    relevance: 'low' | 'medium' | 'high'
+}
+
+export interface IAIInterviewResponse extends Document {
+    _id: Types.ObjectId
+    attemptId: Types.ObjectId
+    sessionId: string
+    questionId: string
+    questionIndex: number
+    questionText: string
+    storageKey: string
+    durationSeconds: number
+    status: AIResponseStatusType
+    transcript?: string
+    transcriptSegments?: IAITranscriptSegment[]
+    analysis?: IAIResponseAnalysis
+    processingStartedAt?: Date
+    processingCompletedAt?: Date
+    processingError?: string
+    createdAt: Date
+}
+
+const AIInterviewResponseSchema = new Schema<IAIInterviewResponse>({
+    attemptId: { type: Schema.Types.ObjectId, ref: 'AssessmentAttempt', required: true, index: true },
+    sessionId: { type: String, required: true, index: true },
+    questionId: { type: String, required: true },
+    questionIndex: { type: Number, required: true },
+    questionText: { type: String, required: true },
+    storageKey: { type: String, default: '' },
+    durationSeconds: { type: Number, default: 0 },
+    status: { type: String, enum: Object.values(AIResponseStatus), default: AIResponseStatus.PENDING_UPLOAD },
+    transcript: { type: String },
+    transcriptSegments: [{
+        start: { type: Number, required: true },
+        end: { type: Number, required: true },
+        text: { type: String, required: true },
+    }],
+    analysis: {
+        version: { type: String },
+        summary: [{ type: String }],
+        keyPoints: [{ type: String }],
+        skillsObserved: [{ type: String }],
+        relevance: { type: String, enum: ['low', 'medium', 'high'] },
+    },
+    processingStartedAt: { type: Date },
+    processingCompletedAt: { type: Date },
+    processingError: { type: String },
+}, { timestamps: { createdAt: true, updatedAt: false } })
+
+AIInterviewResponseSchema.index({ attemptId: 1, sessionId: 1 })
+AIInterviewResponseSchema.index({ sessionId: 1, questionId: 1 }, { unique: true })
+
+export const AIInterviewResponse = mongoose.model<IAIInterviewResponse>('AIInterviewResponse', AIInterviewResponseSchema)
+
+// ============================================
+// AI INTERVIEW SYNTHESIS MODEL (one per session)
+// ============================================
+export interface IAIInterviewSynthesis extends Document {
+    _id: Types.ObjectId
+    attemptId: Types.ObjectId
+    sessionId: string
+    version: string
+    overallSummary: string
+    strengths: string[]
+    gaps: string[]
+    suggestedFollowUps: string[]
+    totalQuestions: number
+    processedQuestions: number
+    status: AISynthesisStatusType
+    createdAt: Date
+}
+
+const AIInterviewSynthesisSchema = new Schema<IAIInterviewSynthesis>({
+    attemptId: { type: Schema.Types.ObjectId, ref: 'AssessmentAttempt', required: true, index: true },
+    sessionId: { type: String, required: true, unique: true },
+    version: { type: String, default: '1.0' },
+    overallSummary: { type: String, default: '' },
+    strengths: [{ type: String }],
+    gaps: [{ type: String }],
+    suggestedFollowUps: [{ type: String }],
+    totalQuestions: { type: Number, default: 0 },
+    processedQuestions: { type: Number, default: 0 },
+    status: { type: String, enum: Object.values(AISynthesisStatus), default: AISynthesisStatus.PENDING },
+}, { timestamps: { createdAt: true, updatedAt: false } })
+
+export const AIInterviewSynthesis = mongoose.model<IAIInterviewSynthesis>('AIInterviewSynthesis', AIInterviewSynthesisSchema)
