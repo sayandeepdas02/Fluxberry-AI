@@ -36,7 +36,7 @@ export function UseCases() {
                 </ul>
 
                 <p className="text-sm text-muted-foreground pt-4 border-t border-border/40">
-                    FluxAI adapts to any hiring funnel that values quality and speed.
+                    Fluxberry AI adapts to any hiring funnel that values quality and speed.
                 </p>
             </PanelContent>
         </Panel>

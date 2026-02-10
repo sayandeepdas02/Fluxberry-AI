@@ -13,10 +13,7 @@ export const startAISessionSchema = z.object({
     agentType: z.enum([
         AgentType.FRONTEND_ENGINEER,
         AgentType.BACKEND_ENGINEER,
-        AgentType.FULLSTACK_ENGINEER,
-        AgentType.DEVOPS,
-        AgentType.QA,
-        AgentType.GENERAL,
+        AgentType.HR_GENERAL,
     ]).optional(),
 })
 

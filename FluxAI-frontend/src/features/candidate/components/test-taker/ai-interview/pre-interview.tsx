@@ -69,12 +69,9 @@ export function PreInterviewScreen({
     const canStart = cameraPermission === 'granted' && micPermission === 'granted' && consentChecked
 
     const agentTypeLabels: Record<string, string> = {
-        FRONTEND_ENGINEER: 'Frontend Engineer',
-        BACKEND_ENGINEER: 'Backend Engineer',
-        FULLSTACK_ENGINEER: 'Fullstack Engineer',
-        DEVOPS: 'DevOps Engineer',
-        QA: 'QA Engineer',
-        GENERAL: 'General',
+        FRONTEND_ENGINEER: 'Frontend Engineering',
+        BACKEND_ENGINEER: 'Backend Engineering',
+        HR_GENERAL: 'Culture & Communication',
     }
 
     return (

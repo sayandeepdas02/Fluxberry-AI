@@ -33,7 +33,7 @@ export function CustomizableSolutions() {
 
             <PanelContent className="py-12">
                 <p className="text-lg text-muted-foreground mb-10">
-                    Every role is different. FluxAI adapts to your hiring needs.
+                    Every role is different. Fluxberry AI adapts to your hiring needs.
                 </p>
 
                 <div className="grid gap-8 sm:grid-cols-2">

@@ -10,9 +10,9 @@ export function FAQ() {
 
     const faqs = [
         {
-            question: "Is FluxAI just another ATS?",
+            question: "Is Fluxberry AI just another ATS?",
             answer:
-                "No. FluxAI doesn't just track candidates — it understands them. We use AI to parse resumes, screen applications, and identify the best fits before you spend time reviewing.",
+                "No. Fluxberry AI doesn't just track candidates — it understands them. We use AI to parse resumes, screen applications, and identify the best fits before you spend time reviewing.",
         },
         {
             question: "Do candidates need an account to apply?",
@@ -20,14 +20,14 @@ export function FAQ() {
                 "No. Applications are frictionless and public. Candidates simply fill out your custom form and submit — no login required.",
         },
         {
-            question: "Can FluxAI replace early interview rounds?",
+            question: "Can Fluxberry AI replace early interview rounds?",
             answer:
                 "Yes. Automated screening handles initial filtering through MCQs, coding challenges, or AI-led interviews, so you only speak with qualified candidates.",
         },
         {
-            question: "Is FluxAI suitable for small teams?",
+            question: "Is Fluxberry AI suitable for small teams?",
             answer:
-                "Absolutely. Start simple with our Starter plan and scale as you grow. We designed FluxAI for teams of all sizes.",
+                "Absolutely. Start simple with our Starter plan and scale as you grow. We designed Fluxberry AI for teams of all sizes.",
         },
         {
             question: "How long does setup take?",
@@ -49,7 +49,7 @@ export function FAQ() {
                         <div className="border border-border rounded-lg p-8 bg-muted/30">
                             <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
                                 We've worked with dozens of hiring teams — and we know what you're wondering.
-                                Here are clear answers to help you decide if FluxAI is the right fit for your needs.
+                                Here are clear answers to help you decide if Fluxberry AI is the right fit for your needs.
                             </p>
 
                             <div className="space-y-3">

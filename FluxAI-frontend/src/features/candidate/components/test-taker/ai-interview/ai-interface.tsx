@@ -28,7 +28,7 @@ type AIInterviewPhase = 'pre-interview' | 'starting' | 'interview' | 'ending' | 
 export function AIInterface({
     attemptId,
     assessmentTitle,
-    agentType = 'GENERAL',
+    agentType = 'HR_GENERAL',
     onComplete,
 }: AIInterfaceProps) {
     const [phase, setPhase] = useState<AIInterviewPhase>('pre-interview')

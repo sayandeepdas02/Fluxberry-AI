@@ -83,7 +83,7 @@ class AIInterviewService {
                 // Fall through to create new session
             } else {
                 // Return existing session info (reconnection)
-                const agentType = (aiRound.agentType || AgentType.GENERAL) as AgentTypeValue
+                const agentType = (aiRound.agentType || AgentType.HR_GENERAL) as AgentTypeValue
                 const config = getAgentConfig(agentType)
                 let systemPrompt = config.systemPrompt
                 try {
@@ -107,7 +107,7 @@ class AIInterviewService {
         }
 
         // Determine agent type
-        const agentType: AgentTypeValue = (input.agentType as AgentTypeValue) || AgentType.GENERAL
+        const agentType: AgentTypeValue = (input.agentType as AgentTypeValue) || AgentType.HR_GENERAL
         const config = getAgentConfig(agentType)
 
         // Get candidate name for personalized greeting
@@ -178,8 +178,12 @@ class AIInterviewService {
                     session: {
                         type: 'realtime',
                         model,
+                        modalities: ['text', 'audio'],
                         instructions,
                         audio: {
+                            input: {
+                                transcription: { model: 'whisper-1' },
+                            },
                             output: { voice },
                         },
                     },

@@ -46,7 +46,7 @@ export function Navbar() {
                     <div className="flex h-14 items-center justify-between px-4">
                         {/* Logo/Brand */}
                         <Link href="/" className="flex items-center space-x-2">
-                            <span className="text-xl font-bold">FluxAI</span>
+                            <span className="text-xl font-bold">Fluxberry AI</span>
                         </Link>
 
                         {/* Desktop Navigation */}

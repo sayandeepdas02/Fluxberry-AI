@@ -231,7 +231,7 @@ export function Sidebar() {
                     <div className="w-5 h-5 bg-orange-500 rounded flex items-center justify-center">
                         <span className="text-[10px] font-bold text-white">F</span>
                     </div>
-                    <span className="font-semibold text-sm">Flux AI</span>
+                    <span className="font-semibold text-sm">Fluxberry AI</span>
                 </div>
             </div>
         </div>

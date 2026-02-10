@@ -4,7 +4,7 @@ export function Testimonials() {
     const testimonials = [
         {
             quote:
-                "FluxAI reduced our resume screening time by over 70%. We now interview only candidates who actually fit the role. The AI screening is remarkably accurate and has completely transformed our hiring process.",
+                "Fluxberry AI reduced our resume screening time by over 70%. We now interview only candidates who actually fit the role. The AI screening is remarkably accurate and has completely transformed our hiring process.",
             author: "Sarah Chen",
             role: "Head of Engineering",
             company: "TechStart Inc",
@@ -18,7 +18,7 @@ export function Testimonials() {
         },
         {
             quote:
-                "Setting up FluxAI took less than an hour, and we were processing applications the same day. The ROI was immediate — our recruiters now spend time talking to great candidates instead of sorting through noise.",
+                "Setting up Fluxberry AI took less than an hour, and we were processing applications the same day. The ROI was immediate — our recruiters now spend time talking to great candidates instead of sorting through noise.",
             author: "Jamie Park",
             role: "Recruiting Lead",
             company: "Scale Ventures",
@@ -33,7 +33,7 @@ export function Testimonials() {
 
             <PanelContent className="py-16">
                 <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-                    See what hiring teams are saying about FluxAI
+                    See what hiring teams are saying about Fluxberry AI
                 </p>
 
                 <div className="grid gap-6 md:grid-cols-3">

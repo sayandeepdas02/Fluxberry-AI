@@ -102,10 +102,7 @@ export type FileTypeValue = typeof FileType[keyof typeof FileType]
 export const AgentType = {
     FRONTEND_ENGINEER: 'FRONTEND_ENGINEER',
     BACKEND_ENGINEER: 'BACKEND_ENGINEER',
-    FULLSTACK_ENGINEER: 'FULLSTACK_ENGINEER',
-    DEVOPS: 'DEVOPS',
-    QA: 'QA',
-    GENERAL: 'GENERAL',
+    HR_GENERAL: 'HR_GENERAL',
 } as const
 export type AgentTypeValue = typeof AgentType[keyof typeof AgentType]
 

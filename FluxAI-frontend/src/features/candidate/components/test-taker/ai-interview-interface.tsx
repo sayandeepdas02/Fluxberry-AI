@@ -32,7 +32,7 @@ export function AIInterviewInterface({ onComplete }: AIInterviewInterfaceProps) 
         <AIInterface
             attemptId={attemptId}
             assessmentTitle="AI Technical Interview"
-            agentType="GENERAL"
+            agentType="HR_GENERAL"
             onComplete={onComplete}
         />
     )

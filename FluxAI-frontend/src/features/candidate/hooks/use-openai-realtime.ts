@@ -48,7 +48,9 @@ export function useOpenAIRealtime({
     const localStreamRef = useRef<MediaStream | null>(null)
     const audioElementRef = useRef<HTMLAudioElement | null>(null)
     const sessionStartTimeRef = useRef<number>(0)
-    const handleRealtimeEventRef = useRef<(event: Record<string, unknown>) => void>(() => {})
+    const initialResponseSentRef = useRef(false)
+    const activeResponseRef = useRef(false)
+    const handleRealtimeEventRef = useRef<(event: Record<string, unknown>) => void>(() => { })
 
     const updateConnectionState = useCallback((state: ConnectionState) => {
         setConnectionState(state)
@@ -110,26 +112,21 @@ export function useOpenAIRealtime({
             dataChannelRef.current = dc
 
             dc.onopen = () => {
-                // Send session configuration (GA shape: type, instructions, audio.output.voice)
-                dc.send(JSON.stringify({
+                // Send session.update via data channel (GA shape)
+                // NOTE: turn_detection, audio.input.transcription, and audio.output.voice
+                // are configured during ephemeral token creation on the backend.
+                // The data channel session.update only overrides instructions here.
+                const sessionUpdate = {
                     type: 'session.update',
                     session: {
                         type: 'realtime',
                         modalities: ['text', 'audio'],
                         instructions: systemPrompt,
-                        input_audio_transcription: { model: 'whisper-1' },
-                        turn_detection: { type: 'server_vad' },
-                        audio: {
-                            output: { voice },
-                        },
                     },
-                }))
-                // Trigger AI to speak first: without this, model only responds after user speaks (Server VAD)
-                setTimeout(() => {
-                    if (dataChannelRef.current?.readyState === 'open') {
-                        dataChannelRef.current.send(JSON.stringify({ type: 'response.create' }))
-                    }
-                }, 800)
+                }
+                console.log('[Realtime] Data channel open, sending session.update')
+                dc.send(JSON.stringify(sessionUpdate))
+                // response.create is now fired after session.updated event (see onmessage handler)
             }
 
             dc.onmessage = (event) => {
@@ -257,10 +254,47 @@ export function useOpenAIRealtime({
                 setIsCandidateSpeaking(false)
                 break
 
-            case 'error':
-                console.error('Realtime API error:', event.error)
-                onError?.(new Error(String(event.error)))
+            case 'session.created':
+                console.log('[Realtime] session.created received')
                 break
+
+            case 'response.created':
+                console.log('[Realtime] response.created received')
+                activeResponseRef.current = true
+                break
+
+            case 'response.done':
+                console.log('[Realtime] response.done received')
+                activeResponseRef.current = false
+                break
+
+            case 'session.updated':
+                console.log('[Realtime] session.updated received, initialResponseSent:', initialResponseSentRef.current, 'activeResponse:', activeResponseRef.current)
+                // Session is ready — trigger AI to speak first (only once, and only if no active response)
+                if (
+                    !initialResponseSentRef.current &&
+                    !activeResponseRef.current &&
+                    dataChannelRef.current?.readyState === 'open'
+                ) {
+                    initialResponseSentRef.current = true
+                    console.log('[Realtime] Sending response.create to trigger AI greeting')
+                    dataChannelRef.current.send(JSON.stringify({
+                        type: 'response.create',
+                        response: {
+                            modalities: ['text', 'audio'],
+                        },
+                    }))
+                }
+                break
+
+            case 'error': {
+                const errDetail = typeof event.error === 'object' && event.error !== null
+                    ? JSON.stringify(event.error)
+                    : String(event.error)
+                console.error('Realtime API error:', errDetail)
+                onError?.(new Error(errDetail))
+                break
+            }
         }
     }, [addTranscriptEntry, onError])
 
