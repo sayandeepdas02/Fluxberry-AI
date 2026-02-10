@@ -248,10 +248,8 @@ export class AttemptsService {
         }
 
         if (roundAttempt.status !== 'NOT_STARTED') {
-            const error = new Error('Round already started') as Error & { statusCode: number; code: string }
-            error.statusCode = 422
-            error.code = 'INVALID_STATUS'
-            throw error
+            // Idempotent: round already started, return current state
+            return this.getById(attemptId)
         }
 
         // Start round with server timestamp
@@ -471,16 +469,41 @@ export class AttemptsService {
             throw error
         }
 
-        // Validate question index matches current
-        if (roundAttempt.currentQuestionIndex !== questionIndex) {
-            const error = new Error(`Invalid question index. Current: ${roundAttempt.currentQuestionIndex}, Requested: ${questionIndex}`) as Error & { statusCode: number; code: string }
+        const questions = roundAttempt.questions || []
+
+        // Resume support: redirect to current question if frontend is behind
+        const currentIdx = roundAttempt.currentQuestionIndex ?? 0
+        let activeQuestionIndex = questionIndex
+
+        if (questionIndex < currentIdx) {
+            // Frontend is behind (e.g. page refresh) — redirect to the current question
+            const currentQuestion = questions[currentIdx]
+            if (!currentQuestion) {
+                const error = new Error('Current question not found') as Error & { statusCode: number; code: string }
+                error.statusCode = 404
+                error.code = 'NOT_FOUND'
+                throw error
+            }
+            const existingAttempt = roundAttempt.questionAttempts?.find(qa => qa.questionIndex === currentIdx)
+            if (existingAttempt?.startedAt) {
+                return {
+                    questionIndex: currentIdx,
+                    questionId: currentQuestion.id,
+                    startedAt: existingAttempt.startedAt,
+                    perQuestionTimeLimit: roundAttempt.perQuestionTimeLimit ?? 0,
+                }
+            }
+            // Current question exists but hasn't been started yet — fall through to start it
+            activeQuestionIndex = currentIdx
+        } else if (questionIndex > currentIdx) {
+            // Trying to skip ahead — reject
+            const error = new Error(`Cannot skip ahead. Current: ${currentIdx}, Requested: ${questionIndex}`) as Error & { statusCode: number; code: string }
             error.statusCode = 400
             error.code = 'INVALID_QUESTION_INDEX'
             throw error
         }
 
-        const questions = roundAttempt.questions || []
-        const question = questions[questionIndex]
+        const question = questions[activeQuestionIndex]
         if (!question) {
             const error = new Error('Question not found') as Error & { statusCode: number; code: string }
             error.statusCode = 404
@@ -489,12 +512,12 @@ export class AttemptsService {
         }
 
         // Find or create question attempt
-        let questionAttempt = roundAttempt.questionAttempts?.find(qa => qa.questionIndex === questionIndex)
+        let questionAttempt = roundAttempt.questionAttempts?.find(qa => qa.questionIndex === activeQuestionIndex)
 
         if (questionAttempt?.startedAt) {
             // Already started, return existing (idempotent)
             return {
-                questionIndex,
+                questionIndex: activeQuestionIndex,
                 questionId: question.id,
                 startedAt: questionAttempt.startedAt,
                 perQuestionTimeLimit: roundAttempt.perQuestionTimeLimit ?? 0,
@@ -512,7 +535,7 @@ export class AttemptsService {
         if (!questionAttempt) {
             questionAttempt = {
                 questionId: question.id,
-                questionIndex,
+                questionIndex: activeQuestionIndex,
                 status: QuestionStatus.IN_PROGRESS,
                 startedAt: now,
             }
@@ -536,7 +559,7 @@ export class AttemptsService {
         await attempt.save()
 
         return {
-            questionIndex,
+            questionIndex: activeQuestionIndex,
             questionId: question.id,
             startedAt: now,
             perQuestionTimeLimit: roundAttempt.perQuestionTimeLimit ?? 0,

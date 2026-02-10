@@ -81,7 +81,7 @@ export function StartStep({ assessmentId }: { assessmentId: string }) {
                             <div className="w-6 h-6 bg-neutral-900 rounded flex items-center justify-center">
                                 <span className="text-[10px] font-bold text-white">F</span>
                             </div>
-                            <span className="font-semibold text-neutral-900">Flux AI</span>
+                            <span className="font-semibold text-neutral-900">Fluxberry AI</span>
                         </div>
                     </div>
                     <h1 className="text-2xl font-bold tracking-tight text-neutral-900 mb-2">
@@ -186,7 +186,7 @@ export function StartStep({ assessmentId }: { assessmentId: string }) {
                 </div>
 
                 <div className="bg-neutral-50 p-4 text-center text-xs text-neutral-400 border-t border-neutral-100">
-                    Powered by FluxAI • Privacy Policy • Terms of Service
+                    Powered by Fluxberry AI • Privacy Policy • Terms of Service
                 </div>
             </div>
         </div>

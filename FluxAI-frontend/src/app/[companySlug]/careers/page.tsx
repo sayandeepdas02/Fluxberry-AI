@@ -181,7 +181,7 @@ export default function CareersPage({ params }: { params: Promise<{ companySlug:
 
                             <h2 className="text-3xl font-bold tracking-tight">Experience better hiring.</h2>
                             <p className="text-zinc-400 max-w-lg mx-auto text-lg">
-                                We use FluxAI to ensure a fair, fast, and transparent interview process for every candidate.
+                                We use Fluxberry AI to ensure a fair, fast, and transparent interview process for every candidate.
                             </p>
 
                             <ul className="flex flex-wrap justify-center gap-4 md:gap-8 text-sm text-zinc-300 py-4">
@@ -198,7 +198,7 @@ export default function CareersPage({ params }: { params: Promise<{ companySlug:
                             </Button>
 
                             <div className="pt-8 text-xs text-zinc-600">
-                                Powered by <span className="font-bold text-zinc-500">FluxAI</span>
+                                Powered by <span className="font-bold text-zinc-500">Fluxberry AI</span>
                             </div>
                         </div>
                     </div>

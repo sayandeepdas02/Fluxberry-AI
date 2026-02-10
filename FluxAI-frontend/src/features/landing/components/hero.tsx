@@ -10,7 +10,7 @@ export function Hero() {
                 </h1>
 
                 <p className="text-xl text-muted-foreground mb-6 max-w-2xl leading-relaxed">
-                    FluxAI helps companies design better hiring funnels, automatically screen candidates,
+                    Fluxberry AI helps companies design better hiring funnels, automatically screen candidates,
                     and hire high-quality talent — without wasting recruiter or engineering time.
                 </p>
 

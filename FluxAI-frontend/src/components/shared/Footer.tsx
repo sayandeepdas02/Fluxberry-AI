@@ -7,12 +7,12 @@ export function Footer() {
             <PanelContent className="py-12">
                 <div className="grid gap-12 md:grid-cols-4">
                     <div className="md:col-span-2">
-                        <div className="text-2xl font-bold mb-3">FluxAI</div>
+                        <div className="text-2xl font-bold mb-3">Fluxberry AI</div>
                         <p className="text-sm text-muted-foreground mb-6 max-w-sm">
                             Hire better candidates. Faster. With confidence.
                         </p>
                         <p className="text-xs text-muted-foreground">
-                            © 2026 FluxAI. All rights reserved.
+                            © 2026 Fluxberry AI. All rights reserved.
                         </p>
                     </div>
 

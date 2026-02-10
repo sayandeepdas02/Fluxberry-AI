@@ -54,7 +54,7 @@ export function SignInForm() {
             <div className="mb-8 text-center">
                 <h1 className="text-3xl font-bold mb-2">Welcome back</h1>
                 <p className="text-sm text-muted-foreground">
-                    Sign in to your FluxAI account
+                    Sign in to your Fluxberry AI account
                 </p>
             </div>
 

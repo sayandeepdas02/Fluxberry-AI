@@ -85,7 +85,7 @@ export function SignUpForm() {
             <div className="mb-8 text-center">
                 <h1 className="text-3xl font-bold mb-2">Create your account</h1>
                 <p className="text-sm text-muted-foreground">
-                    Start hiring smarter with FluxAI
+                    Start hiring smarter with Fluxberry AI
                 </p>
             </div>
 

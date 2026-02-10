@@ -1,9 +1,9 @@
 /**
- * AI Interview Types
+ * AI Interview Types — V2 (Async Recording + Processing)
  */
 
 import { z } from 'zod'
-import { AgentType, AISessionStatus } from '../../database/models/index.js'
+import { AgentType } from '../../database/models/index.js'
 
 // ============================================
 // REQUEST SCHEMAS
@@ -13,10 +13,7 @@ export const startAISessionSchema = z.object({
     agentType: z.enum([
         AgentType.FRONTEND_ENGINEER,
         AgentType.BACKEND_ENGINEER,
-        AgentType.FULLSTACK_ENGINEER,
-        AgentType.DEVOPS,
-        AgentType.QA,
-        AgentType.GENERAL,
+        AgentType.HR_GENERAL,
     ]).optional(),
 })
 
@@ -25,28 +22,58 @@ export const endAISessionSchema = z.object({
     reason: z.enum(['COMPLETED', 'TIMEOUT', 'CANDIDATE_EXIT', 'ERROR']),
 })
 
-export const saveTranscriptSchema = z.object({
+export const initUploadSchema = z.object({
     sessionId: z.string(),
-    entries: z.array(z.object({
-        speaker: z.enum(['AI', 'CANDIDATE']),
-        text: z.string(),
-        timestamp: z.number(),
-    })),
+    questionId: z.string(),
+    mimeType: z.string().default('video/webm'),
+    durationSeconds: z.number().min(0).default(0),
+})
+
+export const completeUploadSchema = z.object({
+    sessionId: z.string(),
+    questionId: z.string(),
+    durationSeconds: z.number().min(0),
+    size: z.number().min(0).optional(),
+})
+
+export const completeSessionSchema = z.object({
+    sessionId: z.string(),
 })
 
 // ============================================
 // RESPONSE TYPES
 // ============================================
 
+export interface AIQuestionConfig {
+    id: string
+    text: string
+    prepSeconds: number
+    answerSeconds: number
+}
+
 export interface StartAISessionResponse {
     sessionId: string
-    ephemeralToken: string
-    agentType: string
-    systemPrompt: string
-    durationSeconds: number
-    startedAt: string
-    model: string
-    voice: string
+    questions: AIQuestionConfig[]
+    consentRecordedAt: string
+    totalDurationEstimate: number
+}
+
+export interface InitUploadResponse {
+    uploadUrl: string
+    uploadId: string
+    storageKey: string
+    expiresIn: number
+}
+
+export interface CompleteUploadResponse {
+    questionId: string
+    status: string
+}
+
+export interface CompleteSessionResponse {
+    sessionId: string
+    status: string
+    totalResponses: number
 }
 
 export interface EndAISessionResponse {
@@ -56,15 +83,33 @@ export interface EndAISessionResponse {
     endedAt: string
 }
 
-export interface SaveTranscriptResponse {
-    entryCount: number
+export interface AIResponseResult {
+    questionId: string
+    questionText: string
+    questionIndex: number
+    durationSeconds: number
+    status: string
+    transcript: string | null
+    analysis: {
+        summary: string[]
+        keyPoints: string[]
+        skillsObserved: string[]
+        relevance: string
+    } | null
 }
 
-export interface UploadMediaResponse {
-    assetId: string
-    mediaType: 'AUDIO' | 'VIDEO'
-    duration: number | null
-    size: number
+export interface AIInterviewResultsResponse {
+    sessionId: string
+    status: string
+    synthesis: {
+        overallSummary: string
+        strengths: string[]
+        gaps: string[]
+        suggestedFollowUps: string[]
+    } | null
+    responses: AIResponseResult[]
+    consent: { recordedAt: string } | null
+    aiDisclosure: string
 }
 
 // ============================================
@@ -73,4 +118,6 @@ export interface UploadMediaResponse {
 
 export type StartAISessionInput = z.infer<typeof startAISessionSchema>
 export type EndAISessionInput = z.infer<typeof endAISessionSchema>
-export type SaveTranscriptInput = z.infer<typeof saveTranscriptSchema>
+export type InitUploadInput = z.infer<typeof initUploadSchema>
+export type CompleteUploadInput = z.infer<typeof completeUploadSchema>
+export type CompleteSessionInput = z.infer<typeof completeSessionSchema>

@@ -1,5 +1,5 @@
 /**
- * AI Interview Controller
+ * AI Interview Controller — V2 (Async Recording + Processing)
  */
 
 import { Request, Response, NextFunction } from 'express'
@@ -7,37 +7,26 @@ import { aiInterviewService } from './ai-interview.service.js'
 import {
     startAISessionSchema,
     endAISessionSchema,
-    saveTranscriptSchema,
+    initUploadSchema,
+    completeUploadSchema,
+    completeSessionSchema,
 } from './ai-interview.types.js'
-import { FileAsset, FileType } from '../../database/models/index.js'
 
 class AIInterviewController {
     /**
      * POST /attempts/:attemptId/ai/start
-     * Start AI interview session
+     * Start AI interview session (returns questions)
      */
     async startSession(req: Request, res: Response, next: NextFunction) {
         try {
             const { attemptId } = req.params
             const parseResult = startAISessionSchema.safeParse(req.body)
-
             if (!parseResult.success) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Invalid request body',
-                    details: parseResult.error.errors,
-                })
+                return res.status(400).json({ success: false, error: 'Invalid request body', details: parseResult.error.errors })
             }
-
             const result = await aiInterviewService.startSession(attemptId, parseResult.data)
-
-            return res.json({
-                success: true,
-                data: result,
-            })
-        } catch (error) {
-            next(error)
-        }
+            return res.json({ success: true, data: result })
+        } catch (error) { next(error) }
     }
 
     /**
@@ -48,142 +37,96 @@ class AIInterviewController {
         try {
             const { attemptId } = req.params
             const parseResult = endAISessionSchema.safeParse(req.body)
-
             if (!parseResult.success) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Invalid request body',
-                    details: parseResult.error.errors,
-                })
+                return res.status(400).json({ success: false, error: 'Invalid request body', details: parseResult.error.errors })
             }
-
             const result = await aiInterviewService.endSession(attemptId, parseResult.data)
-
-            return res.json({
-                success: true,
-                data: result,
-            })
-        } catch (error) {
-            next(error)
-        }
+            return res.json({ success: true, data: result })
+        } catch (error) { next(error) }
     }
 
     /**
-     * POST /attempts/:attemptId/ai/transcript
-     * Save transcript entries
+     * POST /attempts/:attemptId/ai/upload/init
+     * Get pre-signed URL for uploading a question response video
      */
-    async saveTranscript(req: Request, res: Response, next: NextFunction) {
+    async initUpload(req: Request, res: Response, next: NextFunction) {
         try {
             const { attemptId } = req.params
-            const parseResult = saveTranscriptSchema.safeParse(req.body)
-
+            const parseResult = initUploadSchema.safeParse(req.body)
             if (!parseResult.success) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Invalid request body',
-                    details: parseResult.error.errors,
-                })
+                return res.status(400).json({ success: false, error: 'Invalid request body', details: parseResult.error.errors })
             }
-
-            const result = await aiInterviewService.saveTranscript(attemptId, parseResult.data)
-
-            return res.json({
-                success: true,
-                data: result,
-            })
-        } catch (error) {
-            next(error)
-        }
+            const result = await aiInterviewService.initUpload(attemptId, parseResult.data)
+            return res.json({ success: true, data: result })
+        } catch (error) { next(error) }
     }
 
     /**
-     * POST /attempts/:attemptId/ai/media
-     * Upload media asset (audio/video recording)
+     * POST /attempts/:attemptId/ai/upload/complete
+     * Mark upload as complete and enqueue processing
      */
-    async uploadMedia(req: Request, res: Response, next: NextFunction) {
+    async completeUpload(req: Request, res: Response, next: NextFunction) {
         try {
             const { attemptId } = req.params
-            const { sessionId, mediaType } = req.body
-
-            if (!sessionId || !mediaType) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Missing sessionId or mediaType',
-                })
+            const parseResult = completeUploadSchema.safeParse(req.body)
+            if (!parseResult.success) {
+                return res.status(400).json({ success: false, error: 'Invalid request body', details: parseResult.error.errors })
             }
+            const result = await aiInterviewService.completeUpload(attemptId, parseResult.data)
+            return res.json({ success: true, data: result })
+        } catch (error) { next(error) }
+    }
 
-            if (!['AUDIO', 'VIDEO'].includes(mediaType)) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Invalid mediaType, must be AUDIO or VIDEO',
-                })
+    /**
+     * POST /attempts/:attemptId/ai/complete
+     * Finalize the entire AI interview session
+     */
+    async completeSession(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { attemptId } = req.params
+            const parseResult = completeSessionSchema.safeParse(req.body)
+            if (!parseResult.success) {
+                return res.status(400).json({ success: false, error: 'Invalid request body', details: parseResult.error.errors })
             }
+            const result = await aiInterviewService.completeSession(attemptId, parseResult.data)
+            return res.json({ success: true, data: result })
+        } catch (error) { next(error) }
+    }
 
-            // V1: Handle file upload via multer (assumed to be configured in routes)
-            const file = req.file
-            if (!file) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'No file uploaded',
-                })
-            }
+    /**
+     * GET /attempts/:attemptId/ai/results
+     * Get full AI interview results for recruiter dashboard
+     */
+    async getResults(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { attemptId } = req.params
+            const result = await aiInterviewService.getInterviewResults(attemptId)
+            return res.json({ success: true, data: result })
+        } catch (error) { next(error) }
+    }
 
-            // Create file asset record
-            const storageKey = `ai-recordings/${sessionId}/${mediaType.toLowerCase()}-${Date.now()}`
-            const fileAsset = await FileAsset.create({
-                ownerType: 'CANDIDATE',
-                ownerId: attemptId,
-                fileType: FileType.AI_RECORDING,
-                storageKey,
-                mimeType: file.mimetype,
-                size: file.size,
-            })
-
-            // Link to session
-            await aiInterviewService.saveMediaAsset(
-                attemptId,
-                sessionId,
-                mediaType as 'AUDIO' | 'VIDEO',
-                fileAsset._id.toString()
-            )
-
-            return res.json({
-                success: true,
-                data: {
-                    assetId: fileAsset._id.toString(),
-                    mediaType,
-                    duration: null, // V2: Extract from file
-                    size: file.size,
-                },
-            })
-        } catch (error) {
-            next(error)
-        }
+    /**
+     * GET /attempts/:attemptId/ai/responses/:questionId/video
+     * Get signed download URL for a response video
+     */
+    async getResponseVideo(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { attemptId, questionId } = req.params
+            const result = await aiInterviewService.getResponseVideoUrl(attemptId, questionId)
+            return res.json({ success: true, data: result })
+        } catch (error) { next(error) }
     }
 
     /**
      * GET /attempts/:attemptId/ai/details
-     * Get AI interview session details (for recruiter dashboard)
+     * Get AI session details (legacy compat)
      */
     async getSessionDetails(req: Request, res: Response, next: NextFunction) {
         try {
             const { attemptId } = req.params
             const result = await aiInterviewService.getSessionDetails(attemptId)
-
-            if (!result) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'AI session not found',
-                })
-            }
-
-            return res.json({
-                success: true,
-                data: result,
-            })
-        } catch (error) {
-            next(error)
-        }
+            return res.json({ success: true, data: result })
+        } catch (error) { next(error) }
     }
 }
 

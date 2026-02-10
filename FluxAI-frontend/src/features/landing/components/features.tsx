@@ -52,7 +52,7 @@ export function Features() {
 
             <PanelContent className="py-16">
                 <p className="text-lg text-muted-foreground mb-12 max-w-2xl">
-                    From application to offer, FluxAI delivers tools that improve clarity, usability,
+                    From application to offer, Fluxberry AI delivers tools that improve clarity, usability,
                     and candidate experience — end to end.
                 </p>
 

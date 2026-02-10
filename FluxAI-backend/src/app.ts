@@ -4,6 +4,9 @@ import helmet from 'helmet'
 import { requestLogger } from './common/middleware/request-logger.js'
 import { errorHandler } from './common/middleware/error-handler.js'
 import { successResponse } from './common/utils/api-response.js'
+import { isS3Configured, saveLocalFile } from './modules/storage/s3.client.js'
+import fs from 'fs'
+import path from 'path'
 
 // Routes
 import authRoutes from './modules/auth/auth.routes.js'
@@ -75,6 +78,30 @@ export function createApp() {
     // Phase 3: Attempts & Proctoring
     app.use('/api/attempts', attemptsRoutes)
     app.use('/api/attempts', aiInterviewRoutes) // AI Interview APIs
+
+    // Local file upload for dev mode (when S3 is not configured)
+    if (!isS3Configured()) {
+        console.log('[DEV] S3 not configured — local file storage enabled at /api/uploads/local/')
+        app.put('/api/uploads/local/:storageKey(*)', express.raw({ type: '*/*', limit: '100mb' }), (req, res) => {
+            try {
+                const storageKey = decodeURIComponent(req.params.storageKey)
+                saveLocalFile(storageKey, req.body as Buffer)
+                res.status(200).json({ success: true })
+            } catch (err) {
+                console.error('Local upload error:', err)
+                res.status(500).json({ success: false, error: 'Failed to save file locally' })
+            }
+        })
+        app.get('/api/uploads/local/:storageKey(*)', (req, res) => {
+            const storageKey = decodeURIComponent(req.params.storageKey)
+            const filePath = path.join(process.cwd(), 'uploads', storageKey)
+            if (fs.existsSync(filePath)) {
+                res.sendFile(filePath)
+            } else {
+                res.status(404).json({ success: false, error: 'File not found' })
+            }
+        })
+    }
 
     // Phase 4: Results (assessment-level requires auth)
     app.get('/api/assessments/:assessmentId/results', authGuard, (req, res, next) =>

@@ -32,7 +32,7 @@ export function ValueProposition() {
 
             <PanelContent className="py-16">
                 <p className="text-lg text-muted-foreground mb-12 max-w-2xl">
-                    FluxAI replaces fragmented hiring tools with a single intelligent system built for modern teams.
+                    Fluxberry AI replaces fragmented hiring tools with a single intelligent system built for modern teams.
                 </p>
 
                 <div className="grid gap-6 sm:grid-cols-2">

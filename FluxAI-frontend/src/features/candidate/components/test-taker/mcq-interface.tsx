@@ -49,9 +49,19 @@ export function MCQInterface({
             try {
                 const res = await attemptsApi.startQuestion(attemptId, roundIndex, currentQuestionIndex)
                 if (res.success && res.data) {
+                    // Backend may redirect to a different question on resume (Bug 2/3 fix)
+                    if (res.data.questionIndex !== currentQuestionIndex) {
+                        setCurrentQuestionIndex(res.data.questionIndex)
+                        setSelectedOptions([])
+                        hasStartedQuestion.current = false // re-trigger for the redirected question
+                        return
+                    }
                     setStartedAt(new Date(res.data.startedAt))
                     setTimeLimit(res.data.perQuestionTimeLimit)
-                    setTimeLeft(res.data.perQuestionTimeLimit)
+                    // Calculate remaining time from backend startedAt (handles mid-question refresh)
+                    const elapsed = Math.floor((Date.now() - new Date(res.data.startedAt).getTime()) / 1000)
+                    const remaining = Math.max(0, res.data.perQuestionTimeLimit - elapsed)
+                    setTimeLeft(remaining)
                 }
             } catch (err) {
                 console.error('Failed to start question:', err)

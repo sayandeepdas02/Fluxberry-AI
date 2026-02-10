@@ -74,12 +74,9 @@ const STATUS_CONFIG = {
 }
 
 const AGENT_TYPE_LABELS: Record<string, string> = {
-    FRONTEND_ENGINEER: 'Frontend Engineer',
-    BACKEND_ENGINEER: 'Backend Engineer',
-    FULLSTACK_ENGINEER: 'Fullstack Engineer',
-    DEVOPS: 'DevOps',
-    QA: 'QA Engineer',
-    GENERAL: 'General',
+    FRONTEND_ENGINEER: 'Frontend Engineering',
+    BACKEND_ENGINEER: 'Backend Engineering',
+    HR_GENERAL: 'Culture & Communication',
 }
 
 export function AIInterviewViewer({ attemptId }: AIInterviewViewerProps) {
@@ -172,7 +169,7 @@ export function AIInterviewViewer({ attemptId }: AIInterviewViewerProps) {
                     <div className="text-center border-x border-border">
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Agent Type</p>
                         <p className="text-sm font-medium mt-1">
-                            {AGENT_TYPE_LABELS[details.agentType || 'GENERAL'] || details.agentType}
+                            {AGENT_TYPE_LABELS[details.agentType || 'HR_GENERAL'] || details.agentType}
                         </p>
                     </div>
                     <div className="text-center">

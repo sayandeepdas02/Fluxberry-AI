@@ -1,11 +1,11 @@
 "use client"
 
 /**
- * AI Interview Interface
+ * AI Interview Interface — V2 (Async Recording)
  * 
- * Main component that orchestrates the AI interview flow:
+ * Orchestrates the AI interview flow:
  * 1. Pre-interview (permissions, consent)
- * 2. Interview session (WebRTC, transcript)
+ * 2. Interview session (per-question recording + upload)
  * 3. Completion screen
  */
 
@@ -13,7 +13,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { PreInterviewScreen } from './pre-interview'
 import { InterviewSession } from './interview-session'
 import { InterviewComplete } from './interview-complete'
-import { attemptsApi, AISessionStartResponse, AISessionEndReason } from '@/lib/api/attempts'
+import { attemptsApi, AIQuestionConfig, AISessionEndReason } from '@/lib/api/attempts'
 import { Loader2 } from 'lucide-react'
 
 interface AIInterfaceProps {
@@ -28,11 +28,12 @@ type AIInterviewPhase = 'pre-interview' | 'starting' | 'interview' | 'ending' | 
 export function AIInterface({
     attemptId,
     assessmentTitle,
-    agentType = 'GENERAL',
+    agentType = 'HR_GENERAL',
     onComplete,
 }: AIInterfaceProps) {
     const [phase, setPhase] = useState<AIInterviewPhase>('pre-interview')
-    const [session, setSession] = useState<AISessionStartResponse | null>(null)
+    const [sessionId, setSessionId] = useState<string>('')
+    const [questions, setQuestions] = useState<AIQuestionConfig[]>([])
     const [endReason, setEndReason] = useState<AISessionEndReason>('COMPLETED')
     const [duration, setDuration] = useState(0)
     const [error, setError] = useState<string | null>(null)
@@ -46,11 +47,14 @@ export function AIInterface({
         try {
             const res = await attemptsApi.getAISessionDetails(attemptId)
             if (res.success && res.data?.sessionId && res.data.status === 'IN_PROGRESS') {
-                // There's an active session - try to resume
-                // V1: For simplicity, we start fresh (V2: reconnect logic)
-                console.log('Found existing session, will resume from pre-interview')
+                // Resume existing session
+                setSessionId(res.data.sessionId)
+                setQuestions(res.data.questions || [])
+                if (res.data.questions?.length > 0) {
+                    setPhase('interview')
+                }
             }
-        } catch (err) {
+        } catch {
             // No existing session, proceed normally
         }
     }
@@ -66,7 +70,8 @@ export function AIInterface({
                 throw new Error(res.error?.message || 'Failed to start AI session')
             }
 
-            setSession(res.data)
+            setSessionId(res.data.sessionId)
+            setQuestions(res.data.questions)
             setPhase('interview')
         } catch (err) {
             console.error('Failed to start interview:', err)
@@ -76,14 +81,11 @@ export function AIInterface({
     }, [attemptId, agentType])
 
     const handleEndInterview = useCallback(async (reason: AISessionEndReason) => {
-        if (!session) return
-
         setPhase('ending')
         setEndReason(reason)
 
         try {
-            const res = await attemptsApi.endAISession(attemptId, session.sessionId, reason)
-
+            const res = await attemptsApi.endAISession(attemptId, sessionId, reason)
             if (res.success && res.data) {
                 setDuration(res.data.duration)
             }
@@ -91,12 +93,10 @@ export function AIInterface({
             console.error('Failed to end session:', err)
         }
 
-        // Always transition to complete, even on error
         setPhase('complete')
-    }, [attemptId, session])
+    }, [attemptId, sessionId])
 
     const handleCancel = useCallback(() => {
-        // Navigate back to assessment (handled by parent)
         onComplete()
     }, [onComplete])
 
@@ -111,7 +111,7 @@ export function AIInterface({
                 <div className="text-center space-y-4">
                     <Loader2 className="w-12 h-12 animate-spin text-orange-500 mx-auto" />
                     <p className="text-neutral-400">
-                        {phase === 'starting' ? 'Starting interview...' : 'Saving your responses...'}
+                        {phase === 'starting' ? 'Preparing your interview...' : 'Saving your responses...'}
                     </p>
                 </div>
             </div>
@@ -153,17 +153,12 @@ export function AIInterface({
             )
 
         case 'interview':
-            if (!session) return null
+            if (!sessionId || questions.length === 0) return null
             return (
                 <InterviewSession
                     attemptId={attemptId}
-                    sessionId={session.sessionId}
-                    ephemeralToken={session.ephemeralToken}
-                    model={session.model}
-                    voice={session.voice}
-                    systemPrompt={session.systemPrompt}
-                    durationSeconds={session.durationSeconds}
-                    startedAt={session.startedAt}
+                    sessionId={sessionId}
+                    questions={questions}
                     onEndInterview={handleEndInterview}
                 />
             )

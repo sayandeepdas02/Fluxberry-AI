@@ -219,7 +219,7 @@ export function BookDemoModal({ isOpen, onClose }: BookDemoModalProps) {
 </h2>
 
                             <p className="text-sm text-muted-foreground mb-4">
-                                Let's discuss how FluxAI can transform your hiring process.
+                                Let's discuss how Fluxberry AI can transform your hiring process.
                             </p>
 
                             <form onSubmit={handleSubmit} className="space-y-3">

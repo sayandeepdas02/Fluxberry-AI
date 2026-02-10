@@ -4,8 +4,8 @@ import { fontSans, fontMono } from "@/lib/fonts";
 import { AuthProvider } from "@/lib/context/auth-context";
 
 export const metadata: Metadata = {
-    title: "FluxAI - Hire Smarter, Faster",
-    description: "FluxAI helps companies design better hiring funnels, automatically screen candidates, and hire high-quality talent.",
+    title: "Fluxberry AI - Hire Smarter, Faster",
+    description: "Fluxberry AI helps companies design better hiring funnels, automatically screen candidates, and hire high-quality talent.",
 };
 
 export default function RootLayout({

@@ -118,7 +118,7 @@ export function ContactForm() {
                     Thanks for reaching out!
                 </h2>
                 <p className="text-lg text-muted-foreground mb-8 max-w-md mx-auto">
-                    Our team will contact you soon to discuss how FluxAI can transform
+                    Our team will contact you soon to discuss how Fluxberry AI can transform
                     your hiring process.
                 </p>
 
@@ -134,7 +134,7 @@ export function ContactForm() {
             <div className="mb-8">
                 <h1 className="text-4xl font-bold mb-3">Book a Demo</h1>
                 <p className="text-lg text-muted-foreground">
-                    Let's discuss how FluxAI can transform your hiring process.
+                    Let's discuss how Fluxberry AI can transform your hiring process.
                 </p>
             </div>
 
