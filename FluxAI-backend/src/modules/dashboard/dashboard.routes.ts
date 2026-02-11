@@ -10,4 +10,8 @@ router.get('/summary', (req, res, next) =>
     dashboardController.getSummary(req, res, next)
 )
 
+router.get('/analytics', (req, res, next) =>
+    dashboardController.getAnalytics(req, res, next)
+)
+
 export default router
