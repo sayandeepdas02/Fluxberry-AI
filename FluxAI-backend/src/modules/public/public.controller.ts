@@ -34,6 +34,48 @@ class PublicController {
         }
     }
 
+    /**
+     * GET /api/public/jobs/:slug
+     * Get a published job by its public slug
+     */
+    async getJobBySlug(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { slug } = req.params
+            const data = await publicService.getJobBySlug(slug)
+            res.json(successResponse(data))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    /**
+     * POST /api/public/jobs/:slug/apply
+     * Submit application for a published job
+     */
+    async applyToJob(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { slug } = req.params
+            const data = await publicService.submitApplication(slug, req.body)
+            res.status(201).json(successResponse(data))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    /**
+     * POST /api/public/jobs/:slug/upload-resume
+     * Get a pre-signed URL for resume upload
+     */
+    async requestResumeUpload(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { slug } = req.params
+            const data = await publicService.requestResumeUploadUrl(slug, req.body)
+            res.status(201).json(successResponse(data))
+        } catch (error) {
+            next(error)
+        }
+    }
+
     async getAssessment(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params

@@ -46,7 +46,7 @@ export default function JobApplicationPage({ params }: { params: Promise<{ compa
                         </h1>
 
                         <div className="flex flex-wrap items-center justify-center gap-3 text-[13px] text-zinc-500 font-medium">
-                            {job.type && <span className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" /> Job type: <span className="text-zinc-900">{job.type}</span></span>}
+                            {job.employmentType && <span className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" /> Job type: <span className="text-zinc-900">{job.employmentType.replace(/_/g, ' ')}</span></span>}
                             {job.department && <span className="w-1 h-1 rounded-full bg-zinc-300" />}
                             {job.department && <span className="flex items-center gap-1.5"><Building className="w-3.5 h-3.5" /> Department: <span className="text-zinc-900">{job.department}</span></span>}
                             {job.location && <span className="w-1 h-1 rounded-full bg-zinc-300" />}

@@ -19,35 +19,35 @@ const jobsByDepartment = {
             id: "101",
             title: "Senior Propulsion Engineer",
             location: "Los Angeles, CA",
-            type: "Full-time",
+            employmentType: "Full-time",
             tags: ["Thermodynamics", "C++", "Hardware"],
         },
         {
             id: "102",
             title: "Staff Software Engineer, Flight Systems",
             location: "Remote",
-            type: "Full-time",
+            employmentType: "Full-time",
             tags: ["Rust", "Real-time", "Embedded"],
         },
         {
             id: "105",
             title: "Engineering Manager",
             location: "Remote",
-            type: "Full-time",
+            employmentType: "Full-time",
             tags: ["Leadership", "People", "Agile"],
         },
         {
             id: "107",
             title: "Frontend Engineer, Mission Control",
             location: "Los Angeles, CA",
-            type: "Full-time",
+            employmentType: "Full-time",
             tags: ["React", "WebGL", "TypeScript"],
         },
         {
             id: "108",
             title: "Guidance, Navigation & Control Engineer",
             location: "Los Angeles, CA",
-            type: "Full-time",
+            employmentType: "Full-time",
             tags: ["Matlab", "Control Theory", "Simulink"],
         }
     ],
@@ -56,14 +56,14 @@ const jobsByDepartment = {
             id: "103",
             title: "Product Designer, Core Experience",
             location: "New York, NY",
-            type: "Full-time",
+            employmentType: "Full-time",
             tags: ["Figma", "Design Systems", "UX"],
         },
         {
             id: "109",
             title: "Visual Designer",
             location: "Remote",
-            type: "Contract",
+            employmentType: "Contract",
             tags: ["Brand", "Marketing", "Illustration"],
         }
     ],
@@ -72,7 +72,7 @@ const jobsByDepartment = {
             id: "110",
             title: "Senior Product Manager",
             location: "San Francisco, CA",
-            type: "Full-time",
+            employmentType: "Full-time",
             tags: ["Strategy", "Roadmap", "B2B"],
         }
     ],
@@ -81,7 +81,7 @@ const jobsByDepartment = {
             id: "104",
             title: "Marketing Manager",
             location: "Los Angeles, CA",
-            type: "Full-time",
+            employmentType: "Full-time",
             tags: ["Growth", "Campaigns", "Social"],
         }
     ],
@@ -90,7 +90,7 @@ const jobsByDepartment = {
             id: "106",
             title: "Recruiting Coordinator",
             location: "Los Angeles, CA",
-            type: "Contract",
+            employmentType: "Contract",
             tags: ["Scheduling", "Ops"],
         }
     ]
@@ -144,7 +144,7 @@ export default function AllJobsPage({ params }: { params: Promise<{ companySlug:
                                                         <h3 className="font-semibold text-lg group-hover:underline decoration-1 underline-offset-4">{job.title}</h3>
                                                         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mt-1">
                                                             <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {job.location}</span>
-                                                            <span className="flex items-center gap-1"><Briefcase className="w-3.5 h-3.5" /> {job.type}</span>
+                                                            <span className="flex items-center gap-1"><Briefcase className="w-3.5 h-3.5" /> {job.employmentType?.replace(/_/g, ' ')}</span>
                                                         </div>
                                                     </div>
                                                     <Button size="sm" variant="outline" className="opacity-0 group-hover:opacity-100 transition-opacity" asChild>

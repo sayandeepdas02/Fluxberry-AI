@@ -1,63 +1,86 @@
 import { apiClient } from './client'
-import { ApiResponse } from './types'
 
 export interface Job {
     _id: string
     organizationId: string
     title: string
     description: string
-    department: string
-    location: string
-    type: 'FULL_TIME' | 'CONTRACT' | 'INTERNSHIP' | 'PART_TIME'
-    status: 'OPEN' | 'CLOSED' | 'DRAFT'
+    department?: string
+    location?: string
+    employmentType: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERN' | 'OTHER'
+    status: 'DRAFT' | 'PUBLISHED' | 'CLOSED'
     requirements?: string[]
-    salaryRange?: {
-        min: number
-        max: number
-        currency: string
-    }
+    requiredSkills?: string[]
+    salaryRange?: { min: number; max: number; currency: string }
+    applicationSchema?: ApplicationSchema
+    publicSlug?: string
+    createdBy?: string
+    publishedAt?: string
+    closedAt?: string
+    applicationCount?: number
     createdAt: string
     updatedAt: string
+}
+
+export interface ApplicationField {
+    name: string
+    label: string
+    type: 'text' | 'email' | 'number' | 'file' | 'select' | 'textarea'
+    required?: boolean
+    options?: string[]
+}
+
+export interface ApplicationSchema {
+    fields: ApplicationField[]
 }
 
 export interface CreateJobInput {
     title: string
     description: string
-    department: string
-    location: string
-    type: Job['type']
-    status?: Job['status']
+    department?: string
+    location?: string
+    employmentType?: string
     requirements?: string[]
-    salaryRange?: {
-        min: number
-        max: number
-        currency: string
-    }
+    requiredSkills?: string[]
+    salaryRange?: { min: number; max: number; currency: string }
+    applicationSchema?: ApplicationSchema
 }
 
-export interface UpdateJobInput extends Partial<CreateJobInput> { }
+export type UpdateJobInput = Partial<CreateJobInput>
 
 export interface ListJobsQuery {
     page?: number
     limit?: number
-    status?: 'LIVE' | 'CLOSED' | 'DRAFT' | 'PAUSED'
+    status?: 'DRAFT' | 'PUBLISHED' | 'CLOSED'
     search?: string
 }
 
+export interface ListJobsResponse {
+    jobs: Job[]
+    total: number
+    page: number
+    totalPages: number
+}
+
 export const jobsApi = {
-    list: async (query?: ListJobsQuery): Promise<ApiResponse<{ jobs: Job[], total: number, page: number, totalPages: number }>> => {
-        return apiClient.get('/jobs', { params: query })
-    },
+    list: (query?: ListJobsQuery) =>
+        apiClient.get<ListJobsResponse>('/jobs', query as Record<string, string>),
 
-    getById: async (id: string): Promise<ApiResponse<Job>> => {
-        return apiClient.get(`/jobs/${id}`)
-    },
+    getById: (id: string) =>
+        apiClient.get<Job>(`/jobs/${id}`),
 
-    create: async (data: CreateJobInput): Promise<ApiResponse<Job>> => {
-        return apiClient.post('/jobs', data)
-    },
+    create: (input: CreateJobInput) =>
+        apiClient.post<Job>('/jobs', input),
 
-    update: async (id: string, data: UpdateJobInput): Promise<ApiResponse<Job>> => {
-        return apiClient.patch(`/jobs/${id}`, data)
-    },
+    update: (id: string, input: UpdateJobInput) =>
+        apiClient.patch<Job>(`/jobs/${id}`, input),
+
+    publish: (id: string) =>
+        apiClient.post<Job>(`/jobs/${id}/publish`),
+
+    close: (id: string) =>
+        apiClient.post<Job>(`/jobs/${id}/close`),
+
+    delete: (id: string) =>
+        apiClient.delete<Job>(`/jobs/${id}`),
 }
