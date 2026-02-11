@@ -98,6 +98,32 @@ export const FileType = {
 } as const
 export type FileTypeValue = typeof FileType[keyof typeof FileType]
 
+// Job Board Enums
+export const JobStatus = {
+    DRAFT: 'DRAFT',
+    PUBLISHED: 'PUBLISHED',
+    CLOSED: 'CLOSED',
+} as const
+export type JobStatusType = typeof JobStatus[keyof typeof JobStatus]
+
+export const EmploymentType = {
+    FULL_TIME: 'FULL_TIME',
+    PART_TIME: 'PART_TIME',
+    CONTRACT: 'CONTRACT',
+    INTERN: 'INTERN',
+    OTHER: 'OTHER',
+} as const
+export type EmploymentTypeValue = typeof EmploymentType[keyof typeof EmploymentType]
+
+export const ApplicationStatus = {
+    APPLIED: 'APPLIED',
+    REVIEWING: 'REVIEWING',
+    SHORTLISTED: 'SHORTLISTED',
+    REJECTED: 'REJECTED',
+    HIRED: 'HIRED',
+} as const
+export type ApplicationStatusType = typeof ApplicationStatus[keyof typeof ApplicationStatus]
+
 // AI Interview Agent Types
 export const AgentType = {
     FRONTEND_ENGINEER: 'FRONTEND_ENGINEER',
@@ -196,12 +222,18 @@ export interface IJob extends Document {
     organizationId: Types.ObjectId
     title: string
     description: string
-    department: string
-    location: string
-    type: 'FULL_TIME' | 'CONTRACT' | 'INTERNSHIP' | 'PART_TIME'
-    status: 'LIVE' | 'CLOSED' | 'DRAFT' | 'PAUSED'
+    department?: string
+    location?: string
+    employmentType: EmploymentTypeValue
+    status: JobStatusType
     requirements?: string[]
+    requiredSkills?: string[]
     salaryRange?: { min: number; max: number; currency: string }
+    applicationSchema?: Record<string, unknown>
+    publicSlug?: string
+    createdBy?: Types.ObjectId
+    publishedAt?: Date
+    closedAt?: Date
     createdAt: Date
     updatedAt: Date
 }
@@ -210,16 +242,22 @@ const JobSchema = new Schema<IJob>({
     organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
     title: { type: String, required: true },
     description: { type: String, required: true },
-    department: { type: String, required: true },
-    location: { type: String, required: true },
-    type: { type: String, default: 'FULL_TIME' }, // relaxed enum for now or keep strict
-    status: { type: String, enum: ['LIVE', 'CLOSED', 'DRAFT', 'PAUSED'], default: 'LIVE', index: true },
+    department: { type: String },
+    location: { type: String },
+    employmentType: { type: String, enum: Object.values(EmploymentType), default: EmploymentType.FULL_TIME },
+    status: { type: String, enum: Object.values(JobStatus), default: JobStatus.DRAFT, index: true },
     requirements: [{ type: String }],
+    requiredSkills: [{ type: String }],
     salaryRange: {
         min: { type: Number },
         max: { type: Number },
         currency: { type: String, default: 'USD' }
-    }
+    },
+    applicationSchema: { type: Schema.Types.Mixed },
+    publicSlug: { type: String, unique: true, sparse: true },
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    publishedAt: { type: Date },
+    closedAt: { type: Date },
 }, { timestamps: true })
 
 export const Job = mongoose.model<IJob>('Job', JobSchema)
@@ -259,23 +297,91 @@ export interface ICandidate extends Document {
     lastName?: string
     phone?: string
     source?: string
+    jobId?: Types.ObjectId
+    resumeUrl?: string
+    applicationData?: Record<string, unknown>
+    candidateStatus?: ApplicationStatusType
     createdAt: Date
     updatedAt: Date
 }
 
 const CandidateSchema = new Schema<ICandidate>({
     organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
-    email: { type: String, required: true, index: true }, // Scoped uniqueness logic might be needed manually if organizationId + email is unique
+    email: { type: String, required: true, index: true },
     firstName: { type: String },
     lastName: { type: String },
     phone: { type: String },
     source: { type: String },
+    jobId: { type: Schema.Types.ObjectId, ref: 'Job' },
+    resumeUrl: { type: String },
+    applicationData: { type: Schema.Types.Mixed },
+    candidateStatus: { type: String, enum: Object.values(ApplicationStatus) },
 }, { timestamps: true })
 
 // Compound index for unique email per organization
 CandidateSchema.index({ organizationId: 1, email: 1 }, { unique: true })
 
 export const Candidate = mongoose.model<ICandidate>('Candidate', CandidateSchema)
+
+// ============================================
+// JOB APPLICATION MODEL
+// ============================================
+export interface IJobApplication extends Document {
+    _id: Types.ObjectId
+    organizationId: Types.ObjectId
+    jobId: Types.ObjectId
+    candidateId: Types.ObjectId
+    applicationData?: Record<string, unknown>
+    resumeUrl?: string
+    status: ApplicationStatusType
+    submittedAt: Date
+    createdAt: Date
+    updatedAt: Date
+}
+
+const JobApplicationSchema = new Schema<IJobApplication>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+    jobId: { type: Schema.Types.ObjectId, ref: 'Job', required: true, index: true },
+    candidateId: { type: Schema.Types.ObjectId, ref: 'Candidate', required: true },
+    applicationData: { type: Schema.Types.Mixed },
+    resumeUrl: { type: String },
+    status: { type: String, enum: Object.values(ApplicationStatus), default: ApplicationStatus.APPLIED },
+    submittedAt: { type: Date, default: Date.now },
+}, { timestamps: true })
+
+JobApplicationSchema.index({ jobId: 1, candidateId: 1 }, { unique: true })
+
+export const JobApplication = mongoose.model<IJobApplication>('JobApplication', JobApplicationSchema)
+
+// ============================================
+// AUDIT LOG MODEL
+// ============================================
+export interface IAuditLog extends Document {
+    _id: Types.ObjectId
+    organizationId: Types.ObjectId
+    entityType: string
+    entityId: Types.ObjectId
+    action: string
+    previousValue?: Record<string, unknown>
+    newValue?: Record<string, unknown>
+    performedBy?: Types.ObjectId
+    timestamp: Date
+}
+
+const AuditLogSchema = new Schema<IAuditLog>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+    entityType: { type: String, required: true },
+    entityId: { type: Schema.Types.ObjectId, required: true },
+    action: { type: String, required: true },
+    previousValue: { type: Schema.Types.Mixed },
+    newValue: { type: Schema.Types.Mixed },
+    performedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    timestamp: { type: Date, default: Date.now },
+})
+
+AuditLogSchema.index({ entityType: 1, entityId: 1 })
+
+export const AuditLog = mongoose.model<IAuditLog>('AuditLog', AuditLogSchema)
 
 // ============================================
 // ANALYTICS SNAPSHOT MODEL
