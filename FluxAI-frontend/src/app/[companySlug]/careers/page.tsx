@@ -150,7 +150,7 @@ export default function CareersPage({ params }: { params: Promise<{ companySlug:
                                                     <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mt-1">
                                                         {job.department && <span className="flex items-center gap-1"><Building className="w-3.5 h-3.5" /> {job.department}</span>}
                                                         {job.location && <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {job.location}</span>}
-                                                        {job.type && <span className="flex items-center gap-1"><Briefcase className="w-3.5 h-3.5" /> {job.type}</span>}
+                                                        {job.employmentType && <span className="flex items-center gap-1"><Briefcase className="w-3.5 h-3.5" /> {job.employmentType.replace(/_/g, ' ')}</span>}
                                                     </div>
                                                 </div>
                                                 <Button size="sm" variant="secondary" className="opacity-0 group-hover:opacity-100 transition-opacity" asChild>
