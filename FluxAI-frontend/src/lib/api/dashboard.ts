@@ -19,8 +19,29 @@ export interface DashboardSummary {
     }[]
 }
 
+export interface ATSAnalytics {
+    totalJobs: number
+    activeJobs: number
+    totalCandidates: number
+    totalApplications: number
+    conversionRates: {
+        appliedToInterview: number
+        interviewToOffer: number
+        offerToHired: number
+    }
+    stageDistribution: Record<string, number>
+    avgTimeInStage: Record<string, number>
+    hiringTrends: { date: string; value: number }[]
+    applicationSources: { label: string; value: number; percentage: number }[]
+}
+
 export const dashboardApi = {
     summary: async (): Promise<ApiResponse<DashboardSummary>> => {
         return apiClient.get('/dashboard/summary')
-    }
+    },
+
+    analytics: async (): Promise<ApiResponse<ATSAnalytics>> => {
+        return apiClient.get('/dashboard/analytics')
+    },
 }
+
