@@ -46,6 +46,22 @@ export class AuthController {
             next(error)
         }
     }
+
+    /**
+     * DELETE /api/auth/me
+     */
+    async deleteAccount(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            if (!req.user?.id) {
+                res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } })
+                return
+            }
+            await authService.deleteAccount(req.user.id)
+            res.json(successResponse({ message: 'Account deleted successfully' }))
+        } catch (error) {
+            next(error)
+        }
+    }
 }
 
 export const authController = new AuthController()
