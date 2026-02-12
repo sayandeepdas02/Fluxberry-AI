@@ -69,8 +69,22 @@ export interface Assessment {
     showResults: boolean
     proctoringEnabled: boolean
     rounds: AssessmentRound[]
+
     candidateCount?: number
     completedCount?: number
+    createdAt: string
+    updatedAt: string
+}
+
+export interface PipelineStage {
+    _id: string
+    jobId: string
+    organizationId: string
+    name: string
+    type: string
+    order: number
+    color: string
+    isDefault: boolean
     createdAt: string
     updatedAt: string
 }
