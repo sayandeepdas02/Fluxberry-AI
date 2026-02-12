@@ -10,7 +10,10 @@ import {
     Settings,
     LogOut,
     ShoppingBag,
-    FileText
+    FileText,
+    Workflow,
+    Calendar,
+    Activity
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -107,6 +110,15 @@ export function Sidebar() {
                                 <span>Settings</span>
                             </Link>
 
+                            <Link
+                                href="/dashboard/audit-logs"
+                                onClick={() => setIsDropdownOpen(false)}
+                                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-muted rounded-md transition-colors"
+                            >
+                                <Activity className="w-4 h-4" />
+                                <span>Audit Logs</span>
+                            </Link>
+
                             <div className="h-px bg-border my-1" />
 
                             <button
@@ -179,6 +191,18 @@ export function Sidebar() {
                                 >
                                     Candidate Pool
                                 </Link>
+
+                                <Link
+                                    href="/dashboard/workflows"
+                                    className={cn(
+                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                        isActive("/dashboard/workflows")
+                                            ? "text-foreground bg-muted"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                    )}
+                                >
+                                    Workflows
+                                </Link>
                             </div>
                         </div>
 
@@ -211,6 +235,18 @@ export function Sidebar() {
                                     )}
                                 >
                                     Assessments
+                                </Link>
+                                <Link
+                                    href="/dashboard/interviews"
+                                    className={cn(
+                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                        isActive("/dashboard/interviews")
+                                            ? "text-foreground bg-muted"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                    )}
+                                >
+                                    <Calendar className="w-4 h-4" />
+                                    Interviews
                                 </Link>
                             </div>
                         </div>
