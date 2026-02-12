@@ -4,7 +4,9 @@ import mongoose, { Schema, Document, Types } from 'mongoose'
 export const MemberRole = {
     OWNER: 'OWNER',
     ADMIN: 'ADMIN',
+    HIRING_MANAGER: 'HIRING_MANAGER',
     RECRUITER: 'RECRUITER',
+    INTERVIEWER: 'INTERVIEWER',
 } as const
 export type MemberRoleType = typeof MemberRole[keyof typeof MemberRole]
 
@@ -106,6 +108,42 @@ export const JobStatus = {
 } as const
 export type JobStatusType = typeof JobStatus[keyof typeof JobStatus]
 
+// Pipeline Stage Type
+export const PipelineStageType = {
+    APPLIED: 'APPLIED',
+    SCREENING: 'SCREENING',
+    INTERVIEW: 'INTERVIEW',
+    OFFER: 'OFFER',
+    HIRED: 'HIRED',
+    REJECTED: 'REJECTED',
+    CUSTOM: 'CUSTOM',
+} as const
+export type PipelineStageTypeValue = typeof PipelineStageType[keyof typeof PipelineStageType]
+
+// RBAC Resource/Action enums
+export const RBACResource = {
+    JOBS: 'JOBS',
+    APPLICATIONS: 'APPLICATIONS',
+    CANDIDATES: 'CANDIDATES',
+    PIPELINE: 'PIPELINE',
+    OFFERS: 'OFFERS',
+    ONBOARDING: 'ONBOARDING',
+    ANALYTICS: 'ANALYTICS',
+    ASSESSMENTS: 'ASSESSMENTS',
+    SETTINGS: 'SETTINGS',
+    MEMBERS: 'MEMBERS',
+} as const
+export type RBACResourceType = typeof RBACResource[keyof typeof RBACResource]
+
+export const RBACAction = {
+    CREATE: 'CREATE',
+    READ: 'READ',
+    UPDATE: 'UPDATE',
+    DELETE: 'DELETE',
+    MANAGE: 'MANAGE', // Full access
+} as const
+export type RBACActionType = typeof RBACAction[keyof typeof RBACAction]
+
 export const EmploymentType = {
     FULL_TIME: 'FULL_TIME',
     PART_TIME: 'PART_TIME',
@@ -202,6 +240,8 @@ export interface IUser extends Document {
     authProvider?: string
     authProviderId?: string
     onboardingCompleted: boolean
+    googleAccessToken?: string
+    googleRefreshToken?: string
     createdAt: Date
     updatedAt: Date
 }
@@ -214,6 +254,8 @@ const UserSchema = new Schema<IUser>({
     authProvider: { type: String },
     authProviderId: { type: String },
     onboardingCompleted: { type: Boolean, default: false },
+    googleAccessToken: { type: String },
+    googleRefreshToken: { type: String },
 }, { timestamps: true })
 
 export const User = mongoose.model<IUser>('User', UserSchema)
@@ -262,6 +304,7 @@ export interface IJob extends Document {
     createdBy?: Types.ObjectId
     publishedAt?: Date
     closedAt?: Date
+    deletedAt?: Date
     createdAt: Date
     updatedAt: Date
 }
@@ -270,7 +313,7 @@ const JobSchema = new Schema<IJob>({
     organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
     title: { type: String, required: true },
     description: { type: String, required: true },
-    department: { type: String },
+    department: { type: String, index: true },
     location: { type: String },
     employmentType: { type: String, enum: Object.values(EmploymentType), default: EmploymentType.FULL_TIME },
     status: { type: String, enum: Object.values(JobStatus), default: JobStatus.DRAFT, index: true },
@@ -286,9 +329,45 @@ const JobSchema = new Schema<IJob>({
     createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
     publishedAt: { type: Date },
     closedAt: { type: Date },
+    deletedAt: { type: Date, default: null },
 }, { timestamps: true })
 
+// Compound indexes for common query patterns
+JobSchema.index({ organizationId: 1, status: 1, deletedAt: 1 })
+JobSchema.index({ organizationId: 1, department: 1 })
+
 export const Job = mongoose.model<IJob>('Job', JobSchema)
+
+// ============================================
+// PIPELINE STAGE MODEL (Custom stages per job)
+// ============================================
+export interface IPipelineStage extends Document {
+    _id: Types.ObjectId
+    jobId: Types.ObjectId
+    organizationId: Types.ObjectId
+    name: string
+    type: PipelineStageTypeValue
+    order: number
+    color?: string
+    isDefault: boolean
+    createdAt: Date
+    updatedAt: Date
+}
+
+const PipelineStageSchema = new Schema<IPipelineStage>({
+    jobId: { type: Schema.Types.ObjectId, ref: 'Job', required: true, index: true },
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+    name: { type: String, required: true },
+    type: { type: String, enum: Object.values(PipelineStageType), required: true },
+    order: { type: Number, required: true },
+    color: { type: String },
+    isDefault: { type: Boolean, default: false },
+}, { timestamps: true })
+
+PipelineStageSchema.index({ jobId: 1, order: 1 })
+PipelineStageSchema.index({ jobId: 1, type: 1 })
+
+export const PipelineStage = mongoose.model<IPipelineStage>('PipelineStage', PipelineStageSchema)
 
 // ============================================
 // ORGANIZATION MEMBER MODEL
@@ -325,10 +404,10 @@ export interface ICandidate extends Document {
     lastName?: string
     phone?: string
     source?: string
-    jobId?: Types.ObjectId
     resumeUrl?: string
-    applicationData?: Record<string, unknown>
-    candidateStatus?: ApplicationStatusType
+    parsedResumeData?: Record<string, unknown>
+    tags?: string[]
+    deletedAt?: Date
     createdAt: Date
     updatedAt: Date
 }
@@ -340,14 +419,17 @@ const CandidateSchema = new Schema<ICandidate>({
     lastName: { type: String },
     phone: { type: String },
     source: { type: String },
-    jobId: { type: Schema.Types.ObjectId, ref: 'Job' },
     resumeUrl: { type: String },
-    applicationData: { type: Schema.Types.Mixed },
-    candidateStatus: { type: String, enum: Object.values(ApplicationStatus) },
+    parsedResumeData: { type: Schema.Types.Mixed },
+    tags: [{ type: String }],
+    deletedAt: { type: Date, default: null },
 }, { timestamps: true })
 
 // Compound index for unique email per organization
 CandidateSchema.index({ organizationId: 1, email: 1 }, { unique: true })
+CandidateSchema.index({ organizationId: 1, deletedAt: 1 })
+CandidateSchema.index({ tags: 1 })
+CandidateSchema.index({ firstName: 'text', lastName: 'text', email: 'text', tags: 'text' })
 
 export const Candidate = mongoose.model<ICandidate>('Candidate', CandidateSchema)
 
@@ -359,10 +441,12 @@ export interface IJobApplication extends Document {
     organizationId: Types.ObjectId
     jobId: Types.ObjectId
     candidateId: Types.ObjectId
+    currentStageId?: Types.ObjectId
     applicationData?: Record<string, unknown>
     resumeUrl?: string
     status: ApplicationStatusType
     submittedAt: Date
+    deletedAt?: Date
     createdAt: Date
     updatedAt: Date
 }
@@ -370,14 +454,19 @@ export interface IJobApplication extends Document {
 const JobApplicationSchema = new Schema<IJobApplication>({
     organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
     jobId: { type: Schema.Types.ObjectId, ref: 'Job', required: true, index: true },
-    candidateId: { type: Schema.Types.ObjectId, ref: 'Candidate', required: true },
+    candidateId: { type: Schema.Types.ObjectId, ref: 'Candidate', required: true, index: true },
+    currentStageId: { type: Schema.Types.ObjectId, ref: 'PipelineStage' },
     applicationData: { type: Schema.Types.Mixed },
     resumeUrl: { type: String },
     status: { type: String, enum: Object.values(ApplicationStatus), default: ApplicationStatus.APPLIED },
     submittedAt: { type: Date, default: Date.now },
+    deletedAt: { type: Date, default: null },
 }, { timestamps: true })
 
 JobApplicationSchema.index({ jobId: 1, candidateId: 1 }, { unique: true })
+JobApplicationSchema.index({ organizationId: 1, status: 1, deletedAt: 1 })
+JobApplicationSchema.index({ candidateId: 1, organizationId: 1 })
+JobApplicationSchema.index({ currentStageId: 1 })
 
 export const JobApplication = mongoose.model<IJobApplication>('JobApplication', JobApplicationSchema)
 
@@ -412,6 +501,62 @@ AuditLogSchema.index({ entityType: 1, entityId: 1 })
 export const AuditLog = mongoose.model<IAuditLog>('AuditLog', AuditLogSchema)
 
 // ============================================
+// ROLE PERMISSION MODEL (DB-driven RBAC)
+// ============================================
+export interface IRolePermission extends Document {
+    _id: Types.ObjectId
+    role: MemberRoleType
+    resource: RBACResourceType
+    action: RBACActionType
+    allowed: boolean
+    createdAt: Date
+    updatedAt: Date
+}
+
+const RolePermissionSchema = new Schema<IRolePermission>({
+    role: { type: String, enum: Object.values(MemberRole), required: true },
+    resource: { type: String, enum: Object.values(RBACResource), required: true },
+    action: { type: String, enum: Object.values(RBACAction), required: true },
+    allowed: { type: Boolean, default: false },
+}, { timestamps: true })
+
+RolePermissionSchema.index({ role: 1, resource: 1, action: 1 }, { unique: true })
+
+export const RolePermission = mongoose.model<IRolePermission>('RolePermission', RolePermissionSchema)
+
+// ============================================
+// EMAIL LOG MODEL
+// ============================================
+export interface IEmailLog extends Document {
+    _id: Types.ObjectId
+    organizationId?: Types.ObjectId
+    to: string
+    subject: string
+    template?: string
+    status: 'QUEUED' | 'SENT' | 'FAILED'
+    sentAt?: Date
+    error?: string
+    metadata?: Record<string, unknown>
+    createdAt: Date
+}
+
+const EmailLogSchema = new Schema<IEmailLog>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', index: true },
+    to: { type: String, required: true },
+    subject: { type: String, required: true },
+    template: { type: String },
+    status: { type: String, enum: ['QUEUED', 'SENT', 'FAILED'], default: 'QUEUED' },
+    sentAt: { type: Date },
+    error: { type: String },
+    metadata: { type: Schema.Types.Mixed },
+}, { timestamps: { createdAt: true, updatedAt: false } })
+
+EmailLogSchema.index({ organizationId: 1, createdAt: -1 })
+EmailLogSchema.index({ status: 1 })
+
+export const EmailLog = mongoose.model<IEmailLog>('EmailLog', EmailLogSchema)
+
+// ============================================
 // STAGE HISTORY MODEL
 // ============================================
 export interface IStageHistory extends Document {
@@ -420,6 +565,9 @@ export interface IStageHistory extends Document {
     organizationId: Types.ObjectId
     fromStage: ApplicationStatusType | null
     toStage: ApplicationStatusType
+    fromStageId?: Types.ObjectId
+    toStageId?: Types.ObjectId
+    timeInStageMs?: number
     changedBy: Types.ObjectId
     changedAt: Date
 }
@@ -429,11 +577,15 @@ const StageHistorySchema = new Schema<IStageHistory>({
     organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
     fromStage: { type: String, enum: [...Object.values(ApplicationStatus), null], default: null },
     toStage: { type: String, enum: Object.values(ApplicationStatus), required: true },
+    fromStageId: { type: Schema.Types.ObjectId, ref: 'PipelineStage' },
+    toStageId: { type: Schema.Types.ObjectId, ref: 'PipelineStage' },
+    timeInStageMs: { type: Number },
     changedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     changedAt: { type: Date, default: Date.now },
 }, { timestamps: false })
 
 StageHistorySchema.index({ applicationId: 1, changedAt: -1 })
+StageHistorySchema.index({ toStageId: 1 })
 
 export const StageHistory = mongoose.model<IStageHistory>('StageHistory', StageHistorySchema)
 
@@ -522,6 +674,8 @@ const AssessmentSchema = new Schema<IAssessment>({
     status: { type: String, enum: Object.values(AssessmentStatus), default: AssessmentStatus.DRAFT, index: true },
     rounds: [AssessmentRoundSchema],
 }, { timestamps: true })
+
+AssessmentSchema.index({ jobId: 1 })
 
 export const Assessment = mongoose.model<IAssessment>('Assessment', AssessmentSchema)
 
