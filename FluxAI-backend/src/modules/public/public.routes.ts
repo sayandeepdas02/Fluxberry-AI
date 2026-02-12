@@ -40,4 +40,17 @@ router.post('/run-code', (req, res, next) =>
     publicController.runCode(req, res, next)
 )
 
+// Public Offer Routes
+router.get('/offers/:token', (req, res, next) =>
+    publicController.getOfferByToken(req, res, next)
+)
+
+router.post('/offers/:token/accept', (req, res, next) =>
+    publicController.acceptOffer(req, res, next)
+)
+
+router.post('/offers/:token/decline', (req, res, next) =>
+    publicController.declineOffer(req, res, next)
+)
+
 export default router

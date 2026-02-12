@@ -9,7 +9,8 @@ import {
     UserPlus,
     Settings,
     LogOut,
-    ShoppingBag
+    ShoppingBag,
+    FileText
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -48,9 +49,7 @@ export function Sidebar() {
     }, []);
 
     const handleLogout = () => {
-        // Navigate first, then logout to prevent ProtectedRoute from redirecting to /signin
         router.push("/");
-        // Small delay to allow navigation to start before clearing auth
         setTimeout(() => {
             logout();
         }, 100);
@@ -92,7 +91,6 @@ export function Sidebar() {
                             <button
                                 onClick={() => {
                                     setIsDropdownOpen(false);
-                                    // TODO: Open invite modal
                                 }}
                                 className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-muted rounded-md transition-colors"
                             >
@@ -150,7 +148,7 @@ export function Sidebar() {
                                     href="/dashboard"
                                     className={cn(
                                         "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
-                                        isActive("/dashboard")
+                                        isActive("/dashboard") && !pathname?.startsWith("/dashboard/onboarding") && !pathname?.startsWith("/dashboard/analytics") && !pathname?.startsWith("/dashboard/assessments")
                                             ? "text-foreground bg-muted"
                                             : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                     )}
@@ -213,6 +211,61 @@ export function Sidebar() {
                                     )}
                                 >
                                     Assessments
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* Onboarding (New) */}
+                        <div className="space-y-1">
+                            <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-foreground hover:text-foreground transition-colors group">
+                                <FileText className="w-4 h-4" />
+                                <span>Onboarding</span>
+                            </button>
+
+                            <div className="ml-4 space-y-0.5 border-l border-border/50 pl-2">
+                                <Link
+                                    href="/dashboard/onboarding/offers"
+                                    className={cn(
+                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                        isActive("/dashboard/onboarding/offers")
+                                            ? "text-foreground bg-muted"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                    )}
+                                >
+                                    Offers
+                                </Link>
+                                <Link
+                                    href="/dashboard/onboarding/active"
+                                    className={cn(
+                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                        isActive("/dashboard/onboarding/active")
+                                            ? "text-foreground bg-muted"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                    )}
+                                >
+                                    Active
+                                </Link>
+                                <Link
+                                    href="/dashboard/onboarding/completed"
+                                    className={cn(
+                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                        isActive("/dashboard/onboarding/completed")
+                                            ? "text-foreground bg-muted"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                    )}
+                                >
+                                    Completed
+                                </Link>
+                                <Link
+                                    href="/dashboard/onboarding/templates"
+                                    className={cn(
+                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                        isActive("/dashboard/onboarding/templates")
+                                            ? "text-foreground bg-muted"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                    )}
+                                >
+                                    Templates
                                 </Link>
                             </div>
                         </div>

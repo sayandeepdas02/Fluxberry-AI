@@ -191,7 +191,7 @@ export class AttemptsService {
             assessmentId,
             candidateId: candidate._id,
             status: 'NOT_STARTED',
-            rounds: roundsToCreate,
+            rounds: roundsToCreate as any,
         })
 
         return this.formatAttempt(attempt, assessment.title)
@@ -616,7 +616,7 @@ export class AttemptsService {
             // Time expired: mark question as EXPIRED, do not save answer, advance to next
             if (questionAttempt) {
                 questionAttempt.status = QuestionStatus.EXPIRED
-                questionAttempt.endedAt = new Date(new Date(questionAttempt.startedAt).getTime() + perQuestionTimeLimit * 1000)
+                questionAttempt.endedAt = new Date(new Date(questionAttempt!.startedAt!).getTime() + perQuestionTimeLimit * 1000)
             }
 
             const nextQuestionIndex = questionIndex + 1

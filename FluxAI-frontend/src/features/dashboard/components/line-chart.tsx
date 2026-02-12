@@ -146,7 +146,7 @@ export function LineChart({ data }: LineChartProps) {
                             const x = padding.left + index * xScale;
                             return (
                                 <text
-                                    key={month}
+                                    key={`${month}-${index}`}
                                     x={x}
                                     y={height - padding.bottom + 20}
                                     textAnchor="middle"

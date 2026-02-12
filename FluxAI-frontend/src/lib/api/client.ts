@@ -39,6 +39,14 @@ class ApiClient {
             ...options.headers,
         }
 
+        // If body is FormData, remove Content-Type to let browser set boundary
+        if (options.body instanceof FormData) {
+            // Check if headers is an object or Headers instance
+            if (headers && typeof headers === 'object' && !('delete' in headers)) {
+                delete (headers as Record<string, string>)['Content-Type'];
+            }
+        }
+
         if (token) {
             (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`
         }
@@ -49,6 +57,7 @@ class ApiClient {
                 headers,
             })
 
+            // ... rest is same
             const data = await response.json()
 
             if (!response.ok) {
@@ -68,7 +77,7 @@ class ApiClient {
         }
     }
 
-    async get<T>(endpoint: string, params?: Record<string, any>): Promise<ApiResponse<T>> {
+    async get<T>(endpoint: string, params?: Record<string, any>, options?: RequestInit): Promise<ApiResponse<T>> {
         let url = endpoint
         if (params) {
             const searchParams = new URLSearchParams()
@@ -82,27 +91,33 @@ class ApiClient {
                 url += `?${queryString}`
             }
         }
-        return this.request<T>(url, { method: 'GET' })
+        return this.request<T>(url, { ...options, method: 'GET' })
     }
 
-    async post<T>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {
+    async post<T>(endpoint: string, body?: unknown, options?: RequestInit): Promise<ApiResponse<T>> {
+        const isFormData = body instanceof FormData;
         return this.request<T>(endpoint, {
+            ...options,
             method: 'POST',
-            body: body ? JSON.stringify(body) : undefined,
+            body: isFormData ? (body as BodyInit) : (body ? JSON.stringify(body) : undefined),
         })
     }
 
-    async patch<T>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {
+    async patch<T>(endpoint: string, body?: unknown, options?: RequestInit): Promise<ApiResponse<T>> {
+        const isFormData = body instanceof FormData;
         return this.request<T>(endpoint, {
+            ...options,
             method: 'PATCH',
-            body: body ? JSON.stringify(body) : undefined,
+            body: isFormData ? (body as BodyInit) : (body ? JSON.stringify(body) : undefined),
         })
     }
 
-    async put<T>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {
+    async put<T>(endpoint: string, body?: unknown, options?: RequestInit): Promise<ApiResponse<T>> {
+        const isFormData = body instanceof FormData;
         return this.request<T>(endpoint, {
+            ...options,
             method: 'PUT',
-            body: body ? JSON.stringify(body) : undefined,
+            body: isFormData ? (body as BodyInit) : (body ? JSON.stringify(body) : undefined),
         })
     }
 

@@ -96,6 +96,34 @@ aiInterviewWorker.on('error', (err) => {
 })
 
 // ============================================
+// OFFER EXPIRY WORKER
+// ============================================
+import { processOfferExpiryJob } from './processors/offer-expiry.processor.js'
+
+const offerExpiryWorker = new Worker(
+    'offer-expiry',
+    async (job) => {
+        await processOfferExpiryJob(job)
+    },
+    {
+        connection: redisConnection,
+        concurrency: 1, // Only need 1 worker for this cron job
+    }
+)
+
+offerExpiryWorker.on('completed', (job) => {
+    console.log(`✅ Offer Expiry job ${job.id} completed`)
+})
+
+offerExpiryWorker.on('failed', (job, err) => {
+    console.error(`❌ Offer Expiry job ${job?.id} failed:`, err.message)
+})
+
+offerExpiryWorker.on('error', (err) => {
+    console.error('Offer Expiry worker error:', err.message)
+})
+
+// ============================================
 // GRACEFUL SHUTDOWN
 // ============================================
 
@@ -104,6 +132,7 @@ async function shutdown() {
     await evaluationWorker.close()
     await notificationWorker.close()
     await aiInterviewWorker.close()
+    await offerExpiryWorker.close()
     await redisConnection.quit()
     console.log('Workers shut down gracefully')
     process.exit(0)
@@ -116,4 +145,5 @@ console.log('👷 Workers started:')
 console.log('   - evaluation (concurrency: 5)')
 console.log('   - notification (concurrency: 3)')
 console.log('   - ai-interview (concurrency: 3)')
+console.log('   - offer-expiry (concurrency: 1)')
 

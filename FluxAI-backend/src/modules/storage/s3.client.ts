@@ -165,3 +165,41 @@ export function saveLocalFile(storageKey: string, data: Buffer): void {
     fs.writeFileSync(filePath, data)
 }
 
+
+/**
+ * Upload a server-side buffer to storage and return its public URL
+ */
+export async function uploadFile(
+    storageKey: string,
+    buffer: Buffer,
+    mimeType: string
+): Promise<string> {
+    if (!S3_CONFIGURED) {
+        // Dev mode: save locally
+        const filePath = path.join(LOCAL_UPLOAD_DIR, storageKey)
+        const dir = path.dirname(filePath)
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+        fs.writeFileSync(filePath, buffer)
+
+        const serverPort = process.env.PORT || 5001
+        return `http://localhost:${serverPort}/api/uploads/local/${encodeURIComponent(storageKey)}`
+    }
+
+    const command = new PutObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: storageKey,
+        Body: buffer,
+        ContentType: mimeType,
+    })
+
+    await s3Client.send(command)
+
+    // Construct Public URL (Or use CloudFront if configured, but for now standard S3)
+    if (ENDPOINT) {
+        // MinIO or custom
+        return `${ENDPOINT}/${BUCKET_NAME}/${storageKey}`
+    } else {
+        // AWS S3
+        return `https://${BUCKET_NAME}.s3.${REGION}.amazonaws.com/${storageKey}`
+    }
+}

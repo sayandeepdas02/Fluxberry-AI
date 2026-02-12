@@ -1,12 +1,16 @@
 import 'dotenv/config'
 import { createApp } from './app.js'
 import { connectMongoDB, disconnectMongoDB } from './database/mongodb.js'
+import { initScheduler } from './jobs/scheduler.js'
 
 const PORT = process.env.PORT || 5001
 
 async function main() {
     // Connect to MongoDB before starting server
     await connectMongoDB()
+
+    // Initialize Jobs
+    await initScheduler()
 
     const app = createApp()
 
