@@ -89,7 +89,7 @@ export class QuestionsService {
         if (body.type != null) question.type = body.type
         if (body.mcqDetails != null) question.mcqDetails = body.mcqDetails
         if (body.dsaDetails != null) {
-            const existing = question.dsaDetails ?? {}
+            const existing = question.dsaDetails ?? ({} as any)
             question.dsaDetails = {
                 prompt: body.dsaDetails.prompt ?? existing.prompt ?? '',
                 constraints: body.dsaDetails.constraints !== undefined ? body.dsaDetails.constraints ?? undefined : existing.constraints,

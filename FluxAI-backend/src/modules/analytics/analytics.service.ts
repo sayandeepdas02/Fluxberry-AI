@@ -85,7 +85,7 @@ class AnalyticsService {
         const applied = stageDistribution[ApplicationStatus.APPLIED] || 0
         const screening = stageDistribution[ApplicationStatus.SCREENING] || 0
         const interview = stageDistribution[ApplicationStatus.INTERVIEW] || 0
-        const offer = stageDistribution[ApplicationStatus.OFFER] || 0
+        const offer = stageDistribution[ApplicationStatus.OFFER_SENT] || 0
         const hired = stageDistribution[ApplicationStatus.HIRED] || 0
 
         const conversionRates = {
