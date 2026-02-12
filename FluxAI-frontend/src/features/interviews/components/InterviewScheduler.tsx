@@ -1,0 +1,247 @@
+import React, { useEffect, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { Calendar as CalendarIcon, Save, ArrowLeft, Clock } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { interviewsApi, IInterview } from '@/lib/api/interviews'
+import { candidatesApi, Candidate } from '@/lib/api/candidates'
+import { jobsApi, Job } from '@/lib/api/jobs'
+import { organizationsApi, OrganizationMember } from '@/lib/api/organizations'
+import { toast } from 'sonner'
+import { format } from 'date-fns'
+
+export function InterviewScheduler() {
+    const params = useParams()
+    const router = useRouter()
+    const id = params?.id ? (Array.isArray(params.id) ? params.id[0] : params.id) : undefined
+    const isNew = !id || id === 'new'
+
+    const [loading, setLoading] = useState(false)
+    const [candidates, setCandidates] = useState<Candidate[]>([])
+    const [jobs, setJobs] = useState<Job[]>([])
+    const [interviewers, setInterviewers] = useState<OrganizationMember[]>([])
+
+    // Form State
+    const [formData, setFormData] = useState<Partial<IInterview>>({
+        summary: '',
+        start: '',
+        end: '',
+        attendees: [],
+        status: 'SCHEDULED'
+    })
+
+    // UI Helpers for datetime input (native datetime-local uses YYYY-MM-DDTHH:mm)
+    const [startDate, setStartDate] = useState('')
+    const [endDate, setEndDate] = useState('')
+
+    useEffect(() => {
+        Promise.all([
+            loadCandidates(),
+            loadJobs(),
+            loadInterviewers(),
+            !isNew && id ? loadInterview(id) : Promise.resolve()
+        ])
+    }, [id])
+
+    const loadCandidates = async () => {
+        const res = await candidatesApi.list({ limit: 100 })
+        if (res.success && res.data) setCandidates(res.data.candidates)
+    }
+
+    const loadJobs = async () => {
+        const res = await jobsApi.list()
+        if (res.success && res.data) setJobs(res.data.jobs)
+    }
+
+    const loadInterviewers = async () => {
+        const res = await organizationsApi.getCurrentMembers()
+        if (res.success && res.data) setInterviewers(res.data)
+    }
+
+    const loadInterview = async (interviewId: string) => {
+        setLoading(true)
+        try {
+            const res = await interviewsApi.getById(interviewId)
+            if (res.success && res.data) {
+                setFormData(res.data)
+                // Convert ISO strings to local datetime string for input
+                if (res.data.start) setStartDate(format(new Date(res.data.start), "yyyy-MM-dd'T'HH:mm"))
+                if (res.data.end) setEndDate(format(new Date(res.data.end), "yyyy-MM-dd'T'HH:mm"))
+            }
+        } catch (error) {
+            toast.error('Failed to load interview')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleSave = async () => {
+        if (!formData.candidateId || !formData.jobId || !startDate || !endDate) {
+            return toast.error('Please fill in all required fields')
+        }
+
+        setLoading(true)
+        const payload = {
+            ...formData,
+            start: new Date(startDate).toISOString(),
+            end: new Date(endDate).toISOString(),
+        }
+
+        try {
+            if (isNew) {
+                await interviewsApi.create(payload)
+                toast.success('Interview scheduled')
+            } else if (id) {
+                await interviewsApi.update(id, payload)
+                toast.success('Interview updated')
+            }
+            router.push('/dashboard/interviews')
+        } catch (error) {
+            toast.error('Failed to save interview')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    // Handle multi-select for attendees (interviewers)
+    const toggleAttendee = (email: string) => {
+        const current = formData.attendees || []
+        const exists = current.find(a => a.email === email)
+        if (exists) {
+            setFormData({ ...formData, attendees: current.filter(a => a.email !== email) })
+        } else {
+            setFormData({ ...formData, attendees: [...current, { email }] })
+        }
+    }
+
+    if (loading && !isNew) return <div>Loading...</div>
+
+    return (
+        <div className="space-y-6 max-w-3xl mx-auto pb-20">
+            <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" onClick={() => router.push('/dashboard/interviews')}>
+                    <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <h2 className="text-2xl font-bold tracking-tight">
+                    {isNew ? 'Schedule Interview' : 'Edit Interview'}
+                </h2>
+            </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                            <Label>Candidate</Label>
+                            <Select
+                                value={formData.candidateId}
+                                onValueChange={(val) => setFormData({ ...formData, candidateId: val })}
+                                disabled={!isNew}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select Candidate" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {candidates.map(c => (
+                                        <SelectItem key={c._id} value={c._id}>
+                                            {c.firstName} {c.lastName} ({c.email})
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label>Job</Label>
+                            <Select
+                                value={formData.jobId}
+                                onValueChange={(val) => setFormData({ ...formData, jobId: val })}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select Job" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {jobs.map(j => (
+                                        <SelectItem key={j._id} value={j._id}>
+                                            {j.title}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label>Interview Summary/Title</Label>
+                        <Input
+                            value={formData.summary}
+                            onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
+                            placeholder="e.g. Technical Screen with John"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                            <Label>Start Time</Label>
+                            <Input
+                                type="datetime-local"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label>End Time</Label>
+                            <Input
+                                type="datetime-local"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label>Interviewers (Attendees)</Label>
+                        <div className="grid grid-cols-2 gap-2 border p-4 rounded-md h-40 overflow-y-auto">
+                            {interviewers.map(member => (
+                                <div key={member._id} className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id={member._id}
+                                        checked={formData.attendees?.some(a => a.email === member.email)}
+                                        onCheckedChange={() => toggleAttendee(member.email)}
+                                    />
+                                    <Label htmlFor={member._id}>{member.firstName} {member.lastName}</Label>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label>Meeting Link (Optional)</Label>
+                        <Input
+                            value={formData.meetLink || ''}
+                            onChange={(e) => setFormData({ ...formData, meetLink: e.target.value })}
+                            placeholder="https://meet.google.com/..."
+                        />
+                    </div>
+                </CardContent>
+            </Card>
+
+            <div className="flex justify-end">
+                <Button onClick={handleSave} disabled={loading} size="lg">
+                    {loading ? 'Scheduling...' : 'Schedule Interview'}
+                </Button>
+            </div>
+        </div>
+    )
+}
