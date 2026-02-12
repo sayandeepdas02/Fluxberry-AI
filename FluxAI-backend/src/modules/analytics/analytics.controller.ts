@@ -10,12 +10,14 @@ export class AnalyticsController {
     async getKPIs(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
         try {
             const organizationId = req.user?.organizationId
+            const jobId = req.query.jobId as string | undefined
+
             if (!organizationId) {
                 res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
                 return
             }
 
-            const data = await analyticsService.getKPIs(organizationId)
+            const data = await analyticsService.getKPIs(organizationId, jobId)
             res.json(successResponse(data))
         } catch (error) {
             next(error)
@@ -28,12 +30,15 @@ export class AnalyticsController {
     async getTrends(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
         try {
             const organizationId = req.user?.organizationId
+            const jobId = req.query.jobId as string | undefined
+            const timeframe = req.query.timeframe as 'week' | 'month' | undefined
+
             if (!organizationId) {
                 res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
                 return
             }
 
-            const data = await analyticsService.getTrends(organizationId)
+            const data = await analyticsService.getApplicationVolume(organizationId, timeframe, jobId)
             res.json(successResponse(data))
         } catch (error) {
             next(error)
@@ -46,12 +51,59 @@ export class AnalyticsController {
     async getDemographics(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
         try {
             const organizationId = req.user?.organizationId
+            const jobId = req.query.jobId as string | undefined
+
             if (!organizationId) {
                 res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
                 return
             }
 
-            const data = await analyticsService.getDemographics(organizationId)
+            const sourceData = await analyticsService.getSourcePerformance(organizationId, jobId)
+
+            // For now, location is empty as defined in service
+            res.json(successResponse({
+                device: sourceData, // Mapping source to device for backward compatibility or UI expectation
+                location: []
+            }))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    /**
+     * GET /api/analytics/funnel
+     */
+    async getFunnel(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const organizationId = req.user?.organizationId
+            const jobId = req.query.jobId as string | undefined
+
+            if (!organizationId) {
+                res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
+                return
+            }
+
+            const data = await analyticsService.getFunnelMetrics(organizationId, jobId)
+            res.json(successResponse(data))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    /**
+     * GET /api/analytics/time-to-hire
+     */
+    async getTimeToHire(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const organizationId = req.user?.organizationId
+            const jobId = req.query.jobId as string | undefined
+
+            if (!organizationId) {
+                res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
+                return
+            }
+
+            const data = await analyticsService.getTimeToHire(organizationId, jobId)
             res.json(successResponse(data))
         } catch (error) {
             next(error)

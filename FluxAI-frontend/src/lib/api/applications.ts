@@ -25,6 +25,13 @@ export interface JobApplicationResponse {
     applicationData?: Record<string, unknown>
     resumeUrl?: string
     status: ApplicationStage
+    currentStageId?: {
+        _id: string
+        name: string
+        type: string
+        color: string
+        order: number
+    }
     submittedAt: string
     createdAt: string
     updatedAt: string
@@ -65,11 +72,23 @@ export const applicationsApi = {
         return apiClient.get(`/applications/${id}`)
     },
 
+    // Legacy: string-based status
     updateStage: async (id: string, stage: ApplicationStage): Promise<ApiResponse<JobApplicationResponse>> => {
         return apiClient.patch(`/applications/${id}/stage`, { stage })
     },
 
+    // New: stage-ID based
+    moveStage: async (id: string, stageId: string): Promise<ApiResponse<JobApplicationResponse>> => {
+        return apiClient.patch(`/applications/${id}/move-stage`, { stageId })
+    },
+
+    // Legacy: string-based bulk update
     bulkUpdate: async (input: BulkUpdateInput): Promise<ApiResponse<BulkUpdateResponse>> => {
         return apiClient.post('/applications/bulk-update', input)
+    },
+
+    // New: stage-ID based bulk move
+    bulkMove: async (applicationIds: string[], stageId: string): Promise<ApiResponse<BulkUpdateResponse>> => {
+        return apiClient.post('/applications/bulk-move', { applicationIds, stageId })
     },
 }

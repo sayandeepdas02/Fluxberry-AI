@@ -19,6 +19,7 @@ export const listCandidatesQuerySchema = z.object({
     stage: z.enum(['APPLIED', 'SCREENING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJECTED']).optional(),
     dateFrom: z.string().optional(),
     dateTo: z.string().optional(),
+    tags: z.string().optional(), // Comma-separated tags
 })
 
 export const createNoteSchema = z.object({

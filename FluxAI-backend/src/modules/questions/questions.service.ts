@@ -67,7 +67,7 @@ export class QuestionsService {
                 testCases: body.dsaDetails.testCases,
             }
         }
-        const question = await Question.create(doc as IQuestion)
+        const question = await Question.create(doc as unknown as IQuestion)
         return this.formatQuestion(question as IQuestion)
     }
 
@@ -85,7 +85,7 @@ export class QuestionsService {
         if (body.title != null) question.title = body.title
         if (body.difficulty != null) question.difficulty = body.difficulty
         if (body.topics != null) question.topics = body.topics
-        if (body.metadata !== undefined) question.metadata = body.metadata
+        if (body.metadata !== undefined) question.metadata = body.metadata as Record<string, unknown> | undefined
         if (body.type != null) question.type = body.type
         if (body.mcqDetails != null) question.mcqDetails = body.mcqDetails
         if (body.dsaDetails != null) {
