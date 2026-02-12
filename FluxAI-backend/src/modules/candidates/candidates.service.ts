@@ -1,5 +1,5 @@
-import { Candidate, ICandidate, AssessmentAttempt } from '../../database/models/index.js'
-import { CreateCandidateInput, UpdateCandidateInput, ListCandidatesQuery } from './candidates.types.js'
+import { Candidate, ICandidate, AssessmentAttempt, JobApplication, StageHistory, CandidateNote } from '../../database/models/index.js'
+import { CreateCandidateInput, UpdateCandidateInput, ListCandidatesQuery, CreateNoteInput } from './candidates.types.js'
 
 class CandidatesService {
     async create(organizationId: string, input: CreateCandidateInput): Promise<ICandidate> {
@@ -16,7 +16,7 @@ class CandidatesService {
     }
 
     async list(organizationId: string, query: ListCandidatesQuery): Promise<{ candidates: ICandidate[], total: number, page: number, totalPages: number }> {
-        const { page = 1, limit = 20, search, source } = query
+        const { page = 1, limit = 20, search, source, jobId, stage, dateFrom, dateTo } = query
         const skip = (page - 1) * limit
 
         const filter: any = { organizationId }
@@ -31,6 +31,24 @@ class CandidatesService {
                 { firstName: { $regex: search, $options: 'i' } },
                 { lastName: { $regex: search, $options: 'i' } }
             ]
+        }
+
+        // Filter by job and/or stage via JobApplication lookup
+        if (jobId || stage) {
+            const appFilter: any = { organizationId }
+            if (jobId) appFilter.jobId = jobId
+            if (stage) appFilter.status = stage
+
+            const matchingApps = await JobApplication.find(appFilter).select('candidateId').lean()
+            const candidateIds = [...new Set(matchingApps.map(a => a.candidateId.toString()))]
+            filter._id = { $in: candidateIds }
+        }
+
+        // Date range filter
+        if (dateFrom || dateTo) {
+            filter.createdAt = {}
+            if (dateFrom) filter.createdAt.$gte = new Date(dateFrom)
+            if (dateTo) filter.createdAt.$lte = new Date(dateTo)
         }
 
         const [candidates, total] = await Promise.all([
@@ -57,6 +75,46 @@ class CandidatesService {
         return candidate
     }
 
+    /**
+     * Full candidate detail: candidate + applications + stage history + notes
+     */
+    async getDetail(id: string, organizationId: string) {
+        const candidate = await this.getById(id, organizationId)
+
+        const [applications, notes, history] = await Promise.all([
+            JobApplication.find({ candidateId: id, organizationId })
+                .populate('jobId', 'title status department location')
+                .sort({ submittedAt: -1 })
+                .lean(),
+            CandidateNote.find({ candidateId: id, organizationId })
+                .populate('authorId', 'firstName lastName email')
+                .sort({ createdAt: -1 })
+                .lean(),
+            StageHistory.find({ organizationId })
+                .where('applicationId')
+                .in(
+                    (await JobApplication.find({ candidateId: id, organizationId }).select('_id').lean())
+                        .map(a => a._id)
+                )
+                .populate('changedBy', 'firstName lastName')
+                .sort({ changedAt: -1 })
+                .lean(),
+        ])
+
+        // Also get assessment attempt history
+        const attempts = await AssessmentAttempt.find({ candidateId: id })
+            .populate('assessmentId', 'title status')
+            .sort({ createdAt: -1 })
+
+        return {
+            candidate,
+            applications,
+            notes,
+            stageHistory: history,
+            assessmentHistory: attempts,
+        }
+    }
+
     async getHistory(id: string, organizationId: string): Promise<any> {
         // Verify candidate exists
         await this.getById(id, organizationId)
@@ -79,6 +137,23 @@ class CandidatesService {
             throw { code: 'NOT_FOUND', message: 'Candidate not found' }
         }
         return candidate
+    }
+
+    async addNote(candidateId: string, organizationId: string, authorId: string, input: CreateNoteInput) {
+        // Verify candidate exists in org
+        await this.getById(candidateId, organizationId)
+
+        const note = await CandidateNote.create({
+            candidateId,
+            organizationId,
+            authorId,
+            content: input.content,
+        })
+
+        // Populate author for response
+        return CandidateNote.findById(note._id)
+            .populate('authorId', 'firstName lastName email')
+            .lean()
     }
 }
 

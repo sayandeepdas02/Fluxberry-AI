@@ -1,98 +1,221 @@
-import { Job, Candidate, AssessmentAttempt, AnalyticsSnapshot } from '../../database/models/index.js'
+import { Job, Candidate, AssessmentAttempt, AnalyticsSnapshot, JobApplication, StageHistory, ApplicationStatus } from '../../database/models/index.js'
 import { KPIData, AnalyticsTrendData, DemographicsData } from './analytics.types.js'
 
 class AnalyticsService {
     async getKPIs(organizationId: string): Promise<Record<string, KPIData>> {
-        // Real-time aggregation
         const [
             activeJobs,
+            totalJobs,
             totalCandidates,
-            completedAttempts
+            totalApplications,
+            awaitingReview,
         ] = await Promise.all([
-            Job.countDocuments({ organizationId, status: 'LIVE' }),
+            Job.countDocuments({ organizationId, status: 'PUBLISHED' }),
+            Job.countDocuments({ organizationId }),
             Candidate.countDocuments({ organizationId }),
-            AssessmentAttempt.countDocuments({
-                // We need to join with Assessment to check organizationId, or assume candidate count implies org scope
-                // Since AssessmentAttempt doesn't have direct orgId, we rely on candidates or assessments queries.
-                // Ideally schema should have orgId de-normalized on attempts for speed.
-                // For now, we query assessments first.
-            })
+            JobApplication.countDocuments({ organizationId }),
+            JobApplication.countDocuments({ organizationId, status: ApplicationStatus.APPLIED }),
         ])
 
-        // Correction: AssessmentAttempt -> Assessment -> Org
-        // Efficient way: Find all assessment IDs for this org
-        // const assessments = await Assessment.find({ organizationId }).select('_id')
-        // const assessmentIds = assessments.map(a => a._id)
-        // const attemptsCount = await AssessmentAttempt.countDocuments({ assessmentId: { $in: assessmentIds }, status: 'COMPLETED' })
-
-        // Simulating trends for now (randomized or 0) since we lack historical snapshot data seeding
         return {
             activeJobs: {
                 label: 'Active Jobs',
                 value: activeJobs,
-                trend: 12,
-                trendDirection: 'up'
+                trend: 0,
+                trendDirection: 'neutral'
             },
             totalCandidates: {
                 label: 'Total Candidates',
                 value: totalCandidates,
-                trend: 5,
-                trendDirection: 'up'
+                trend: 0,
+                trendDirection: 'neutral'
             },
-            // Placeholder for ROI/Applications until we define "Applications" strictly
             applications: {
                 label: 'Total Applications',
-                value: totalCandidates, // using candidates as proxy for now
-                trend: 8,
-                trendDirection: 'up'
+                value: totalApplications,
+                trend: 0,
+                trendDirection: 'neutral'
             },
             awaitingReview: {
                 label: 'Awaiting Review',
-                value: 0, // Implement real count if needed
+                value: awaitingReview,
                 trend: 0,
                 trendDirection: 'neutral'
             }
         }
     }
 
-    async getTrends(organizationId: string, timeframe: 'week' | 'month' = 'month'): Promise<AnalyticsTrendData[]> {
-        // Fetch from AnalyticsSnapshot if available, or real-time aggregate by date
-        const snapshots = await AnalyticsSnapshot.find({ organizationId })
-            .sort({ date: 1 })
-            .limit(30)
+    /**
+     * ATS-specific analytics: conversion rates, stage distribution, avg time in stage
+     */
+    async getATSAnalytics(organizationId: string) {
+        const [
+            totalJobs,
+            activeJobs,
+            totalCandidates,
+            totalApplications,
+        ] = await Promise.all([
+            Job.countDocuments({ organizationId }),
+            Job.countDocuments({ organizationId, status: 'PUBLISHED' }),
+            Candidate.countDocuments({ organizationId }),
+            JobApplication.countDocuments({ organizationId }),
+        ])
 
-        if (snapshots.length > 0) {
-            return snapshots.map(s => ({
-                date: s.date.toISOString().split('T')[0],
-                value: s.engagedCandidates // or totalReach
-            }))
+        // Stage distribution across all org applications
+        const stageAgg = await JobApplication.aggregate([
+            { $match: { organizationId: { $exists: true } } },
+            {
+                $addFields: {
+                    orgIdStr: { $toString: '$organizationId' }
+                }
+            },
+            { $match: { orgIdStr: organizationId } },
+            { $group: { _id: '$status', count: { $sum: 1 } } },
+        ])
+
+        const stageDistribution: Record<string, number> = {}
+        for (const stage of Object.values(ApplicationStatus)) {
+            stageDistribution[stage] = 0
+        }
+        for (const item of stageAgg) {
+            stageDistribution[item._id] = item.count
         }
 
-        // Fallback: Mock data if no history exists yet
-        return Array.from({ length: 7 }, (_, i) => {
-            const d = new Date()
-            d.setDate(d.getDate() - (6 - i))
-            return {
-                date: d.toISOString().split('T')[0],
-                value: Math.floor(Math.random() * 50)
+        // Conversion rates
+        const applied = stageDistribution[ApplicationStatus.APPLIED] || 0
+        const screening = stageDistribution[ApplicationStatus.SCREENING] || 0
+        const interview = stageDistribution[ApplicationStatus.INTERVIEW] || 0
+        const offer = stageDistribution[ApplicationStatus.OFFER] || 0
+        const hired = stageDistribution[ApplicationStatus.HIRED] || 0
+
+        const conversionRates = {
+            appliedToInterview: totalApplications > 0
+                ? Math.round(((interview + offer + hired) / totalApplications) * 100)
+                : 0,
+            interviewToOffer: (interview + offer + hired) > 0
+                ? Math.round(((offer + hired) / (interview + offer + hired)) * 100)
+                : 0,
+            offerToHired: (offer + hired) > 0
+                ? Math.round((hired / (offer + hired)) * 100)
+                : 0,
+        }
+
+        // Avg time in stage (from stage history)
+        const avgTimeAgg = await StageHistory.aggregate([
+            {
+                $addFields: {
+                    orgIdStr: { $toString: '$organizationId' }
+                }
+            },
+            { $match: { orgIdStr: organizationId } },
+            { $sort: { applicationId: 1, changedAt: 1 } },
+            {
+                $group: {
+                    _id: '$fromStage',
+                    avgDays: {
+                        $avg: {
+                            $divide: [
+                                { $subtract: ['$changedAt', { $ifNull: ['$createdAt', '$changedAt'] }] },
+                                1000 * 60 * 60 * 24
+                            ]
+                        }
+                    }
+                }
             }
-        })
+        ])
+
+        const avgTimeInStage: Record<string, number> = {}
+        for (const item of avgTimeAgg) {
+            if (item._id) {
+                avgTimeInStage[item._id] = Math.round(item.avgDays * 10) / 10
+            }
+        }
+
+        return {
+            totalJobs,
+            activeJobs,
+            totalCandidates,
+            totalApplications,
+            conversionRates,
+            stageDistribution,
+            avgTimeInStage,
+        }
+    }
+
+    async getTrends(organizationId: string, timeframe: 'week' | 'month' = 'month'): Promise<AnalyticsTrendData[]> {
+        // Aggregate applications by day for the last 30 days
+        const daysBack = timeframe === 'week' ? 7 : 30
+        const startDate = new Date()
+        startDate.setDate(startDate.getDate() - daysBack)
+
+        const pipeline = await JobApplication.aggregate([
+            {
+                $addFields: { orgIdStr: { $toString: '$organizationId' } }
+            },
+            {
+                $match: {
+                    orgIdStr: organizationId,
+                    submittedAt: { $gte: startDate }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        $dateToString: { format: '%Y-%m-%d', date: '$submittedAt' }
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ])
+
+        // Fill in missing dates with 0
+        const result: AnalyticsTrendData[] = []
+        for (let i = 0; i < daysBack; i++) {
+            const d = new Date()
+            d.setDate(d.getDate() - (daysBack - 1 - i))
+            const dateStr = d.toISOString().split('T')[0]
+            const found = pipeline.find((p: any) => p._id === dateStr)
+            result.push({ date: dateStr, value: found ? found.count : 0 })
+        }
+
+        return result
     }
 
     async getDemographics(organizationId: string): Promise<{ device: DemographicsData[], location: DemographicsData[] }> {
-        // In a real app, we would aggregate UserAgent data from attempts
-        // For now returning static structure that frontend expects, but could be powered by DB later
+        // Aggregate application sources
+        const sourceAgg = await JobApplication.aggregate([
+            {
+                $addFields: { orgIdStr: { $toString: '$organizationId' } }
+            },
+            { $match: { orgIdStr: organizationId } },
+            {
+                $lookup: {
+                    from: 'candidates',
+                    localField: 'candidateId',
+                    foreignField: '_id',
+                    as: 'candidate'
+                }
+            },
+            { $unwind: '$candidate' },
+            {
+                $group: {
+                    _id: { $ifNull: ['$candidate.source', 'Direct'] },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { count: -1 } }
+        ])
+
+        const total = sourceAgg.reduce((sum: number, item: any) => sum + item.count, 0) || 1
+
         return {
-            device: [
-                { label: 'Desktop', value: 80, percentage: 80 },
-                { label: 'Mobile', value: 15, percentage: 15 },
-                { label: 'Tablet', value: 5, percentage: 5 }
-            ],
-            location: [
-                { label: 'United States', value: 45, percentage: 45 },
-                { label: 'India', value: 30, percentage: 30 },
-                { label: 'Europe', value: 25, percentage: 25 }
-            ]
+            device: sourceAgg.map((item: any) => ({
+                label: item._id,
+                value: item.count,
+                percentage: Math.round((item.count / total) * 100)
+            })),
+            location: [] // No location data tracked yet
         }
     }
 }

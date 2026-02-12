@@ -19,6 +19,21 @@ class DashboardService {
             recentCandidates: recentCandidates.candidates
         }
     }
+
+    async getAnalytics(organizationId: string) {
+        const [atsAnalytics, trends, demographics] = await Promise.all([
+            analyticsService.getATSAnalytics(organizationId),
+            analyticsService.getTrends(organizationId, 'month'),
+            analyticsService.getDemographics(organizationId),
+        ])
+
+        return {
+            ...atsAnalytics,
+            hiringTrends: trends,
+            applicationSources: demographics.device,
+        }
+    }
 }
 
 export const dashboardService = new DashboardService()
+

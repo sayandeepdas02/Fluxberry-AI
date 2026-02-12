@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { dashboardApi, DashboardSummary } from '@/lib/api/dashboard'
+import { dashboardApi, DashboardSummary, ATSAnalytics } from '@/lib/api/dashboard'
 
 interface UseDashboardResult {
     summary: DashboardSummary | null
+    analytics: ATSAnalytics | null
     isLoading: boolean
     error: string | null
     refetch: () => Promise<void>
@@ -12,32 +13,42 @@ interface UseDashboardResult {
 
 export function useDashboard(): UseDashboardResult {
     const [summary, setSummary] = useState<DashboardSummary | null>(null)
+    const [analytics, setAnalytics] = useState<ATSAnalytics | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-    const fetchSummary = useCallback(async () => {
+    const fetchData = useCallback(async () => {
         setIsLoading(true)
         setError(null)
 
-        const response = await dashboardApi.summary()
+        const [summaryRes, analyticsRes] = await Promise.all([
+            dashboardApi.summary(),
+            dashboardApi.analytics(),
+        ])
 
-        if (response.success && response.data) {
-            setSummary(response.data)
+        if (summaryRes.success && summaryRes.data) {
+            setSummary(summaryRes.data)
         } else {
-            setError(response.error?.message || 'Failed to load dashboard summary')
+            setError(summaryRes.error?.message || 'Failed to load dashboard summary')
+        }
+
+        if (analyticsRes.success && analyticsRes.data) {
+            setAnalytics(analyticsRes.data)
         }
 
         setIsLoading(false)
     }, [])
 
     useEffect(() => {
-        fetchSummary()
-    }, [fetchSummary])
+        fetchData()
+    }, [fetchData])
 
     return {
         summary,
+        analytics,
         isLoading,
         error,
-        refetch: fetchSummary
+        refetch: fetchData
     }
 }
+

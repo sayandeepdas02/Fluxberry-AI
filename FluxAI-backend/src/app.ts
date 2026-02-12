@@ -21,6 +21,7 @@ import candidatesRoutes from './modules/candidates/candidates.routes.js'
 import analyticsRoutes from './modules/analytics/analytics.routes.js'
 import dashboardRoutes from './modules/dashboard/dashboard.routes.js'
 import publicRoutes from './modules/public/public.routes.js'
+import applicationsRoutes from './modules/applications/applications.routes.js'
 import aiInterviewRoutes from './modules/ai-interview/ai-interview.routes.js'
 import { attemptsController } from './modules/attempts/attempts.controller.js'
 import { resultsController } from './modules/results/results.controller.js'
@@ -74,6 +75,7 @@ export function createApp() {
     // Onboarding
     app.use('/api/onboarding', onboardingRoutes)
     app.use('/api/candidates', candidatesRoutes)
+    app.use('/api/applications', applicationsRoutes)
 
     // Phase 3: Attempts & Proctoring
     app.use('/api/attempts', attemptsRoutes)

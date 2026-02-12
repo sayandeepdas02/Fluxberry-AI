@@ -117,10 +117,11 @@ export type EmploymentTypeValue = typeof EmploymentType[keyof typeof EmploymentT
 
 export const ApplicationStatus = {
     APPLIED: 'APPLIED',
-    REVIEWING: 'REVIEWING',
-    SHORTLISTED: 'SHORTLISTED',
-    REJECTED: 'REJECTED',
+    SCREENING: 'SCREENING',
+    INTERVIEW: 'INTERVIEW',
+    OFFER: 'OFFER',
     HIRED: 'HIRED',
+    REJECTED: 'REJECTED',
 } as const
 export type ApplicationStatusType = typeof ApplicationStatus[keyof typeof ApplicationStatus]
 
@@ -382,6 +383,55 @@ const AuditLogSchema = new Schema<IAuditLog>({
 AuditLogSchema.index({ entityType: 1, entityId: 1 })
 
 export const AuditLog = mongoose.model<IAuditLog>('AuditLog', AuditLogSchema)
+
+// ============================================
+// STAGE HISTORY MODEL
+// ============================================
+export interface IStageHistory extends Document {
+    _id: Types.ObjectId
+    applicationId: Types.ObjectId
+    organizationId: Types.ObjectId
+    fromStage: ApplicationStatusType | null
+    toStage: ApplicationStatusType
+    changedBy: Types.ObjectId
+    changedAt: Date
+}
+
+const StageHistorySchema = new Schema<IStageHistory>({
+    applicationId: { type: Schema.Types.ObjectId, ref: 'JobApplication', required: true, index: true },
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+    fromStage: { type: String, enum: [...Object.values(ApplicationStatus), null], default: null },
+    toStage: { type: String, enum: Object.values(ApplicationStatus), required: true },
+    changedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    changedAt: { type: Date, default: Date.now },
+}, { timestamps: false })
+
+StageHistorySchema.index({ applicationId: 1, changedAt: -1 })
+
+export const StageHistory = mongoose.model<IStageHistory>('StageHistory', StageHistorySchema)
+
+// ============================================
+// CANDIDATE NOTE MODEL
+// ============================================
+export interface ICandidateNote extends Document {
+    _id: Types.ObjectId
+    candidateId: Types.ObjectId
+    organizationId: Types.ObjectId
+    authorId: Types.ObjectId
+    content: string
+    createdAt: Date
+}
+
+const CandidateNoteSchema = new Schema<ICandidateNote>({
+    candidateId: { type: Schema.Types.ObjectId, ref: 'Candidate', required: true, index: true },
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
+    authorId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    content: { type: String, required: true },
+}, { timestamps: { createdAt: true, updatedAt: false } })
+
+CandidateNoteSchema.index({ candidateId: 1, createdAt: -1 })
+
+export const CandidateNote = mongoose.model<ICandidateNote>('CandidateNote', CandidateNoteSchema)
 
 // ============================================
 // ANALYTICS SNAPSHOT MODEL

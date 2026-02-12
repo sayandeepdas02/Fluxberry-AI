@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express'
 import { candidatesService } from './candidates.service.js'
-import { createCandidateSchema, updateCandidateSchema, listCandidatesQuerySchema } from './candidates.types.js'
+import { createCandidateSchema, updateCandidateSchema, listCandidatesQuerySchema, createNoteSchema } from './candidates.types.js'
 import { successResponse } from '../../common/utils/api-response.js'
 import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
 
@@ -45,6 +45,7 @@ export class CandidatesController {
 
     /**
      * GET /api/candidates/:id
+     * Returns full detail: candidate + applications + stageHistory + notes
      */
     async getById(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
         try {
@@ -55,10 +56,8 @@ export class CandidatesController {
             }
 
             const { id } = req.params
-            const candidate = await candidatesService.getById(id, organizationId)
-            const history = await candidatesService.getHistory(id, organizationId)
-
-            res.json(successResponse({ candidate, history }))
+            const detail = await candidatesService.getDetail(id, organizationId)
+            res.json(successResponse(detail))
         } catch (error) {
             next(error)
         }
@@ -79,6 +78,27 @@ export class CandidatesController {
             const input = updateCandidateSchema.parse(req.body)
             const candidate = await candidatesService.update(id, organizationId, input)
             res.json(successResponse(candidate))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    /**
+     * POST /api/candidates/:id/notes
+     */
+    async addNote(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const organizationId = req.user?.organizationId
+            const userId = req.user?.id
+            if (!organizationId || !userId) {
+                res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
+                return
+            }
+
+            const { id } = req.params
+            const input = createNoteSchema.parse(req.body)
+            const note = await candidatesService.addNote(id, organizationId, userId, input)
+            res.status(201).json(successResponse(note))
         } catch (error) {
             next(error)
         }
