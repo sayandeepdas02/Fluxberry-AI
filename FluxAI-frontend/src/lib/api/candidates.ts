@@ -66,6 +66,7 @@ export interface ListCandidatesQuery {
     stage?: string
     dateFrom?: string
     dateTo?: string
+    tags?: string
 }
 
 export const candidatesApi = {

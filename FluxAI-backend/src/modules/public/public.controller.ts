@@ -3,6 +3,7 @@ import { Request } from 'express'
 import { publicService } from './public.service.js'
 import { offersService } from '../offers/offers.service.js'
 import { successResponse } from '../../common/utils/api-response.js'
+import redis from '../../jobs/redis.js'
 
 class PublicController {
     async getCompany(req: Request, res: Response, next: NextFunction) {
@@ -42,8 +43,19 @@ class PublicController {
     async getJobBySlug(req: Request, res: Response, next: NextFunction) {
         try {
             const { slug } = req.params
+            const cacheKey = `public:job:${slug}`
+            const cached = await redis.get(cacheKey)
+
+            if (cached) {
+                return res.json(JSON.parse(cached))
+            }
+
             const data = await publicService.getJobBySlug(slug)
-            res.json(successResponse(data))
+            const response = successResponse(data)
+
+            await redis.set(cacheKey, JSON.stringify(response), 'EX', 300) // 5 minutes
+
+            res.json(response)
         } catch (error) {
             next(error)
         }

@@ -1,8 +1,42 @@
 import { Job, Candidate, AssessmentAttempt, AnalyticsSnapshot, JobApplication, StageHistory, ApplicationStatus } from '../../database/models/index.js'
 import { KPIData, AnalyticsTrendData, DemographicsData } from './analytics.types.js'
+import { redisConnection } from '../../jobs/redis.js'
+import mongoose from 'mongoose'
+
+const CACHE_TTL = 600 // 10 minutes
 
 class AnalyticsService {
-    async getKPIs(organizationId: string): Promise<Record<string, KPIData>> {
+    private getCacheKey(orgId: string, metric: string, jobId?: string): string {
+        return `analytics:${orgId}:${metric}:${jobId || 'all'}`
+    }
+
+    private async getCached<T>(key: string): Promise<T | null> {
+        try {
+            const data = await redisConnection.get(key)
+            return data ? JSON.parse(data) : null
+        } catch (error) {
+            console.error('Redis get error:', error)
+            return null
+        }
+    }
+
+    private async setCache(key: string, data: any): Promise<void> {
+        try {
+            await redisConnection.setex(key, CACHE_TTL, JSON.stringify(data))
+        } catch (error) {
+            console.error('Redis set error:', error)
+        }
+    }
+
+    async getKPIs(organizationId: string, jobId?: string): Promise<Record<string, KPIData>> {
+        const cacheKey = this.getCacheKey(organizationId, 'kpis', jobId)
+        const cached = await this.getCached<Record<string, KPIData>>(cacheKey)
+        if (cached) return cached
+
+        const jobFilter = jobId ? { jobId: new mongoose.Types.ObjectId(jobId) } : {}
+        const orgFilter = { organizationId: new mongoose.Types.ObjectId(organizationId) }
+        const combinedFilter = { ...orgFilter, ...jobFilter }
+
         const [
             activeJobs,
             totalJobs,
@@ -10,166 +44,185 @@ class AnalyticsService {
             totalApplications,
             awaitingReview,
         ] = await Promise.all([
-            Job.countDocuments({ organizationId, status: 'PUBLISHED' }),
-            Job.countDocuments({ organizationId }),
-            Candidate.countDocuments({ organizationId }),
-            JobApplication.countDocuments({ organizationId }),
-            JobApplication.countDocuments({ organizationId, status: ApplicationStatus.APPLIED }),
+            Job.countDocuments({ ...orgFilter, status: 'PUBLISHED' }),
+            Job.countDocuments(orgFilter),
+            // Candidates are org-wide, but if filtering by job, we count applications unique candidates
+            jobId
+                ? JobApplication.distinct('candidateId', combinedFilter).then(ids => ids.length)
+                : Candidate.countDocuments(orgFilter),
+            JobApplication.countDocuments(combinedFilter),
+            JobApplication.countDocuments({ ...combinedFilter, status: ApplicationStatus.APPLIED }),
         ])
 
-        return {
+        const result = {
             activeJobs: {
                 label: 'Active Jobs',
                 value: activeJobs,
                 trend: 0,
-                trendDirection: 'neutral'
+                trendDirection: 'neutral' as const
             },
             totalCandidates: {
                 label: 'Total Candidates',
                 value: totalCandidates,
                 trend: 0,
-                trendDirection: 'neutral'
+                trendDirection: 'neutral' as const
             },
             applications: {
                 label: 'Total Applications',
                 value: totalApplications,
                 trend: 0,
-                trendDirection: 'neutral'
+                trendDirection: 'neutral' as const
             },
             awaitingReview: {
                 label: 'Awaiting Review',
                 value: awaitingReview,
                 trend: 0,
-                trendDirection: 'neutral'
+                trendDirection: 'neutral' as const
             }
         }
+
+        await this.setCache(cacheKey, result)
+        return result
     }
 
-    /**
-     * ATS-specific analytics: conversion rates, stage distribution, avg time in stage
-     */
-    async getATSAnalytics(organizationId: string) {
-        const [
-            totalJobs,
-            activeJobs,
-            totalCandidates,
-            totalApplications,
-        ] = await Promise.all([
-            Job.countDocuments({ organizationId }),
-            Job.countDocuments({ organizationId, status: 'PUBLISHED' }),
-            Candidate.countDocuments({ organizationId }),
-            JobApplication.countDocuments({ organizationId }),
-        ])
+    async getFunnelMetrics(organizationId: string, jobId?: string) {
+        const cacheKey = this.getCacheKey(organizationId, 'funnel', jobId)
+        const cached = await this.getCached(cacheKey)
+        if (cached) return cached
 
-        // Stage distribution across all org applications
+        const matchStage = {
+            organizationId: new mongoose.Types.ObjectId(organizationId),
+            ...(jobId ? { jobId: new mongoose.Types.ObjectId(jobId) } : {})
+        }
+
         const stageAgg = await JobApplication.aggregate([
-            { $match: { organizationId: { $exists: true } } },
-            {
-                $addFields: {
-                    orgIdStr: { $toString: '$organizationId' }
-                }
-            },
-            { $match: { orgIdStr: organizationId } },
+            { $match: matchStage },
             { $group: { _id: '$status', count: { $sum: 1 } } },
         ])
 
         const stageDistribution: Record<string, number> = {}
-        for (const stage of Object.values(ApplicationStatus)) {
-            stageDistribution[stage] = 0
-        }
-        for (const item of stageAgg) {
-            stageDistribution[item._id] = item.count
-        }
+        Object.values(ApplicationStatus).forEach(s => stageDistribution[s] = 0)
+        stageAgg.forEach(item => stageDistribution[item._id] = item.count)
 
-        // Conversion rates
+        // Conversion Logic
         const applied = stageDistribution[ApplicationStatus.APPLIED] || 0
         const screening = stageDistribution[ApplicationStatus.SCREENING] || 0
         const interview = stageDistribution[ApplicationStatus.INTERVIEW] || 0
         const offer = stageDistribution[ApplicationStatus.OFFER_SENT] || 0
         const hired = stageDistribution[ApplicationStatus.HIRED] || 0
+        const total = Object.values(stageDistribution).reduce((a, b) => a + b, 0)
 
         const conversionRates = {
-            appliedToInterview: totalApplications > 0
-                ? Math.round(((interview + offer + hired) / totalApplications) * 100)
-                : 0,
-            interviewToOffer: (interview + offer + hired) > 0
-                ? Math.round(((offer + hired) / (interview + offer + hired)) * 100)
-                : 0,
-            offerToHired: (offer + hired) > 0
-                ? Math.round((hired / (offer + hired)) * 100)
-                : 0,
+            appliedToInterview: total > 0 ? Math.round(((interview + offer + hired) / total) * 100) : 0,
+            interviewToOffer: (interview + offer + hired) > 0 ? Math.round(((offer + hired) / (interview + offer + hired)) * 100) : 0,
+            offerToHired: (offer + hired) > 0 ? Math.round((hired / (offer + hired)) * 100) : 0,
         }
 
-        // Avg time in stage (from stage history)
-        const avgTimeAgg = await StageHistory.aggregate([
+        const result = { stageDistribution, conversionRates }
+        await this.setCache(cacheKey, result)
+        return result
+    }
+
+    async getTimeToHire(organizationId: string, jobId?: string) {
+        const cacheKey = this.getCacheKey(organizationId, 'timeToHire', jobId)
+        const cached = await this.getCached(cacheKey)
+        if (cached) return cached
+
+        const matchStage = {
+            organizationId: new mongoose.Types.ObjectId(organizationId),
+            ...(jobId ? { jobId: new mongoose.Types.ObjectId(jobId) } : {})
+        }
+
+        // Get all hired applications to math with stage history
+        // Or simpler: aggregation on StageHistory
+        // But StageHistory doesn't have jobId directly, need lookup
+
+        const avgTimeAgg = await JobApplication.aggregate([
+            { $match: { ...matchStage, status: ApplicationStatus.HIRED } },
             {
-                $addFields: {
-                    orgIdStr: { $toString: '$organizationId' }
+                $lookup: {
+                    from: 'stagehistories',
+                    localField: '_id',
+                    foreignField: 'applicationId',
+                    as: 'history'
                 }
             },
-            { $match: { orgIdStr: organizationId } },
-            { $sort: { applicationId: 1, changedAt: 1 } },
             {
-                $group: {
-                    _id: '$fromStage',
-                    avgDays: {
-                        $avg: {
-                            $divide: [
-                                { $subtract: ['$changedAt', { $ifNull: ['$createdAt', '$changedAt'] }] },
-                                1000 * 60 * 60 * 24
-                            ]
+                $utilities: {
+                    $addFields: {
+                        firstApplied: {
+                            $min: {
+                                $filter: {
+                                    input: '$history',
+                                    as: 'h',
+                                    cond: { $eq: ['$$h.toStage', ApplicationStatus.APPLIED] }
+                                }
+                            }
+                        },
+                        hiredAt: {
+                            $min: {
+                                $filter: {
+                                    input: '$history',
+                                    as: 'h',
+                                    cond: { $eq: ['$$h.toStage', ApplicationStatus.HIRED] }
+                                }
+                            }
                         }
                     }
+                }
+            },
+            // Fallback: Use createdAt and updatedAt if history incomplete
+            {
+                $project: {
+                    duration: {
+                        $divide: [
+                            { $subtract: [{ $ifNull: ['$updatedAt', new Date()] }, '$createdAt'] },
+                            1000 * 60 * 60 * 24 // days
+                        ]
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    avgDays: { $avg: '$duration' },
+                    min: { $min: '$duration' },
+                    max: { $max: '$duration' }
                 }
             }
         ])
 
-        const avgTimeInStage: Record<string, number> = {}
-        for (const item of avgTimeAgg) {
-            if (item._id) {
-                avgTimeInStage[item._id] = Math.round(item.avgDays * 10) / 10
-            }
-        }
-
-        return {
-            totalJobs,
-            activeJobs,
-            totalCandidates,
-            totalApplications,
-            conversionRates,
-            stageDistribution,
-            avgTimeInStage,
-        }
+        const result = avgTimeAgg[0] || { avgDays: 0, min: 0, max: 0 }
+        await this.setCache(cacheKey, result)
+        return result
     }
 
-    async getTrends(organizationId: string, timeframe: 'week' | 'month' = 'month'): Promise<AnalyticsTrendData[]> {
-        // Aggregate applications by day for the last 30 days
+    async getApplicationVolume(organizationId: string, timeframe: 'week' | 'month' = 'month', jobId?: string): Promise<AnalyticsTrendData[]> {
+        const cacheKey = this.getCacheKey(organizationId, `volume:${timeframe}`, jobId)
+        const cached = await this.getCached<AnalyticsTrendData[]>(cacheKey)
+        if (cached) return cached
+
         const daysBack = timeframe === 'week' ? 7 : 30
         const startDate = new Date()
         startDate.setDate(startDate.getDate() - daysBack)
 
+        const matchStage = {
+            organizationId: new mongoose.Types.ObjectId(organizationId),
+            submittedAt: { $gte: startDate },
+            ...(jobId ? { jobId: new mongoose.Types.ObjectId(jobId) } : {})
+        }
+
         const pipeline = await JobApplication.aggregate([
-            {
-                $addFields: { orgIdStr: { $toString: '$organizationId' } }
-            },
-            {
-                $match: {
-                    orgIdStr: organizationId,
-                    submittedAt: { $gte: startDate }
-                }
-            },
+            { $match: matchStage },
             {
                 $group: {
-                    _id: {
-                        $dateToString: { format: '%Y-%m-%d', date: '$submittedAt' }
-                    },
+                    _id: { $dateToString: { format: '%Y-%m-%d', date: '$submittedAt' } },
                     count: { $sum: 1 }
                 }
             },
             { $sort: { _id: 1 } }
         ])
 
-        // Fill in missing dates with 0
         const result: AnalyticsTrendData[] = []
         for (let i = 0; i < daysBack; i++) {
             const d = new Date()
@@ -179,16 +232,22 @@ class AnalyticsService {
             result.push({ date: dateStr, value: found ? found.count : 0 })
         }
 
+        await this.setCache(cacheKey, result)
         return result
     }
 
-    async getDemographics(organizationId: string): Promise<{ device: DemographicsData[], location: DemographicsData[] }> {
-        // Aggregate application sources
+    async getSourcePerformance(organizationId: string, jobId?: string): Promise<DemographicsData[]> {
+        const cacheKey = this.getCacheKey(organizationId, 'source', jobId)
+        const cached = await this.getCached<DemographicsData[]>(cacheKey)
+        if (cached) return cached
+
+        const matchStage = {
+            organizationId: new mongoose.Types.ObjectId(organizationId),
+            ...(jobId ? { jobId: new mongoose.Types.ObjectId(jobId) } : {})
+        }
+
         const sourceAgg = await JobApplication.aggregate([
-            {
-                $addFields: { orgIdStr: { $toString: '$organizationId' } }
-            },
-            { $match: { orgIdStr: organizationId } },
+            { $match: matchStage },
             {
                 $lookup: {
                     from: 'candidates',
@@ -207,16 +266,16 @@ class AnalyticsService {
             { $sort: { count: -1 } }
         ])
 
-        const total = sourceAgg.reduce((sum: number, item: any) => sum + item.count, 0) || 1
+        const total = sourceAgg.reduce((sum, item) => sum + item.count, 0) || 1
 
-        return {
-            device: sourceAgg.map((item: any) => ({
-                label: item._id,
-                value: item.count,
-                percentage: Math.round((item.count / total) * 100)
-            })),
-            location: [] // No location data tracked yet
-        }
+        const result = sourceAgg.map(item => ({
+            label: item._id,
+            value: item.count,
+            percentage: Math.round((item.count / total) * 100)
+        }))
+
+        await this.setCache(cacheKey, result)
+        return result
     }
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { use, useState, useCallback } from "react";
+import { use, useState } from "react";
 import {
     Table,
     TableBody,
@@ -13,35 +13,29 @@ import {
 import { cn } from "@/lib/utils";
 import { FileText, Search, ChevronDown, X, Loader2 } from "lucide-react";
 import { useApplications } from "@/features/jobs/hooks/use-applications";
-import { ApplicationStage, JobApplicationResponse } from "@/lib/api/applications";
+import { JobApplicationResponse } from "@/lib/api/applications";
+import { PipelineStage } from "@/lib/api/types";
 import Link from "next/link";
 
-const STAGES: { label: string; value: ApplicationStage | undefined }[] = [
-    { label: "All", value: undefined },
-    { label: "Applied", value: "APPLIED" },
-    { label: "Screening", value: "SCREENING" },
-    { label: "Interview", value: "INTERVIEW" },
-    { label: "Offer", value: "OFFER" },
-    { label: "Hired", value: "HIRED" },
-    { label: "Rejected", value: "REJECTED" },
-];
+function StageBadge({ app, stages }: { app: JobApplicationResponse; stages: PipelineStage[] }) {
+    // Try to find stage by ID first, then by matching status type
+    const stage = app.currentStageId
+        ? stages.find(s => s._id === (typeof app.currentStageId === 'object' ? app.currentStageId._id : app.currentStageId))
+        : stages.find(s => s.type === app.status);
 
-const STAGE_COLORS: Record<ApplicationStage, string> = {
-    APPLIED: "bg-blue-500/15 text-blue-400 border-blue-500/20",
-    SCREENING: "bg-amber-500/15 text-amber-400 border-amber-500/20",
-    INTERVIEW: "bg-purple-500/15 text-purple-400 border-purple-500/20",
-    OFFER: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
-    HIRED: "bg-green-500/15 text-green-400 border-green-500/20",
-    REJECTED: "bg-red-500/15 text-red-400 border-red-500/20",
-};
+    const label = stage ? stage.name : app.status;
+    const color = stage?.color || '#64748b'; // Default slate-500
 
-function StageBadge({ stage }: { stage: ApplicationStage }) {
     return (
-        <span className={cn(
-            "inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border",
-            STAGE_COLORS[stage]
-        )}>
-            {stage}
+        <span
+            className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border"
+            style={{
+                backgroundColor: `${color}15`, // 15% opacity
+                color: color,
+                borderColor: `${color}30` // 30% opacity
+            }}
+        >
+            {label}
         </span>
     );
 }
@@ -64,6 +58,7 @@ export default function JobApplicantsPage({ params }: PageProps) {
     const { jobId } = use(params);
     const {
         applications,
+        stages,
         total,
         isLoading,
         error,
@@ -71,13 +66,15 @@ export default function JobApplicantsPage({ params }: PageProps) {
         search,
         setStageFilter,
         setSearch,
-        updateStage,
+        moveStage,
+        bulkMove,
         bulkUpdate,
         refetch,
+        setPage,
+        page,
     } = useApplications(jobId);
 
     const [selected, setSelected] = useState<Set<string>>(new Set());
-    const [bulkStage, setBulkStage] = useState<ApplicationStage | ''>('');
     const [showBulkDropdown, setShowBulkDropdown] = useState(false);
     const [searchInput, setSearchInput] = useState('');
 
@@ -98,13 +95,9 @@ export default function JobApplicantsPage({ params }: PageProps) {
         }
     };
 
-    const handleBulkMoveStage = async (stage: ApplicationStage) => {
+    const handleBulkMoveStage = async (stageId: string) => {
         if (selected.size === 0) return;
-        await bulkUpdate({
-            applicationIds: Array.from(selected),
-            action: 'MOVE_STAGE',
-            stage,
-        });
+        await bulkMove(Array.from(selected), stageId);
         setSelected(new Set());
         setShowBulkDropdown(false);
     };
@@ -123,8 +116,8 @@ export default function JobApplicantsPage({ params }: PageProps) {
         setSearch(searchInput);
     };
 
-    const handleStageChange = async (appId: string, newStage: ApplicationStage) => {
-        await updateStage(appId, newStage);
+    const handleStageChange = async (appId: string, stageId: string) => {
+        await moveStage(appId, stageId);
     };
 
     return (
@@ -142,18 +135,33 @@ export default function JobApplicantsPage({ params }: PageProps) {
                 {/* Stage filter tabs */}
                 <div className="border-b border-edge">
                     <div className="flex items-center gap-1 overflow-x-auto">
-                        {STAGES.map(({ label, value }) => (
+                        <button
+                            onClick={() => setStageFilter(undefined)}
+                            className={cn(
+                                "px-3 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors",
+                                !stageFilter
+                                    ? "border-foreground text-foreground"
+                                    : "border-transparent text-muted-foreground hover:text-foreground/80"
+                            )}
+                        >
+                            All
+                        </button>
+                        {stages.map((stage) => (
                             <button
-                                key={label}
-                                onClick={() => setStageFilter(value)}
+                                key={stage._id}
+                                onClick={() => setStageFilter(stage._id)}
                                 className={cn(
                                     "px-3 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors",
-                                    stageFilter === value
+                                    stageFilter === stage._id
                                         ? "border-foreground text-foreground"
                                         : "border-transparent text-muted-foreground hover:text-foreground/80"
                                 )}
+                                style={{
+                                    borderColor: stageFilter === stage._id ? stage.color : undefined,
+                                    color: stageFilter === stage._id ? stage.color : undefined
+                                }}
                             >
-                                {label}
+                                {stage.name}
                             </button>
                         ))}
                     </div>
@@ -178,14 +186,15 @@ export default function JobApplicantsPage({ params }: PageProps) {
                                         Move Stage <ChevronDown className="w-3 h-3" />
                                     </button>
                                     {showBulkDropdown && (
-                                        <div className="absolute top-full left-0 mt-1 w-40 bg-card border border-edge rounded-md shadow-lg z-10">
-                                            {STAGES.filter(s => s.value).map(({ label, value }) => (
+                                        <div className="absolute top-full left-0 mt-1 w-48 bg-card border border-edge rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
+                                            {stages.map((stage) => (
                                                 <button
-                                                    key={value}
-                                                    onClick={() => handleBulkMoveStage(value!)}
-                                                    className="w-full text-left px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
+                                                    key={stage._id}
+                                                    onClick={() => handleBulkMoveStage(stage._id)}
+                                                    className="w-full text-left px-3 py-2 text-sm hover:bg-muted/50 transition-colors flex items-center gap-2"
                                                 >
-                                                    {label}
+                                                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: stage.color }} />
+                                                    {stage.name}
                                                 </button>
                                             ))}
                                         </div>
@@ -240,7 +249,9 @@ export default function JobApplicantsPage({ params }: PageProps) {
                     <div className="flex flex-col items-center justify-center py-20 text-center">
                         <p className="text-muted-foreground">No applications found</p>
                         <p className="text-sm text-muted-foreground/60 mt-1">
-                            {stageFilter ? `No applications in "${stageFilter}" stage` : 'No applications for this job yet'}
+                            {stageFilter
+                                ? `No applications in "${stages.find(s => s._id === stageFilter)?.name || 'this'}" stage`
+                                : 'No applications for this job yet'}
                         </p>
                     </div>
                 ) : (
@@ -267,6 +278,11 @@ export default function JobApplicantsPage({ params }: PageProps) {
                             <TableBody>
                                 {applications.map((app) => {
                                     const info = getCandidateInfo(app);
+                                    // Resolve current stage ID
+                                    const currentStageId = typeof app.currentStageId === 'object'
+                                        ? app.currentStageId._id
+                                        : (app.currentStageId || stages.find(s => s.type === app.status)?._id || '');
+
                                     return (
                                         <TableRow key={app._id} className={cn(
                                             "hover:bg-muted/20 border-edge",
@@ -287,7 +303,7 @@ export default function JobApplicantsPage({ params }: PageProps) {
                                                 {info.email}
                                             </TableCell>
                                             <TableCell>
-                                                <StageBadge stage={app.status} />
+                                                <StageBadge app={app} stages={stages} />
                                             </TableCell>
                                             <TableCell className="text-muted-foreground text-sm">
                                                 {new Date(app.submittedAt).toLocaleDateString()}
@@ -308,12 +324,14 @@ export default function JobApplicantsPage({ params }: PageProps) {
                                             </TableCell>
                                             <TableCell>
                                                 <select
-                                                    value={app.status}
-                                                    onChange={(e) => handleStageChange(app._id, e.target.value as ApplicationStage)}
-                                                    className="text-xs bg-card border border-edge rounded px-2 py-1 text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                                                    value={currentStageId}
+                                                    onChange={(e) => handleStageChange(app._id, e.target.value)}
+                                                    className="text-xs bg-card border border-edge rounded px-2 py-1 text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring max-w-[120px]"
                                                 >
-                                                    {STAGES.filter(s => s.value).map(({ label, value }) => (
-                                                        <option key={value} value={value}>{label}</option>
+                                                    {stages.map((stage) => (
+                                                        <option key={stage._id} value={stage._id}>
+                                                            {stage.name}
+                                                        </option>
                                                     ))}
                                                 </select>
                                             </TableCell>
@@ -322,6 +340,31 @@ export default function JobApplicantsPage({ params }: PageProps) {
                                 })}
                             </TableBody>
                         </Table>
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {total > 0 && (
+                    <div className="flex items-center justify-between border-t border-edge pt-4">
+                        <div className="text-sm text-muted-foreground">
+                            Showing {((page - 1) * 20) + 1} to {Math.min(page * 20, total)} of {total} results
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setPage(page - 1)}
+                                disabled={page === 1}
+                                className="px-3 py-1 text-sm border border-edge rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/50 transition-colors"
+                            >
+                                Previous
+                            </button>
+                            <button
+                                onClick={() => setPage(page + 1)}
+                                disabled={page * 20 >= total}
+                                className="px-3 py-1 text-sm border border-edge rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/50 transition-colors"
+                            >
+                                Next
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

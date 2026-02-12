@@ -1,3 +1,4 @@
+
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import {
@@ -127,6 +128,24 @@ export class AuthService {
         const organization = membership?.organizationId as unknown as IOrganization | null
 
         return this.formatUser(user, organization, membership?.role ?? null)
+    }
+
+    /**
+     * Delete user account (GDPR)
+     */
+    async deleteAccount(userId: string): Promise<void> {
+        const user = await User.findById(userId)
+        if (!user) {
+            throw { code: 'NOT_FOUND', message: 'User not found' }
+        }
+
+        // Hard delete user and memberships
+        await OrganizationMember.deleteMany({ userId: user._id })
+        await User.deleteOne({ _id: user._id })
+
+        // Note: In a real production system, we might want to anonymize 
+        // or cascade delete other resources (applications, interviews, etc.)
+        // For now, this satisfies the basic GDPR requirement of removing the user record.
     }
 
     /**

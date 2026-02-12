@@ -16,7 +16,7 @@ class CandidatesService {
     }
 
     async list(organizationId: string, query: ListCandidatesQuery): Promise<{ candidates: ICandidate[], total: number, page: number, totalPages: number }> {
-        const { page = 1, limit = 20, search, source, jobId, stage, dateFrom, dateTo } = query
+        const { page = 1, limit = 20, search, source, jobId, stage, dateFrom, dateTo, tags } = query
         const skip = (page - 1) * limit
 
         const filter: any = { organizationId }
@@ -25,12 +25,17 @@ class CandidatesService {
             filter.source = source
         }
 
+        if (tags) {
+            const tagArray = tags.split(',').map(t => t.trim())
+            if (tagArray.length > 0) {
+                filter.tags = { $in: tagArray }
+            }
+        }
+
         if (search) {
-            filter.$or = [
-                { email: { $regex: search, $options: 'i' } },
-                { firstName: { $regex: search, $options: 'i' } },
-                { lastName: { $regex: search, $options: 'i' } }
-            ]
+            // Use text search if text index is available
+            filter.$text = { $search: search }
+            // sort by relevance score if searching
         }
 
         // Filter by job and/or stage via JobApplication lookup
@@ -41,7 +46,15 @@ class CandidatesService {
 
             const matchingApps = await JobApplication.find(appFilter).select('candidateId').lean()
             const candidateIds = [...new Set(matchingApps.map(a => a.candidateId.toString()))]
-            filter._id = { $in: candidateIds }
+
+            // If we already have ids from another filter, we need intersection
+            if (filter._id) {
+                const existingIds = filter._id.$in
+                const intersection = existingIds.filter((id: string) => candidateIds.includes(id))
+                filter._id = { $in: intersection }
+            } else {
+                filter._id = { $in: candidateIds }
+            }
         }
 
         // Date range filter
@@ -51,9 +64,11 @@ class CandidatesService {
             if (dateTo) filter.createdAt.$lte = new Date(dateTo)
         }
 
+        const sortOptions: any = search ? { score: { $meta: 'textScore' } } : { createdAt: -1 }
+
         const [candidates, total] = await Promise.all([
-            Candidate.find(filter)
-                .sort({ createdAt: -1 })
+            Candidate.find(filter, search ? { score: { $meta: 'textScore' } } : undefined)
+                .sort(sortOptions)
                 .skip(skip)
                 .limit(limit),
             Candidate.countDocuments(filter)

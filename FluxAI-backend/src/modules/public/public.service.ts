@@ -136,7 +136,6 @@ class PublicService {
                 lastName: body.lastName,
                 phone: body.phone,
                 source: 'JOB_APPLICATION',
-                jobId: job._id,
             })
         }
 

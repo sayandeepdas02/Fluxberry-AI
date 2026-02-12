@@ -1,5 +1,9 @@
 import { Queue, QueueOptions } from 'bullmq'
 import { redisConnection } from '../redis.js'
+import { ResumeParsingJobData } from '../processors/resume-parsing.processor.js'
+import { EmailJobData } from '../processors/email.processor.js'
+import { AnalyticsAggregationJobData } from '../processors/analytics-aggregation.processor.js'
+import { WorkflowJobData } from '../processors/workflow.processor.js'
 
 // Queue configuration
 const queueOptions: QueueOptions = {
@@ -95,6 +99,26 @@ export type AIInterviewJobData = ProcessAIResponseJob | SynthesizeAIInterviewJob
 export const aiInterviewQueue = new Queue<AIInterviewJobData>('ai-interview', queueOptions)
 
 // ============================================
+// RESUME PARSING QUEUE
+// ============================================
+export const resumeParsingQueue = new Queue<ResumeParsingJobData>('resume-parsing', queueOptions)
+
+// ============================================
+// EMAIL QUEUE (tracked email sending)
+// ============================================
+export const emailQueue = new Queue<EmailJobData>('email', queueOptions)
+
+// ============================================
+// ANALYTICS AGGREGATION QUEUE
+// ============================================
+export const analyticsQueue = new Queue<AnalyticsAggregationJobData>('analytics-aggregation', queueOptions)
+
+// ============================================
+// WORKFLOW QUEUE
+// ============================================
+export const workflowQueue = new Queue<WorkflowJobData>('workflow', queueOptions)
+
+// ============================================
 // JOB PRODUCERS
 // ============================================
 
@@ -124,3 +148,36 @@ export async function enqueueAIInterviewJob(data: AIInterviewJobData): Promise<s
     console.log(`📤 Enqueued ${data.type} job: ${job.id}`)
     return job.id || ''
 }
+
+export async function enqueueResumeParsingJob(data: ResumeParsingJobData): Promise<string> {
+    const job = await resumeParsingQueue.add('PARSE_RESUME', data, {
+        jobId: `PARSE_RESUME-${data.candidateId}-${Date.now()}`,
+    })
+    console.log(`📤 Enqueued PARSE_RESUME job: ${job.id}`)
+    return job.id || ''
+}
+
+export async function enqueueEmailJob(data: EmailJobData): Promise<string> {
+    const job = await emailQueue.add('SEND_EMAIL', data, {
+        jobId: `SEND_EMAIL-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+    })
+    console.log(`📤 Enqueued SEND_EMAIL job: ${job.id}`)
+    return job.id || ''
+}
+
+export async function enqueueAnalyticsJob(data: AnalyticsAggregationJobData): Promise<string> {
+    const job = await analyticsQueue.add(data.type, data, {
+        jobId: `${data.type}-${data.organizationId}-${Date.now()}`,
+    })
+    console.log(`📤 Enqueued ${data.type} job: ${job.id}`)
+    return job.id || ''
+}
+
+export async function enqueueWorkflowJob(data: WorkflowJobData): Promise<string> {
+    const job = await workflowQueue.add('EXECUTE_WORKFLOW', data, {
+        jobId: `WORKFLOW-${data.actionType}-${data.entityId}-${Date.now()}`,
+    })
+    console.log(`📤 Enqueued WORKFLOW job: ${job.id}`)
+    return job.id || ''
+}
+

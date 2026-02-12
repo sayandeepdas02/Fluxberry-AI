@@ -1,5 +1,6 @@
 import { Job, IJob, AuditLog, JobApplication } from '../../database/models/index.js'
 import { ListJobsQuery, CreateJobInput, UpdateJobInput } from './jobs.types.js'
+import { pipelineService } from './pipeline.service.js'
 import crypto from 'crypto'
 
 class JobsService {
@@ -50,6 +51,13 @@ class JobsService {
             status: 'DRAFT',
             createdBy: userId,
         })
+
+        // Auto-create default pipeline stages
+        try {
+            await pipelineService.createDefaultStages(job._id.toString(), organizationId)
+        } catch (err) {
+            console.error('[JobsService] Failed to create default pipeline stages:', err)
+        }
 
         await this.logAudit({
             organizationId,

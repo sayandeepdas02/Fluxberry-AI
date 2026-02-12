@@ -88,6 +88,77 @@ class ApplicationsController {
             next(error)
         }
     }
+
+    /**
+     * PATCH /api/applications/:id/move-stage (stage-ID-based)
+     */
+    async moveStage(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const organizationId = req.user?.organizationId
+            const userId = req.user?.id
+            if (!organizationId || !userId) {
+                res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
+                return
+            }
+
+            const { id } = req.params
+            const { stageId } = req.body
+            if (!stageId) {
+                res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'stageId is required' } })
+                return
+            }
+
+            const application = await applicationsService.moveToStage(id, organizationId, stageId, userId)
+            res.json(successResponse(application))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    /**
+     * POST /api/applications/bulk-move (stage-ID-based)
+     */
+    async bulkMove(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const organizationId = req.user?.organizationId
+            const userId = req.user?.id
+            if (!organizationId || !userId) {
+                res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
+                return
+            }
+
+            const { applicationIds, stageId } = req.body
+            if (!applicationIds?.length || !stageId) {
+                res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'applicationIds and stageId are required' } })
+                return
+            }
+
+            const result = await applicationsService.bulkMoveToStage(organizationId, applicationIds, stageId, userId)
+            res.json(successResponse(result))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    /**
+     * GET /api/applications/:id/stage-history
+     */
+    async getStageHistory(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const organizationId = req.user?.organizationId
+            if (!organizationId) {
+                res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
+                return
+            }
+
+            const { id } = req.params
+            const history = await applicationsService.getStageHistory(id, organizationId)
+            res.json(successResponse(history))
+        } catch (error) {
+            next(error)
+        }
+    }
 }
 
 export const applicationsController = new ApplicationsController()
+

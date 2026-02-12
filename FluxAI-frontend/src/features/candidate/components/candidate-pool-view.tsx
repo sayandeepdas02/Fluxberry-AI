@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, FileText } from "lucide-react"
+import { Search, FileText, Filter, X } from "lucide-react"
 import {
     Table,
     TableBody,
@@ -10,11 +10,43 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { useCandidates } from "@/features/candidate/hooks/use-candidates"
 import { format } from "date-fns"
+import { useState, useEffect } from "react"
+import { useDebounce } from "@/hooks/use-debounce"
 
 export function CandidatePoolView() {
-    const { candidates, total, isLoading, error } = useCandidates()
+    const [search, setSearch] = useState("")
+    const [source, setSource] = useState<string>("all")
+    const [tags, setTags] = useState("")
+
+    const debouncedSearch = useDebounce(search, 500)
+    const debouncedTags = useDebounce(tags, 500)
+
+    const { candidates, total, isLoading, error, refetch } = useCandidates()
+
+    useEffect(() => {
+        refetch({
+            search: debouncedSearch || undefined,
+            source: source === "all" ? undefined : source,
+            tags: debouncedTags || undefined
+        })
+    }, [debouncedSearch, source, debouncedTags, refetch])
+
+    const clearFilters = () => {
+        setSearch("")
+        setSource("all")
+        setTags("")
+    }
 
     if (isLoading) {
         return <div className="p-8 text-center text-muted-foreground">Loading candidates...</div>
@@ -39,20 +71,50 @@ export function CandidatePoolView() {
                 </div>
             </div>
 
-            <div className="flex items-center justify-between bg-card border border-edge rounded-lg px-4 py-3">
-                <div className="flex items-center space-x-2">
-                    <span className="font-medium text-sm">All Candidates</span>
-                    <Badge variant="neutral" className="rounded-full px-2 py-0.5 text-xs">
-                        {total}
-                    </Badge>
+            <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search by name or email..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="pl-9"
+                        />
+                    </div>
+                    <div className="flex gap-2">
+                        <Select value={source} onValueChange={setSource}>
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Source" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Sources</SelectItem>
+                                <SelectItem value="LinkedIn">LinkedIn</SelectItem>
+                                <SelectItem value="Referral">Referral</SelectItem>
+                                <SelectItem value="Website">Website</SelectItem>
+                                <SelectItem value="Direct">Direct</SelectItem>
+                                <SelectItem value="Agency">Agency</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        <div className="relative w-[200px]">
+                            <Input
+                                placeholder="Filter by tags (comma separated)..."
+                                value={tags}
+                                onChange={(e) => setTags(e.target.value)}
+                            />
+                        </div>
+
+                        {(search || source !== "all" || tags) && (
+                            <Button variant="ghost" size="icon" onClick={clearFilters} title="Clear filters">
+                                <X className="h-4 w-4" />
+                            </Button>
+                        )}
+                    </div>
                 </div>
-                <div className="relative w-64">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <input
-                        type="text"
-                        placeholder="Search candidates..."
-                        className="w-full h-9 pl-9 pr-4 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
-                    />
+
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <span className="font-medium">{total}</span> candidates found
                 </div>
             </div>
 

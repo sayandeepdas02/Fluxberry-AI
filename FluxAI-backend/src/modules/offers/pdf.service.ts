@@ -1,8 +1,8 @@
 import puppeteer from 'puppeteer'
-import { v4 as uuidv4 } from 'uuid'
+// import { v4 as uuidv4 } from 'uuid'
 import { isS3Configured, uploadFile } from '../storage/s3.client.js'
-import fs from 'fs'
-import path from 'path'
+// import fs from 'fs'
+// import path from 'path'
 
 export class PdfService {
 
