@@ -76,7 +76,7 @@ export function requireOrganization(req: AuthenticatedRequest, res: Response, ne
 }
 
 // Role hierarchy: OWNER > ADMIN > RECRUITER
-const ROLE_HIERARCHY: Record<MemberRoleType, number> = {
+const ROLE_HIERARCHY: Record<string, number> = {
     OWNER: 3,
     ADMIN: 2,
     RECRUITER: 1,
