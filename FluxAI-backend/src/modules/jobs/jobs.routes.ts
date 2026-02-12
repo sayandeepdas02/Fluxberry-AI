@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { jobsController } from './jobs.controller.js'
+import { pipelineController } from './pipeline.controller.js'
 import { applicationsController } from '../applications/applications.controller.js'
 import { authGuard, requireOrgAccess } from '../../common/guards/auth.guard.js'
 
@@ -14,6 +15,12 @@ router.get('/', (req, res, next) => jobsController.list(req, res, next))
 router.get('/:id', (req, res, next) => jobsController.getById(req, res, next))
 router.patch('/:id', (req, res, next) => jobsController.update(req, res, next))
 
+// Pipeline stage routes
+router.get('/:id/stages', (req, res, next) => pipelineController.getStages(req, res, next))
+router.post('/:id/stages', requireOrgAccess('ADMIN'), (req, res, next) => pipelineController.addStage(req, res, next))
+router.patch('/:id/stages/reorder', requireOrgAccess('ADMIN'), (req, res, next) => pipelineController.reorderStages(req, res, next))
+router.delete('/:id/stages/:stageId', requireOrgAccess('ADMIN'), (req, res, next) => pipelineController.removeStage(req, res, next))
+
 // Applications per job
 router.get('/:jobId/applications', (req, res, next) => {
     req.params.jobId = req.params.jobId
@@ -26,3 +33,4 @@ router.post('/:id/close', requireOrgAccess('ADMIN'), (req, res, next) => jobsCon
 router.delete('/:id', requireOrgAccess('ADMIN'), (req, res, next) => jobsController.delete(req, res, next))
 
 export default router
+
