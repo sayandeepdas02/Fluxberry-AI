@@ -17,6 +17,8 @@ import jobsRoutes from './modules/jobs/jobs.routes.js'
 import attemptsRoutes from './modules/attempts/attempts.routes.js'
 import filesRoutes from './modules/files/files.routes.js'
 import onboardingRoutes from './modules/onboarding/onboarding.routes.js'
+import candidateOnboardingRoutes from './modules/onboarding/candidate-onboarding.routes.js'
+import offersRoutes from './modules/offers/offers.routes.js'
 import candidatesRoutes from './modules/candidates/candidates.routes.js'
 import analyticsRoutes from './modules/analytics/analytics.routes.js'
 import dashboardRoutes from './modules/dashboard/dashboard.routes.js'
@@ -73,7 +75,10 @@ export function createApp() {
     app.use('/api/jobs', jobsRoutes)
 
     // Onboarding
-    app.use('/api/onboarding', onboardingRoutes)
+    // Onboarding
+    app.use('/api/onboarding', onboardingRoutes) // SaaS Onboarding
+    app.use('/api/candidate-onboarding', candidateOnboardingRoutes) // ATS Candidate Onboarding
+    app.use('/api/offers', offersRoutes) // Offer Management
     app.use('/api/candidates', candidatesRoutes)
     app.use('/api/applications', applicationsRoutes)
 

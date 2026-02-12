@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express'
 import { Request } from 'express'
 import { publicService } from './public.service.js'
+import { offersService } from '../offers/offers.service.js'
 import { successResponse } from '../../common/utils/api-response.js'
 
 class PublicController {
@@ -94,6 +95,42 @@ class PublicController {
         try {
             const { code, language, stdin } = req.body ?? {}
             const data = await publicService.runCode({ code: code ?? '', language: language ?? 'python', stdin })
+            res.json(successResponse(data))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    /**
+     * OFFER ROUTES
+     */
+
+    async getOfferByToken(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { token } = req.params
+            const data = await offersService.getOfferByToken(token)
+            res.json(successResponse(data))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async acceptOffer(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { token } = req.params
+            const { signature } = req.body
+            const data = await offersService.acceptOffer(token, signature)
+            res.json(successResponse(data))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async declineOffer(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { token } = req.params
+            const { reason } = req.body
+            const data = await offersService.declineOffer(token, reason)
             res.json(successResponse(data))
         } catch (error) {
             next(error)

@@ -119,11 +119,38 @@ export const ApplicationStatus = {
     APPLIED: 'APPLIED',
     SCREENING: 'SCREENING',
     INTERVIEW: 'INTERVIEW',
-    OFFER: 'OFFER',
+    OFFER_SENT: 'OFFER_SENT',
+    OFFER_ACCEPTED: 'OFFER_ACCEPTED',
+    OFFER_DECLINED: 'OFFER_DECLINED',
+    ONBOARDING: 'ONBOARDING',
     HIRED: 'HIRED',
     REJECTED: 'REJECTED',
 } as const
 export type ApplicationStatusType = typeof ApplicationStatus[keyof typeof ApplicationStatus]
+
+export const OfferStatus = {
+    DRAFT: 'DRAFT',
+    SENT: 'SENT',
+    VIEWED: 'VIEWED',
+    ACCEPTED: 'ACCEPTED',
+    DECLINED: 'DECLINED',
+    EXPIRED: 'EXPIRED',
+} as const
+export type OfferStatusType = typeof OfferStatus[keyof typeof OfferStatus]
+
+export const OnboardingStatus = {
+    IN_PROGRESS: 'IN_PROGRESS',
+    COMPLETED: 'COMPLETED',
+} as const
+export type OnboardingStatusType = typeof OnboardingStatus[keyof typeof OnboardingStatus]
+
+export const OnboardingDocumentStatus = {
+    PENDING: 'PENDING',
+    UPLOADED: 'UPLOADED',
+    APPROVED: 'APPROVED',
+    REJECTED: 'REJECTED',
+} as const
+export type OnboardingDocumentStatusType = typeof OnboardingDocumentStatus[keyof typeof OnboardingDocumentStatus]
 
 // AI Interview Agent Types
 export const AgentType = {
@@ -861,3 +888,172 @@ const AIInterviewSynthesisSchema = new Schema<IAIInterviewSynthesis>({
 }, { timestamps: { createdAt: true, updatedAt: false } })
 
 export const AIInterviewSynthesis = mongoose.model<IAIInterviewSynthesis>('AIInterviewSynthesis', AIInterviewSynthesisSchema)
+
+// ============================================
+// ORGANIZATION ONBOARDING CONFIG MODEL
+// ============================================
+export interface IOrganizationOnboardingConfig extends Document {
+    _id: Types.ObjectId
+    organizationId: Types.ObjectId
+    requiredDocuments: string[] // List of document titles e.g. ["ID Proof", "Contract"]
+    createdAt: Date
+    updatedAt: Date
+}
+
+const OrganizationOnboardingConfigSchema = new Schema<IOrganizationOnboardingConfig>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, unique: true },
+    requiredDocuments: [{ type: String }],
+}, { timestamps: true })
+
+export const OrganizationOnboardingConfig = mongoose.model<IOrganizationOnboardingConfig>('OrganizationOnboardingConfig', OrganizationOnboardingConfigSchema)
+
+// ============================================
+// OFFER TEMPLATE MODEL
+// ============================================
+export interface IOfferTemplate extends Document {
+    _id: Types.ObjectId
+    organizationId: Types.ObjectId
+    name: string
+    content: string // HTML or text content with placeholders
+    variables: string[] // List of variables used in content (Legacy)
+    variableSchema: Record<string, { type: string, label: string }> // JSON schema for variables
+    isActive: boolean
+    createdAt: Date
+    updatedAt: Date
+}
+
+
+
+// ============================================
+// OFFER MODEL
+// ============================================
+export interface IOffer extends Document {
+    _id: Types.ObjectId
+    organizationId: Types.ObjectId
+    applicationId: Types.ObjectId
+    candidateId: Types.ObjectId
+    templateId?: Types.ObjectId
+    templateSnapshot?: string // HTML snapshot at creation
+    variables?: Record<string, any>
+    status: OfferStatusType
+    content: string // Rendered content (or base content)
+    pdfUrl?: string // Unsigned PDF
+    signedPdfUrl?: string // Signed PDF
+    signature?: {
+        name: string
+        data: string // Base64 or SVG
+        ip: string
+        signedAt: Date
+    }
+    expiresAt?: Date
+    token?: string // Secure token for public access
+    openedAt?: Date
+    acceptedAt?: Date
+    declinedAt?: Date
+    declineReason?: string
+    createdAt: Date
+    updatedAt: Date
+}
+
+
+
+// ============================================
+// ONBOARDING MODEL
+// ============================================
+export interface IOnboarding extends Document {
+    _id: Types.ObjectId
+    organizationId: Types.ObjectId
+    applicationId: Types.ObjectId
+    candidateId: Types.ObjectId
+    status: OnboardingStatusType
+    startDate?: Date
+    completedAt?: Date
+    createdAt: Date
+    updatedAt: Date
+}
+
+const OnboardingSchema = new Schema<IOnboarding>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+    applicationId: { type: Schema.Types.ObjectId, ref: 'JobApplication', required: true, unique: true },
+    candidateId: { type: Schema.Types.ObjectId, ref: 'Candidate', required: true },
+    status: { type: String, enum: Object.values(OnboardingStatus), default: OnboardingStatus.IN_PROGRESS, index: true },
+    startDate: { type: Date },
+    completedAt: { type: Date },
+}, { timestamps: true })
+
+export const Onboarding = mongoose.model<IOnboarding>('Onboarding', OnboardingSchema)
+
+// ============================================
+// ONBOARDING DOCUMENT MODEL
+// ============================================
+export interface IOnboardingDocument extends Document {
+    _id: Types.ObjectId
+    organizationId: Types.ObjectId
+    onboardingId: Types.ObjectId
+    title: string
+    fileAssetId?: Types.ObjectId
+    status: OnboardingDocumentStatusType
+    reviewedBy?: Types.ObjectId
+    reviewedAt?: Date
+    feedback?: string
+    createdAt: Date
+    updatedAt: Date
+}
+
+const OnboardingDocumentSchema = new Schema<IOnboardingDocument>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+    onboardingId: { type: Schema.Types.ObjectId, ref: 'Onboarding', required: true, index: true },
+    title: { type: String, required: true },
+    fileAssetId: { type: Schema.Types.ObjectId, ref: 'FileAsset' },
+    status: { type: String, enum: Object.values(OnboardingDocumentStatus), default: OnboardingDocumentStatus.PENDING },
+    reviewedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    reviewedAt: { type: Date },
+    feedback: { type: String },
+}, { timestamps: true })
+
+export const OnboardingDocument = mongoose.model<IOnboardingDocument>('OnboardingDocument', OnboardingDocumentSchema)
+
+// ============================================
+// OFFER TEMPLATE MODEL
+// ============================================
+const OfferTemplateSchema = new Schema<IOfferTemplate>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
+    name: { type: String, required: true },
+    content: { type: String, required: true },
+    variables: [{ type: String }],
+    variableSchema: { type: Map, of: new Schema({ type: String, label: String }, { _id: false }) },
+    isActive: { type: Boolean, default: true },
+}, { timestamps: true })
+
+export const OfferTemplate = mongoose.model<IOfferTemplate>('OfferTemplate', OfferTemplateSchema)
+
+// ============================================
+// OFFER MODEL
+// ============================================
+const OfferSchema = new Schema<IOffer>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
+    applicationId: { type: Schema.Types.ObjectId, ref: 'JobApplication', required: true },
+    candidateId: { type: Schema.Types.ObjectId, ref: 'Candidate', required: true },
+    templateId: { type: Schema.Types.ObjectId, ref: 'OfferTemplate' },
+    templateSnapshot: { type: String },
+    variables: { type: Map, of: Schema.Types.Mixed }, // Stores key-value pairs for template variables
+    status: { type: String, enum: Object.values(OfferStatus), default: OfferStatus.DRAFT },
+    content: { type: String },
+    pdfUrl: { type: String },
+    signedPdfUrl: { type: String },
+    signature: {
+        name: String,
+        data: String,
+        ip: String,
+        signedAt: Date
+    },
+    expiresAt: { type: Date },
+    token: { type: String, index: true },
+    openedAt: { type: Date },
+    acceptedAt: { type: Date },
+    declinedAt: { type: Date },
+    declineReason: { type: String },
+}, { timestamps: true })
+
+export const Offer = mongoose.model<IOffer>('Offer', OfferSchema)
+
