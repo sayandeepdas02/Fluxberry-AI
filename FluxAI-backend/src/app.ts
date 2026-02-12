@@ -1,7 +1,10 @@
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
+import compression from 'compression'
+import { apiLimiter, authLimiter } from './common/middleware/rate-limiter.js'
 import { requestLogger } from './common/middleware/request-logger.js'
+import { requestIdMiddleware } from './common/middleware/request-id.middleware.js'
 import { errorHandler } from './common/middleware/error-handler.js'
 import { successResponse } from './common/utils/api-response.js'
 import { isS3Configured, saveLocalFile } from './modules/storage/s3.client.js'
@@ -29,12 +32,22 @@ import { attemptsController } from './modules/attempts/attempts.controller.js'
 import { resultsController } from './modules/results/results.controller.js'
 import { filesController } from './modules/files/files.controller.js'
 import { authGuard } from './common/guards/auth.guard.js'
+import { workflowRoutes } from './modules/workflow/workflow.routes.js'
+import { emailTrackingRoutes } from './modules/email/email-tracking.routes.js'
+import { emailTemplateRoutes } from './modules/email/email-templates.routes.js'
+import { interviewRoutes } from './modules/interviews/interviews.routes.js'
+import auditRoutes from './modules/audit/audit.routes.js'
 
 export function createApp() {
     const app = express()
 
     // Security middleware
     app.use(helmet())
+    app.use(compression())
+
+    // Rate limiting
+    app.use('/api/', apiLimiter)
+    app.use('/api/auth/', authLimiter)
 
     // CORS configuration - flexible for development
     const corsOrigins = process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000', 'http://localhost:3001']
@@ -46,6 +59,9 @@ export function createApp() {
     // Body parsing
     app.use(express.json({ limit: '10mb' }))
     app.use(express.urlencoded({ extended: true }))
+
+    // Request ID tracking
+    app.use(requestIdMiddleware)
 
     // Request logging
     app.use(requestLogger)
@@ -132,6 +148,20 @@ export function createApp() {
     app.post('/api/attempts/:attemptId/rounds/:roundType/video', (req, res, next) =>
         filesController.attachVideo(req, res, next)
     )
+
+    // Phase 5: Workflows
+    app.use('/api/workflows', workflowRoutes)
+
+    // Phase 6: Email Tracking & Templates
+    app.use('/api/tracking', emailTrackingRoutes)
+    app.use('/api/email-templates', emailTemplateRoutes)
+
+    // Phase 7: Interviews
+    // Phase 7: Interviews
+    app.use('/api/interviews', interviewRoutes)
+
+    // Audit Logs
+    app.use('/api/audit-logs', auditRoutes)
 
     // ============================================
 
