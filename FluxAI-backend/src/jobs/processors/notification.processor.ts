@@ -28,7 +28,7 @@ export async function processNotificationJob(job: Job<NotificationJobData>): Pro
 // EMAIL SENDERS (Resend + dev fallback)
 // ============================================
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'FluxAI <onboarding@resend.dev>'
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Fluxberry AI <onboarding@resend.dev>'
 
 function getInviteEmailHtml(data: SendInviteEmailJob): string {
     const greeting = data.candidateName ? `Hi ${data.candidateName},` : 'Hi,'

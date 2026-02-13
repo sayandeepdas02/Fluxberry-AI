@@ -1,7 +1,7 @@
 import { Job } from 'bullmq'
 import { Offer, OfferStatus } from '../../database/models/index.js'
 
-export const offerExpiryProcessor = async (_job: Job) => {
+export const processOfferExpiryJob = async (_job: Job) => {
     try {
         const now = new Date()
 

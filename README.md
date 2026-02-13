@@ -1,202 +1,172 @@
-# FluxAI
+# Fluxberry AI - Technical Hiring Assessment Platform
 
-**Technical Hiring Assessment Platform**
+Fluxberry AI is a comprehensive, AI-powered platform designed to streamline the technical hiring process. It combines automated workflows, intelligent scheduling, code execution environments, and deep analytics to help engineering teams hire faster and better.
 
-FluxAI is a modern, full-stack platform for evaluating technical candidates through structured, multi-round assessments. It combines automated grading, browser-based proctoring, and async workflows to help engineering teams hire faster with higher signal quality.
+## 🚀 Key Features
 
----
+### 🤖 Automation & Intelligence
+- **Workflow Automation Engine:** Create custom rules (e.g., "If score > 80, move to Interview") to automate candidate progression.
+- **AI Interviewer:** Real-time AI-driven technical interviews powered by OpenAI.
+- **Code Execution:** Secure, sandboxed code execution for DSA assessments using Judge0.
 
-## Key Features
+### 📧 Communication & Scheduling
+- **Advanced Email Engine:** Customizable email templates with built-in open tracking and variable injection.
+- **Smart Scheduling:** Seamless integration with Google Calendar for checking interviewer availability and booking slots.
+- **Automated Notifications:** Event-driven email triggers for stage changes, interview invites, and assessments.
 
-| Capability | Description |
-|------------|-------------|
-| **Multi-round assessments** | MCQ → DSA → AI Interview pipeline |
-| **User onboarding flow** | Signup → Onboarding → Dashboard journey |
-| **Protected routes** | Auth-gated onboarding and dashboard |
-| **Workspace dropdown** | Invite, Settings, Logout from sidebar |
-| **Browser proctoring** | Tab-switch, fullscreen, face detection |
-| **Async evaluation** | BullMQ-based background processing |
-| **Dynamic workspaces** | Organization-based multi-tenancy |
+### 📊 Management & Insights
+- **Pipeline Management:** Customizable Kanban-style hiring pipelines with drag-and-drop stage management.
+- **Analytics Dashboard:** Visual insights into hiring metrics, conversion rates, and time-to-hire.
+- **Scorecards:** Structured feedback forms for consistent candidate evaluation.
+- **Audit Logs:** Comprehensive activity tracking for security and compliance (GDPR ready).
 
----
+### 🛡️ Security & Performance
+- **Role-Based Access Control (RBAC):** Granular permissions for admins, recruiters, and interviewers.
+- **Rate Limiting:** Protection against abuse on API and Auth endpoints.
+- **Data Retention:** Automated policies for cleaning up old logs and data.
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-### Frontend
-- **Framework:** Next.js 14 (App Router)
-- **Styling:** Tailwind CSS
-- **State:** React Context + hooks
-- **Validation:** Zod
+### Backend (`FluxAI-backend`)
+- **Runtime:** Node.js, Express.js
+- **Language:** TypeScript
+- **Database:** MongoDB (Mongoose ORM)
+- **Caching & Queues:** Redis, BullMQ
+- **Email:** Resend
+- **Validation:** Zod, Express-Validator
+- **Logs:** Winston (Structured Logging)
 
-### Backend
-- **Runtime:** Node.js + TypeScript
-- **Framework:** Express.js
-- **Database:** MongoDB + Mongoose
-- **Auth:** JWT (stateless)
-- **Queue:** BullMQ + Redis
+### Frontend (`FluxAI-frontend`)
+- **Framework:** Next.js 15 (App Router)
+- **Language:** TypeScript, React 19
+- **Styling:** Tailwind CSS v4, Radix UI
+- **Icons:** Lucide React
+- **Charts:** Recharts
 
----
-
-## Quick Start
-
-### Prerequisites
-- Node.js 18+
-- MongoDB 7+
-- Redis 7+ (for background jobs)
-
-### Backend Setup
-
-```bash
-cd FluxAI-backend
-
-npm install
-cp .env.example .env
-# Edit .env: MONGODB_URI, JWT_SECRET
-
-npm run dev
-# → http://localhost:5001
-```
-
-### Frontend Setup
-
-```bash
-cd FluxAI-frontend
-
-npm install
-cp .env.example .env.local
-# Edit: NEXT_PUBLIC_API_URL=http://localhost:5001/api
-
-npm run dev
-# → http://localhost:3000
-```
-
----
-
-## Repository Structure
+## 📂 Repository Structure
 
 ```
 FluxAI/
-├── FluxAI-frontend/          # Next.js application
+├── FluxAI-backend/         # Express API Server
 │   ├── src/
-│   │   ├── app/              # Pages (App Router)
-│   │   ├── components/       # Shared UI components
-│   │   ├── features/         # Feature modules
-│   │   └── lib/              # API clients, context
-│   └── public/
-│
-├── FluxAI-backend/           # Express API server
-│   ├── src/
-│   │   ├── database/
-│   │   │   ├── mongodb.ts    # Connection
-│   │   │   └── models/       # Mongoose models
-│   │   ├── modules/
-│   │   │   ├── auth/
-│   │   │   ├── onboarding/   # User onboarding
-│   │   │   ├── organizations/
-│   │   │   ├── assessments/
-│   │   │   ├── questions/
-│   │   │   ├── attempts/
-│   │   │   ├── proctoring/
-│   │   │   ├── evaluation/
-│   │   │   ├── results/
-│   │   │   ├── candidates/   # Candidate management
-│   │   │   ├── analytics/    # KPIs & Reporting
-│   │   │   ├── dashboard/    # Dashboard aggregation
-│   │   │   ├── public/       # Public career APIs
-│   │   │   └── files/
-│   │   └── jobs/             # BullMQ workers
+│   │   ├── common/         # Shared utilities, middleware, guards
+│   │   ├── config/         # Environment and app configuration
+│   │   ├── database/       # Mongoose models and connection logic
+│   │   ├── jobs/           # BullMQ processors and cron jobs
+│   │   ├── modules/        # Feature-based architecture (Auth, User, Workflow, etc.)
+│   │   └── server.ts       # Entry point
+│   ├── .env.example        # Backend environment variables template
 │   └── package.json
 │
-├── features.md               # Detailed feature docs
-└── README.md
+├── FluxAI-frontend/        # Next.js Client Application
+│   ├── src/
+│   │   ├── app/            # App Router pages and layouts
+│   │   ├── components/     # Reusable UI components
+│   │   ├── features/       # Feature-specific components and logic
+│   │   ├── lib/            # API clients and utilities
+│   │   └── hooks/          # Custom React hooks
+│   ├── .env.local          # Frontend environment variables
+│   └── package.json
+│
+└── README.md               # Project Documentation
 ```
 
----
+## ⚡ Getting Started
 
-## Environment Variables
+### Prerequisites
+- Node.js (v18+)
+- MongoDB (Local or Atlas)
+- Redis (Local or Cloud)
+- npm or yarn
 
-### Backend (`FluxAI-backend/.env`)
+### 1. Backend Setup
+
+Navigate to the backend directory:
+```bash
+cd FluxAI-backend
+```
+
+Install dependencies:
+```bash
+npm install
+```
+
+Configure environment variables:
+```bash
+cp .env.example .env
+```
+*Edit `.env` with your MongoDB URI, Redis URL, Resend API Key, and OpenAI Key.*
+
+Run the development server:
+```bash
+npm run dev
+```
+
+Start the background worker (for emails & workflows):
+```bash
+npm run worker
+```
+
+### 2. Frontend Setup
+
+Navigate to the frontend directory:
+```bash
+cd ../FluxAI-frontend
+```
+
+Install dependencies:
+```bash
+npm install
+```
+
+Configure environment variables:
+Create a `.env.local` file:
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:5001/api
+```
+
+Run the development server:
+```bash
+npm run dev
+```
+
+Visit `http://localhost:3000` to access the application.
+
+## 🔧 Configuration
+
+### Backend Environment Variables (`FluxAI-backend/.env`)
+
+| Variable | Description | Default/Example |
+|----------|-------------|-----------------|
+| `PORT` | API Server Port | `5001` |
+| `MONGODB_URI` | MongoDB Connection String | `mongodb://localhost:27017/fluxberry-ai` |
+| `JWT_SECRET` | Secret for signing tokens | *SecureString* |
+| `CORS_ORIGIN` | Allowed Frontend Origin | `http://localhost:3000` |
+| `REDIS_URL` | Redis Connection String | `redis://localhost:6379` |
+| `RESEND_API_KEY` | API Key for Email Service | *re_123...* |
+| `OPENAI_API_KEY` | OpenAI Key for AI Interviews | *sk-...* |
+| `JUDGE0_BASE_URL` | Judge0 URL for Code Exec | `http://localhost:2358` |
+
+### Frontend Environment Variables (`FluxAI-frontend/.env.local`)
 
 | Variable | Description |
 |----------|-------------|
-| `MONGODB_URI` | MongoDB connection string |
-| `JWT_SECRET` | JWT signing secret |
-| `PORT` | Server port (default: 5001) |
-| `CORS_ORIGIN` | Frontend URL |
-| `REDIS_URL` | Redis connection (for jobs) |
+| `NEXT_PUBLIC_API_URL` | URL of the backend API (e.g., `http://localhost:5001/api`) |
 
-### Frontend (`FluxAI-frontend/.env.local`)
+## 🧪 Testing
 
-| Variable | Description |
-|----------|-------------|
-| `NEXT_PUBLIC_API_URL` | Backend API URL |
+The backend includes a suite of tests using Jest.
 
----
-
-## API Highlights
-
-| Endpoint | Description |
-|----------|-------------|
-| `POST /api/auth/signup` | Register (returns `onboardingCompleted: false`) |
-| `POST /api/auth/login` | Login with onboarding status |
-| `POST /api/onboarding/complete` | Complete onboarding + update org |
-| `GET /api/assessments` | List assessments |
-| `POST /api/assessments/:id/attempts` | Start candidate attempt |
-| `GET /api/attempts/:id/result` | Get attempt results |
-| `GET /api/jobs` | List & filter jobs |
-| `GET /api/candidates` | Manage candidate pool |
-| `GET /api/analytics` | Dashboard KPIs & trends |
-| `GET /api/public/companies/:slug` | Public career page |
-
----
-
-## User Flows
-
-### New User
-```
-/signup → /onboard/step-1 → step-2 → step-3 → /dashboard
-```
-
-### Returning User
-```
-/signin → /dashboard (if onboarding done)
-        → /onboard/step-1 (if not)
-```
-
-### Logout
-```
-Workspace dropdown → Logout → / (landing page)
-```
-
----
-
-## Scripts
-
-### Backend
+Run unit tests:
 ```bash
-npm run dev      # Dev server
-npm run build    # Build
-npm run start    # Production
-npm run worker   # Background worker
+cd FluxAI-backend
+npm run test
 ```
 
-### Frontend
-```bash
-npm run dev      # Dev server
-npm run build    # Build
-npm run lint     # Lint
-```
+## 🤝 Contributing
 
----
-
-## Roadmap
-
-- [ ] DSA code execution sandbox
-- [ ] AI interview scoring (LLM)
-- [ ] Email delivery
-- [ ] Payments & billing
-- [ ] ATS integrations
-
----
-
-*Built for engineering teams that care about hiring quality.*
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request

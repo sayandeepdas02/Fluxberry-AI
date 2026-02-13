@@ -1,7 +1,7 @@
 {
-  "name": "fluxai-backend",
+  "name": "fluxberry-backend",
   "version": "1.0.0",
-  "description": "FluxAI Backend - Technical Hiring Assessment Platform API",
+  "description": "Fluxberry AI - Technical Hiring Assessment Platform API",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",

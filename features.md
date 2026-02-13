@@ -1,8 +1,8 @@
-# FluxAI — Feature Documentation
+# Fluxberry AI — Feature Documentation
 
 ## 1. Product Overview
 
-**FluxAI** is a technical hiring assessment platform built for engineering teams that need to evaluate candidates at scale with high signal quality and minimal operational overhead.
+**Fluxberry AI** is a technical hiring assessment platform built for engineering teams that need to evaluate candidates at scale with high signal quality and minimal operational overhead.
 
 ### Who It's For
 - Technical hiring teams at startups and enterprises
@@ -10,8 +10,8 @@
 - Recruiters managing high-volume technical pipelines
 
 ### Core Problems Solved
-| Problem | FluxAI Solution |
-|---------|-----------------|
+| Problem | Fluxberry AI Solution |
+|---------|-----------------------|
 | **Time-to-hire is too long** | Async assessments eliminate scheduling bottlenecks |
 | **Signal quality is low** | Multi-round format (MCQ → DSA → AI Interview) provides depth |
 | **Cheating is rampant** | Browser-based proctoring with tab-switch detection, face tracking |
@@ -32,7 +32,7 @@
 
 ---
 
-### User Onboarding ✅ NEW
+### User Onboarding ✅
 
 | Route | Description |
 |-------|-------------|
@@ -49,11 +49,6 @@
 - Dashboard routes require auth + completed onboarding
 - Unauthenticated users → redirect to `/signin`
 
-**UX Behaviors:**
-- Multi-step wizard with progress indicator
-- Workspace name updates organization
-- Onboarding status persisted (`onboardingCompleted` flag)
-
 ---
 
 ### Recruiter Dashboard
@@ -67,10 +62,14 @@
 | `/dashboard/analytics` | Assessment performance analytics (✅ Integrated) |
 | `/dashboard/candidate-pool` | Browse all candidates (✅ Integrated) |
 | `/dashboard/manage-jobs` | Job listing management (✅ Integrated) |
+| `/dashboard/workflows` | Automation rules builder (✅ **New**) |
+| `/dashboard/interviews` | Interview scheduler & calendar (✅ **New**) |
+| `/dashboard/audit-logs` | Security & activity logs (✅ **New**) |
+| `/dashboard/settings/email-templates` | Email template editor (✅ **New**) |
 
 **UX Behaviors:**
-- Sidebar navigation with **dynamic workspace name** from user's organization
-- **Workspace dropdown** with: + Invite, Settings, Logout
+- Sidebar navigation with **dynamic workspace name**
+- **Workspace dropdown** with: + Invite, Settings, Audit Logs, Logout
 - Logout redirects to landing page `/`
 - Data tables with search, filter, sort
 - Quick actions (edit, delete, duplicate)
@@ -112,9 +111,10 @@
 ### Tech Stack
 - **Runtime:** Node.js 20+ with TypeScript
 - **Framework:** Express.js
-- **Database:** MongoDB with Mongoose ODM ✅ **(Migrated from PostgreSQL/Prisma)**
+- **Database:** MongoDB with Mongoose ODM
 - **Auth:** JWT-based authentication
 - **Queue:** BullMQ + Redis
+- **Email:** Resend
 
 ---
 
@@ -129,11 +129,51 @@
 | Organization membership | ✅ Done |
 | **User onboarding tracking** | ✅ Done |
 
-**Endpoints:**
-- `POST /api/auth/signup` — Returns `onboardingCompleted: false`
-- `POST /api/auth/login` — Returns user with onboarding status
-- `GET /api/auth/me`
-- `POST /api/onboarding/complete` — Marks onboarding done, updates org
+---
+
+### Automation & Workflows ✅ **(New)**
+
+| Feature | Status |
+|---------|--------|
+| **Workflow Engine** | ✅ Done (Event-driven architecture) |
+| **Rules Engine** | ✅ Done (If Condition -> Then Action) |
+| **Triggers** | ✅ Done (Application Submitted, Stage Changed) |
+| **Actions** | ✅ Done (Move Stage, Send Email) |
+| **Visual Builder** | ✅ Done (Frontend UI) |
+
+---
+
+### Email Engine ✅ **(New)**
+
+| Feature | Status |
+|---------|--------|
+| **Template Management** | ✅ Done (CRUD + Variable Injection) |
+| **Sending Provider** | ✅ Done (Resend Integration) |
+| **Open Tracking** | ✅ Done (Pixel + Webhook) |
+| **Logs** | ✅ Done (Sent/Failed/Opened status) |
+| **Visual Editor** | ✅ Done (Frontend UI) |
+
+---
+
+### Interview Management ✅ **(New)**
+
+| Feature | Status |
+|---------|--------|
+| **Scheduling** | ✅ Done (Conflict detection) |
+| **Google Calendar** | ✅ Done (OAuth + Event Sync) |
+| **Scorecards** | ✅ Done (Feedback forms) |
+| **Calendar UI** | ✅ Done (Frontend) |
+
+---
+
+### Security & Compliance ✅ **(New)**
+
+| Feature | Status |
+|---------|--------|
+| **Audit Logs** | ✅ Done (Full activity tracking) |
+| **GDPR Deletion** | ✅ Done (Self-serve account deletion) |
+| **Data Retention** | ✅ Done (Automated cleanup via Cron) |
+| **Rate Limiting** | ✅ Done (API + Auth protection) |
 
 ---
 
@@ -168,187 +208,53 @@
 
 ---
 
-### File Uploads ✅
-
-| Feature | Status |
-|---------|--------|
-| S3-compatible pre-signed URLs | ✅ Done |
-| Resume attachment (≤5MB PDF) | ✅ Done |
-| Video attachment (≤500MB) | ✅ Done |
-
----
-
 ### Background Jobs ✅
 
 | Feature | Status |
 |---------|--------|
 | BullMQ + Redis infrastructure | ✅ Done |
 | Evaluation job queue | ✅ Done |
-
----
-
-### Candidates & CRM ✅
-
-| Feature | Status |
-|---------|--------|
-| Create & Update Candidates | ✅ Done |
-| List with Filtering (Source, Search) | ✅ Done |
-| Candidate History (Attempts timeline) | ✅ Done |
-
----
-
-### Jobs & ATS ✅
-
-| Feature | Status |
-|---------|--------|
-| Create Jobs | ✅ Done |
-| List with Pagination & Status Filter | ✅ Done |
-| Advanced Search | ✅ Done |
-
----
-
-### Analytics & Dashboard ✅
-
-| Feature | Status |
-|---------|--------|
-| Aggregate KPIs (Reach, ROI, etc.) | ✅ Done |
-| Trend Analysis (Time-series) | ✅ Done |
-| Demographic breakdowns | ✅ Done |
-| Dashboard Overview Summary | ✅ Done |
-
----
-
-### Public Career Pages ✅
-
-| Feature | Status |
-|---------|--------|
-| Public Company Profile (`/companies/:slug`) | ✅ Done |
-| Public Job Listing (`/companies/:slug/jobs`) | ✅ Done |
-| Job Detail View (`/jobs/:id`) | ✅ Done |
-| Application Form | ✅ Done (UI only, submit pending) |
+| Email job queue | ✅ Done |
+| Workflow job queue | ✅ Done |
 
 ---
 
 ## 4. MVP Completion Status
 
-| Domain | Status |
-|--------|--------|
-| **Auth & Organizations** | ✅ Done |
-| **User Onboarding Flow** | ✅ Done |
-| **Assessments CRUD** | ✅ Done |
-| **Question Bank** | ✅ Done |
-| **Candidate Attempts** | ✅ Done |
-| **Proctoring Ingestion** | ✅ Done |
-| **MCQ Auto-Grading** | ✅ Done |
-| **Results APIs** | ✅ Done |
-| **File Storage** | ✅ Done |
-| **Background Jobs** | ✅ Done |
-| **MongoDB Migration** | ✅ Done |
-| DSA Code Execution | ✅ Implemented (Run Only) |
-| AI Interview Scoring | 🚧 Stubbed |
-| Email Delivery | 🚧 Stubbed (Logged) |
-| Payments / Billing | ⏳ Post-MVP |
-| ATS Integrations | ⏳ Post-MVP |
+| Domain | Status | Notes |
+|--------|--------|-------|
+| **Auth & Organizations** | ✅ Done | Production ready |
+| **User Onboarding Flow** | ✅ Done | Production ready |
+| **Assessments & Questions** | ✅ Done | Production ready |
+| **Candidate Experience** | ✅ Done | Production ready |
+| **Proctoring** | ✅ Done | Signals captured, no auto-ban |
+| **Workflows & Automation** | ✅ Done | Backend engine + UI |
+| **Email System** | ✅ Done | Resend integration complete |
+| **Interviews & Scheduling** | ✅ Done | Google Cal integration complete |
+| **Audit & Security** | ✅ Done | GDPR + Logs complete |
+| **DSA Code Execution** | ⚠️ Partial | Runner works, grading is simplified |
+| **AI Interview** | 🚧 Shell | UI works, backend is stubbed (no real AI agent) |
+| **Payments** | ⏳ Post-MVP | UI placeholders only |
 
 ---
 
-## 5. Out of Scope (Intentionally Not Built)
+## 5. Known Limitations (What is NOT Working)
 
-| Feature | Reason |
-|---------|--------|
-| **Resume parsing** | Requires ML/NLP integration |
-| **AI scoring intelligence** | Requires LLM integration |
-| **Code execution sandbox** | Requires isolated runtime |
-| **Payment processing** | Requires Stripe integration |
-| **Email delivery** | Requires SendGrid/SES |
+### 1. AI Interview (Round 3)
+- **Status:** 🚧 **Disconnected UI Shell**
+- **Description:** The UI allows candidates to record video, but it **does not** connect to an actual AI provider (like OpenAI Realtime or Ribbon).
+- **Impact:** No conversation happens, no transcript is generated.
+
+### 2. DSA Grading
+- **Status:** ⚠️ **Basic Execution**
+- **Description:** Code executes runs against basic test cases (if Judge0 is active), but deep semantic analysis or complexity grading is not implemented.
+- **Impact:** Pass/Fail is based on simple output matching only.
+
+### 3. Payment Processing
+- **Status:** 🛑 **Stubbed**
+- **Description:** "Upgrade Plan" buttons exist but do not trigger any Stripe flow.
+- **Impact:** All users are effectively on a "Free Tier".
 
 ---
 
 *Last updated: February 2026*
-
----
-
-## 6. Round 3 (AI Interview) Status & Integration Guide
-
-### Current Status: 🚧 Disconnected UI Shell
-
-As of the latest update, **Round 3 (AI Interview) is currently partially implemented as a UI shell.**
-
-- **Frontend:** The `InterviewSession` component renders the camera feed, microphone controls, and a placeholder for the AI avatar. It **does not** connect to any AI service (OpenAI, Ribbon, etc.).
-- **Backend:** The `startSession` endpoint generates a local session ID but **does not** initiate a session with an external AI provider.
-- **Data:** Transcripts are **not generated or saved**.
-
-This state allows for the UI flow to be demonstrated (Round 1 -> Round 2 -> Round 3) without incurring costs or requiring valid API keys for a specific provider.
-
-### Integration Guide: Adding an AI Agent (e.g., Ribbon AI)
-
-To fully enable the AI Interview, you need to integrate a provider. Here is the recommended approach:
-
-#### Backend Integration
-
-1.  **Select a Provider Strategy**:
-    - Decide if you will use a direct API (like OpenAI Realtime) or a managed platform (like Ribbon AI/Vapi).
-    - Acquire necessary API keys and Webhook secrets.
-
-2.  **Update `AIInterviewService`**:
-    - Modify `src/modules/ai-interview/ai-interview.service.ts`.
-    - **Implement `startSession`**: Call your provider's API to create a session token or URL.
-      ```typescript
-      // Example:
-      const session = await ribbonApi.createSession({
-          candidateName: candidate.name,
-          resumeUrl: candidate.resumeUrl,
-          questions: generatedQuestions
-      });
-      return { sessionId: session.id, token: session.clientToken, ... };
-      ```
-    - **Implement Webhooks** (Optional but recommended):
-      - Create a new controller (e.g., `ai-interview.controller.ts`) to handle webhook events (transcripts, completion).
-      - Verify signatures to ensure security.
-
-3.  **Update Types**:
-    - Update `StartAISessionResponse` in `src/modules/ai-interview/ai-interview.types.ts` to include any necessary client-side tokens or URLs.
-
-#### Frontend Integration
-
-1.  **Update `attempts.ts`**:
-    - Sync `AISessionStartResponse` with the backend's new return type.
-
-2.  **Modify `InterviewSession`**:
-    - Update `src/features/candidate/components/test-taker/ai-interview/interview-session.tsx`.
-    - **Add Provider SDK**: Install and import the provider's client SDK (e.g., `@ribbon-ai/react-sdk`).
-    - **Initialize Connection**: Use the token/URL from `startAISession` response to connect.
-    - **Handle Events**:
-      - `onConnect`: Set status to "Live".
-      - `onTranscript`: Update the transcript state.
-      - `onDisconnect`: Handle end of interview.
-
-3.  **Media Handling**:
-    - Ensure your provider supports the browser's `MediaStream`. Most WebRTC-based providers (like OpenAI/Vapi) handle this automatically or require you to pass the stream track.
-
-4.  **Testing**:
-    - Use the `/assessment/[id]/round` route to test the full flow.
-    - Verify that audio/video permissions are requested and that the AI responds to voice input.
-
----
-
-## 7. System Limitations & Stubbed Features
-
-This section explicitly lists features that are **Partially Implemented** or **Stubbed** to clarify the current system capabilities.
-
-| Feature Area | Status | Description |
-|--------------|--------|-------------|
-| **AI Interview (Round 3)** | 🚧 **Disconnected** | The UI is fully functional (camera, mic, avatar), but it **does not** connect to an AI provider. No conversation happens, and no transcript is saved. |
-| **DSA Round** | ⚠️ **Run Only** | Candidates can write code and click "Run" to execute it against Judge0 (if configured). However, **"Submit"** creates a placeholder score (0%) because test case execution logic is stubbed. |
-| **Job Applications** | 🚧 **UI Only** | The public job application form exists (`/jobs/:id`), but the **"Submit Application"** button is not hooked up to the backend. No candidate or application record is created. |
-| **Email Notifications** | 🛑 **Stubbed** | The system **does not send real emails**. Password resets, invite links, and notifications are logged to the backend console/logs for development purposes. |
-| **Payments** | 🛑 **Placeholder** | The "Manage Billing" and "Upgrade" buttons are visual placeholders. No Stripe/payment integration exists. |
-
-**What is Working (End-to-End):**
-- ✅ Recruiter Auth (Signup, Login, Onboarding)
-- ✅ Assessment Creation & Management
-- ✅ Candidate Link Generation & System Check
-- ✅ Round 1 (MCQ) taking & Auto-grading
-- ✅ Round 2 (DSA) entering code & running it (output visible)
-- ✅ Round 3 (AI) entering the room (video/audio works)
-- ✅ Candidate Results Dashboard (scores and status updates)
