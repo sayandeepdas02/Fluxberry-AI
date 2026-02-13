@@ -8,7 +8,7 @@ import { processEmailJob } from './processors/email.processor.js'
 import { processAnalyticsAggregationJob } from './processors/analytics-aggregation.processor.js'
 import { processWorkflowJob } from './processors/workflow.processor.js'
 
-console.log('🚀 Starting FluxAI Worker...')
+console.log('🚀 Starting Fluxberry AI Worker...')
 
 // ============================================
 // EVALUATION WORKER

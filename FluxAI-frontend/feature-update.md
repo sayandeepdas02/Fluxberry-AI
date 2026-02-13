@@ -1,8 +1,8 @@
-# FluxAI Feature Update & Engineering Status
+# Fluxberry AI Feature Update & Engineering Status
 
 ## 1. Overview
 
-**FluxAI** is a technical hiring assessment platform designed to automate and streamline the screening process for engineering roles. It competes with platforms like TestGorilla and HackerRank but focuses on a premium, recruiter-friendly experience with AI-enhanced capabilities.
+**Fluxberry AI** is a technical hiring assessment platform designed to automate and streamline the screening process for engineering roles. It competes with platforms like TestGorilla and HackerRank but focuses on a premium, recruiter-friendly experience with AI-enhanced capabilities.
 
 **Core Value Proposition:**
 - **Automated Screening:** Reduces time-to-hire by automating technical rounds (MCQ, Coding, AI Interview).

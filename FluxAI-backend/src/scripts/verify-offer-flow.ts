@@ -78,7 +78,7 @@ async function main() {
         const variables = {
             candidateName: 'John Doe',
             role: 'Senior Engineer',
-            company: 'FluxAI',
+            company: 'Fluxberry AI',
             salary: '$150,000',
             date: new Date().toLocaleDateString()
         }

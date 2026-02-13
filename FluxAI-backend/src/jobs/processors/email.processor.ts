@@ -60,7 +60,7 @@ export async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
         const resend = new Resend(process.env.RESEND_API_KEY)
 
         await resend.emails.send({
-            from: process.env.EMAIL_FROM || 'FluxAI <noreply@fluxai.app>',
+            from: process.env.EMAIL_FROM || 'Fluxberry AI <noreply@fluxberry.ai>',
             to,
             subject,
             html: finalHtml,

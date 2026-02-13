@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "../styles/globals.css";
 import { fontSans, fontMono } from "@/lib/fonts";
 import { AuthProvider } from "@/lib/context/auth-context";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
     title: "Fluxberry AI - Hire Smarter, Faster",
@@ -18,6 +19,7 @@ export default function RootLayout({
             <body>
                 <AuthProvider>
                     {children}
+                    <Toaster />
                 </AuthProvider>
             </body>
         </html>
