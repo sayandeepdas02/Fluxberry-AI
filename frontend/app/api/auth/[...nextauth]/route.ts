@@ -1,11 +1,10 @@
 import NextAuth, { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { PrismaAdapter } from "@next-auth/prisma-adapter"
-import { prisma } from "@/lib/prisma"
 import { compare } from "bcrypt"
+import connectDB from "@/lib/db"
+import User from "@/models/User"
 
 export const authOptions: NextAuthOptions = {
-    adapter: PrismaAdapter(prisma),
     session: {
         strategy: "jwt",
     },
@@ -24,24 +23,22 @@ export const authOptions: NextAuthOptions = {
                     return null
                 }
 
-                const user = await prisma.user.findUnique({
-                    where: {
-                        email: credentials.email
-                    }
-                })
+                await connectDB();
+
+                const user = await User.findOne({ email: credentials.email });
 
                 if (!user) {
                     return null
                 }
 
-                const isPasswordValid = await compare(credentials.password, user.password)
+                const isPasswordValid = await compare(credentials.password, user.password!)
 
                 if (!isPasswordValid) {
                     return null
                 }
 
                 return {
-                    id: user.id,
+                    id: user._id.toString(),
                     email: user.email,
                     name: user.name,
                 }
@@ -51,8 +48,6 @@ export const authOptions: NextAuthOptions = {
     callbacks: {
         async session({ session, token }) {
             if (token && session.user) {
-                // Safe navigation for id since token.id might be unknown type initially
-                // We can cast token to any or define a type, but simpler to use sub or id if present
                 if (token.sub) {
                     // @ts-ignore
                     session.user.id = token.sub
@@ -72,3 +67,4 @@ export const authOptions: NextAuthOptions = {
 const handler = NextAuth(authOptions)
 
 export { handler as GET, handler as POST }
+

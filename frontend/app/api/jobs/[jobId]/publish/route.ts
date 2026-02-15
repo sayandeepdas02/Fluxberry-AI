@@ -1,7 +1,8 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "../../../auth/[...nextauth]/route"
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import connectDB from "@/lib/db"
+import Job from "@/models/Job"
 import { nanoid } from 'nanoid'
 
 export async function POST(req: Request, { params }: { params: Promise<{ jobId: string }> }) {
@@ -10,22 +11,24 @@ export async function POST(req: Request, { params }: { params: Promise<{ jobId: 
 
     const { jobId } = await params
 
-    const job = await prisma.job.findUnique({
-        where: { id: jobId }
-    })
+    await connectDB();
+
+    const job = await Job.findById(jobId);
 
     if (!job) return new NextResponse("Job not found", { status: 404 })
 
     // Generate link if not exists
     const shareableLink = job.shareableLink || nanoid(10)
 
-    const updated = await prisma.job.update({
-        where: { id: jobId },
-        data: {
+    const updated = await Job.findByIdAndUpdate(
+        jobId,
+        {
             status: "published",
             shareableLink
-        }
-    })
+        },
+        { new: true }
+    )
 
     return NextResponse.json(updated)
 }
+

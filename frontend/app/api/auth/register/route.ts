@@ -1,4 +1,5 @@
-import { prisma } from "@/lib/prisma"
+import connectDB from "@/lib/db"
+import User from "@/models/User"
 import { userRegisterSchema } from "@/lib/validations/auth"
 import { hash } from "bcrypt"
 import { NextResponse } from "next/server"
@@ -9,11 +10,9 @@ export async function POST(req: Request) {
         const json = await req.json()
         const body = userRegisterSchema.parse(json)
 
-        const exists = await prisma.user.findUnique({
-            where: {
-                email: body.email,
-            },
-        })
+        await connectDB();
+
+        const exists = await User.findOne({ email: body.email });
 
         if (exists) {
             return new NextResponse("User already exists", { status: 409 })
@@ -21,17 +20,15 @@ export async function POST(req: Request) {
 
         const hashedPassword = await hash(body.password, 10)
 
-        const user = await prisma.user.create({
-            data: {
-                name: body.name,
-                email: body.email,
-                company: body.company,
-                password: hashedPassword,
-            },
+        const user = await User.create({
+            name: body.name,
+            email: body.email,
+            company: body.company,
+            password: hashedPassword,
         })
 
         // Remove password from response
-        const { password, ...result } = user
+        const { password, ...result } = user.toObject();
 
         return NextResponse.json(result, { status: 201 })
     } catch (error) {
@@ -39,6 +36,8 @@ export async function POST(req: Request) {
             return new NextResponse(JSON.stringify(error.issues), { status: 422 })
         }
 
+        console.error(error)
         return new NextResponse(null, { status: 500 })
     }
 }
+

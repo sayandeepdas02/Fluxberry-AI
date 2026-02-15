@@ -1,4 +1,5 @@
-import { prisma } from "@/lib/prisma"
+import connectDB from "@/lib/db"
+import Job from "@/models/Job"
 import { notFound } from "next/navigation"
 import { ApplicationForm } from "@/components/candidate/application-form"
 import { TestInterface } from "@/components/candidate/test-interface"
@@ -13,19 +14,22 @@ interface PageProps {
 
 export default async function JobApplicationPage({ params }: PageProps) {
     const { shareableLink } = await params
-    const job = await prisma.job.findUnique({
-        where: { shareableLink },
-        include: {
-            customFields: true,
-            questions: { // Only fetch questions if we need to check length, but usually we hide them
-                select: { id: true }
-            }
-        }
-    })
 
-    if (!job) {
+    await connectDB();
+
+    const jobDoc = await Job.findOne({ shareableLink }).lean();
+
+    if (!jobDoc) {
         notFound()
     }
+
+    const job = {
+        ...jobDoc,
+        id: jobDoc._id.toString(),
+        questions: jobDoc.questions?.map((q: any) => ({ ...q, id: q._id.toString() })) || [],
+        customFields: jobDoc.customFields?.map((f: any) => ({ ...f, id: f._id.toString() })) || []
+    }
+
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8">

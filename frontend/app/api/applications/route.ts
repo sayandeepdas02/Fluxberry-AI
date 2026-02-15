@@ -1,19 +1,25 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import connectDB from "@/lib/db"
+import Candidate from "@/models/Candidate"
+import Job from "@/models/Job"
 
 export async function POST(req: Request) {
     try {
         const json = await req.json()
         const { jobId, customFields, ...data } = json
 
-        // Add validation here in real app
+        await connectDB();
 
-        const candidate = await prisma.candidate.create({
-            data: {
-                ...data,
-                jobId,
-                customFields
-            }
+        // Validate job exists
+        const job = await Job.findById(jobId);
+        if (!job) {
+            return new NextResponse("Job not found", { status: 404 })
+        }
+
+        const candidate = await Candidate.create({
+            ...data,
+            jobId,
+            customFields
         })
 
         return NextResponse.json(candidate)
@@ -22,3 +28,4 @@ export async function POST(req: Request) {
         return new NextResponse("Internal Error", { status: 500 })
     }
 }
+

@@ -1,7 +1,8 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "../[...nextauth]/route"
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import connectDB from "@/lib/db"
+import User from "@/models/User"
 
 export async function GET() {
     const session = await getServerSession(authOptions)
@@ -10,18 +11,9 @@ export async function GET() {
         return new NextResponse("Unauthorized", { status: 401 })
     }
 
-    const user = await prisma.user.findUnique({
-        where: {
-            email: session.user.email,
-        },
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            company: true,
-            createdAt: true,
-        },
-    })
+    await connectDB();
+
+    const user = await User.findOne({ email: session.user.email }).select("-password");
 
     if (!user) {
         return new NextResponse("User not found", { status: 404 })
@@ -29,3 +21,4 @@ export async function GET() {
 
     return NextResponse.json(user)
 }
+
