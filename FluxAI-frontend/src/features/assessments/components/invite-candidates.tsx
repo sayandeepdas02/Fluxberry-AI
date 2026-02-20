@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, Upload, Rocket, Loader2, CheckCircle2, AlertCircle, Copy, Link2 } from "lucide-react"
+import { ArrowLeft, Upload, Rocket, Loader2, CheckCircle2, AlertCircle, Copy, Link2, FileSpreadsheet, X } from "lucide-react"
 import Link from "next/link"
 import { assessmentsApi } from "@/lib/api/assessments"
 
@@ -39,6 +39,38 @@ const getTestLink = (assessmentId: string) => {
     return `${process.env.NEXT_PUBLIC_APP_URL || ""}/assessment/${assessmentId}/start`
 }
 
+/**
+ * Parse a CSV file's text content into a list of emails.
+ * Supports:
+ *  - Files with an "email" header row (skips it)
+ *  - Comma-separated or newline-separated plain lists
+ *  - Multi-column CSVs — only captures the first column
+ */
+function parseCSVToEmails(text: string): { emails: string[]; skipped: number } {
+    const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+    const emails: string[] = []
+    let skipped = 0
+
+    for (const line of lines) {
+        // Take only the first "column" (before any comma)
+        const firstCol = line.split(",")[0].replace(/^["']|["']$/g, "").trim().toLowerCase()
+
+        // Skip header rows
+        if (firstCol === "email" || firstCol === "emails" || firstCol === "e-mail") {
+            skipped++
+            continue
+        }
+
+        if (firstCol && EMAIL_REGEX.test(firstCol)) {
+            emails.push(firstCol)
+        } else if (firstCol) {
+            skipped++
+        }
+    }
+
+    return { emails, skipped }
+}
+
 export function InviteCandidates({ assessmentId }: { assessmentId: string }) {
     const [status, setStatus] = useState<"DRAFT" | "ACTIVE" | "CLOSED" | null>(null)
     const [publishLoading, setPublishLoading] = useState(false)
@@ -47,6 +79,12 @@ export function InviteCandidates({ assessmentId }: { assessmentId: string }) {
     const [success, setSuccess] = useState<number | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [copied, setCopied] = useState(false)
+
+    // CSV import state
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const [csvImport, setCsvImport] = useState<{ count: number; filename: string } | null>(null)
+    const [csvError, setCsvError] = useState<string | null>(null)
+    const [isDragOver, setIsDragOver] = useState(false)
 
     useEffect(() => {
         assessmentsApi.getById(assessmentId).then((res) => {
@@ -111,6 +149,7 @@ export function InviteCandidates({ assessmentId }: { assessmentId: string }) {
             if (res.success && res.data) {
                 setSuccess(res.data.invited)
                 setEmailsRaw("")
+                setCsvImport(null)
             } else {
                 setError(res.error?.message || "Failed to send invites.")
             }
@@ -120,6 +159,67 @@ export function InviteCandidates({ assessmentId }: { assessmentId: string }) {
             setLoading(false)
         }
     }
+
+    // ── CSV Handlers ──────────────────────────────────────────────────────────
+
+    const processCSVFile = (file: File) => {
+        setCsvError(null)
+        setCsvImport(null)
+
+        if (!file.name.endsWith(".csv") && file.type !== "text/csv") {
+            setCsvError("Please upload a .csv file.")
+            return
+        }
+        if (file.size > 1 * 1024 * 1024) { // 1MB limit
+            setCsvError("CSV file is too large. Maximum size is 1MB.")
+            return
+        }
+
+        const reader = new FileReader()
+        reader.onload = (e) => {
+            const text = e.target?.result as string
+            if (!text) {
+                setCsvError("Could not read file.")
+                return
+            }
+
+            const { emails, skipped } = parseCSVToEmails(text)
+
+            if (emails.length === 0) {
+                setCsvError(`No valid emails found in the CSV.${skipped > 0 ? ` (${skipped} rows skipped)` : ""}`)
+                return
+            }
+
+            // Merge with existing emails in textarea, deduplicating
+            const existing = parseEmails(emailsRaw)
+            const merged = [...new Set([...existing, ...emails])]
+            setEmailsRaw(merged.join("\n"))
+            setCsvImport({ count: emails.length, filename: file.name })
+        }
+        reader.onerror = () => setCsvError("Error reading file.")
+        reader.readAsText(file)
+    }
+
+    const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) processCSVFile(file)
+        // Reset input so the same file can be re-uploaded
+        if (fileInputRef.current) fileInputRef.current.value = ""
+    }
+
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault()
+        setIsDragOver(false)
+        const file = e.dataTransfer.files?.[0]
+        if (file) processCSVFile(file)
+    }
+
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault()
+        setIsDragOver(true)
+    }
+
+    const handleDragLeave = () => setIsDragOver(false)
 
     return (
         <div className="max-w-2xl mx-auto space-y-8 py-8">
@@ -212,10 +312,62 @@ export function InviteCandidates({ assessmentId }: { assessmentId: string }) {
                                 />
                             </div>
 
-                            <div className="border-2 border-dashed border-muted-foreground/20 rounded-lg p-6 flex flex-col items-center justify-center text-center text-muted-foreground">
-                                <Upload className="w-6 h-6 mb-2" />
-                                <p className="text-sm font-medium">Upload CSV</p>
-                                <p className="text-xs mt-1">Drag and drop or click to upload (coming soon)</p>
+                            {/* CSV Upload Zone */}
+                            <div>
+                                {/* Hidden file input */}
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept=".csv,text/csv"
+                                    className="sr-only"
+                                    onChange={handleFileInputChange}
+                                    aria-label="Upload CSV file with emails"
+                                />
+
+                                <div
+                                    className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${isDragOver
+                                            ? "border-blue-400 bg-blue-50 text-blue-700"
+                                            : "border-muted-foreground/20 text-muted-foreground hover:border-muted-foreground/40 hover:bg-muted/30"
+                                        }`}
+                                    onClick={() => fileInputRef.current?.click()}
+                                    onDrop={handleDrop}
+                                    onDragOver={handleDragOver}
+                                    onDragLeave={handleDragLeave}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => e.key === "Enter" && fileInputRef.current?.click()}
+                                    aria-label="Click or drag and drop a CSV file to import emails"
+                                >
+                                    <Upload className="w-6 h-6 mb-2" />
+                                    <p className="text-sm font-medium">Upload CSV</p>
+                                    <p className="text-xs mt-1">
+                                        Click or drag & drop a .csv file with email addresses
+                                    </p>
+                                    <p className="text-xs mt-0.5 opacity-70">
+                                        Supports header row (<code>email</code>) or plain lists
+                                    </p>
+                                </div>
+
+                                {/* CSV import success badge */}
+                                {csvImport && (
+                                    <div className="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm">
+                                        <FileSpreadsheet className="w-4 h-4 flex-shrink-0" />
+                                        <span className="flex-1">
+                                            <strong>{csvImport.count}</strong> email{csvImport.count !== 1 ? "s" : ""} imported from <em>{csvImport.filename}</em>
+                                        </span>
+                                        <button onClick={() => setCsvImport(null)} className="text-green-600 hover:text-green-800">
+                                            <X className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* CSV parse error */}
+                                {csvError && (
+                                    <div className="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
+                                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                        <span>{csvError}</span>
+                                    </div>
+                                )}
                             </div>
                         </>
                     )}
@@ -241,7 +393,7 @@ export function InviteCandidates({ assessmentId }: { assessmentId: string }) {
                             <Button
                                 className="bg-foreground text-background hover:bg-foreground/90 gap-2"
                                 onClick={handleSendInvites}
-                                disabled={loading}
+                                disabled={loading || !emailsRaw.trim()}
                             >
                                 {loading ? (
                                     <>

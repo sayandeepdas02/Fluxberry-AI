@@ -152,7 +152,7 @@ export function Sidebar() {
                         <div className="space-y-1">
                             <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-foreground hover:text-foreground transition-colors group">
                                 <Briefcase className="w-4 h-4" />
-                                <span>Flux ATS</span>
+                                <span>Job Board</span>
                             </button>
 
                             <div className="ml-4 space-y-0.5 border-l border-border/50 pl-2">
@@ -192,7 +192,7 @@ export function Sidebar() {
                                     Candidate Pool
                                 </Link>
 
-                                <Link
+                                {/* <Link
                                     href="/dashboard/workflows"
                                     className={cn(
                                         "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
@@ -202,7 +202,7 @@ export function Sidebar() {
                                     )}
                                 >
                                     Workflows
-                                </Link>
+                                </Link> */}
                             </div>
                         </div>
 
@@ -210,7 +210,7 @@ export function Sidebar() {
                         <div className="space-y-1">
                             <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-foreground hover:text-foreground transition-colors group">
                                 <ShoppingBag className="w-4 h-4" />
-                                <span>Flux Hire</span>
+                                <span>Interview Automation</span>
                             </button>
 
                             <div className="ml-4 space-y-0.5 border-l border-border/50 pl-2">
@@ -236,7 +236,7 @@ export function Sidebar() {
                                 >
                                     Assessments
                                 </Link>
-                                <Link
+                                {/* <Link
                                     href="/dashboard/interviews"
                                     className={cn(
                                         "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
@@ -247,7 +247,7 @@ export function Sidebar() {
                                 >
                                     <Calendar className="w-4 h-4" />
                                     Interviews
-                                </Link>
+                                </Link> */}
                             </div>
                         </div>
 
@@ -255,7 +255,7 @@ export function Sidebar() {
                         <div className="space-y-1">
                             <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-foreground hover:text-foreground transition-colors group">
                                 <FileText className="w-4 h-4" />
-                                <span>Onboarding</span>
+                                <span>Talent Onboarding</span>
                             </button>
 
                             <div className="ml-4 space-y-0.5 border-l border-border/50 pl-2">
