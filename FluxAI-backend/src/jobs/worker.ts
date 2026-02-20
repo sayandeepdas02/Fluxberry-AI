@@ -1,3 +1,4 @@
+import 'dotenv/config' // ⚠️ MUST be first — loads .env before any other module reads process.env
 import { Worker } from 'bullmq'
 import { redisConnection } from './redis.js'
 import { processEvaluationJob } from './processors/evaluation.processor.js'
@@ -7,8 +8,14 @@ import { processResumeParsingJob } from './processors/resume-parsing.processor.j
 import { processEmailJob } from './processors/email.processor.js'
 import { processAnalyticsAggregationJob } from './processors/analytics-aggregation.processor.js'
 import { processWorkflowJob } from './processors/workflow.processor.js'
+import { validateWorkerEnv } from '../config/env.js'
 
 console.log('🚀 Starting Fluxberry AI Worker...')
+console.log(`🔑 RESEND_API_KEY loaded: ${!!process.env.RESEND_API_KEY}`)
+console.log(`🌐 FRONTEND_URL: ${process.env.FRONTEND_URL || '(not set)'}`)
+
+// Validate all required env vars — throws and exits if any are missing
+validateWorkerEnv()
 
 // ============================================
 // EVALUATION WORKER
