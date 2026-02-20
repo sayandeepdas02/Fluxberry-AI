@@ -253,31 +253,48 @@ class PublicService {
 
     /**
      * Run code via Judge0 (for DSA "Run Code" in UI). No auth required; rate-limit in production.
+     * Judge0 defaults to hosted CE (https://ce.judge0.com). Override JUDGE0_BASE_URL for self-hosted.
      */
     async runCode(body: { code: string; language: string; stdin?: string }) {
-        const baseUrl = process.env.JUDGE0_BASE_URL || 'http://localhost:2358'
+        const baseUrl = process.env.JUDGE0_BASE_URL || 'https://ce.judge0.com'
         const languageId = getJudge0LanguageId(body.language || 'python')
         if (languageId == null) {
-            throw { code: 'INVALID_INPUT', message: `Unsupported language: ${body.language}` }
+            const err = new Error(`Unsupported language: ${body.language}`) as Error & { statusCode: number; code: string }
+            err.statusCode = 400
+            err.code = 'INVALID_INPUT'
+            throw err
         }
-        const result = await judge0RunCode(
-            baseUrl,
-            body.code || '',
-            languageId,
-            body.stdin ?? '',
-            {
-                authToken: process.env.JUDGE0_AUTH_TOKEN || undefined,
-                rapidApiKey: process.env.JUDGE0_RAPIDAPI_KEY || undefined,
-                rapidApiHost: process.env.JUDGE0_RAPIDAPI_HOST || undefined,
+        const cpuTimeLimit = process.env.JUDGE0_CPU_TIME_LIMIT != null ? parseFloat(process.env.JUDGE0_CPU_TIME_LIMIT) : 2
+        const memoryLimitKb = process.env.JUDGE0_MEMORY_LIMIT_KB != null ? parseInt(process.env.JUDGE0_MEMORY_LIMIT_KB, 10) : 128000
+        try {
+            const result = await judge0RunCode(
+                baseUrl,
+                body.code || '',
+                languageId,
+                body.stdin ?? '',
+                {
+                    authToken: process.env.JUDGE0_AUTH_TOKEN || undefined,
+                    rapidApiKey: process.env.JUDGE0_RAPIDAPI_KEY || undefined,
+                    rapidApiHost: process.env.JUDGE0_RAPIDAPI_HOST || undefined,
+                    cpuTimeLimit,
+                    memoryLimitKb,
+                }
+            )
+            return {
+                stdout: result.stdout,
+                stderr: result.stderr,
+                statusDescription: result.statusDescription,
+                timeSeconds: result.timeSeconds,
+                memoryKb: result.memoryKb,
+                compileError: result.compileError ?? undefined,
+                exitCode: result.exitCode ?? undefined,
             }
-        )
-        return {
-            stdout: result.stdout,
-            stderr: result.stderr,
-            statusDescription: result.statusDescription,
-            timeSeconds: result.timeSeconds,
-            memoryKb: result.memoryKb,
-            compileError: result.compileError,
+        } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e)
+            const err = new Error(msg) as Error & { statusCode: number; code: string }
+            err.statusCode = 502
+            err.code = 'JUDGE0_ERROR'
+            throw err
         }
     }
 }

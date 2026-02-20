@@ -32,7 +32,8 @@ export interface EvaluateMCQJob {
 export interface EvaluateDSAJob {
     type: 'EVALUATE_DSA'
     attemptId: string
-    submission: {
+    /** Optional: if provided (e.g. from submitRound), use this single submission; else processor loads all answers from attempt. */
+    submission?: {
         code: string
         language: string
     }

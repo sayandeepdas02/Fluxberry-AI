@@ -50,7 +50,8 @@ export interface ResumeUploadResponse {
 export interface RunCodeResponse {
     stdout: string
     stderr: string
-    exitCode: number
+    /** Program exit code from Judge0 (optional for backwards compatibility). */
+    exitCode?: number
     time?: number
     memory?: number
     compileError?: string

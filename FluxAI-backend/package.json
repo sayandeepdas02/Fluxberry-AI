@@ -13,7 +13,10 @@
     "type-check": "tsc --noEmit",
     "test": "jest",
     "seed": "tsx src/database/seed.ts",
-    "seed:questions": "tsx src/scripts/seed-questions.ts"
+    "seed:questions": "tsx src/scripts/seed-questions.ts",
+    "test:judge0": "tsx src/scripts/test-judge0.ts",
+    "test:judge0:flow": "tsx src/scripts/judge0-flow.test.ts",
+    "test:judge0:verify": "tsx src/__tests__/judge0.integration.ts"
   },
   "keywords": [
     "hiring",
@@ -68,6 +71,7 @@
     "@typescript-eslint/parser": "^6.19.0",
     "eslint": "^8.56.0",
     "tsx": "^4.7.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "undici": "^7.22.0"
   }
 }

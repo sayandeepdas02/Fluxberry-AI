@@ -140,10 +140,12 @@ async function processMCQEvaluation(data: EvaluateMCQJob): Promise<void> {
 // DSA EVALUATION (Judge0)
 // ============================================
 
-const JUDGE0_BASE_URL = process.env.JUDGE0_BASE_URL || 'http://localhost:2358'
+const JUDGE0_BASE_URL = process.env.JUDGE0_BASE_URL || 'https://ce.judge0.com'
 const JUDGE0_AUTH_TOKEN = process.env.JUDGE0_AUTH_TOKEN || undefined
 const JUDGE0_RAPIDAPI_KEY = process.env.JUDGE0_RAPIDAPI_KEY || undefined
 const JUDGE0_RAPIDAPI_HOST = process.env.JUDGE0_RAPIDAPI_HOST || undefined
+const JUDGE0_CPU_TIME_LIMIT = process.env.JUDGE0_CPU_TIME_LIMIT != null ? parseFloat(process.env.JUDGE0_CPU_TIME_LIMIT) : 2
+const JUDGE0_MEMORY_LIMIT_KB = process.env.JUDGE0_MEMORY_LIMIT_KB != null ? parseInt(process.env.JUDGE0_MEMORY_LIMIT_KB, 10) : 128000
 
 interface DSATestCaseResult {
     stdin: string
@@ -164,7 +166,7 @@ interface DSAEvaluationMetadata {
 }
 
 async function processDSAEvaluation(data: EvaluateDSAJob): Promise<void> {
-    const { attemptId, submission } = data
+    const { attemptId, submission: jobSubmission } = data
 
     const attempt = await AssessmentAttempt.findById(attemptId)
     if (!attempt) {
@@ -178,86 +180,179 @@ async function processDSAEvaluation(data: EvaluateDSAJob): Promise<void> {
 
     const dsaRound = assessment.rounds.find((r) => r.roundType === 'DSA' && r.enabled)
     if (!dsaRound?.config) {
-        await updateDSAPlaceholder(attemptId, submission, 'PENDING', undefined)
+        await updateDSAPlaceholder(attemptId, { code: '', language: 'python' }, 'PENDING', undefined)
         return
     }
 
     const questionIds = (dsaRound.config as { questionIds?: string[] }).questionIds as string[] | undefined
     if (!questionIds?.length) {
-        await updateDSAPlaceholder(attemptId, submission, 'PENDING', undefined)
+        await updateDSAPlaceholder(attemptId, { code: '', language: 'python' }, 'PENDING', undefined)
         return
     }
 
     const questions = await Question.find({ _id: { $in: questionIds } }).sort({ createdAt: 1 })
-    const questionWithTests = questions.find(
-        (q) => q.dsaDetails?.testCases && Array.isArray(q.dsaDetails.testCases) && q.dsaDetails.testCases.length > 0
-    ) as (IQuestion & { dsaDetails: IDSADetails }) | undefined
 
-    if (!questionWithTests?.dsaDetails?.testCases?.length) {
-        await updateDSAPlaceholder(attemptId, submission, 'PENDING', undefined)
-        return
-    }
-
-    const languageId = getJudge0LanguageId(submission.language)
-    if (languageId == null) {
-        await updateDSAPlaceholder(attemptId, submission, 'EVALUATED', {
-            judge0Error: `Unsupported language: ${submission.language}`,
-            testCasesRun: 0,
-            testCasesPassed: 0,
-            score: 0,
-            maxScore: 100,
-        })
-        return
-    }
-
-    const testCases = questionWithTests.dsaDetails.testCases
-    const testResults: DSATestCaseResult[] = []
-    let passed = 0
-
-    try {
-        for (const tc of testCases) {
-            const { passed: p, result } = await runTestCase(
-                JUDGE0_BASE_URL,
-                submission.code,
-                languageId,
-                tc.stdin ?? '',
-                tc.expectedStdout ?? '',
-                {
-                    authToken: JUDGE0_AUTH_TOKEN,
-                    rapidApiKey: JUDGE0_RAPIDAPI_KEY,
-                    rapidApiHost: JUDGE0_RAPIDAPI_HOST,
-                }
-            )
-            if (p) passed++
-            testResults.push({
-                stdin: tc.stdin ?? '',
-                expectedStdout: tc.expectedStdout ?? '',
-                passed: p,
-                statusDescription: result.statusDescription,
-            })
+    // Legacy path: single submission from submitRound (e.g. one question round)
+    if (jobSubmission?.code != null) {
+        const questionWithTests = questions.find(
+            (q) => q.dsaDetails?.testCases && Array.isArray(q.dsaDetails.testCases) && q.dsaDetails.testCases.length > 0
+        ) as (IQuestion & { dsaDetails: IDSADetails }) | undefined
+        if (!questionWithTests?.dsaDetails?.testCases?.length) {
+            await updateDSAPlaceholder(attemptId, jobSubmission, 'PENDING', undefined)
+            return
         }
-    } catch (err) {
-        const message = err instanceof Error ? err.message : String(err)
-        console.error(`Judge0 DSA evaluation failed for attempt ${attemptId}:`, message)
-        await updateDSAPlaceholder(attemptId, submission, 'EVALUATED', {
-            judge0Error: message,
-            testCasesRun: testResults.length,
+        const languageId = getJudge0LanguageId(jobSubmission.language)
+        if (languageId == null) {
+            await updateDSAPlaceholder(attemptId, jobSubmission, 'EVALUATED', {
+                judge0Error: `Unsupported language: ${jobSubmission.language}`,
+                testCasesRun: 0,
+                testCasesPassed: 0,
+                score: 0,
+                maxScore: 100,
+            })
+            return
+        }
+        const testCases = questionWithTests.dsaDetails.testCases
+        const testResults: DSATestCaseResult[] = []
+        let passed = 0
+        try {
+            for (const tc of testCases) {
+                const { passed: p, result } = await runTestCase(
+                    JUDGE0_BASE_URL,
+                    jobSubmission.code,
+                    languageId,
+                    tc.stdin ?? '',
+                    tc.expectedStdout ?? '',
+                    {
+                        authToken: JUDGE0_AUTH_TOKEN,
+                        rapidApiKey: JUDGE0_RAPIDAPI_KEY,
+                        rapidApiHost: JUDGE0_RAPIDAPI_HOST,
+                        cpuTimeLimit: JUDGE0_CPU_TIME_LIMIT,
+                        memoryLimitKb: JUDGE0_MEMORY_LIMIT_KB,
+                    }
+                )
+                if (p) passed++
+                testResults.push({
+                    stdin: tc.stdin ?? '',
+                    expectedStdout: tc.expectedStdout ?? '',
+                    passed: p,
+                    statusDescription: result.statusDescription,
+                })
+            }
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err)
+            console.error(`Judge0 DSA evaluation failed for attempt ${attemptId}:`, message)
+            await updateDSAPlaceholder(attemptId, jobSubmission, 'EVALUATED', {
+                judge0Error: message,
+                testCasesRun: testResults.length,
+                testCasesPassed: passed,
+                testResults,
+                score: 0,
+                maxScore: testCases.length,
+            })
+            return
+        }
+        await updateDSAPlaceholder(attemptId, jobSubmission, 'EVALUATED', {
+            testCasesRun: testCases.length,
             testCasesPassed: passed,
             testResults,
-            score: 0,
+            score: passed,
             maxScore: testCases.length,
         })
         return
     }
 
-    const maxScore = testCases.length
-    const score = passed
-    await updateDSAPlaceholder(attemptId, submission, 'EVALUATED', {
-        testCasesRun: maxScore,
-        testCasesPassed: score,
-        testResults,
-        score,
-        maxScore,
+    // Main path: load saved answers from attempt (submitAnswer-per-question flow)
+    const roundAttempt = attempt.rounds.find((r: { roundType: string }) => r.roundType === 'DSA')
+    if (!roundAttempt?.answers || typeof roundAttempt.answers !== 'object') {
+        await updateDSAPlaceholder(attemptId, { code: '', language: 'python' }, 'PENDING', undefined)
+        return
+    }
+
+    const answers = roundAttempt.answers as Record<string, { code?: string; language?: string }>
+    let totalScore = 0
+    let totalMax = 0
+    const questionResults: Array<{
+        questionId: string
+        testCasesRun: number
+        testCasesPassed: number
+        score: number
+        maxScore: number
+        judge0Error?: string
+    }> = []
+
+    for (const q of questions) {
+        const qId = q._id.toString()
+        const sub = answers[qId]
+        if (!sub?.code) continue
+
+        const testCases = q.dsaDetails?.testCases && Array.isArray(q.dsaDetails.testCases)
+            ? (q as IQuestion & { dsaDetails: IDSADetails }).dsaDetails.testCases
+            : []
+        if (testCases.length === 0) continue
+
+        const languageId = getJudge0LanguageId(sub.language ?? 'python')
+        if (languageId == null) {
+            questionResults.push({
+                questionId: qId,
+                testCasesRun: 0,
+                testCasesPassed: 0,
+                score: 0,
+                maxScore: testCases.length,
+                judge0Error: `Unsupported language: ${sub.language}`,
+            })
+            totalMax += testCases.length
+            continue
+        }
+
+        let passed = 0
+        try {
+            for (const tc of testCases) {
+                const { passed: p } = await runTestCase(
+                    JUDGE0_BASE_URL,
+                    sub.code,
+                    languageId,
+                    tc.stdin ?? '',
+                    tc.expectedStdout ?? '',
+                    {
+                        authToken: JUDGE0_AUTH_TOKEN,
+                        rapidApiKey: JUDGE0_RAPIDAPI_KEY,
+                        rapidApiHost: JUDGE0_RAPIDAPI_HOST,
+                        cpuTimeLimit: JUDGE0_CPU_TIME_LIMIT,
+                        memoryLimitKb: JUDGE0_MEMORY_LIMIT_KB,
+                    }
+                )
+                if (p) passed++
+            }
+            questionResults.push({
+                questionId: qId,
+                testCasesRun: testCases.length,
+                testCasesPassed: passed,
+                score: passed,
+                maxScore: testCases.length,
+            })
+            totalScore += passed
+            totalMax += testCases.length
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err)
+            console.error(`Judge0 DSA evaluation failed for attempt ${attemptId} question ${qId}:`, message)
+            questionResults.push({
+                questionId: qId,
+                testCasesRun: testCases.length,
+                testCasesPassed: 0,
+                score: 0,
+                maxScore: testCases.length,
+                judge0Error: message,
+            })
+            totalMax += testCases.length
+        }
+    }
+
+    const placeholderSubmission = { code: '', language: 'python' }
+    await updateDSAPlaceholder(attemptId, placeholderSubmission, 'EVALUATED', {
+        score: totalScore,
+        maxScore: totalMax || 100,
+        questionResults,
     })
 }
 
@@ -272,6 +367,14 @@ async function updateDSAPlaceholder(
         testResults?: DSATestCaseResult[]
         score?: number
         maxScore?: number
+        questionResults?: Array<{
+            questionId: string
+            testCasesRun: number
+            testCasesPassed: number
+            score: number
+            maxScore: number
+            judge0Error?: string
+        }>
     } | undefined
 ): Promise<void> {
     const metadata: DSAEvaluationMetadata = {
