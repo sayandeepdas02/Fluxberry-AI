@@ -60,23 +60,39 @@ async function sendInviteEmail(data: SendInviteEmailJob): Promise<void> {
     const apiKey = process.env.RESEND_API_KEY
 
     if (!apiKey) {
-        // Dev fallback: no key = log only (app still works, emails not sent)
-        console.log(`📤 [DEV] No RESEND_API_KEY — would send invite to ${data.candidateEmail}`)
-        console.log(`   Assessment: ${data.assessmentTitle}`)
-        console.log(`   Link: ${data.inviteLink}`)
-        return
+        throw new Error(
+            'RESEND_API_KEY is not configured. Cannot send invite email to ' + data.candidateEmail +
+            '. Please add RESEND_API_KEY to your .env file and restart the worker.'
+        )
+    }
+
+    // Dev/Sandbox override: Resend sandbox only allows sending to your own email
+    // until a custom domain is verified at resend.com/domains.
+    // Set RESEND_TEST_EMAIL=your@email.com in .env to redirect all emails there.
+    const testEmail = process.env.RESEND_TEST_EMAIL
+    const actualTo = testEmail || data.candidateEmail
+    const isOverridden = !!testEmail && testEmail !== data.candidateEmail
+
+    if (isOverridden) {
+        console.log(`📧 [DEV OVERRIDE] Redirecting invite email for ${data.candidateEmail} → ${actualTo}`)
+    } else {
+        console.log(`📧 Sending invite to ${data.candidateEmail} via Resend...`)
     }
 
     const resend = new Resend(apiKey)
-    const { error } = await resend.emails.send({
+    const { data: result, error } = await resend.emails.send({
         from: FROM_EMAIL,
-        to: data.candidateEmail,
-        subject: `You're invited: ${data.assessmentTitle}`,
+        to: actualTo,
+        subject: isOverridden
+            ? `[TEST - intended for ${data.candidateEmail}] You're invited: ${data.assessmentTitle}`
+            : `You're invited: ${data.assessmentTitle}`,
         html: getInviteEmailHtml(data),
     })
 
     if (error) {
-        console.error(`❌ Resend error for ${data.candidateEmail}:`, error)
+        console.error(`❌ Resend error for ${actualTo}:`, error)
         throw new Error(`Failed to send invite email: ${error.message}`)
     }
+
+    console.log(`✅ Email sent to ${actualTo} (Resend ID: ${result?.id ?? 'unknown'})`)
 }
