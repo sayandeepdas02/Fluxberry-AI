@@ -357,15 +357,10 @@ export class AttemptsService {
                     assessmentId
                 )
             } else if (roundType === 'DSA') {
-                const submission = (answers as { code?: string; language?: string }) ?? {}
-                await evaluationService.createDSAPlaceholder(attemptId, submission)
+                await evaluationService.createDSAPlaceholder(attemptId, { code: '', language: 'python' })
                 await enqueueEvaluationJob({
                     type: 'EVALUATE_DSA',
                     attemptId,
-                    submission: {
-                        code: submission.code ?? '',
-                        language: submission.language ?? 'python',
-                    },
                 })
             } else if (roundType === 'AI') {
                 const refs = (answers as { transcriptRef?: string; videoRef?: string }) ?? {}
@@ -635,6 +630,16 @@ export class AttemptsService {
             }
 
             await attempt.save()
+
+            if (isRoundComplete && roundAttempt.roundType === 'DSA') {
+                try {
+                    await evaluationService.createDSAPlaceholder(attemptId, { code: '', language: 'python' })
+                    await enqueueEvaluationJob({ type: 'EVALUATE_DSA', attemptId })
+                } catch (err) {
+                    console.error(`Failed to enqueue DSA evaluation for attempt ${attemptId}:`, err)
+                }
+            }
+
             return {
                 success: true,
                 nextQuestionIndex: isRoundComplete ? null : nextQuestionIndex,
@@ -668,6 +673,20 @@ export class AttemptsService {
         }
 
         await attempt.save()
+
+        // When DSA round is completed via last submitAnswer, enqueue evaluation (Judge0 test cases).
+        // Frontend does not call submitRound for DSA; this ensures EVALUATE_DSA runs.
+        if (isRoundComplete && roundAttempt.roundType === 'DSA') {
+            try {
+                await evaluationService.createDSAPlaceholder(attemptId, { code: '', language: 'python' })
+                await enqueueEvaluationJob({
+                    type: 'EVALUATE_DSA',
+                    attemptId,
+                })
+            } catch (err) {
+                console.error(`Failed to enqueue DSA evaluation for attempt ${attemptId}:`, err)
+            }
+        }
 
         return {
             success: true,

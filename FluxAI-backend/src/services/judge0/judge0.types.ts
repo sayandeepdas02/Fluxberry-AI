@@ -30,7 +30,7 @@ export interface Judge0SubmissionResponse {
     exit_signal: number | null
 }
 
-/** Result normalized for our evaluation logic. */
+/** Result normalized for our evaluation logic and API responses. */
 export interface Judge0RunResult {
     accepted: boolean
     stdout: string
@@ -40,4 +40,6 @@ export interface Judge0RunResult {
     timeSeconds: number | null
     memoryKb: number | null
     compileError: string | null
+    /** Program exit code (Judge0 exit_code). */
+    exitCode: number | null
 }
