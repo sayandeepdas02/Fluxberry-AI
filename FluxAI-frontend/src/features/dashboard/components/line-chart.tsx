@@ -51,20 +51,35 @@ export function LineChart({ data }: LineChartProps) {
     const chartHeight = height - padding.top - padding.bottom;
 
     // Calculate max value for scaling
-    const maxValue = Math.max(...thisYear, ...lastYear) * 1.2; // Add headroom
+    const maxValueRaw = Math.max(...thisYear, ...lastYear);
+    const maxValue = maxValueRaw === 0 ? 10 : maxValueRaw * 1.2; // Add headroom, prevent div by 0
     const yScale = chartHeight / maxValue;
-    const xScale = chartWidth / (months.length - 1);
+
+    // Safety check for xScale to prevent division by zero
+    // If only 1 point, center it. If 0 points, scale doesn't matter (loop won't run)
+    const hasMultiplePoints = months.length > 1;
+    const xScale = hasMultiplePoints ? chartWidth / (months.length - 1) : 0;
 
     // Generate points
-    const thisYearPoints = thisYear.map((value, index) => ({
-        x: padding.left + index * xScale,
-        y: padding.top + chartHeight - value * yScale,
-    }));
+    const thisYearPoints = thisYear.map((value, index) => {
+        const x = hasMultiplePoints
+            ? padding.left + index * xScale
+            : padding.left + chartWidth / 2; // Center if single point
+        return {
+            x,
+            y: padding.top + chartHeight - value * yScale,
+        };
+    });
 
-    const lastYearPoints = lastYear.map((value, index) => ({
-        x: padding.left + index * xScale,
-        y: padding.top + chartHeight - value * yScale,
-    }));
+    const lastYearPoints = lastYear.map((value, index) => {
+        const x = hasMultiplePoints
+            ? padding.left + index * xScale
+            : padding.left + chartWidth / 2;
+        return {
+            x,
+            y: padding.top + chartHeight - value * yScale,
+        };
+    });
 
     const thisYearPath = getSmoothPath(thisYearPoints);
     const lastYearPath = getSmoothPath(lastYearPoints);
@@ -143,7 +158,9 @@ export function LineChart({ data }: LineChartProps) {
 
                         {/* X-axis labels */}
                         {months.map((month, index) => {
-                            const x = padding.left + index * xScale;
+                            const x = hasMultiplePoints
+                                ? padding.left + index * xScale
+                                : padding.left + chartWidth / 2;
                             return (
                                 <text
                                     key={`${month}-${index}`}

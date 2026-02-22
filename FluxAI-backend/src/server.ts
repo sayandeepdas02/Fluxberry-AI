@@ -3,10 +3,14 @@ import { createApp } from './app.js'
 import { connectMongoDB, disconnectMongoDB } from './database/mongodb.js'
 import { startCronJobs } from './jobs/cron.js'
 import { initScheduler } from './jobs/scheduler.js'
+import { validateServerEnv } from './config/env.js'
 
 const PORT = process.env.PORT || 5001
 
 async function main() {
+    // Validate environment variables — fail loudly if anything is missing
+    validateServerEnv()
+
     // Connect to MongoDB
     await connectMongoDB()
 
