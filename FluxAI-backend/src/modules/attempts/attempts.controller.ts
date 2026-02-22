@@ -179,6 +179,33 @@ export class AttemptsController {
             next(error)
         }
     }
+
+    /**
+     * GET /api/attempts/ribbon-callback
+     * Called by frontend callback page with cookie. Returns nextUrl to redirect the candidate.
+     */
+    async ribbonCallback(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const attemptId = (req as Request & { cookies?: Record<string, string> }).cookies?.fluxai_ribbon_attempt
+            if (!attemptId) {
+                res.status(400).json({
+                    success: false,
+                    error: { code: 'NO_COOKIE', message: 'Ribbon callback cookie missing' },
+                })
+                return
+            }
+            const result = await attemptsService.getRibbonCallbackNextUrl(attemptId)
+            res.clearCookie('fluxai_ribbon_attempt', {
+                path: '/',
+                httpOnly: true,
+                sameSite: 'lax',
+                secure: process.env.NODE_ENV === 'production',
+            })
+            res.json(successResponse(result))
+        } catch (error) {
+            next(error)
+        }
+    }
 }
 
 export const attemptsController = new AttemptsController()

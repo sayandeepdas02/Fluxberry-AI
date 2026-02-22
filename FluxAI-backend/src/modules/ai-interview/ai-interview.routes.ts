@@ -10,8 +10,11 @@ const router = Router()
 
 // ─── Candidate-facing routes (no auth — candidate uses attempt token) ───
 
-// Start session + get questions
+// Start session + get questions (legacy recording flow)
 router.post('/:attemptId/ai/start', aiInterviewController.startSession.bind(aiInterviewController))
+
+// Start Ribbon interactive voice interview (returns interview_link; sets cookie for callback)
+router.post('/:attemptId/ai/ribbon/start', aiInterviewController.startRibbonSession.bind(aiInterviewController))
 
 // End session
 router.post('/:attemptId/ai/end', aiInterviewController.endSession.bind(aiInterviewController))

@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
 import helmet from 'helmet'
 import compression from 'compression'
 import { apiLimiter, authLimiter } from './common/middleware/rate-limiter.js'
@@ -37,6 +38,7 @@ import { emailTrackingRoutes } from './modules/email/email-tracking.routes.js'
 import { emailTemplateRoutes } from './modules/email/email-templates.routes.js'
 import { interviewRoutes } from './modules/interviews/interviews.routes.js'
 import auditRoutes from './modules/audit/audit.routes.js'
+import { handleRibbonWebhook } from './modules/webhooks/ribbon.webhook.js'
 
 export function createApp() {
     const app = express()
@@ -56,9 +58,15 @@ export function createApp() {
         credentials: true,
     }))
 
-    // Body parsing
+    // Ribbon webhook (must use raw body for signature verification; register before json parser)
+    app.post('/api/webhooks/ribbon', express.raw({ type: 'application/json', limit: '1mb' }), (req, res) =>
+        handleRibbonWebhook(req, res)
+    )
+
+    // Body parsing and cookies (for Ribbon callback cookie)
     app.use(express.json({ limit: '10mb' }))
     app.use(express.urlencoded({ extended: true }))
+    app.use(cookieParser())
 
     // Request ID tracking
     app.use(requestIdMiddleware)

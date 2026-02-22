@@ -27,6 +27,7 @@ import {
     generateDownloadUrl,
 } from '../storage/s3.client.js'
 import { enqueueAIInterviewJob } from '../../jobs/queues/index.js'
+import { createFlow, createInterview, isRibbonConfigured } from '../../services/ribbon/ribbon.client.js'
 import type {
     StartAISessionInput,
     EndAISessionInput,
@@ -176,6 +177,93 @@ class AIInterviewService {
             consentRecordedAt: now.toISOString(),
             totalDurationEstimate: totalDuration,
         }
+    }
+
+    /**
+     * Start Ribbon AI interview (interactive voice).
+     * Ensures a flow exists for this assessment, creates a one-use interview, returns link.
+     */
+    async startRibbonSession(attemptId: string): Promise<{ interview_link: string; attemptId: string }> {
+        if (!isRibbonConfigured()) {
+            throw this.createError('Ribbon AI is not configured (RIBBON_API_KEY)', 503, 'SERVICE_UNAVAILABLE')
+        }
+
+        const attempt = await AssessmentAttempt.findById(attemptId)
+        if (!attempt) throw this.createError('Attempt not found', 404, 'NOT_FOUND')
+
+        const aiRoundIndex = attempt.rounds.findIndex(r => r.roundType === 'AI')
+        if (aiRoundIndex === -1) throw this.createError('No AI round in this assessment', 400, 'INVALID_CONFIG')
+
+        const aiRound = attempt.rounds[aiRoundIndex]
+        if (aiRound.status === RoundStatus.COMPLETED) {
+            throw this.createError('AI round already completed', 400, 'ALREADY_SUBMITTED')
+        }
+        if (aiRound.ribbonInterviewId) {
+            // Already started Ribbon; could return existing link but Ribbon links are one-use, so create new
+            // Option: throw so frontend shows "already started" or create new and overwrite. We create new.
+        }
+
+        const assessment = await Assessment.findById(attempt.assessmentId)
+        if (!assessment) throw this.createError('Assessment not found', 404, 'NOT_FOUND')
+
+        const aiRoundConfig = assessment.rounds.find(r => r.roundType === 'AI')
+        const config = (aiRoundConfig?.config || {}) as { questions?: AIQuestionConfig[]; ribbonFlowId?: string }
+        const questions = config?.questions?.length ? config.questions : DEFAULT_QUESTIONS
+        const questionStrings = questions.map(q => q.text)
+
+        const frontendOrigin = process.env.FRONTEND_URL || 'http://localhost:3000'
+        const backendPublic = process.env.BACKEND_PUBLIC_URL || process.env.FRONTEND_URL?.replace('3000', '5001') || 'http://localhost:5001'
+        const redirectUrl = `${frontendOrigin.replace(/\/$/, '')}/assessment/ribbon-callback`
+        const webhookUrl = `${backendPublic.replace(/\/$/, '')}/api/webhooks/ribbon`
+        const webhookSecret = process.env.RIBBON_WEBHOOK_SECRET || ''
+
+        let flowId = config.ribbonFlowId
+        if (!flowId) {
+            const flowRes = await createFlow({
+                org_name: assessment.title || 'FluxAI',
+                title: `${assessment.title || 'Interview'} – AI Round`,
+                questions: questionStrings,
+                redirect_url: redirectUrl,
+                webhook_url: webhookUrl,
+                webhook_secret_key: webhookSecret || undefined,
+                interview_type: 'general',
+            })
+            flowId = flowRes.interview_flow_id
+            if (assessment.rounds) {
+                const roundIndex = assessment.rounds.findIndex(r => r.roundType === 'AI')
+                if (roundIndex >= 0 && assessment.rounds[roundIndex]) {
+                    const round = assessment.rounds[roundIndex] as { config?: Record<string, unknown> }
+                    round.config = { ...(round.config || {}), ribbonFlowId: flowId }
+                    assessment.markModified(`rounds.${roundIndex}.config`)
+                    await assessment.save()
+                }
+            }
+        }
+
+        const candidate = await Candidate.findById(attempt.candidateId).lean()
+        const candidateInfo = candidate
+            ? {
+                interviewee_email_address: (candidate as { email?: string }).email,
+                interviewee_first_name: (candidate as { firstName?: string }).firstName,
+                interviewee_last_name: (candidate as { lastName?: string }).lastName,
+            }
+            : undefined
+
+        const { interview_id, interview_link } = await createInterview(flowId, candidateInfo)
+
+        const now = new Date()
+        aiRound.ribbonInterviewId = interview_id
+        aiRound.status = RoundStatus.IN_PROGRESS
+        aiRound.startedAt = now
+        aiRound.aiConsentRecordedAt = now
+        aiRound.aiQuestions = questions
+        if (attempt.status === 'NOT_STARTED') {
+            attempt.status = 'IN_PROGRESS'
+            attempt.startedAt = now
+        }
+        await attempt.save()
+
+        return { interview_link, attemptId: attemptId.toString() }
     }
 
     // ────── UPLOAD ──────
@@ -383,14 +471,16 @@ class AIInterviewService {
     // ────── RESULTS (RECRUITER) ──────
 
     /**
-     * Get full AI interview results for recruiter dashboard
+     * Get full AI interview results for recruiter dashboard.
+     * Supports both legacy (aiSessionId + AIInterviewResponse) and Ribbon (ribbonInterviewId + synthesis only).
      */
     async getInterviewResults(attemptId: string): Promise<AIInterviewResultsResponse> {
         const attempt = await AssessmentAttempt.findById(attemptId)
         if (!attempt) throw this.createError('Attempt not found', 404, 'NOT_FOUND')
 
         const aiRound = attempt.rounds.find(r => r.roundType === 'AI')
-        if (!aiRound || !aiRound.aiSessionId) {
+        const sessionId = aiRound?.ribbonInterviewId || aiRound?.aiSessionId
+        if (!aiRound || !sessionId) {
             return {
                 sessionId: '',
                 status: 'NOT_STARTED',
@@ -401,17 +491,12 @@ class AIInterviewService {
             }
         }
 
-        const sessionId = aiRound.aiSessionId
-
-        // Get all responses
-        const responses = await AIInterviewResponse.find({ sessionId }).sort({ questionIndex: 1 })
-
-        // Get synthesis
         const synthesis = await AIInterviewSynthesis.findOne({ sessionId })
+        const responses = await AIInterviewResponse.find({ sessionId }).sort({ questionIndex: 1 })
 
         return {
             sessionId,
-            status: aiRound.aiSessionStatus || 'NOT_STARTED',
+            status: aiRound.aiSessionStatus || aiRound.status || 'NOT_STARTED',
             synthesis: synthesis && synthesis.status === 'COMPLETED'
                 ? {
                     overallSummary: synthesis.overallSummary,

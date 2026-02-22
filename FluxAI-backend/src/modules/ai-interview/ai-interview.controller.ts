@@ -128,6 +128,25 @@ class AIInterviewController {
             return res.json({ success: true, data: result })
         } catch (error) { next(error) }
     }
+
+    /**
+     * POST /attempts/:attemptId/ai/ribbon/start
+     * Start Ribbon interactive voice interview. Sets cookie for callback and returns interview_link.
+     */
+    async startRibbonSession(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { attemptId } = req.params
+            const result = await aiInterviewService.startRibbonSession(attemptId)
+            res.cookie('fluxai_ribbon_attempt', attemptId, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                path: '/',
+                maxAge: 60 * 60 * 1000, // 1 hour
+            })
+            return res.json({ success: true, data: result })
+        } catch (error) { next(error) }
+    }
 }
 
 export const aiInterviewController = new AIInterviewController()
