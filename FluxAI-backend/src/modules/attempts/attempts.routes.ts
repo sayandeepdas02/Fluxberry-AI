@@ -7,6 +7,9 @@ const router = Router()
 // Public routes for candidates (no auth required)
 // Note: In production, you'd use invitation tokens for access control
 
+// Ribbon callback (must be before /:attemptId so "ribbon-callback" is not treated as attemptId)
+router.get('/ribbon-callback', (req, res, next) => attemptsController.ribbonCallback(req, res, next))
+
 // Get attempt details
 router.get('/:attemptId', (req, res, next) => attemptsController.getById(req, res, next))
 

@@ -791,6 +791,8 @@ export interface IRoundAttempt {
     aiConsentRecordedAt?: Date
     aiQuestions?: { id: string; text: string; prepSeconds: number; answerSeconds: number }[]
     aiRestartUsed?: boolean
+    // Ribbon (interactive voice AI)
+    ribbonInterviewId?: string
 }
 
 export interface IAssessmentAttempt extends Document {
@@ -850,6 +852,7 @@ const RoundAttemptSchema = new Schema<IRoundAttempt>({
         answerSeconds: { type: Number, default: 180 },
     }],
     aiRestartUsed: { type: Boolean, default: false },
+    ribbonInterviewId: { type: String },
 }, { _id: true })
 
 const AssessmentAttemptSchema = new Schema<IAssessmentAttempt>({
@@ -862,6 +865,7 @@ const AssessmentAttemptSchema = new Schema<IAssessmentAttempt>({
 }, { timestamps: true })
 
 AssessmentAttemptSchema.index({ assessmentId: 1, candidateId: 1 }, { unique: true })
+AssessmentAttemptSchema.index({ 'rounds.ribbonInterviewId': 1 }, { sparse: true })
 
 export const AssessmentAttempt = mongoose.model<IAssessmentAttempt>('AssessmentAttempt', AssessmentAttemptSchema)
 
@@ -1025,6 +1029,8 @@ export interface IAIInterviewSynthesis extends Document {
     totalQuestions: number
     processedQuestions: number
     status: AISynthesisStatusType
+    /** Full transcript (Ribbon); optional for legacy session-based flow */
+    transcript?: string
     createdAt: Date
 }
 
@@ -1039,6 +1045,7 @@ const AIInterviewSynthesisSchema = new Schema<IAIInterviewSynthesis>({
     totalQuestions: { type: Number, default: 0 },
     processedQuestions: { type: Number, default: 0 },
     status: { type: String, enum: Object.values(AISynthesisStatus), default: AISynthesisStatus.PENDING },
+    transcript: { type: String },
 }, { timestamps: { createdAt: true, updatedAt: false } })
 
 export const AIInterviewSynthesis = mongoose.model<IAIInterviewSynthesis>('AIInterviewSynthesis', AIInterviewSynthesisSchema)

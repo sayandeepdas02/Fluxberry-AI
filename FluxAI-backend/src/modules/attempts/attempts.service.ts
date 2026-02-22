@@ -375,6 +375,44 @@ export class AttemptsService {
     }
 
     /**
+     * Get redirect URL after Ribbon callback (next round or completed page).
+     * Optionally marks AI round COMPLETED if webhook has not yet run.
+     */
+    async getRibbonCallbackNextUrl(attemptId: string): Promise<{ nextUrl: string }> {
+        const attempt = await AssessmentAttempt.findById(attemptId)
+        if (!attempt) {
+            const error = new Error('Attempt not found') as Error & { statusCode: number; code: string }
+            error.statusCode = 404
+            error.code = 'NOT_FOUND'
+            throw error
+        }
+        const assessmentId = attempt.assessmentId.toString()
+        const aiRound = attempt.rounds.find(r => r.roundType === 'AI')
+        if (aiRound && aiRound.status !== 'COMPLETED' && aiRound.ribbonInterviewId) {
+            aiRound.status = 'COMPLETED'
+            aiRound.endedAt = new Date()
+            const allCompleted = attempt.rounds.every(
+                r => r.status === 'COMPLETED' || r.status === 'SKIPPED'
+            )
+            if (allCompleted) {
+                attempt.status = 'COMPLETED'
+                attempt.submittedAt = new Date()
+            }
+            await attempt.save()
+        }
+        const roundTypes = attempt.rounds.map(r => r.roundType)
+        const aiIndex = roundTypes.indexOf('AI')
+        if (aiIndex < 0) {
+            return { nextUrl: `/assessment/${assessmentId}/completed` }
+        }
+        const nextIndex = aiIndex + 1
+        if (nextIndex < roundTypes.length) {
+            return { nextUrl: `/assessment/${assessmentId}/round/${nextIndex}` }
+        }
+        return { nextUrl: `/assessment/${assessmentId}/completed` }
+    }
+
+    /**
      * Get questions for a round (candidate-facing: MCQ options only, no correct answers)
      */
     async getRoundQuestions(attemptId: string, roundType: RoundTypeValue): Promise<RoundQuestionResponse[]> {

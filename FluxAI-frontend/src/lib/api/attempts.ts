@@ -194,12 +194,35 @@ export const attemptsApi = {
     // ============================================
 
     /**
-     * Start AI interview session — returns questions
+     * Start AI interview session — returns questions (legacy recording flow)
      */
     async startAISession(attemptId: string, agentType?: string) {
         return apiClient.post<AISessionStartResponse>(
             `/attempts/${attemptId}/ai/start`,
             agentType ? { agentType } : {}
+        )
+    },
+
+    /**
+     * Start Ribbon interactive voice interview. Returns interview_link; backend sets cookie for callback.
+     * Call with credentials so the cookie is stored.
+     */
+    async startRibbonAISession(attemptId: string) {
+        return apiClient.post<{ interview_link: string; attemptId: string }>(
+            `/attempts/${attemptId}/ai/ribbon/start`,
+            undefined,
+            { credentials: 'include' }
+        )
+    },
+
+    /**
+     * Get next URL after Ribbon callback (for redirect). Call with credentials so cookie is sent.
+     */
+    async getRibbonCallbackNextUrl() {
+        return apiClient.get<{ nextUrl: string }>(
+            `/attempts/ribbon-callback`,
+            undefined,
+            { credentials: 'include' }
         )
     },
 
