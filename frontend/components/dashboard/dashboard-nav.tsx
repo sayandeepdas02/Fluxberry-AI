@@ -33,7 +33,7 @@ export function DashboardNav() {
     ]
 
     return (
-        <nav className="grid items-start gap-2">
+        <nav className="grid items-start gap-3">
             <div className="px-2 py-2">
                 <Link href="/dashboard/jobs/new">
                     <Button className="w-full justify-start" size="sm">
@@ -51,11 +51,13 @@ export function DashboardNav() {
                     >
                         <span
                             className={cn(
-                                "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
-                                pathname === item.href ? "bg-accent text-accent-foreground" : "transparent"
+                                "group flex items-center rounded-lg px-4 py-[16px] text-[14px] font-medium transition-colors hover:bg-slate-50 hover:text-slate-900 border-l-[3px] border-transparent",
+                                pathname === item.href
+                                    ? "bg-primary/5 text-primary border-primary font-semibold"
+                                    : "text-muted-foreground"
                             )}
                         >
-                            <Icon className="mr-2 h-4 w-4" />
+                            <Icon className={cn("mr-3 h-[18px] w-[18px]", pathname === item.href ? "text-primary" : "text-muted-foreground group-hover:text-slate-900")} />
                             <span>{item.title}</span>
                         </span>
                     </Link>
