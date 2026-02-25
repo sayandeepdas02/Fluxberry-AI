@@ -58,7 +58,7 @@ export function Pricing() {
 
                 <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                     {plans.map((plan) => (
-                        <div key={plan.name} className={`relative p-8 rounded-2xl bg-white border ${plan.popular ? "border-primary shadow-lg ring-1 ring-primary" : "shadow-sm"}`}>
+                        <div key={plan.name} className={`relative p-8 rounded-3xl bg-white border border-black/5 ${plan.popular ? "shadow-xl ring-1 ring-primary/20 bg-gradient-to-b from-white to-primary/5" : "shadow-sm hover:shadow-md transition-all"}`}>
                             {plan.popular && (
                                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
                                     Most Popular

@@ -23,7 +23,7 @@ export function Hero() {
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
                     <Link href="/register">
-                        <Button size="lg" className="h-12 px-8 text-base">
+                        <Button size="lg" className="h-12 px-8 text-base shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all">
                             Start Hiring Smarter
                             <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
@@ -34,7 +34,7 @@ export function Hero() {
                     </Button>
                 </div>
 
-                <div className="relative mx-auto max-w-5xl rounded-xl border bg-white shadow-2xl overflow-hidden">
+                <div className="relative mx-auto max-w-5xl rounded-2xl border border-black/5 bg-white shadow-2xl overflow-hidden ring-1 ring-black/5">
                     <Image
                         src="/hero-dashboard-v2.png"
                         alt="Interview AI Dashboard Interface"

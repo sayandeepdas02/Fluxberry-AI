@@ -33,11 +33,11 @@ export function Testimonials() {
 
                 <div className="grid md:grid-cols-3 gap-8">
                     {testimonials.map((t, i) => (
-                        <div key={i} className="bg-slate-50 p-8 rounded-2xl relative">
+                        <div key={i} className="bg-white border border-black/5 p-8 rounded-3xl relative shadow-sm hover:shadow-md transition-all">
                             <Quote className="h-8 w-8 text-primary/20 mb-4" />
                             <p className="text-lg text-slate-700 italic mb-6">"{t.quote}"</p>
                             <div className="flex items-center space-x-4">
-                                <div className="h-10 w-10 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-600">
+                                <div className="h-10 w-10 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-600 border border-slate-200">
                                     {t.initial}
                                 </div>
                                 <div>

@@ -48,12 +48,12 @@ export function Features() {
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {features.map((feature, index) => (
-                        <div key={index} className="p-6 rounded-2xl border bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                            <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                        <div key={index} className="p-6 rounded-2xl border border-black/5 bg-white shadow-sm hover:shadow-md transition-all">
+                            <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
                                 <feature.icon className="h-6 w-6 text-primary" />
                             </div>
                             <h3 className="text-xl font-semibold text-slate-900 mb-2">{feature.title}</h3>
-                            <p className="text-slate-600">{feature.description}</p>
+                            <p className="text-slate-600 leading-relaxed">{feature.description}</p>
                         </div>
                     ))}
                 </div>
