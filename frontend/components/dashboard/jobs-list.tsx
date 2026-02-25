@@ -34,16 +34,9 @@ export function JobsList() {
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold tracking-tight">Your Jobs</h2>
-                <Link href="/dashboard/jobs/new">
-                    <Button>
-                        <Plus className="mr-2 h-4 w-4" /> Create New Job
-                    </Button>
-                </Link>
-            </div>
+            {/* Header handled externally by SectionHeader */}
 
-            <div className="rounded-md border">
+            <div className="bg-card rounded-[12px] border shadow-sm overflow-hidden mix-blend-multiply">
                 <Table>
                     <TableHeader>
                         <TableRow>
