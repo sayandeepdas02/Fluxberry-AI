@@ -20,6 +20,9 @@ export interface ICandidate extends Document {
     testScore?: number;
     testPassed?: boolean;
     answers: IAnswer[];
+    status?: 'APPLIED' | 'SHORTLISTED' | 'REJECTED' | 'INTERVIEWED';
+    tabSwitchCount?: number;
+    flagged?: boolean;
     createdAt: Date;
 }
 
@@ -44,9 +47,18 @@ const CandidateSchema = new Schema<ICandidate>(
         testScore: Number,
         testPassed: Boolean,
         answers: [AnswerSchema],
+        status: {
+            type: String,
+            enum: ['APPLIED', 'SHORTLISTED', 'REJECTED', 'INTERVIEWED'],
+            default: 'APPLIED'
+        },
+        tabSwitchCount: { type: Number, default: 0 },
+        flagged: { type: Boolean, default: false }
     },
     { timestamps: true }
 );
+
+CandidateSchema.index({ jobId: 1, status: 1, testScore: 1 });
 
 const Candidate: Model<ICandidate> = mongoose.models.Candidate || mongoose.model<ICandidate>('Candidate', CandidateSchema);
 

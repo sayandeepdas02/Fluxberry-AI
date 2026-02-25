@@ -14,6 +14,8 @@ export function TestInterface({ jobId, candidateId, duration, onComplete }: any)
     const [loaded, setLoaded] = useState(false)
     const [score, setScore] = useState<number | null>(null)
 
+    const [tabSwitches, setTabSwitches] = useState(0)
+
     useEffect(() => {
         // Fetch questions (In real app, fetch one by one or all masked)
         const startTest = async () => {
@@ -27,6 +29,40 @@ export function TestInterface({ jobId, candidateId, duration, onComplete }: any)
         }
         startTest()
     }, [])
+
+    useEffect(() => {
+        if (!loaded) return
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'hidden') {
+                handleTabSwitch();
+            }
+        };
+
+        const handleBlur = () => {
+            handleTabSwitch();
+        };
+
+        window.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('blur', handleBlur);
+
+        return () => {
+            window.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('blur', handleBlur);
+        };
+    }, [loaded, tabSwitches]);
+
+    const handleTabSwitch = () => {
+        const newCount = tabSwitches + 1;
+        setTabSwitches(newCount);
+
+        if (newCount === 2) {
+            alert("⚠️ Warning: Please do not switch tabs or leave this window. Doing so again may automatically submit your test.");
+        } else if (newCount >= 5) {
+            alert("❌ Test Auto-Submitted due to multiple tab switches.");
+            submitTest(newCount);
+        }
+    };
 
     useEffect(() => {
         if (!loaded) return
@@ -63,11 +99,17 @@ export function TestInterface({ jobId, candidateId, duration, onComplete }: any)
         }
     }
 
-    const submitTest = async () => {
+    const submitTest = async (finalSwitchCount?: number) => {
         // Final submission
         const res = await fetch(`/api/test/${jobId}/submit-test`, {
             method: "POST",
-            body: JSON.stringify({ candidateId })
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                candidateId,
+                tabSwitchCount: finalSwitchCount !== undefined ? finalSwitchCount : tabSwitches
+            })
         })
         const result = await res.json()
         setScore(result.score)
