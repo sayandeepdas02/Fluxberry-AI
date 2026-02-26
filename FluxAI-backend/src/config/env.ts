@@ -58,3 +58,10 @@ export function validateWorkerEnv(): void {
     checkKeys(ENV_CONFIG.requiredInWorker, 'Worker')
     console.log('✅ Worker environment variables validated')
 }
+
+export const featureFlags = {
+    ENABLE_OFFER_ENGINE: process.env.ENABLE_OFFER_ENGINE === 'true',
+    ENABLE_FORM_ENGINE: process.env.ENABLE_FORM_ENGINE === 'true',
+    ENABLE_REMINDER_ENGINE: process.env.ENABLE_REMINDER_ENGINE === 'true',
+    ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS === 'true',
+}
