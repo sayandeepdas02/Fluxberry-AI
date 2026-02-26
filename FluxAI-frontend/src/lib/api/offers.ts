@@ -5,11 +5,15 @@ export interface IOfferTemplate {
     _id: string
     organizationId: string
     name: string
-    content: string
+    type: 'FULL_TIME' | 'INTERN' | 'CONTRACTOR'
+    country?: string
+    htmlContent: string
     variables: string[]
-    variableSchema: Record<string, { type: string; label: string }>
+    version: number
     isActive: boolean
+    createdBy?: string
     createdAt: string
+    updatedAt: string
 }
 
 export interface IOffer {
@@ -18,17 +22,53 @@ export interface IOffer {
     applicationId: string
     candidateId: string
     templateId?: string
-    status: 'DRAFT' | 'SENT' | 'VIEWED' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED'
-    content: string
-    pdfUrl?: string
+    status: 'DRAFT' | 'SENT' | 'VIEWED' | 'SIGNED' | 'REJECTED' | 'EXPIRED'
+    filledVariables?: Record<string, any>
+    generatedPdfUrl?: string
     signedPdfUrl?: string
-    token?: string
     expiresAt?: string
-    openedAt?: string
-    acceptedAt?: string
-    declinedAt?: string
-    declineReason?: string
+    viewedAt?: string
+    signedAt?: string
+    rejectedReason?: string
+    publicToken?: string
+    auditLog?: {
+        event: string
+        timestamp: string
+        ipAddress: string
+    }[]
     createdAt: string
+    updatedAt: string
+}
+
+export interface IOnboardingFormField {
+    id: string
+    type: 'text' | 'number' | 'dropdown' | 'date' | 'file' | 'checkbox' | 'signature'
+    label: string
+    required: boolean
+    options?: string[]
+    conditionalLogic?: Record<string, any>
+    validationRules?: Record<string, any>
+}
+
+export interface IOnboardingFormTemplate {
+    _id: string
+    organizationId: string
+    name: string
+    fields: IOnboardingFormField[]
+    version: number
+    createdAt: string
+    updatedAt: string
+}
+
+export interface IOnboardingFormResponse {
+    _id: string
+    onboardingId: string
+    formTemplateId: string
+    responses: Record<string, any>
+    status: 'IN_PROGRESS' | 'SUBMITTED'
+    submittedAt?: string
+    createdAt: string
+    updatedAt: string
 }
 
 export interface CreateOfferInput {
@@ -40,8 +80,10 @@ export interface CreateOfferInput {
 
 export interface CreateTemplateInput {
     name: string
-    content: string
-    variableSchema?: Record<string, { type: string; label: string }>
+    type: 'FULL_TIME' | 'INTERN' | 'CONTRACTOR'
+    country?: string
+    htmlContent: string
+    variables?: string[]
 }
 
 export const offersApi = {

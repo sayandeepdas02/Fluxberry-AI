@@ -39,9 +39,14 @@ export function WorkflowList() {
 
     const toggleStatus = async (rule: IWorkflowRule) => {
         try {
-            const updatedRule = await workflowsApi.update(rule._id, { isActive: !rule.isActive })
-            setRules(rules.map((r) => (r._id === rule._id ? updatedRule : r)))
-            toast.success(`Workflow ${updatedRule.isActive ? 'activated' : 'deactivated'}`)
+            const response = await workflowsApi.update(rule._id, { isActive: !rule.isActive })
+            if (response.success && response.data) {
+                const updatedRule = response.data
+                setRules(rules.map((r) => (r._id === rule._id ? updatedRule : r)))
+                toast.success(`Workflow ${updatedRule.isActive ? 'activated' : 'deactivated'}`)
+            } else {
+                throw new Error("API call unsuccessful")
+            }
         } catch (error) {
             toast.error('Failed to update status')
         }

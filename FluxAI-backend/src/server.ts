@@ -20,6 +20,12 @@ async function main() {
     // Initialize Jobs
     await initScheduler()
 
+    // Start advanced offer/onboarding reminder Cron
+    const mod = await import('./jobs/reminder.engine.js')
+    if (mod.reminderEngine) {
+        mod.reminderEngine.startJobs()
+    }
+
     const app = createApp()
 
     const server = app.listen(PORT, () => {

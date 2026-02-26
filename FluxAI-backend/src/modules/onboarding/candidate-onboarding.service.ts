@@ -83,7 +83,14 @@ export class CandidateOnboardingService {
         const documents = await OnboardingDocument.find({ onboardingId })
         const allApproved = documents.every(d => d.status === OnboardingDocumentStatus.APPROVED)
 
-        if (allApproved && documents.length > 0) {
+        // Also check if there is an OnboardingFormResponse attached to this onboarding
+        // It's additive, so if there is no response attached, it defaults to true
+        // If there is one attached, it MUST be SUBMITTED
+        const { OnboardingFormResponse } = await import('../../database/models/index.js')
+        const formResponse = await OnboardingFormResponse.findOne({ onboardingId })
+        const formCompleted = formResponse ? formResponse.status === 'SUBMITTED' : true
+
+        if (allApproved && formCompleted && documents.length > 0) {
             await Onboarding.updateOne(
                 { _id: onboardingId },
                 { status: OnboardingStatus.COMPLETED, completedAt: new Date() }

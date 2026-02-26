@@ -114,8 +114,8 @@ export default function PublicOfferPage() {
     }
 
     const isExpired = offer.expiresAt && new Date(offer.expiresAt) < new Date();
-    const isAccepted = offer.status === 'ACCEPTED' || offer.status === 'HIRED'; // Assuming status enum
-    const isDeclined = offer.status === 'DECLINED';
+    const isAccepted = offer.status === 'SIGNED'; // Assuming status enum
+    const isDeclined = offer.status === 'REJECTED';
 
     if (isExpired && !isAccepted && !isDeclined) {
         return (
@@ -153,7 +153,7 @@ export default function PublicOfferPage() {
                         </h2>
                         {offer.createdAt && <span className="text-sm text-muted-foreground">Sent on {format(new Date(offer.createdAt), 'MMMM d, yyyy')}</span>}
                     </div>
-                    <PdfPreview url={offer.pdfUrl || undefined} />
+                    <PdfPreview url={offer.signedPdfUrl || offer.generatedPdfUrl || undefined} />
                     {/* If no PDF url, we might show content? For MVP pdfUrl is critical. */}
                 </div>
 

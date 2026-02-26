@@ -109,6 +109,26 @@ export class AnalyticsController {
             next(error)
         }
     }
+
+    /**
+     * GET /api/analytics/onboarding
+     */
+    async getOnboardingMetrics(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const organizationId = req.user?.organizationId
+
+            if (!organizationId) {
+                res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
+                return
+            }
+
+            const { onboardingAnalyticsService } = await import('./onboarding-analytics.service.js')
+            const data = await onboardingAnalyticsService.getOnboardingMetrics(organizationId)
+            res.json(successResponse(data))
+        } catch (error) {
+            next(error)
+        }
+    }
 }
 
 export const analyticsController = new AnalyticsController()

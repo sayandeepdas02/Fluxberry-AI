@@ -11,5 +11,6 @@ router.get('/trends', (req, res, next) => analyticsController.getTrends(req, res
 router.get('/demographics', (req, res, next) => analyticsController.getDemographics(req, res, next))
 router.get('/funnel', (req, res, next) => analyticsController.getFunnel(req, res, next))
 router.get('/time-to-hire', (req, res, next) => analyticsController.getTimeToHire(req, res, next))
+router.get('/onboarding', (req, res, next) => analyticsController.getOnboardingMetrics(req, res, next))
 
 export default router

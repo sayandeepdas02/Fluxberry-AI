@@ -93,10 +93,10 @@ export function DocumentReviewModal({ isOpen, onClose, document, onReviewComplet
                 <DialogFooter className="flex justify-between sm:justify-end gap-2">
                     <Button variant="outline" onClick={onClose} disabled={processing}>Cancel</Button>
                     <Button
-                        variant="destructive"
+                        variant="secondary"
                         onClick={handleReject}
                         disabled={processing}
-                        className="gap-2"
+                        className="gap-2 bg-red-500 hover:bg-red-600 text-white"
                     >
                         {processing && <Loader2 className="w-4 h-4 animate-spin" />}
                         <XCircle className="w-4 h-4" />
