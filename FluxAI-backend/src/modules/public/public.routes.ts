@@ -53,4 +53,17 @@ router.post('/offers/:token/decline', (req, res, next) =>
     publicController.declineOffer(req, res, next)
 )
 
+// Public Onboarding Form Routes
+router.get('/onboarding/:onboardingId/form', (req, res, next) =>
+    publicController.getOnboardingForm(req, res, next)
+)
+
+router.patch('/onboarding/:onboardingId/form', (req, res, next) =>
+    publicController.saveOnboardingFormDraft(req, res, next)
+)
+
+router.post('/onboarding/:onboardingId/form/submit', (req, res, next) =>
+    publicController.submitOnboardingForm(req, res, next)
+)
+
 export default router

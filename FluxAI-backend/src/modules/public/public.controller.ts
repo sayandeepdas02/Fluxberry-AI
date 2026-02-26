@@ -113,9 +113,9 @@ class PublicController {
         }
     }
 
-    /**
-     * OFFER ROUTES
-     */
+    // ============================================
+    // OFFER ROUTES
+    // ============================================
 
     async getOfferByToken(req: Request, res: Response, next: NextFunction) {
         try {
@@ -130,8 +130,9 @@ class PublicController {
     async acceptOffer(req: Request, res: Response, next: NextFunction) {
         try {
             const { token } = req.params
-            const { signature } = req.body
-            const data = await offersService.acceptOffer(token, signature)
+            const { signature } = req.body // { name, data, type }
+            const ipAddress = req.ip || req.connection.remoteAddress || '0.0.0.0'
+            const data = await offersService.recordSignature(token, signature, ipAddress)
             res.json(successResponse(data))
         } catch (error) {
             next(error)
@@ -142,7 +143,47 @@ class PublicController {
         try {
             const { token } = req.params
             const { reason } = req.body
-            const data = await offersService.declineOffer(token, reason)
+            const ipAddress = req.ip || req.connection.remoteAddress || '0.0.0.0'
+            const data = await offersService.rejectOffer(token, reason, ipAddress)
+            res.json(successResponse(data))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    // ============================================
+    // ONBOARDING FORM ROUTES
+    // ============================================
+
+    async getOnboardingForm(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { onboardingId } = req.params
+            const { onboardingFormService } = await import('../onboarding/onboarding-form.service.js')
+            const data = await onboardingFormService.fetchFormResponse(onboardingId)
+            res.json(successResponse(data))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async saveOnboardingFormDraft(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { onboardingId } = req.params
+            const { responses } = req.body
+            const { onboardingFormService } = await import('../onboarding/onboarding-form.service.js')
+            const data = await onboardingFormService.saveFormDraft(onboardingId, responses)
+            res.json(successResponse(data))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async submitOnboardingForm(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { onboardingId } = req.params
+            const { responses } = req.body
+            const { onboardingFormService } = await import('../onboarding/onboarding-form.service.js')
+            const data = await onboardingFormService.submitOnboardingForm(onboardingId, responses)
             res.json(successResponse(data))
         } catch (error) {
             next(error)
