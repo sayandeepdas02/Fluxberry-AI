@@ -161,7 +161,7 @@ export function CreateOfferModal() {
                         </div>
                         {selectedTemplateId && (
                             <div className="border rounded-md p-3 bg-muted/20 text-xs text-muted-foreground whitespace-pre-wrap max-h-32 overflow-y-auto">
-                                {getSelectedTemplate()?.content ?? ''}
+                                {getSelectedTemplate()?.htmlContent ?? ''}
                             </div>
                         )}
                         <div className="space-y-2">
@@ -183,10 +183,10 @@ export function CreateOfferModal() {
                     <div className="space-y-4 py-4">
                         <p className="text-sm text-muted-foreground">Fill in the details for dynamic placeholders.</p>
                         {template.variables.map(variable => {
-                            // Basic schema check if available, otherwise text input
-                            const schema = template.variableSchema?.[variable];
-                            const label = schema?.label || variable;
-                            const type = schema?.type || 'text';
+                            // We only have string variables in the new schema (OfferTemplate)
+                            // We capitalize and replace underscores for display.
+                            const label = variable.replace(/_/g, ' ');
+                            const type = 'text';
 
                             return (
                                 <div key={variable} className="space-y-2">
@@ -195,7 +195,7 @@ export function CreateOfferModal() {
                                         value={variables[variable] || ''}
                                         onChange={(e) => setVariables(prev => ({ ...prev, [variable]: e.target.value }))}
                                         placeholder={`Enter ${label}`}
-                                        type={type === 'number' ? 'number' : 'text'}
+                                        type={type}
                                     />
                                 </div>
                             );

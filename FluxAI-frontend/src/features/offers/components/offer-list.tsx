@@ -26,8 +26,8 @@ export function OfferList() {
             case 'DRAFT': return <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200">Draft</Badge>;
             case 'SENT': return <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">Sent</Badge>;
             case 'VIEWED': return <Badge variant="outline" className="bg-purple-100 text-purple-700 border-purple-200">Viewed</Badge>;
-            case 'ACCEPTED': return <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">Accepted</Badge>;
-            case 'DECLINED': return <Badge variant="outline" className="bg-red-100 text-red-700 border-red-200">Declined</Badge>;
+            case 'SIGNED': return <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">Signed</Badge>;
+            case 'REJECTED': return <Badge variant="outline" className="bg-red-100 text-red-700 border-red-200">Rejected</Badge>;
             case 'EXPIRED': return <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-200">Expired</Badge>;
             default: return <Badge variant="outline">{status}</Badge>;
         }
@@ -103,7 +103,7 @@ export function OfferList() {
                                         <Eye className="w-4 h-4 text-muted-foreground" />
                                     </Button>
                                     <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                                        <a href={offer.pdfUrl} target="_blank" rel="noopener noreferrer">
+                                        <a href={offer.signedPdfUrl || offer.generatedPdfUrl} target="_blank" rel="noopener noreferrer">
                                             <FileText className="w-4 h-4 text-muted-foreground" />
                                         </a>
                                     </Button>
