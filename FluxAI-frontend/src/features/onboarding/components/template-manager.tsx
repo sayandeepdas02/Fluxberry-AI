@@ -15,6 +15,13 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { format } from "date-fns"
@@ -43,6 +50,8 @@ export function TemplateManager() {
     // Form state
     const [formName, setFormName] = useState("")
     const [formContent, setFormContent] = useState("")
+    const [formType, setFormType] = useState<"FULL_TIME" | "INTERN" | "CONTRACTOR">("FULL_TIME")
+    const [formCountry, setFormCountry] = useState("")
     const [formSaving, setFormSaving] = useState(false)
 
     const fetchTemplates = useCallback(async () => {
@@ -74,18 +83,12 @@ export function TemplateManager() {
             const variableMatches = formContent.match(/\{\{(\w+)\}\}/g) || []
             const variables = [...new Set(variableMatches.map(v => v.replace(/\{\{|\}\}/g, '')))]
 
-            const variableSchema: Record<string, { type: string; label: string }> = {}
-            variables.forEach(v => {
-                variableSchema[v] = {
-                    type: 'text',
-                    label: v.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())
-                }
-            })
-
             const data: CreateTemplateInput = {
                 name: formName.trim(),
-                content: formContent,
-                variableSchema,
+                type: formType,
+                country: formCountry,
+                htmlContent: formContent,
+                variables,
             }
 
             if (editingTemplate) {
@@ -113,6 +116,8 @@ export function TemplateManager() {
     const resetForm = () => {
         setFormName("")
         setFormContent("")
+        setFormType("FULL_TIME")
+        setFormCountry("")
         setEditingTemplate(null)
         setIsCreateOpen(false)
     }
@@ -120,7 +125,9 @@ export function TemplateManager() {
     const openEdit = (template: IOfferTemplate) => {
         setEditingTemplate(template)
         setFormName(template.name)
-        setFormContent(template.content)
+        setFormContent(template.htmlContent)
+        setFormType(template.type || "FULL_TIME")
+        setFormCountry(template.country || "")
         setIsCreateOpen(true)
     }
 
@@ -133,8 +140,10 @@ export function TemplateManager() {
         try {
             const data: CreateTemplateInput = {
                 name: `${template.name} (Copy)`,
-                content: template.content,
-                variableSchema: template.variableSchema,
+                type: template.type,
+                country: template.country,
+                htmlContent: template.htmlContent,
+                variables: template.variables,
             }
             const response = await offersApi.createTemplate(data)
             if (response.success && response.data) {
@@ -204,7 +213,28 @@ export function TemplateManager() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Template Content</Label>
+                                <Label>Employment Type</Label>
+                                <Select value={formType} onValueChange={(v: any) => setFormType(v)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="FULL_TIME">Full Time</SelectItem>
+                                        <SelectItem value="INTERN">Intern</SelectItem>
+                                        <SelectItem value="CONTRACTOR">Contractor</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Country (Optional)</Label>
+                                <Input
+                                    placeholder="e.g. US, UK, IN"
+                                    value={formCountry}
+                                    onChange={(e) => setFormCountry(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Template HTML Content</Label>
                                 <Textarea
                                     placeholder={`Dear {{candidateName}},\n\nWe are pleased to offer you the position of {{position}} at {{companyName}}...\n\nSalary: {{salary}}\nStart Date: {{startDate}}\n\nBest regards,\n{{signerName}}`}
                                     value={formContent}
@@ -264,7 +294,7 @@ export function TemplateManager() {
             {filtered.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filtered.map((template) => {
-                        const variables = template.variables || Object.keys(template.variableSchema || {})
+                        const variables = template.variables || []
                         return (
                             <Card key={template._id} className="group hover:shadow-md transition-shadow">
                                 <CardHeader className="pb-3">
@@ -297,9 +327,15 @@ export function TemplateManager() {
                                 <CardContent className="pt-0">
                                     {/* Content preview */}
                                     <p className="text-xs text-muted-foreground line-clamp-3 mb-3 leading-relaxed">
-                                        {template.content.slice(0, 150)}
-                                        {template.content.length > 150 && '...'}
+                                        {template.htmlContent.slice(0, 150)}
+                                        {template.htmlContent.length > 150 && '...'}
                                     </p>
+
+                                    {/* Attributes */}
+                                    <div className="flex gap-2 mb-3">
+                                        <Badge variant="outline" className="text-[10px]">{template.type.replace('_', ' ')}</Badge>
+                                        {template.country && <Badge variant="outline" className="text-[10px]">{template.country}</Badge>}
+                                    </div>
 
                                     {/* Variables */}
                                     {variables.length > 0 && (
@@ -368,7 +404,7 @@ export function TemplateManager() {
                     <div className="py-4">
                         <div className="p-6 bg-white dark:bg-muted/20 border rounded-lg">
                             <pre className="whitespace-pre-wrap text-sm leading-relaxed font-sans">
-                                {previewTemplate?.content}
+                                {previewTemplate?.htmlContent}
                             </pre>
                         </div>
                         {previewTemplate && (
@@ -377,7 +413,7 @@ export function TemplateManager() {
                                     Variables in this template
                                 </p>
                                 <div className="flex flex-wrap gap-1.5">
-                                    {(previewTemplate.variables || Object.keys(previewTemplate.variableSchema || {})).map(v => (
+                                    {(previewTemplate.variables || []).map(v => (
                                         <Badge key={v} variant="secondary" className="text-xs font-mono">
                                             {'{{' + v + '}}'}
                                         </Badge>

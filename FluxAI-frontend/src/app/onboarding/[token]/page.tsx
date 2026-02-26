@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { atsOnboardingApi, IOnboarding, IOnboardingDocument } from "@/lib/api/ats-onboarding";
 import { DocumentUpload } from "@/features/onboarding/components/document-upload";
+import { OnboardingFormWizard } from "@/features/onboarding/components/onboarding-form-wizard";
+import { format } from "date-fns";
 import {
     CheckCircle,
     XCircle,
@@ -134,6 +136,13 @@ export default function PublicOnboardingPage() {
                     </div>
                 </div>
 
+                {/* Form Wizard */}
+                <OnboardingFormWizard
+                    onboardingId={onboarding._id}
+                    token={token}
+                    onComplete={fetchOnboarding}
+                />
+
                 {/* Documents List */}
                 <div className="grid gap-4">
                     {onboarding.documents.map((doc) => (
@@ -144,7 +153,7 @@ export default function PublicOnboardingPage() {
                                     <div>
                                         <h3 className="font-semibold">{doc.title}</h3>
                                         <p className="text-sm text-muted-foreground px-0.5">
-                                            {doc.description || "Upload required document"}
+                                            Upload required document
                                         </p>
                                     </div>
                                 </div>
