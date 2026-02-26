@@ -1,50 +1,30 @@
 import { Types } from 'mongoose'
-import { Offer, JobApplication, OfferStatus, ApplicationStatus, OfferTemplate } from '../../database/models/index.js'
+import { Offer, JobApplication, OfferStatus, ApplicationStatus, OfferTemplate, OfferSignature, ActivityLog } from '../../database/models/index.js'
 import crypto from 'crypto'
 import { templateService } from './template.service.js'
 import { pdfService } from './pdf.service.js'
-import { v4 as uuidv4 } from 'uuid'
+import { candidateOnboardingService } from '../onboarding/candidate-onboarding.service.js'
 
 export class OffersService {
 
-    // Updated: Create Offer from Template
-    async createOffer(
+    async createOfferDraft(
         organizationId: string,
         applicationId: string,
         templateId: string,
-        variables: Record<string, any>,
+        filledVariables: Record<string, any>,
         expiresInDays: number = 7
     ) {
-        // 1. Validate Application Status
         const app = await JobApplication.findOne({
             _id: applicationId,
             organizationId
         })
         if (!app) throw new Error('Application not found')
 
-        // 2. Fetch Template
         const template = await OfferTemplate.findOne({ _id: templateId, organizationId })
         if (!template) throw new Error('Template not found')
         if (!template.isActive) throw new Error('Template is not active')
 
-        // 3. Validate Variables
-        /* 
-           Using template.schema (Map) requires conversion to JS object if we want to iterate easily,
-           or we can just skip strict validation for MVP and rely on render checking.
-           Ideally: templateService.validateVariables(template.schema, variables)
-        */
-
-        // 4. Render Content
-        const content = templateService.render(template.content, variables)
-
-        // 5. Generate Unsigned PDF
-        // We generate it now so it's ready for preview/sending
-        const pdfBuffer = await pdfService.generatePdf(content)
-
-        // 6. Create Offer Record (DRAFT)
-        // We need an ID for the PDF path, so we might need to create object first or use UUID
         const offerId = new Types.ObjectId()
-        const pdfUrl = await pdfService.uploadPdf(pdfBuffer, organizationId, offerId.toString(), 'unsigned')
 
         const expiresAt = new Date()
         expiresAt.setDate(expiresAt.getDate() + expiresInDays)
@@ -55,38 +35,66 @@ export class OffersService {
             applicationId,
             candidateId: app.candidateId,
             templateId: template._id,
-            templateSnapshot: template.content,
-            variables,
-            content,
+            filledVariables,
             status: OfferStatus.DRAFT,
-            pdfUrl,
-            expiresAt
+            expiresAt,
+            auditLog: [{
+                event: 'Offer Draft Created',
+                timestamp: new Date(),
+                ipAddress: 'sys'
+            }]
         })
 
         return offer
     }
 
-    async sendOffer(offerId: string, organizationId: string) {
+    async generateOfferPdf(offerId: string, organizationId: string) {
+        const offer = await Offer.findOne({ _id: offerId, organizationId }).populate('templateId')
+        if (!offer || !offer.templateId) throw new Error('Offer or Template not found')
+
+        const template = await OfferTemplate.findById(offer.templateId)
+        if (!template) throw new Error('Template not found')
+
+        const content = templateService.render(template.htmlContent, offer.filledVariables || {})
+        const pdfBuffer = await pdfService.generatePdf(content)
+        const pdfUrl = await pdfService.uploadPdf(pdfBuffer, organizationId, offer._id.toString(), 'unsigned')
+
+        offer.generatedPdfUrl = pdfUrl
+        await offer.save()
+
+        return offer
+    }
+
+    async sendOfferEmail(offerId: string, organizationId: string) {
         const offer = await Offer.findOne({ _id: offerId, organizationId })
         if (!offer) throw new Error('Offer not found')
         if (offer.status !== OfferStatus.DRAFT) throw new Error('Offer must be in DRAFT to send')
+        if (!offer.generatedPdfUrl) throw new Error('Cannot send offer without generated PDF')
 
-        // Generate Secure Token
         const token = crypto.randomBytes(32).toString('hex')
-        offer.token = token
+        offer.publicToken = token
         offer.status = OfferStatus.SENT
-        // offer.sentAt = new Date() // If I added this field
+
+        if (offer.auditLog) {
+            offer.auditLog.push({ event: 'Offer Sent', timestamp: new Date(), ipAddress: 'sys' })
+        }
+
         await offer.save()
 
-        // Update Application Status
         await JobApplication.updateOne(
             { _id: offer.applicationId },
             { status: ApplicationStatus.OFFER_SENT }
         )
 
-        // TODO: Send Email (Mocked)
-        console.log(`[Email] Sending Offer Link to Candidate: /offers/${token}`)
+        // Track globally in ActivityLog
+        await ActivityLog.create({
+            entityType: 'OFFER',
+            entityId: offer._id,
+            eventType: 'OFFER_SENT',
+            timestamp: new Date()
+        })
 
+        console.log(`[Email] Sending Offer Link to Candidate: /offers/${token}`)
         return offer
     }
 
@@ -97,30 +105,37 @@ export class OffersService {
     async getOffers(organizationId: string) {
         return Offer.find({ organizationId })
             .sort({ createdAt: -1 })
-            .populate('applicationId', 'jobId candidateId') // accurate population might need Virtuals or deep populate if Schema is complex
+            .populate('applicationId', 'jobId candidateId')
     }
 
     async getOffersByApplication(applicationId: string, organizationId: string) {
         return Offer.find({ applicationId, organizationId }).sort({ createdAt: -1 })
     }
 
-    // Public Access
-    async getOfferByToken(token: string) {
-        const offer = await Offer.findOne({ token })
+    // Public Routes
+    async getOfferByToken(publicToken: string) {
+        const offer = await Offer.findOne({ publicToken })
         if (!offer) throw new Error('Invalid offer token')
 
-        // Mark as Viewed if not already
         if (offer.status === OfferStatus.SENT) {
             offer.status = OfferStatus.VIEWED
-            if (!offer.openedAt) offer.openedAt = new Date()
+            if (!offer.viewedAt) offer.viewedAt = new Date()
+
+            if (offer.auditLog) {
+                offer.auditLog.push({ event: 'Offer Viewed', timestamp: new Date(), ipAddress: 'candidate' }) // Needs req ip ideally
+            }
             await offer.save()
+
+            await ActivityLog.create({
+                entityType: 'OFFER',
+                entityId: offer._id,
+                eventType: 'OFFER_VIEWED',
+                timestamp: new Date()
+            })
         }
 
-        // Check Expiry
         if (offer.expiresAt && new Date() > offer.expiresAt) {
-            // We allow viewing but maybe indicate expiry?
-            // Or update status if not updated yet
-            if (offer.status !== OfferStatus.ACCEPTED && offer.status !== OfferStatus.DECLINED) {
+            if (offer.status !== OfferStatus.SIGNED && offer.status !== OfferStatus.REJECTED) {
                 offer.status = OfferStatus.EXPIRED
                 await offer.save()
             }
@@ -129,9 +144,10 @@ export class OffersService {
         return offer
     }
 
-    async acceptOffer(token: string, signatureData: { name: string, data: string }) {
-        const offer = await Offer.findOne({ token })
+    async recordSignature(publicToken: string, signatureData: { name: string, data: string, type: 'DRAWN' | 'TYPED' }, ipAddress: string = '0.0.0.0') {
+        const offer = await Offer.findOne({ publicToken }).populate('templateId')
         if (!offer) throw new Error('Invalid offer token')
+        if (!offer.templateId) throw new Error('Offer has no linked template')
 
         if (offer.status !== OfferStatus.SENT && offer.status !== OfferStatus.VIEWED) {
             throw new Error('Offer is not in a valid state to accept')
@@ -143,51 +159,73 @@ export class OffersService {
             throw new Error('Offer has expired')
         }
 
-        // 1. Append Signature to Content
+        const template = await OfferTemplate.findById(offer.templateId)
+        if (!template) throw new Error('Template not found')
+
         const signedAt = new Date()
+        const content = templateService.render(template.htmlContent, offer.filledVariables || {})
+        const documentHash = crypto.createHash('sha256').update(content).digest('hex')
+
         const signatureHtml = `
             <div class="signature-section">
                 <h3>Agreed and Accepted</h3>
                 <p><strong>Signed By:</strong> ${signatureData.name}</p>
                 <p><strong>Date:</strong> ${signedAt.toLocaleString()}</p>
                 <img src="${signatureData.data}" class="signature-img" alt="Signature" />
+                <p><small>Document Hash: ${documentHash}</small></p>
             </div>
         `
-        const finalContent = offer.content + signatureHtml
+        const finalContent = content + signatureHtml
 
-        // 2. Generate Signed PDF
         const pdfBuffer = await pdfService.generatePdf(finalContent)
         const signedPdfUrl = await pdfService.uploadPdf(pdfBuffer, offer.organizationId.toString(), offer._id.toString(), 'signed')
 
-        // 3. Update Offer
-        offer.status = OfferStatus.ACCEPTED
-        offer.acceptedAt = signedAt
+        offer.status = OfferStatus.SIGNED
+        offer.signedAt = signedAt
         offer.signedPdfUrl = signedPdfUrl
-        offer.signature = {
-            name: signatureData.name,
-            data: signatureData.data,
-            ip: '0.0.0.0', // TODO: Capture IP from request if passed
-            signedAt
+
+        if (offer.auditLog) {
+            offer.auditLog.push({ event: 'Offer Signed', timestamp: signedAt, ipAddress })
         }
         await offer.save()
 
-        // 4. Update Application
+        await OfferSignature.create({
+            offerId: offer._id,
+            signatureType: signatureData.type,
+            signatureImageUrl: signatureData.data,
+            documentHash,
+            signedAt,
+            ipAddress
+        })
+
+        await ActivityLog.create({
+            entityType: 'OFFER',
+            entityId: offer._id,
+            eventType: 'OFFER_SIGNED',
+            timestamp: signedAt
+        })
+
         await JobApplication.updateOne(
             { _id: offer.applicationId },
             { status: ApplicationStatus.OFFER_ACCEPTED }
         )
 
-        // 5. Return Offer (Controller will trigger Onboarding)
+        // Auto Trigger Onboarding (Without Replacing / Breaking Existing Logic)
+        await this.checkAndTriggerOnboarding(offer.applicationId.toString(), offer.organizationId.toString())
+
         return offer
     }
 
-    async declineOffer(token: string, reason: string) {
-        const offer = await Offer.findOne({ token })
+    async rejectOffer(publicToken: string, reason: string, ipAddress: string = '0.0.0.0') {
+        const offer = await Offer.findOne({ publicToken })
         if (!offer) throw new Error('Invalid offer token')
 
-        offer.status = OfferStatus.DECLINED
-        offer.declinedAt = new Date()
-        offer.declineReason = reason
+        offer.status = OfferStatus.REJECTED
+        offer.rejectedReason = reason
+
+        if (offer.auditLog) {
+            offer.auditLog.push({ event: 'Offer Rejected', timestamp: new Date(), ipAddress })
+        }
         await offer.save()
 
         await JobApplication.updateOne(
@@ -196,6 +234,23 @@ export class OffersService {
         )
 
         return offer
+    }
+
+    async expireOffer(offerId: string, organizationId: string) {
+        const offer = await Offer.findOne({ _id: offerId, organizationId })
+        if (!offer) throw new Error('Offer not found')
+
+        offer.status = OfferStatus.EXPIRED
+        if (offer.auditLog) {
+            offer.auditLog.push({ event: 'Offer Expired Automatically', timestamp: new Date(), ipAddress: 'sys' })
+        }
+        await offer.save()
+
+        return offer
+    }
+
+    async checkAndTriggerOnboarding(applicationId: string, organizationId: string) {
+        await candidateOnboardingService.initializeOnboarding(applicationId, organizationId)
     }
 }
 

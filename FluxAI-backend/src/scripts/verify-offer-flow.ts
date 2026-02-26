@@ -16,14 +16,10 @@ async function main() {
         const candidateId = new Types.ObjectId()
         const applicationId = new Types.ObjectId()
 
-        // Create dummy organization if needed (Schema requires valid refs usually, but for unit test like this we might get away with just IDs if service doesn't populate immediately, except creating template/offer)
-        // Actually, createOffer checks JobApplication existence. So we must create valid docs.
-
         await Organization.create({
             _id: orgId,
             name: 'Test Org ' + Date.now(),
             slug: 'test-org-' + Date.now(),
-            // ownerId removed as it not in schema
         })
 
         await Candidate.create({
@@ -61,20 +57,15 @@ async function main() {
         const template = await OfferTemplate.create({
             organizationId: orgId,
             name: 'Standard Offer',
-            content: templateContent,
+            type: 'FULL_TIME',
+            htmlContent: templateContent,
             variables: ['candidateName', 'role', 'company', 'salary', 'date'],
-            variableSchema: {
-                candidateName: { type: 'text', label: 'Candidate Name' },
-                role: { type: 'text', label: 'Role' },
-                salary: { type: 'number', label: 'Annual Salary' },
-                date: { type: 'date', label: 'Start Date' }
-            },
             isActive: true
         })
         console.log('   ✅ Template created:', template._id)
 
-        // 3. Create Offer (Generate Unsigned PDF)
-        console.log('3. Creating Offer (Generating PDF)...')
+        // 3. Create Offer Draft
+        console.log('3. Creating Offer Draft...')
         const variables = {
             candidateName: 'John Doe',
             role: 'Senior Engineer',
@@ -83,48 +74,50 @@ async function main() {
             date: new Date().toLocaleDateString()
         }
 
-        const offer = await offersService.createOffer(
+        let offer = await offersService.createOfferDraft(
             orgId.toString(),
             applicationId.toString(),
             template._id.toString(),
             variables,
             7 // expires in 7 days
         )
+        console.log('   ✅ Offer draft created:', offer._id)
 
-        console.log('   ✅ Offer created:', offer._id)
-        console.log('   📄 Unsigned PDF URL:', offer.pdfUrl)
+        // 3.5 Generate PDF
+        console.log('3.5 Generating PDF...')
+        offer = await offersService.generateOfferPdf(offer._id.toString(), orgId.toString())
 
-        if (!offer.pdfUrl) throw new Error('Unsigned PDF URL missing')
+        console.log('   📄 Unsigned PDF URL:', offer.generatedPdfUrl)
+        if (!offer.generatedPdfUrl) throw new Error('Unsigned PDF URL missing')
 
-        // 3.5. Send Offer (Generate Token)
-        console.log('3.5. Sending Offer (Generating Token)...')
-        const sentOffer = await offersService.sendOffer(offer._id.toString(), orgId.toString())
-        console.log('   ✅ Offer Sent. Token:', sentOffer.token)
+        // 4. Send Offer (Generate Token)
+        console.log('4. Sending Offer (Generating Token)...')
+        const sentOffer = await offersService.sendOfferEmail(offer._id.toString(), orgId.toString())
+        console.log('   ✅ Offer Sent. Token:', sentOffer.publicToken)
 
-        if (!sentOffer.token) throw new Error('Token missing after sending offer')
+        if (!sentOffer.publicToken) throw new Error('Token missing after sending offer')
 
-        // 4. Accept Offer (Sign and Generate Signed PDF)
-        console.log('4. Accepting Offer (Signing)...')
+        // 5. Accept Offer (Sign and Generate Signed PDF)
+        console.log('5. Accepting Offer (Signing)...')
 
         const signatureData = {
             name: 'John Doe',
             data: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', // 1x1 pixel
-            ip: '127.0.0.1',
-            userAgent: 'TestScript/1.0'
+            type: 'DRAWN' as 'DRAWN' | 'TYPED'
         }
 
-        const signedOffer = await offersService.acceptOffer(
-            sentOffer.token, // USE TOKEN HERE
-            signatureData
+        const signedOffer = await offersService.recordSignature(
+            sentOffer.publicToken, // USE TOKEN HERE
+            signatureData,
+            '127.0.0.1'
         )
 
         console.log('   ✅ Offer Accepted:', signedOffer.status)
         console.log('   📄 Signed PDF URL:', signedOffer.signedPdfUrl)
-        console.log('   ✍️ Signature Metadata:', signedOffer.signature)
 
-        if (signedOffer.status !== OfferStatus.ACCEPTED) throw new Error('Status not updated to ACCEPTED')
+        if (signedOffer.status !== OfferStatus.SIGNED) throw new Error('Status not updated to SIGNED')
         if (!signedOffer.signedPdfUrl) throw new Error('Signed PDF URL missing')
-        if (!signedOffer.acceptedAt) throw new Error('AcceptedAt timestamp missing')
+        if (!signedOffer.signedAt) throw new Error('signedAt timestamp missing')
 
         console.log('🎉 Verification Successful!')
 

@@ -10,13 +10,17 @@ export class OffersController {
             const user = (req as AuthenticatedRequest).user
             if (!user?.organizationId) return res.status(403).json({ error: 'Organization context required' })
 
-            const offer = await offersService.createOffer(
+            // 1. Create Draft
+            let offer = await offersService.createOfferDraft(
                 user.organizationId,
                 applicationId,
                 templateId,
                 variables,
                 expiresInDays
             )
+
+            // 2. Generate PDF instantly
+            offer = await offersService.generateOfferPdf(offer._id.toString(), user.organizationId)
 
             res.status(201).json({ success: true, data: offer })
         } catch (error) {
@@ -73,7 +77,7 @@ export class OffersController {
             const user = (req as AuthenticatedRequest).user
             if (!user?.organizationId) return res.status(403).json({ error: 'Organization context required' })
 
-            const offer = await offersService.sendOffer(id, user.organizationId)
+            const offer = await offersService.sendOfferEmail(id, user.organizationId)
             res.json({ success: true, data: offer })
         } catch (error) {
             next(error)
