@@ -123,6 +123,56 @@ export class OrganizationsController {
             next(error)
         }
     }
+
+    /**
+     * GET /api/organization/onboarding-settings
+     * Get the current organization's onboarding settings
+     */
+    async getOnboardingSettings(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const userId = req.user?.id
+            const organizationId = req.user?.organizationId
+
+            if (!userId || !organizationId) {
+                res.status(400).json({
+                    success: false,
+                    error: { code: 'NO_ORG', message: 'User is not part of an organization' },
+                })
+                return
+            }
+
+            const settings = await organizationsService.getOnboardingSettings(organizationId, userId)
+            res.json(successResponse(settings))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    /**
+     * PATCH /api/organization/onboarding-settings
+     * Update the current organization's onboarding settings
+     */
+    async updateOnboardingSettings(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const userId = req.user?.id
+            const organizationId = req.user?.organizationId
+
+            if (!userId || !organizationId) {
+                res.status(400).json({
+                    success: false,
+                    error: { code: 'NO_ORG', message: 'User is not part of an organization' },
+                })
+                return
+            }
+
+            const { updateOnboardingSettingsSchema } = await import('./organizations.types.js')
+            const input = updateOnboardingSettingsSchema.parse(req.body)
+            const settings = await organizationsService.updateOnboardingSettings(organizationId, userId, input)
+            res.json(successResponse(settings))
+        } catch (error) {
+            next(error)
+        }
+    }
 }
 
 export const organizationsController = new OrganizationsController()

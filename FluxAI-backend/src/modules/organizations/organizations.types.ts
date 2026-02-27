@@ -13,6 +13,15 @@ export const updateOrganizationSchema = z.object({
 
 export type UpdateOrganizationInput = z.infer<typeof updateOrganizationSchema>
 
+export const updateOnboardingSettingsSchema = z.object({
+    offerReminderHours: z.number().int().min(1).optional(),
+    onboardingReminderHours: z.number().int().min(1).optional(),
+    offerExpiryDays: z.number().int().min(1).optional(),
+    maxReminders: z.number().int().min(0).optional(),
+})
+
+export type UpdateOnboardingSettingsInput = z.infer<typeof updateOnboardingSettingsSchema>
+
 // ============================================
 // RESPONSE TYPES
 // ============================================
