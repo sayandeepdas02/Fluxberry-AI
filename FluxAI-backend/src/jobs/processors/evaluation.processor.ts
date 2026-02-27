@@ -6,6 +6,7 @@ import {
     Evaluation,
     IQuestion,
     IDSADetails,
+    IDSATestCase
 } from '../../database/models/index.js'
 import { EvaluationJobData, EvaluateMCQJob, EvaluateDSAJob, EvaluateAIJob } from '../queues/index.js'
 import { getJudge0LanguageId, runTestCase } from '../../services/judge0/judge0.client.js'
@@ -286,9 +287,9 @@ async function processDSAEvaluation(data: EvaluateDSAJob): Promise<void> {
         const sub = answers[qId]
         if (!sub?.code) continue
 
-        const testCases = q.dsaDetails?.testCases && Array.isArray(q.dsaDetails.testCases)
+        const testCases = (q.dsaDetails?.testCases && Array.isArray(q.dsaDetails.testCases)
             ? (q as IQuestion & { dsaDetails: IDSADetails }).dsaDetails.testCases
-            : []
+            : []) as IDSATestCase[]
         if (testCases.length === 0) continue
 
         const languageId = getJudge0LanguageId(sub.language ?? 'python')

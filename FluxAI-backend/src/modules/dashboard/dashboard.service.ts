@@ -22,15 +22,15 @@ class DashboardService {
 
     async getAnalytics(organizationId: string) {
         const [atsAnalytics, trends, demographics] = await Promise.all([
-            analyticsService.getATSAnalytics(organizationId),
-            analyticsService.getTrends(organizationId, 'month'),
-            analyticsService.getDemographics(organizationId),
+            analyticsService.getKPIs(organizationId),
+            analyticsService.getApplicationVolume(organizationId, 'month'),
+            analyticsService.getSourcePerformance(organizationId),
         ])
 
         return {
             ...atsAnalytics,
             hiringTrends: trends,
-            applicationSources: demographics.device,
+            applicationSources: demographics,
         }
     }
 }

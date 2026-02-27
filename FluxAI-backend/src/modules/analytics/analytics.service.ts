@@ -148,24 +148,22 @@ class AnalyticsService {
                 }
             },
             {
-                $utilities: {
-                    $addFields: {
-                        firstApplied: {
-                            $min: {
-                                $filter: {
-                                    input: '$history',
-                                    as: 'h',
-                                    cond: { $eq: ['$$h.toStage', ApplicationStatus.APPLIED] }
-                                }
+                $addFields: {
+                    firstApplied: {
+                        $min: {
+                            $filter: {
+                                input: '$history',
+                                as: 'h',
+                                cond: { $eq: ['$$h.toStage', ApplicationStatus.APPLIED] }
                             }
-                        },
-                        hiredAt: {
-                            $min: {
-                                $filter: {
-                                    input: '$history',
-                                    as: 'h',
-                                    cond: { $eq: ['$$h.toStage', ApplicationStatus.HIRED] }
-                                }
+                        }
+                    },
+                    hiredAt: {
+                        $min: {
+                            $filter: {
+                                input: '$history',
+                                as: 'h',
+                                cond: { $eq: ['$$h.toStage', ApplicationStatus.HIRED] }
                             }
                         }
                     }
