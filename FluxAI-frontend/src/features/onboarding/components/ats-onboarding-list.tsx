@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useATSOnboarding } from "@/features/onboarding/hooks/use-ats-onboarding";
 import {
     Table,
@@ -14,10 +14,12 @@ import { format } from "date-fns";
 import { FileText, CheckCircle, XCircle, Clock, Eye, Download } from "lucide-react";
 import { IOnboarding, IOnboardingDocument } from "@/lib/api/ats-onboarding";
 import { DocumentReviewModal } from "./document-review-modal";
+import { TimelineView } from "./timeline-view";
 
 export function ATSOnboardingList() {
     const { activeOnboardings, fetchActiveOnboardings, loading } = useATSOnboarding();
     const [selectedDocument, setSelectedDocument] = useState<{ onboarding: IOnboarding, document: IOnboardingDocument } | null>(null);
+    const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
     useEffect(() => {
         fetchActiveOnboardings();
@@ -69,44 +71,59 @@ export function ATSOnboardingList() {
                     </TableHeader>
                     <TableBody>
                         {activeOnboardings.map((onboarding) => (
-                            <TableRow key={onboarding._id}>
-                                <TableCell className="font-medium">
-                                    {/* Ideally assume population */}
-                                    {(onboarding.candidateId as any)?.firstName ?
-                                        `${(onboarding.candidateId as any).firstName} ${(onboarding.candidateId as any).lastName}` :
-                                        (typeof onboarding.candidateId === 'string' ? onboarding.candidateId : 'Unknown Candidate')
-                                    }
-                                </TableCell>
-                                <TableCell>{format(new Date(onboarding.startDate), 'MMM d, yyyy')}</TableCell>
-                                <TableCell>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-24 h-2 bg-secondary rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-primary"
-                                                style={{ width: `${getProgress(onboarding)}%` }}
-                                            />
-                                        </div>
-                                        <span className="text-xs text-muted-foreground">{getProgress(onboarding)}%</span>
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <div className="flex flex-wrap gap-2">
-                                        {onboarding.documents.map(doc => (
-                                            <div
-                                                key={doc._id}
-                                                className="flex items-center gap-1.5 px-2 py-1 text-xs border rounded-md cursor-pointer hover:bg-muted"
-                                                onClick={() => doc.status !== 'PENDING' && setSelectedDocument({ onboarding, document: doc })}
-                                            >
-                                                <span>{doc.title}</span>
-                                                {getStatusBadge(doc.status)}
+                            <React.Fragment key={onboarding._id}>
+                                <TableRow>
+                                    <TableCell className="font-medium">
+                                        {/* Ideally assume population */}
+                                        {(onboarding.candidateId as any)?.firstName ?
+                                            `${(onboarding.candidateId as any).firstName} ${(onboarding.candidateId as any).lastName}` :
+                                            (typeof onboarding.candidateId === 'string' ? onboarding.candidateId : 'Unknown Candidate')
+                                        }
+                                    </TableCell>
+                                    <TableCell>{format(new Date(onboarding.startDate), 'MMM d, yyyy')}</TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-24 h-2 bg-secondary rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-primary"
+                                                    style={{ width: `${getProgress(onboarding)}%` }}
+                                                />
                                             </div>
-                                        ))}
-                                    </div>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <Button variant="ghost" size="sm">Details</Button>
-                                </TableCell>
-                            </TableRow>
+                                            <span className="text-xs text-muted-foreground">{getProgress(onboarding)}%</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-wrap gap-2">
+                                            {onboarding.documents.map(doc => (
+                                                <div
+                                                    key={doc._id}
+                                                    className="flex items-center gap-1.5 px-2 py-1 text-xs border rounded-md cursor-pointer hover:bg-muted"
+                                                    onClick={() => doc.status !== 'PENDING' && setSelectedDocument({ onboarding, document: doc })}
+                                                >
+                                                    <span>{doc.title}</span>
+                                                    {getStatusBadge(doc.status)}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setExpandedRow(expandedRow === onboarding._id ? null : onboarding._id)}
+                                        >
+                                            {expandedRow === onboarding._id ? 'Hide Timeline' : 'View Timeline'}
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                                {expandedRow === onboarding._id && (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="bg-muted/30 p-6">
+                                            <TimelineView onboardingId={onboarding._id} />
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </React.Fragment>
                         ))}
                     </TableBody>
                 </Table>
