@@ -1,11 +1,20 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+
 export function DashboardHeader() {
+    const pathname = usePathname();
+    const isAtsRoute = pathname?.startsWith("/dashboard/ats-screening");
+
     return (
         <div className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-20 px-6 py-3 flex items-center justify-between">
-            {/* Breadcrumbs Placeholder */}
+            {/* Dynamic Breadcrumbs */}
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>Products</span>
                 <span>/</span>
-                <span className="text-foreground font-medium">Flux ATS</span>
+                <span className="text-foreground font-medium">
+                    {isAtsRoute ? "ATS Screening" : "Job Board"}
+                </span>
             </div>
 
             {/* Right Actions Placeholder */}
