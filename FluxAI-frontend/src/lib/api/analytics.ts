@@ -42,6 +42,12 @@ export interface AnalyticsTimeToHireResponse {
     max: number
 }
 
+export interface AtsEfficiencyResponse {
+    hoursSaved: number
+    totalScreened: number
+    scoreDistribution: { range: string; count: number }[]
+}
+
 export const analyticsApi = {
     getKPIs: async (jobId?: string): Promise<ApiResponse<AnalyticsKPIResponse>> => {
         return apiClient.get('/analytics/kpis', { jobId })
@@ -61,5 +67,9 @@ export const analyticsApi = {
 
     getTimeToHire: async (jobId?: string): Promise<ApiResponse<AnalyticsTimeToHireResponse>> => {
         return apiClient.get('/analytics/time-to-hire', { jobId })
+    },
+
+    getAtsEfficiency: async (jobId?: string): Promise<ApiResponse<AtsEfficiencyResponse>> => {
+        return apiClient.get('/analytics/ats-efficiency', { jobId })
     }
 }

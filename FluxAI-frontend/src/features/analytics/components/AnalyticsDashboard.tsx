@@ -37,10 +37,11 @@ import {
     AnalyticsTrendData,
     AnalyticsFunnelResponse,
     AnalyticsTimeToHireResponse,
+    AtsEfficiencyResponse,
     DemographicsData
 } from "@/lib/api/analytics"
 import { jobsApi, Job } from "@/lib/api/jobs"
-import { Users, FileText, CheckCircle, Clock, TrendingUp } from "lucide-react"
+import { Users, FileText, CheckCircle, Clock, TrendingUp, Zap } from "lucide-react"
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
@@ -55,6 +56,7 @@ export default function AnalyticsDashboard() {
     const [funnel, setFunnel] = useState<AnalyticsFunnelResponse | null>(null)
     const [timeToHire, setTimeToHire] = useState<AnalyticsTimeToHireResponse | null>(null)
     const [demographics, setDemographics] = useState<{ device: DemographicsData[] } | null>(null)
+    const [efficiency, setEfficiency] = useState<AtsEfficiencyResponse | null>(null)
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
@@ -80,12 +82,13 @@ export default function AnalyticsDashboard() {
         setLoading(true)
         const jobId = selectedJob === "all" ? undefined : selectedJob
         try {
-            const [kpiRes, trendRes, funnelRes, timeRes, demoRes] = await Promise.all([
+            const [kpiRes, trendRes, funnelRes, timeRes, demoRes, effRes] = await Promise.all([
                 analyticsApi.getKPIs(jobId),
                 analyticsApi.getTrends(timeframe, jobId),
                 analyticsApi.getFunnel(jobId),
                 analyticsApi.getTimeToHire(jobId),
-                analyticsApi.getDemographics(jobId)
+                analyticsApi.getDemographics(jobId),
+                analyticsApi.getAtsEfficiency(jobId)
             ])
 
             if (kpiRes.success && kpiRes.data) setKpis(kpiRes.data)
@@ -93,6 +96,7 @@ export default function AnalyticsDashboard() {
             if (funnelRes.success && funnelRes.data) setFunnel(funnelRes.data)
             if (timeRes.success && timeRes.data) setTimeToHire(timeRes.data)
             if (demoRes.success && demoRes.data) setDemographics(demoRes.data)
+            if (effRes.success && effRes.data) setEfficiency(effRes.data)
 
         } catch (error) {
             console.error("Failed to fetch analytics", error)
@@ -167,6 +171,12 @@ export default function AnalyticsDashboard() {
                     value={`${Math.round(timeToHire?.avgDays || 0)} days`}
                     icon={Clock}
                     description={`Min: ${Math.round(timeToHire?.min || 0)}d, Max: ${Math.round(timeToHire?.max || 0)}d`}
+                />
+                <KPICard
+                    title="Hours Saved (ATS)"
+                    value={efficiency?.hoursSaved || 0}
+                    icon={Zap}
+                    description="Estimated manual screening time saved"
                 />
             </div>
 
@@ -259,6 +269,48 @@ export default function AnalyticsDashboard() {
                                         contentStyle={{ backgroundColor: 'var(--background)', borderColor: 'var(--border)' }}
                                     />
                                     <Bar dataKey="value" fill="#f97316" radius={[0, 4, 4, 0]} barSize={32} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Score Distribution Chart */}
+                <Card className="col-span-4 lg:col-span-3">
+                    <CardHeader>
+                        <CardTitle>ATS Score Distribution</CardTitle>
+                        <CardDescription>How candidates are scoring in automated screening.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="h-[300px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart
+                                    data={efficiency?.scoreDistribution || []}
+                                    margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+                                >
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-muted" />
+                                    <XAxis
+                                        dataKey="range"
+                                        stroke="#888888"
+                                        fontSize={12}
+                                        tickLine={false}
+                                        axisLine={false}
+                                    />
+                                    <YAxis
+                                        stroke="#888888"
+                                        fontSize={12}
+                                        tickLine={false}
+                                        axisLine={false}
+                                    />
+                                    <Tooltip
+                                        cursor={{ fill: 'transparent' }}
+                                        contentStyle={{ backgroundColor: 'var(--background)', borderColor: 'var(--border)' }}
+                                    />
+                                    <Bar dataKey="count" fill="#8884d8" radius={[4, 4, 0, 0]} barSize={40}>
+                                        {(efficiency?.scoreDistribution || []).map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Bar>
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
