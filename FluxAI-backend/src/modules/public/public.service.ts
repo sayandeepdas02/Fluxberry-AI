@@ -3,6 +3,7 @@ import { jobsService } from '../jobs/jobs.service.js'
 import { getJudge0LanguageId, runCode as judge0RunCode } from '../../services/judge0/judge0.client.js'
 import { validateApplicationData } from '../../common/utils/application-schema.validator.js'
 import { generateUploadUrl, generateStorageKey } from '../storage/s3.client.js'
+import { enqueueAtsScreeningJob } from '../../jobs/queues/index.js'
 
 class PublicService {
     async getCompanyBySlug(slug: string) {
@@ -171,6 +172,15 @@ class PublicService {
         } catch (err) {
             console.error('[AuditLog] Failed to log application:', err)
         }
+
+        // 9. Emit CANDIDATE_APPLIED event for ATS Screening
+        enqueueAtsScreeningJob({
+            type: 'CANDIDATE_APPLIED',
+            applicationId: application._id.toString(),
+            candidateId: candidate._id.toString(),
+            jobId: job._id.toString(),
+            organizationId: orgId,
+        }).catch(err => console.error('[ATS] Failed to enqueue screening job:', err))
 
         return {
             applicationId: application._id.toString(),
