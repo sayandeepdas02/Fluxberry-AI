@@ -60,7 +60,7 @@ async function testValidSignatureUnknownInterviewReturns200() {
         body: body.toString('utf8'),
     })
     assert.strictEqual(res.status, 200, 'Webhook should return 200 for unknown interview (idempotent)')
-    const data = await res.json()
+    const data = await res.json() as any
     assert.strictEqual(data.success, true)
     console.log('   OK')
 }

@@ -1127,6 +1127,8 @@ export interface IOnboarding extends Document {
     applicationId: Types.ObjectId
     candidateId: Types.ObjectId
     status: OnboardingStatusType
+    formTemplateSnapshot?: Record<string, any>
+    formTemplateVersion?: number
     startDate?: Date
     completedAt?: Date
     expiresAt?: Date
@@ -1142,6 +1144,8 @@ const OnboardingSchema = new Schema<IOnboarding>({
     applicationId: { type: Schema.Types.ObjectId, ref: 'JobApplication', required: true, unique: true },
     candidateId: { type: Schema.Types.ObjectId, ref: 'Candidate', required: true },
     status: { type: String, enum: Object.values(OnboardingStatus), default: OnboardingStatus.IN_PROGRESS, index: true },
+    formTemplateSnapshot: { type: Schema.Types.Mixed },
+    formTemplateVersion: { type: Number },
     startDate: { type: Date },
     completedAt: { type: Date },
     expiresAt: { type: Date },
@@ -1223,15 +1227,21 @@ export interface IOffer extends Document {
     applicationId: Types.ObjectId
     candidateId: Types.ObjectId
     templateId?: Types.ObjectId
+    snapshotHtml?: string
+    snapshotVariables?: Record<string, any>
+    snapshotTemplateVersion?: number
     status: OfferStatusType
     filledVariables?: Record<string, any>
     generatedPdfUrl?: string // Unsigned PDF
     signedPdfUrl?: string // Signed PDF
+    signedPdfHash?: string
     expiresAt?: Date
     viewedAt?: Date
     signedAt?: Date
     rejectedReason?: string
     publicToken?: string // Secure token for public access
+    tokenExpiresAt?: Date
+    tokenUsedAt?: Date
     auditLog?: {
         event: string
         timestamp: Date
@@ -1246,15 +1256,21 @@ const OfferSchema = new Schema<IOffer>({
     applicationId: { type: Schema.Types.ObjectId, ref: 'JobApplication', required: true },
     candidateId: { type: Schema.Types.ObjectId, ref: 'Candidate', required: true },
     templateId: { type: Schema.Types.ObjectId, ref: 'OfferTemplate' },
+    snapshotHtml: { type: String },
+    snapshotVariables: { type: Schema.Types.Mixed },
+    snapshotTemplateVersion: { type: Number },
     status: { type: String, enum: Object.values(OfferStatus), default: OfferStatus.DRAFT },
     filledVariables: { type: Map, of: Schema.Types.Mixed }, // Stores key-value pairs for template variables
     generatedPdfUrl: { type: String },
     signedPdfUrl: { type: String },
+    signedPdfHash: { type: String },
     expiresAt: { type: Date },
     viewedAt: { type: Date },
     signedAt: { type: Date },
     rejectedReason: { type: String },
     publicToken: { type: String, index: true },
+    tokenExpiresAt: { type: Date },
+    tokenUsedAt: { type: Date },
     auditLog: [{
         event: { type: String },
         timestamp: { type: Date, default: Date.now },
@@ -1279,7 +1295,7 @@ export interface IOfferSignature extends Document {
 }
 
 const OfferSignatureSchema = new Schema<IOfferSignature>({
-    offerId: { type: Schema.Types.ObjectId, ref: 'Offer', required: true, index: true },
+    offerId: { type: Schema.Types.ObjectId, ref: 'Offer', required: true, unique: true },
     signatureType: { type: String, enum: ['DRAWN', 'TYPED'], required: true },
     signatureImageUrl: { type: String },
     documentHash: { type: String },
@@ -1338,7 +1354,8 @@ export interface IOnboardingFormResponse extends Document {
     onboardingId: Types.ObjectId
     formTemplateId: Types.ObjectId
     responses: Record<string, any>
-    status: 'IN_PROGRESS' | 'SUBMITTED'
+    status: 'IN_PROGRESS' | 'SUBMITTED' | 'NEEDS_REVISION'
+    feedback?: { fieldId: string; message: string }[]
     submittedAt?: Date
     createdAt: Date
     updatedAt: Date
@@ -1348,11 +1365,40 @@ const OnboardingFormResponseSchema = new Schema<IOnboardingFormResponse>({
     onboardingId: { type: Schema.Types.ObjectId, ref: 'Onboarding', required: true, index: true },
     formTemplateId: { type: Schema.Types.ObjectId, ref: 'OnboardingFormTemplate', required: true },
     responses: { type: Schema.Types.Mixed, default: {} },
-    status: { type: String, enum: ['IN_PROGRESS', 'SUBMITTED'], default: 'IN_PROGRESS' },
+    status: { type: String, enum: ['IN_PROGRESS', 'SUBMITTED', 'NEEDS_REVISION'], default: 'IN_PROGRESS' },
+    feedback: [{
+        fieldId: { type: String, required: true },
+        message: { type: String, required: true }
+    }],
     submittedAt: { type: Date },
 }, { timestamps: true })
 
+OnboardingFormResponseSchema.index({ onboardingId: 1 }, { unique: true })
+
 export const OnboardingFormResponse = mongoose.model<IOnboardingFormResponse>('OnboardingFormResponse', OnboardingFormResponseSchema)
+
+// ============================================
+// ORGANIZATION ONBOARDING SETTINGS MODEL
+// ============================================
+export interface IOrganizationOnboardingSettings extends Document {
+    organizationId: Types.ObjectId
+    offerReminderHours: number
+    onboardingReminderHours: number
+    offerExpiryDays: number
+    maxReminders: number
+    createdAt: Date
+    updatedAt: Date
+}
+
+const OrganizationOnboardingSettingsSchema = new Schema<IOrganizationOnboardingSettings>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, unique: true },
+    offerReminderHours: { type: Number, default: 48 },
+    onboardingReminderHours: { type: Number, default: 72 },
+    offerExpiryDays: { type: Number, default: 7 },
+    maxReminders: { type: Number, default: 3 },
+}, { timestamps: true })
+
+export const OrganizationOnboardingSettings = mongoose.model<IOrganizationOnboardingSettings>('OrganizationOnboardingSettings', OrganizationOnboardingSettingsSchema)
 
 // ============================================
 // ACTIVITY LOG MODEL

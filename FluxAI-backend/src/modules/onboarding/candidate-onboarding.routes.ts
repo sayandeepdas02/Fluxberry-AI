@@ -13,4 +13,10 @@ router.get('/application/:applicationId', candidateOnboardingController.getStatu
 // Review/Update document status
 router.patch('/document/:docId', candidateOnboardingController.updateDocument.bind(candidateOnboardingController))
 
+// Recruiter Rejection of submitted forms
+router.patch('/form/:onboardingId/reject', candidateOnboardingController.rejectForm.bind(candidateOnboardingController))
+
+// Recruiter Activity Timeline Pagination Log
+router.get('/:onboardingId/timeline', candidateOnboardingController.getTimeline.bind(candidateOnboardingController))
+
 export default router

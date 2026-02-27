@@ -78,6 +78,30 @@ export class OnboardingFormService {
         return formResponse
     }
 
+    async rejectForm(organizationId: string, onboardingId: string, feedback: { fieldId: string, message: string }[]) {
+        const onboarding = await Onboarding.findOne({ _id: onboardingId, organizationId })
+        if (!onboarding) throw new Error('Onboarding record not found')
+
+        const formResponse = await OnboardingFormResponse.findOne({ onboardingId })
+        if (!formResponse) throw new Error('Form response not found')
+
+        if (formResponse.status !== 'SUBMITTED') {
+            throw new Error('Can only reject SUBMITTED forms')
+        }
+
+        formResponse.status = 'NEEDS_REVISION'
+        formResponse.feedback = feedback
+
+        // Let's ensure candidate workflow reflects pending action again if needed,
+        // but 'FORM_PENDING' or similar is tracked in workflowState
+        onboarding.workflowState = 'FORM_PENDING'
+
+        await formResponse.save()
+        await onboarding.save()
+
+        return formResponse
+    }
+
     private async validateForm(template: any, responses: Record<string, any>) {
         for (const field of template.fields) {
             if (field.required && (responses[field.id] === undefined || responses[field.id] === '')) {

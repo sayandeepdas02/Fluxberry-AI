@@ -1,10 +1,11 @@
 import {
     Organization,
     OrganizationMember,
+    OrganizationOnboardingSettings,
     IOrganization,
     MemberRoleType,
 } from '../../database/models/index.js'
-import { UpdateOrganizationInput, OrganizationResponse, OrganizationMemberResponse } from './organizations.types.js'
+import { UpdateOrganizationInput, UpdateOnboardingSettingsInput, OrganizationResponse, OrganizationMemberResponse } from './organizations.types.js'
 
 export class OrganizationsService {
     /**
@@ -162,6 +163,50 @@ export class OrganizationsService {
                 joinedAt: m.joinedAt,
             }
         })
+    }
+
+    /**
+     * Get organization onboarding settings
+     */
+    async getOnboardingSettings(organizationId: string, userId: string): Promise<any> {
+        // Verify user is a member of this organization
+        const membership = await OrganizationMember.findOne({ userId, organizationId })
+
+        if (!membership) {
+            const error = new Error('Access denied') as Error & { statusCode: number; code: string }
+            error.statusCode = 403
+            error.code = 'FORBIDDEN'
+            throw error
+        }
+
+        let settings = await OrganizationOnboardingSettings.findOne({ organizationId })
+        if (!settings) {
+            settings = await OrganizationOnboardingSettings.create({ organizationId })
+        }
+        return settings
+    }
+
+    /**
+     * Update organization onboarding settings (OWNER or ADMIN only)
+     */
+    async updateOnboardingSettings(organizationId: string, userId: string, input: UpdateOnboardingSettingsInput): Promise<any> {
+        // Verify user is an OWNER or ADMIN of this organization
+        const membership = await OrganizationMember.findOne({ userId, organizationId })
+
+        if (!membership || (membership.role !== 'OWNER' && membership.role !== 'ADMIN')) {
+            const error = new Error('Owner or Admin access required') as Error & { statusCode: number; code: string }
+            error.statusCode = 403
+            error.code = 'FORBIDDEN'
+            throw error
+        }
+
+        const settings = await OrganizationOnboardingSettings.findOneAndUpdate(
+            { organizationId },
+            { $set: input },
+            { new: true, upsert: true }
+        )
+
+        return settings
     }
 }
 

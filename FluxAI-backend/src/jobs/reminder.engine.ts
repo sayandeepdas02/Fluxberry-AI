@@ -1,22 +1,41 @@
 import cron from 'node-cron'
-import { Onboarding, Offer, ActivityLog } from '../database/models/index.js'
+import { Onboarding, Offer, ActivityLog, OrganizationOnboardingSettings } from '../database/models/index.js'
 import { offersService } from '../modules/offers/offers.service.js'
 import { enqueueEmailJob } from './queues/index.js'
+import { redisConnection } from './redis.js'
 
 export class ReminderEngine {
 
     // Check every hour
     startJobs() {
         cron.schedule('0 * * * *', async () => {
-            console.log("Running Workflow Automation Cron Job")
+            // 1. Acquire Distributed Lock to prevent multi-instance parallel execution
+            const lockAcquired = await redisConnection.set('onboarding_cron_lock', '1', 'EX', 55 * 60, 'NX')
+            if (!lockAcquired) {
+                console.log('Skipping Workflow Automation Cron - Lock acquired by another instance')
+                return
+            }
+
+            console.log("Running Workflow Automation Cron Job (Lock Acquired)")
             try {
                 await this.processOfferExpirations()
                 await this.processOfferReminders()
                 await this.processOnboardingReminders()
             } catch (err) {
                 console.error("Cron Job Error:", err)
+            } finally {
+                // We keep the lock for 55 minutes to ensure no other hour-tick catches it early in clustered setups,
+                // or we could delete it here. Usually, let it expire is safer to avoid drift double-executions.
             }
         })
+    }
+
+    private async getOrgSettings(orgId: string) {
+        let settings = await OrganizationOnboardingSettings.findOne({ organizationId: orgId })
+        if (!settings) {
+            settings = await OrganizationOnboardingSettings.create({ organizationId: orgId }) // default schema values will inject
+        }
+        return settings
     }
 
     private async processOfferExpirations() {
@@ -27,81 +46,79 @@ export class ReminderEngine {
         })
 
         for (const offer of expiredOffers) {
-            await offersService.expireOffer(offer.publicToken!)
+            await offersService.expireOffer(offer._id.toString(), offer.organizationId.toString())
         }
     }
 
     private async processOfferReminders() {
-        // Find offers SENT or VIEWED, created > 48h ago, and no reminder sent yet (or check reminderCount/log)
-        // For simplicity: created > 48h ago, reminderCount == 0 (Extend schema internally or use ActivityLog)
         const now = new Date()
-        const cutoff = new Date(now.getTime() - (48 * 60 * 60 * 1000))
 
-        // This is a simplistic check. Real implementation would use lastReminderSentAt and reminderCount
-        const offersToRemind = await Offer.find({
-            status: { $in: ['SENT', 'VIEWED'] },
-            createdAt: { $lt: cutoff }
-            // Let's assume we aren't tracking offer reminder count at the schema level right now, 
-            // but we can track via ActivityLog to prevent spam.
+        const pendingOffers = await Offer.find({
+            status: { $in: ['SENT', 'VIEWED'] }
         })
 
-        for (const offer of offersToRemind) {
-            const hasReminder = await ActivityLog.findOne({
-                entityType: 'OFFER',
-                entityId: offer._id,
-                eventType: 'REMINDER_SENT'
-            })
+        for (const offer of pendingOffers) {
+            const orgSettings = await this.getOrgSettings(offer.organizationId.toString())
+            const cutoff = new Date(now.getTime() - (orgSettings.offerReminderHours * 60 * 60 * 1000))
 
-            if (!hasReminder) {
-                // Send reminder email
-                await enqueueEmailJob({
-                    to: 'candidate@example.com', // Get from application
-                    subject: 'Reminder: Action Required on Your Offer',
-                    html: `<p>Please review and sign your offer before it expires.</p>`
-                })
-
-                await ActivityLog.create({
+            if (offer.createdAt < cutoff) {
+                // Time has passed the organization's cutoff length
+                const hasReminder = await ActivityLog.findOne({
                     entityType: 'OFFER',
                     entityId: offer._id,
-                    eventType: 'REMINDER_SENT',
-                    timestamp: new Date()
+                    eventType: 'REMINDER_SENT'
                 })
+
+                if (!hasReminder) {
+                    await enqueueEmailJob({
+                        to: 'candidate@example.com', // In reality via candidate reference
+                        subject: 'Reminder: Action Required on Your Offer',
+                        html: `<p>Please review and sign your offer before it expires.</p>`
+                    })
+
+                    await ActivityLog.create({
+                        entityType: 'OFFER',
+                        entityId: offer._id,
+                        eventType: 'REMINDER_SENT',
+                        timestamp: new Date()
+                    })
+                }
             }
         }
     }
 
     private async processOnboardingReminders() {
-        // Find Onboardings IN_PROGRESS with no activity in 72h
         const now = new Date()
-        const cutoff = new Date(now.getTime() - (72 * 60 * 60 * 1000))
 
         const stalledOnboardings = await Onboarding.find({
-            status: 'IN_PROGRESS',
-            $or: [
-                { lastReminderSentAt: { $lt: cutoff } }, // Over 72 hrs since last reminder
-                { lastReminderSentAt: { $exists: false }, startDate: { $lt: cutoff } } // Over 72 hrs since start with no reminder
-            ]
-        })
+            status: 'IN_PROGRESS'
+        }).populate('candidateId')
 
         for (const onboarding of stalledOnboardings) {
-            // Send reminder
-            await enqueueEmailJob({
-                to: 'candidate@example.com', // Get candidate email
-                subject: 'Reminder: Action Required on Onboarding Tasks',
-                html: `<p>Please log in and complete your pending onboarding tasks.</p>`
-            })
+            const orgSettings = await this.getOrgSettings(onboarding.organizationId.toString())
+            const cutoff = new Date(now.getTime() - (orgSettings.onboardingReminderHours * 60 * 60 * 1000))
 
-            onboarding.reminderCount = (onboarding.reminderCount || 0) + 1
-            onboarding.lastReminderSentAt = new Date()
-            await onboarding.save()
+            const lastHit = onboarding.lastReminderSentAt || onboarding.startDate || now
+            if (lastHit < cutoff && (onboarding.reminderCount || 0) < orgSettings.maxReminders) {
 
-            await ActivityLog.create({
-                entityType: 'ONBOARDING',
-                entityId: onboarding._id,
-                eventType: 'REMINDER_SENT',
-                metadata: { count: onboarding.reminderCount },
-                timestamp: new Date()
-            })
+                await enqueueEmailJob({
+                    to: 'candidate@example.com', // Populate from candidate inside app
+                    subject: 'Reminder: Action Required on Onboarding Tasks',
+                    html: `<p>Please log in and complete your pending onboarding tasks.</p>`
+                })
+
+                onboarding.reminderCount = (onboarding.reminderCount || 0) + 1
+                onboarding.lastReminderSentAt = new Date()
+                await onboarding.save()
+
+                await ActivityLog.create({
+                    entityType: 'ONBOARDING',
+                    entityId: onboarding._id,
+                    eventType: 'REMINDER_SENT',
+                    metadata: { count: onboarding.reminderCount },
+                    timestamp: new Date()
+                })
+            }
         }
     }
 }

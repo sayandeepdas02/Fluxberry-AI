@@ -183,7 +183,7 @@ class PublicController {
             const { onboardingId } = req.params
             const { responses } = req.body
             const { onboardingFormService } = await import('../onboarding/onboarding-form.service.js')
-            const data = await onboardingFormService.submitOnboardingForm(onboardingId, responses)
+            const data = await onboardingFormService.submitForm(onboardingId, responses)
             res.json(successResponse(data))
         } catch (error) {
             next(error)
