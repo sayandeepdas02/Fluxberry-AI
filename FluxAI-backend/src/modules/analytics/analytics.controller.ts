@@ -129,6 +129,26 @@ export class AnalyticsController {
             next(error)
         }
     }
+
+    /**
+     * GET /api/analytics/ats-efficiency
+     */
+    async getAtsEfficiency(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const organizationId = req.user?.organizationId
+            const jobId = req.query.jobId as string | undefined
+
+            if (!organizationId) {
+                res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
+                return
+            }
+
+            const data = await analyticsService.getAtsEfficiencyMetrics(organizationId, jobId)
+            res.json(successResponse(data))
+        } catch (error) {
+            next(error)
+        }
+    }
 }
 
 export const analyticsController = new AnalyticsController()

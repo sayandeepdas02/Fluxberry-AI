@@ -1,4 +1,5 @@
 import { Job, Candidate, AssessmentAttempt, AnalyticsSnapshot, JobApplication, StageHistory, ApplicationStatus } from '../../database/models/index.js'
+import { ScreeningResult } from '../ats-screening/models/screening-result.model.js'
 import { KPIData, AnalyticsTrendData, DemographicsData } from './analytics.types.js'
 import { redisConnection } from '../../jobs/redis.js'
 import mongoose from 'mongoose'
@@ -271,6 +272,61 @@ class AnalyticsService {
             value: item.count,
             percentage: Math.round((item.count / total) * 100)
         }))
+
+        await this.setCache(cacheKey, result)
+        return result
+    }
+
+    async getAtsEfficiencyMetrics(organizationId: string, jobId?: string) {
+        const cacheKey = this.getCacheKey(organizationId, 'atsEfficiency', jobId)
+        const cached = await this.getCached(cacheKey)
+        if (cached) return cached
+
+        const matchStage = {
+            organizationId: new mongoose.Types.ObjectId(organizationId),
+            ...(jobId ? { jobId: new mongoose.Types.ObjectId(jobId) } : {})
+        }
+
+        // 1. Get total screened candidates to calculate "Hours Saved"
+        // Base estimate: 3 minutes per manual resume screen
+        const totalScreened = await ScreeningResult.countDocuments(matchStage)
+        const hoursSaved = Math.round((totalScreened * 3) / 60)
+
+        // 2. Score Distribution (Histogram)
+        const distributionAgg = await ScreeningResult.aggregate([
+            { $match: matchStage },
+            {
+                $bucket: {
+                    groupBy: "$finalScore",
+                    boundaries: [0, 20, 40, 60, 80, 101], // 101 to include 100
+                    default: "Unknown",
+                    output: { count: { $sum: 1 } }
+                }
+            }
+        ])
+
+        const formatRange = (min: number, max: number) => `${min}-${max}`
+        const chartData = [
+            { range: formatRange(0, 19), count: 0 },
+            { range: formatRange(20, 39), count: 0 },
+            { range: formatRange(40, 59), count: 0 },
+            { range: formatRange(60, 79), count: 0 },
+            { range: formatRange(80, 100), count: 0 },
+        ]
+
+        distributionAgg.forEach(bucket => {
+            if (bucket._id === 0) chartData[0].count = bucket.count
+            if (bucket._id === 20) chartData[1].count = bucket.count
+            if (bucket._id === 40) chartData[2].count = bucket.count
+            if (bucket._id === 60) chartData[3].count = bucket.count
+            if (bucket._id === 80) chartData[4].count = bucket.count
+        })
+
+        const result = {
+            hoursSaved,
+            totalScreened,
+            scoreDistribution: chartData
+        }
 
         await this.setCache(cacheKey, result)
         return result
