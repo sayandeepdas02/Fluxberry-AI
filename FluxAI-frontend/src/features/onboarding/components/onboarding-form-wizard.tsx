@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Loader2, Save, Send } from "lucide-react";
+import { Loader2, Save, Send, AlertTriangle } from "lucide-react";
 
 interface FormWizardProps {
     onboardingId: string;
@@ -190,18 +190,42 @@ export function OnboardingFormWizard({ onboardingId, token, onComplete }: FormWi
                 </p>
             </div>
 
+            {response?.status === 'NEEDS_REVISION' && (
+                <div className="mb-6 p-4 rounded-md bg-orange-50 border border-orange-200">
+                    <h3 className="text-sm font-semibold text-orange-800 flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4" />
+                        Revisions Requested
+                    </h3>
+                    <p className="text-sm text-orange-700 mt-1">
+                        The onboarding team has reviewed your submission and requested some changes.
+                        Please review the feedback below and resubmit the form.
+                    </p>
+                </div>
+            )}
+
             <div className="space-y-6">
-                {template.fields.map((field) => (
-                    <div key={field.id} className="space-y-2">
-                        {field.type !== 'checkbox' && (
-                            <Label className="flex gap-1">
-                                {field.label}
-                                {field.required && <span className="text-red-500">*</span>}
-                            </Label>
-                        )}
-                        {renderField(field)}
-                    </div>
-                ))}
+                {template.fields.map((field) => {
+                    const fieldFeedback = response?.status === 'NEEDS_REVISION'
+                        ? response.feedback?.find(f => f.fieldId === field.id)
+                        : null;
+
+                    return (
+                        <div key={field.id} className="space-y-2">
+                            {field.type !== 'checkbox' && (
+                                <Label className="flex gap-1">
+                                    {field.label}
+                                    {field.required && <span className="text-red-500">*</span>}
+                                </Label>
+                            )}
+                            {renderField(field)}
+                            {fieldFeedback && (
+                                <p className="text-sm font-medium text-red-500 mt-1">
+                                    {fieldFeedback.message}
+                                </p>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
 
             <div className="flex items-center gap-3 mt-8 pt-6 border-t">

@@ -65,7 +65,8 @@ export interface IOnboardingFormResponse {
     onboardingId: string
     formTemplateId: string
     responses: Record<string, any>
-    status: 'IN_PROGRESS' | 'SUBMITTED'
+    status: 'IN_PROGRESS' | 'SUBMITTED' | 'NEEDS_REVISION'
+    feedback?: { fieldId: string, message: string }[]
     submittedAt?: string
     createdAt: string
     updatedAt: string
