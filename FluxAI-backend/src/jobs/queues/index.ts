@@ -120,6 +120,28 @@ export const analyticsQueue = new Queue<AnalyticsAggregationJobData>('analytics-
 export const workflowQueue = new Queue<WorkflowJobData>('workflow', queueOptions)
 
 // ============================================
+// ATS SCREENING QUEUE
+// ============================================
+export interface AtsScreeningJobData {
+    type: 'CANDIDATE_APPLIED'
+    applicationId: string
+    candidateId: string
+    jobId: string
+    organizationId: string
+}
+export const atsScreeningQueue = new Queue<AtsScreeningJobData>('ats-screening', {
+    ...queueOptions,
+    defaultJobOptions: {
+        ...queueOptions.defaultJobOptions,
+        attempts: 5,
+        backoff: { type: 'exponential', delay: 2000 },
+        removeOnComplete: 1000,
+        removeOnFail: false // Keep failed jobs in Dead Letter Queue for monitoring dashboard
+    }
+})
+
+
+// ============================================
 // JOB PRODUCERS
 // ============================================
 
@@ -179,6 +201,14 @@ export async function enqueueWorkflowJob(data: WorkflowJobData): Promise<string>
         jobId: `WORKFLOW-${data.actionType}-${data.entityId}-${Date.now()}`,
     })
     console.log(`📤 Enqueued WORKFLOW job: ${job.id}`)
+    return job.id || ''
+}
+
+export async function enqueueAtsScreeningJob(data: AtsScreeningJobData): Promise<string> {
+    const job = await atsScreeningQueue.add(data.type, data, {
+        jobId: `${data.type}-${data.applicationId}-${Date.now()}`,
+    })
+    console.log(`📤 Enqueued ${data.type} job: ${job.id}`)
     return job.id || ''
 }
 
