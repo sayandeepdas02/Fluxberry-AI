@@ -206,6 +206,28 @@ export function Sidebar() {
                             </div>
                         </div>
 
+                        {/* ATS Screening (New Top Level) */}
+                        <div className="space-y-1">
+                            <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-foreground hover:text-foreground transition-colors group">
+                                <Activity className="w-4 h-4" />
+                                <span>ATS Screening</span>
+                            </button>
+
+                            <div className="ml-4 space-y-0.5 border-l border-border/50 pl-2">
+                                <Link
+                                    href="/dashboard/ats-screening"
+                                    className={cn(
+                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                        isActive("/dashboard/ats-screening")
+                                            ? "text-foreground bg-muted"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                    )}
+                                >
+                                    Overview
+                                </Link>
+                            </div>
+                        </div>
+
                         {/* Flux Hire (Expanded) */}
                         <div className="space-y-1">
                             <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-foreground hover:text-foreground transition-colors group">

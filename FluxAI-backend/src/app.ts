@@ -29,6 +29,7 @@ import dashboardRoutes from './modules/dashboard/dashboard.routes.js'
 import publicRoutes from './modules/public/public.routes.js'
 import applicationsRoutes from './modules/applications/applications.routes.js'
 import aiInterviewRoutes from './modules/ai-interview/ai-interview.routes.js'
+import { atsScreeningRoutes } from './modules/ats-screening/ats-screening.routes.js'
 import { attemptsController } from './modules/attempts/attempts.controller.js'
 import { resultsController } from './modules/results/results.controller.js'
 import { filesController } from './modules/files/files.controller.js'
@@ -139,10 +140,13 @@ export function createApp() {
         resultsController.getAssessmentResults(req, res, next)
     )
 
-    // Analytics
+    // Analytics & Dashboard
     app.use('/api/analytics', analyticsRoutes)
     app.use('/api/dashboard', dashboardRoutes)
     app.use('/api/public', publicRoutes)
+
+    // ATS Screening
+    app.use('/api/ats-screening', atsScreeningRoutes)
 
     app.get('/api/attempts/:attemptId/result', (req, res, next) =>
         resultsController.getAttemptResult(req, res, next)

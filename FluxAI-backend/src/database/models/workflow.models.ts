@@ -1,12 +1,14 @@
 import mongoose, { Schema, Document, Types } from 'mongoose'
 
-// Trigger Types
 export const WorkflowTrigger = {
     APPLICATION_SUBMITTED: 'APPLICATION_SUBMITTED',
     STAGE_CHANGED: 'STAGE_CHANGED',
     SCORE_SUBMITTED: 'SCORE_SUBMITTED',
     TAG_ADDED: 'TAG_ADDED',
     DISQUALIFIED: 'DISQUALIFIED',
+    SCREENING_COMPLETED: 'SCREENING_COMPLETED',
+    SCREENING_SCORE_ABOVE: 'SCREENING_SCORE_ABOVE',
+    SCREENING_SCORE_BELOW: 'SCREENING_SCORE_BELOW',
 } as const
 export type WorkflowTriggerType = typeof WorkflowTrigger[keyof typeof WorkflowTrigger]
 
