@@ -4,6 +4,7 @@ import crypto from 'crypto'
 import { templateService } from './template.service.js'
 import { pdfService } from './pdf.service.js'
 import { candidateOnboardingService } from '../onboarding/candidate-onboarding.service.js'
+import { PDFDocument } from 'pdf-lib'
 
 export class OffersService {
 
@@ -35,6 +36,9 @@ export class OffersService {
             applicationId,
             candidateId: app.candidateId,
             templateId: template._id,
+            snapshotHtml: template.htmlContent,
+            snapshotVariables: template.variables,
+            snapshotTemplateVersion: template.version,
             filledVariables,
             status: OfferStatus.DRAFT,
             expiresAt,
@@ -53,9 +57,12 @@ export class OffersService {
         if (!offer || !offer.templateId) throw new Error('Offer or Template not found')
 
         const template = await OfferTemplate.findById(offer.templateId)
-        if (!template) throw new Error('Template not found')
+        if (!template && !offer.snapshotHtml) throw new Error('Template not found')
 
-        const content = templateService.render(template.htmlContent, offer.filledVariables || {})
+        const htmlToRender = offer.snapshotHtml || template?.htmlContent
+        if (!htmlToRender) throw new Error('Template content not found')
+
+        const content = templateService.render(htmlToRender, offer.filledVariables || {})
         const pdfBuffer = await pdfService.generatePdf(content)
         const pdfUrl = await pdfService.uploadPdf(pdfBuffer, organizationId, offer._id.toString(), 'unsigned')
 
@@ -71,8 +78,14 @@ export class OffersService {
         if (offer.status !== OfferStatus.DRAFT) throw new Error('Offer must be in DRAFT to send')
         if (!offer.generatedPdfUrl) throw new Error('Cannot send offer without generated PDF')
 
-        const token = crypto.randomBytes(32).toString('hex')
-        offer.publicToken = token
+        const rawToken = crypto.randomBytes(32).toString('hex')
+        const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex')
+        offer.publicToken = tokenHash
+
+        const tokenExpires = new Date()
+        tokenExpires.setDate(tokenExpires.getDate() + 7) // Configured 7 days by default, configurable via settings later
+        offer.tokenExpiresAt = tokenExpires
+
         offer.status = OfferStatus.SENT
 
         if (offer.auditLog) {
@@ -94,8 +107,10 @@ export class OffersService {
             timestamp: new Date()
         })
 
-        console.log(`[Email] Sending Offer Link to Candidate: /offers/${token}`)
-        return offer
+        console.log(`[Email] Sending Offer Link to Candidate: /offer/${rawToken}`)
+
+        const responseData = offer.toObject()
+        return { ...responseData, rawToken }
     }
 
     async getOffer(offerId: string, organizationId: string) {
@@ -113,9 +128,19 @@ export class OffersService {
     }
 
     // Public Routes
-    async getOfferByToken(publicToken: string) {
-        const offer = await Offer.findOne({ publicToken })
+    async getOfferByToken(rawToken: string) {
+        const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex')
+        const offer = await Offer.findOne({ publicToken: tokenHash })
         if (!offer) throw new Error('Invalid offer token')
+
+        // 410 Gone if token expired
+        if (offer.tokenExpiresAt && new Date() > offer.tokenExpiresAt) {
+            throw new Error('410 Gone: Token has expired')
+        }
+
+        if (offer.tokenUsedAt) {
+            throw new Error('Token has already been consumed')
+        }
 
         if (offer.status === OfferStatus.SENT) {
             offer.status = OfferStatus.VIEWED
@@ -144,50 +169,88 @@ export class OffersService {
         return offer
     }
 
-    async recordSignature(publicToken: string, signatureData: { name: string, data: string, type: 'DRAWN' | 'TYPED' }, ipAddress: string = '0.0.0.0') {
-        const offer = await Offer.findOne({ publicToken }).populate('templateId')
+    async recordSignature(rawToken: string, signatureData: { name: string, data: string, type: 'DRAWN' | 'TYPED' }, ipAddress: string = '0.0.0.0') {
+        const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex')
+        const offer = await Offer.findOne({ publicToken: tokenHash }).populate('templateId')
+
         if (!offer) throw new Error('Invalid offer token')
-        if (!offer.templateId) throw new Error('Offer has no linked template')
+        if (offer.status === OfferStatus.SIGNED) throw new Error('Offer has already been signed')
 
-        if (offer.status !== OfferStatus.SENT && offer.status !== OfferStatus.VIEWED) {
-            throw new Error('Offer is not in a valid state to accept')
-        }
-
-        if (offer.expiresAt && new Date() > offer.expiresAt) {
+        if (offer.tokenExpiresAt && new Date() > offer.tokenExpiresAt) {
             offer.status = OfferStatus.EXPIRED
             await offer.save()
             throw new Error('Offer has expired')
         }
 
-        const template = await OfferTemplate.findById(offer.templateId)
-        if (!template) throw new Error('Template not found')
+        const htmlToRender = offer.snapshotHtml || (await OfferTemplate.findById(offer.templateId))?.htmlContent
+        if (!htmlToRender) throw new Error('Template not found')
 
         const signedAt = new Date()
-        const content = templateService.render(template.htmlContent, offer.filledVariables || {})
-        const documentHash = crypto.createHash('sha256').update(content).digest('hex')
+        const content = templateService.render(htmlToRender, offer.filledVariables || {})
+        const unsignedPdfBuffer = await pdfService.generatePdf(content)
 
-        const signatureHtml = `
-            <div class="signature-section">
-                <h3>Agreed and Accepted</h3>
-                <p><strong>Signed By:</strong> ${signatureData.name}</p>
-                <p><strong>Date:</strong> ${signedAt.toLocaleString()}</p>
-                <img src="${signatureData.data}" class="signature-img" alt="Signature" />
-                <p><small>Document Hash: ${documentHash}</small></p>
-            </div>
-        `
-        const finalContent = content + signatureHtml
+        // Load PDF using pdf-lib
+        const pdfDoc = await PDFDocument.load(unsignedPdfBuffer)
 
-        const pdfBuffer = await pdfService.generatePdf(finalContent)
-        const signedPdfUrl = await pdfService.uploadPdf(pdfBuffer, offer.organizationId.toString(), offer._id.toString(), 'signed')
-
-        offer.status = OfferStatus.SIGNED
-        offer.signedAt = signedAt
-        offer.signedPdfUrl = signedPdfUrl
-
-        if (offer.auditLog) {
-            offer.auditLog.push({ event: 'Offer Signed', timestamp: signedAt, ipAddress })
+        // Insert signature image at fixed coordinates
+        let imgBytes;
+        if (signatureData.data.includes('base64,')) {
+            imgBytes = Buffer.from(signatureData.data.split('base64,')[1], 'base64');
+        } else {
+            imgBytes = Buffer.from(signatureData.data, 'base64');
         }
-        await offer.save()
+
+        let signatureImage;
+        try {
+            signatureImage = await pdfDoc.embedPng(imgBytes)
+        } catch {
+            signatureImage = await pdfDoc.embedJpg(imgBytes)
+        }
+
+        // Draw onto the last page
+        const pages = pdfDoc.getPages()
+        const lastPage = pages[pages.length - 1]
+
+        const dims = signatureImage.scale(0.5)
+        lastPage.drawImage(signatureImage, {
+            x: 50,
+            y: 50,
+            width: dims.width,
+            height: dims.height,
+        })
+
+        const form = pdfDoc.getForm()
+        try { form.flatten() } catch (err) { }
+
+        const signedPdfBytes = await pdfDoc.save()
+        const signedPdfBuffer = Buffer.from(signedPdfBytes)
+        const documentHash = crypto.createHash('sha256').update(signedPdfBuffer).digest('hex')
+
+        const signedPdfUrl = await pdfService.uploadPdf(signedPdfBuffer, offer.organizationId.toString(), offer._id.toString(), 'signed')
+
+        // Atomic lock to SIGNED using Conditional Guard
+        const updatedOffer = await Offer.findOneAndUpdate(
+            { _id: offer._id, status: { $ne: OfferStatus.SIGNED } },
+            {
+                $set: {
+                    status: OfferStatus.SIGNED,
+                    signedAt,
+                    signedPdfUrl,
+                    signedPdfHash: documentHash,
+                    tokenUsedAt: new Date(),
+                }
+            },
+            { new: true }
+        )
+
+        if (!updatedOffer) {
+            throw new Error('Offer was modified concurrently or already signed')
+        }
+
+        if (updatedOffer.auditLog) {
+            updatedOffer.auditLog.push({ event: 'Offer Signed', timestamp: signedAt, ipAddress })
+            await updatedOffer.save()
+        }
 
         await OfferSignature.create({
             offerId: offer._id,
@@ -216,8 +279,9 @@ export class OffersService {
         return offer
     }
 
-    async rejectOffer(publicToken: string, reason: string, ipAddress: string = '0.0.0.0') {
-        const offer = await Offer.findOne({ publicToken })
+    async rejectOffer(rawToken: string, reason: string, ipAddress: string = '0.0.0.0') {
+        const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex')
+        const offer = await Offer.findOne({ publicToken: tokenHash })
         if (!offer) throw new Error('Invalid offer token')
 
         offer.status = OfferStatus.REJECTED
