@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { publicController } from './public.controller.js'
+import { publicRateLimiter, validatePublicToken } from '../../common/middleware/token-validator.js'
 
 const router = Router()
 
@@ -41,15 +42,15 @@ router.post('/run-code', (req, res, next) =>
 )
 
 // Public Offer Routes
-router.get('/offers/:token', (req, res, next) =>
+router.get('/offers/:token', publicRateLimiter, validatePublicToken, (req, res, next) =>
     publicController.getOfferByToken(req, res, next)
 )
 
-router.post('/offers/:token/accept', (req, res, next) =>
+router.post('/offers/:token/accept', publicRateLimiter, validatePublicToken, (req, res, next) =>
     publicController.acceptOffer(req, res, next)
 )
 
-router.post('/offers/:token/decline', (req, res, next) =>
+router.post('/offers/:token/decline', publicRateLimiter, validatePublicToken, (req, res, next) =>
     publicController.declineOffer(req, res, next)
 )
 
