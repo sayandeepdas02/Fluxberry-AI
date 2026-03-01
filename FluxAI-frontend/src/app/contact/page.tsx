@@ -11,7 +11,7 @@ export default function ContactPage() {
         <>
             <Navbar />
 
-            <div className="mx-auto md:max-w-5xl">
+            <div className="mx-auto md:max-w-6xl">
                 {/* Contact Form Section */}
                 <Panel>
                     <PanelContent className="py-16">

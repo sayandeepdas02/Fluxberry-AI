@@ -9,7 +9,7 @@ export default function SignUpPage() {
         <>
             <Navbar />
 
-            <div className="mx-auto md:max-w-5xl">
+            <div className="mx-auto md:max-w-6xl">
                 <Panel>
                     <PanelContent className="py-20">
                         <SignUpForm />

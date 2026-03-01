@@ -1,11 +1,12 @@
 import { AtsDashboardPage } from "@/features/ats-screening/pages/ats-dashboard-page"
 
 interface PageProps {
-    params: {
+    params: Promise<{
         jobId: string
-    }
+    }>
 }
 
-export default function AtsScreeningDashboardRoute({ params }: PageProps) {
-    return <AtsDashboardPage jobId={params.jobId} />
+export default async function AtsScreeningDashboardRoute({ params }: PageProps) {
+    const resolvedParams = await params;
+    return <AtsDashboardPage jobId={resolvedParams.jobId} />
 }

@@ -28,10 +28,10 @@ export function Navbar() {
     };
 
     const navItems = [
-        { label: "Features", href: "features" },
-        { label: "Solutions", href: "solutions" },
-        { label: "Pricing", href: "pricing" },
-        { label: "Testimonials", href: "testimonials" },
+        { label: "Features", href: "/#features" },
+        { label: "Solutions", href: "/#solutions" },
+        { label: "Pricing", href: "/pricing" },
+        { label: "Testimonials", href: "/#testimonials" },
     ];
 
     return (
@@ -41,7 +41,7 @@ export function Navbar() {
                 isScrolled && "shadow-sm"
             )}
         >
-            <div className="mx-auto md:max-w-5xl">
+            <div className="mx-auto md:max-w-6xl">
                 <div className="screen-line-before screen-line-after border-x border-edge">
                     <div className="flex h-14 items-center justify-between px-4">
                         {/* Logo/Brand */}
@@ -49,16 +49,25 @@ export function Navbar() {
                             <span className="text-xl font-bold">Fluxberry AI</span>
                         </Link>
 
-                        {/* Desktop Navigation */}
                         <nav className="hidden md:flex items-center space-x-6">
                             {navItems.map((item) => (
-                                <button
-                                    key={item.href}
-                                    onClick={() => scrollToSection(item.href)}
-                                    className="font-mono text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
-                                >
-                                    {item.label}
-                                </button>
+                                item.href.startsWith('/') ? (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className="font-mono text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
+                                    >
+                                        {item.label}
+                                    </Link>
+                                ) : (
+                                    <button
+                                        key={item.href}
+                                        onClick={() => scrollToSection(item.href)}
+                                        className="font-mono text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
+                                    >
+                                        {item.label}
+                                    </button>
+                                )
                             ))}
                         </nav>
 
@@ -92,15 +101,26 @@ export function Navbar() {
             {/* Mobile Menu */}
             {isMobileMenuOpen && (
                 <div className="md:hidden border-t border-edge bg-background">
-                    <div className="mx-auto md:max-w-5xl px-4 py-4 space-y-3">
+                    <div className="mx-auto md:max-w-6xl px-4 py-4 space-y-3">
                         {navItems.map((item) => (
-                            <button
-                                key={item.href}
-                                onClick={() => scrollToSection(item.href)}
-                                className="block w-full text-left font-mono text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 py-2"
-                            >
-                                {item.label}
-                            </button>
+                            item.href.startsWith('/') && !item.href.includes('#') ? (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className="block w-full text-left font-mono text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 py-2"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    {item.label}
+                                </Link>
+                            ) : (
+                                <button
+                                    key={item.href}
+                                    onClick={() => scrollToSection(item.href.replace('/#', ''))}
+                                    className="block w-full text-left font-mono text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 py-2"
+                                >
+                                    {item.label}
+                                </button>
+                            )
                         ))}
                         <div className="flex flex-col space-y-2 pt-3">
                             <Link href="/contact" className="w-full">

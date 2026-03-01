@@ -5,32 +5,30 @@ export function WhyChooseUs() {
     const benefits = [
         {
             icon: TrendingDown,
-            title: "Reduce Cost Per Hire",
-            description:
-                "Cut recruiter and engineering hours spent on low-quality candidates.",
+            title: "Effortless Experience",
+            description: "Fluxberry AI enables instant, intuitive, beautifully designed HR workflows.",
         },
         {
             icon: Clock,
-            title: "Hire Faster",
-            description: "Shortlist in hours, not weeks.",
+            title: "Seamless Integration",
+            description: "Fluxberry AI uses AI to streamline and connect various tools.",
         },
         {
             icon: TrendingUp,
-            title: "Improve Hiring Outcomes",
-            description: "Focus on skills, not resume formatting.",
+            title: "Scalable Automation",
+            description: "Fluxberry AI integrates, scales, provides insights, and optimizes growth.",
         },
-    ];
-
-    const stats = [
-        { value: "100k+", label: "applications processed" },
-        { value: "78k+", label: "candidates screened" },
-        { value: "4.9/5", label: "recruiter satisfaction" },
     ];
 
     return (
         <Panel>
             <PanelHeader>
-                <PanelTitle>The Best Fit for Teams That Care About Hiring Quality</PanelTitle>
+                <div className="flex flex-col items-start gap-4">
+                    <span className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                        <span className="text-foreground text-xs">●</span> Why Fluxberry AI
+                    </span>
+                    <PanelTitle className="text-3xl md:text-5xl">Why Fluxberry AI?</PanelTitle>
+                </div>
             </PanelHeader>
 
             <PanelContent className="py-12">
@@ -38,8 +36,8 @@ export function WhyChooseUs() {
                     {benefits.map((benefit, index) => {
                         const Icon = benefit.icon;
                         return (
-                            <div key={index} className="text-center">
-                                <div className="mb-4 inline-flex items-center justify-center size-14 rounded-lg bg-muted">
+                            <div key={index} className="text-center group p-6 border border-border rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                                <div className="mb-6 inline-flex items-center justify-center size-14 rounded-lg bg-background border border-border group-hover:border-foreground/30 transition-colors">
                                     <Icon className="size-7 text-foreground" />
                                 </div>
                                 <h3 className="text-xl font-semibold mb-3">{benefit.title}</h3>
@@ -49,15 +47,6 @@ export function WhyChooseUs() {
                             </div>
                         );
                     })}
-                </div>
-
-                <div className="grid grid-cols-3 gap-8 pt-12 border-t border-edge">
-                    {stats.map((stat, index) => (
-                        <div key={index} className="text-center">
-                            <div className="text-4xl md:text-5xl font-bold mb-2">{stat.value}</div>
-                            <div className="text-sm text-muted-foreground">{stat.label}</div>
-                        </div>
-                    ))}
                 </div>
             </PanelContent>
         </Panel>
