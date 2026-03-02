@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation'
+import { SettingsPage } from "@/features/dashboard/pages/settings-page";
 
-export default function SettingsPage() {
-    redirect('/dashboard/settings/email-templates')
+export default function SettingsRootPage() {
+    return <SettingsPage />;
 }
