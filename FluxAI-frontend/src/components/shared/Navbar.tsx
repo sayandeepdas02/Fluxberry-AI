@@ -55,7 +55,7 @@ export function Navbar() {
                                     <Link
                                         key={item.href}
                                         href={item.href}
-                                        className="font-mono text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
+                                        className="font-sans text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
                                     >
                                         {item.label}
                                     </Link>
@@ -63,7 +63,7 @@ export function Navbar() {
                                     <button
                                         key={item.href}
                                         onClick={() => scrollToSection(item.href)}
-                                        className="font-mono text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
+                                        className="font-sans text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
                                     >
                                         {item.label}
                                     </button>
@@ -107,7 +107,7 @@ export function Navbar() {
                                 <Link
                                     key={item.href}
                                     href={item.href}
-                                    className="block w-full text-left font-mono text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 py-2"
+                                    className="block w-full text-left font-sans text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 py-2"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     {item.label}
@@ -116,7 +116,7 @@ export function Navbar() {
                                 <button
                                     key={item.href}
                                     onClick={() => scrollToSection(item.href.replace('/#', ''))}
-                                    className="block w-full text-left font-mono text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 py-2"
+                                    className="block w-full text-left font-sans text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 py-2"
                                 >
                                     {item.label}
                                 </button>
