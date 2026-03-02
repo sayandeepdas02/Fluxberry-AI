@@ -34,9 +34,14 @@ export function SignUpForm() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validation
-        if (formData.password !== formData.confirmPassword) {
-            setError("Passwords do not match");
+        // Validation — run synchronously before setting loading state
+        if (!formData.firstName.trim()) {
+            setError("First name is required");
+            return;
+        }
+
+        if (!formData.lastName.trim()) {
+            setError("Last name is required");
             return;
         }
 
@@ -45,13 +50,8 @@ export function SignUpForm() {
             return;
         }
 
-        if (!formData.firstName.trim()) {
-            setError("First name is required");
-            return;
-        }
-
-        if (!formData.lastName.trim()) {
-            setError("Last name is required");
+        if (formData.password !== formData.confirmPassword) {
+            setError("Passwords do not match");
             return;
         }
 
@@ -68,11 +68,12 @@ export function SignUpForm() {
 
         if (result.success) {
             router.push("/onboard/step-1");
+            // Note: isLoading stays true intentionally here to prevent form
+            // re-enabling during the navigation transition.
         } else {
             setError(result.error || "Signup failed");
+            setIsLoading(false);
         }
-
-        setIsLoading(false);
     };
 
     const handleGoogleSignIn = () => {

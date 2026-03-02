@@ -1,11 +1,12 @@
 import { GeistMono } from "geist/font";
-import { IBM_Plex_Sans as FontSans } from "next/font/google";
+import { Arimo } from "next/font/google";
 
-export const fontSans = FontSans({
-    weight: ["400", "500", "600"],
+export const fontSans = Arimo({
+    weight: ["400", "500", "600", "700"],
+    style: ["normal", "italic"],
     display: "swap",
     subsets: ["latin"],
-    variable: "--font-sans",
+    variable: "--font-ibm-plex-sans",
 });
 
 export const fontMono = GeistMono;
