@@ -31,7 +31,7 @@ export function SignInForm() {
         const result = await login(formData);
 
         if (result.success && result.user) {
-            // Redirect based on onboarding status
+            // Keep isLoading=true during navigation to prevent button flash
             if (result.user.onboardingCompleted) {
                 router.push("/dashboard");
             } else {
@@ -39,9 +39,8 @@ export function SignInForm() {
             }
         } else {
             setError(result.error || "Invalid credentials");
+            setIsLoading(false);
         }
-
-        setIsLoading(false);
     };
 
     const handleGoogleSignIn = () => {

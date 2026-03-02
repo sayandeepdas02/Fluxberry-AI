@@ -61,6 +61,12 @@ class ApiClient {
             const data = await response.json()
 
             if (!response.ok) {
+                // Global 401 interceptor: fire an event so the auth context can auto-logout
+                if (response.status === 401) {
+                    if (typeof window !== 'undefined') {
+                        window.dispatchEvent(new Event('auth:unauthorized'))
+                    }
+                }
                 return {
                     success: false,
                     error: data.error || { code: 'UNKNOWN', message: 'Request failed' },

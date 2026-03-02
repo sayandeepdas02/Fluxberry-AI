@@ -1,6 +1,7 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useCallback, useState, ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 import { User } from '@/lib/api/types'
 import { authApi, LoginInput, SignupInput } from '@/lib/api/auth'
 import { getStoredToken, clearStoredToken } from '@/lib/api/client'
@@ -20,25 +21,22 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [isLoading, setIsLoading] = useState(true)
+    const router = useRouter()
 
-    // Check for existing session on mount
-    useEffect(() => {
-        const token = getStoredToken()
-        if (token) {
-            refreshUser()
-        } else {
-            setIsLoading(false)
-        }
-    }, [])
+    const logout = useCallback(() => {
+        authApi.logout()
+        setUser(null)
+        router.push('/signin')
+    }, [router])
 
-    const refreshUser = async () => {
+    const refreshUser = useCallback(async () => {
         setIsLoading(true)
         try {
             const response = await authApi.getCurrentUser()
             if (response.success && response.data) {
                 setUser(response.data)
             } else {
-                // Token invalid, clear it
+                // Token invalid or expired — clear and redirect
                 clearStoredToken()
                 setUser(null)
             }
@@ -48,7 +46,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } finally {
             setIsLoading(false)
         }
-    }
+    }, [])
+
+    // Check for existing session on mount
+    useEffect(() => {
+        const token = getStoredToken()
+        if (token) {
+            refreshUser()
+        } else {
+            setIsLoading(false)
+        }
+    }, [refreshUser])
+
+    // Global 401 interceptor: any API call that returns 401 triggers an
+    // `auth:unauthorized` event from the API client. We listen here and
+    // auto-logout so the user is never stuck in an expired-token state.
+    useEffect(() => {
+        const handleUnauthorized = () => {
+            const token = getStoredToken()
+            if (token) {
+                // Only auto-logout if we thought we were authenticated.
+                // Prevents redirect loops on public pages.
+                logout()
+            }
+        }
+
+        window.addEventListener('auth:unauthorized', handleUnauthorized)
+        return () => window.removeEventListener('auth:unauthorized', handleUnauthorized)
+    }, [logout])
 
     const login = async (input: LoginInput) => {
         const response = await authApi.login(input)
@@ -76,11 +101,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             success: false,
             error: response.error?.message || 'Signup failed'
         }
-    }
-
-    const logout = () => {
-        authApi.logout()
-        setUser(null)
     }
 
     return (
