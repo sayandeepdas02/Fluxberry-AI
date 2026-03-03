@@ -162,6 +162,33 @@ export class EvaluationService {
     }
 
     /**
+     * Finalize AI evaluation with the actual orchestrator score.
+     * Upserts the Evaluation record — replaces any prior placeholder.
+     * Called by InterviewOrchestrator.completeSession().
+     */
+    async finalizeAIEvaluation(
+        attemptId: string,
+        score: number,
+        metadata: Record<string, unknown>
+    ): Promise<EvaluationResult> {
+        const evaluation = await Evaluation.findOneAndUpdate(
+            { attemptId, roundType: 'AI' },
+            {
+                $set: {
+                    score: Math.round(score),
+                    maxScore: 100,
+                    metadata: { ...metadata, status: 'COMPLETED' },
+                    evaluatedAt: new Date(),
+                },
+            },
+            { upsert: true, new: true }
+        )
+
+        return this.formatEvaluation(evaluation!)
+    }
+
+
+    /**
      * Get evaluations for an attempt
      */
     async getByAttemptId(attemptId: string): Promise<EvaluationResult[]> {
