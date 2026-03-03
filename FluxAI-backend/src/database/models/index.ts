@@ -706,6 +706,8 @@ export interface IQuestion extends Document {
     _id: Types.ObjectId
     /** Optional stable id for lookup (e.g. seed IDs matching frontend mock bank) */
     slug?: string
+    /** Organization that owns this question. null = global/seeded question visible to all orgs. */
+    organizationId?: Types.ObjectId
     type: QuestionTypeValue
     title: string
     difficulty: DifficultyType
@@ -718,6 +720,7 @@ export interface IQuestion extends Document {
 
 const QuestionSchema = new Schema<IQuestion>({
     slug: { type: String, sparse: true, unique: true },
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', index: true, default: null },
     type: { type: String, enum: Object.values(QuestionType), required: true, index: true },
     title: { type: String, required: true },
     difficulty: { type: String, enum: Object.values(Difficulty), required: true, index: true },
@@ -739,6 +742,8 @@ const QuestionSchema = new Schema<IQuestion>({
         }],
     },
 }, { timestamps: { createdAt: true, updatedAt: false } })
+
+QuestionSchema.index({ organizationId: 1, type: 1, difficulty: 1 })
 
 export const Question = mongoose.model<IQuestion>('Question', QuestionSchema)
 
@@ -1049,6 +1054,167 @@ const AIInterviewSynthesisSchema = new Schema<IAIInterviewSynthesis>({
 }, { timestamps: { createdAt: true, updatedAt: false } })
 
 export const AIInterviewSynthesis = mongoose.model<IAIInterviewSynthesis>('AIInterviewSynthesis', AIInterviewSynthesisSchema)
+
+// ============================================
+// AI INTERVIEW ORCHESTRATOR — PHASE ENUM & SESSION MODEL
+// ============================================
+
+export const InterviewPhase = {
+    INTRO: 'INTRO',
+    PROJECT_DEEP_DIVE: 'PROJECT_DEEP_DIVE',
+    FUNDAMENTALS: 'FUNDAMENTALS',
+    CULTURE_FIT: 'CULTURE_FIT',
+    SUMMARY: 'SUMMARY',
+    COMPLETED: 'COMPLETED',
+} as const
+export type InterviewPhaseValue = typeof InterviewPhase[keyof typeof InterviewPhase]
+
+export const OrchestratorSessionStatus = {
+    ACTIVE: 'ACTIVE',
+    COMPLETED: 'COMPLETED',
+    ABANDONED: 'ABANDONED',
+    TIMED_OUT: 'TIMED_OUT',
+} as const
+export type OrchestratorSessionStatusType = typeof OrchestratorSessionStatus[keyof typeof OrchestratorSessionStatus]
+
+// Per-turn evaluation stored by the orchestrator
+export interface IOrchestratorEvaluation {
+    phase: InterviewPhaseValue
+    question: string
+    answer: string
+    metrics: {
+        correctnessScore: number    // 0–10
+        depthScore: number          // 0–10
+        communicationScore: number  // 0–10
+        relevanceScore: number      // 0–10
+        feedback?: string           // brief LLM-generated feedback note (not shown to candidate)
+        redFlags?: string[]  // e.g. ["Contradicted earlier answer", "Could not explain own code"]
+    }
+}
+
+// Snapshot of aiConfig stored on session creation
+export interface IOrchestratorAIConfig {
+    role: 'FRONTEND' | 'BACKEND' | 'FULLSTACK' | 'DEVOPS'
+    difficulty: 'JUNIOR' | 'MID' | 'SENIOR'
+    maxDurationMinutes: number
+    maxFundamentalQuestions: number
+    maxProjectFollowUps: number
+    grillingIntensity: 'LOW' | 'MEDIUM' | 'HIGH'
+}
+
+export interface ICandidateContext {
+    role?: string
+    yearsOfExperience?: number
+    projects?: string[]
+    techStack?: string[]
+}
+
+export interface IAIInterviewSession extends Document {
+    _id: Types.ObjectId
+    attemptId: Types.ObjectId
+    roundId?: Types.ObjectId
+    candidateId: Types.ObjectId
+    organizationId: Types.ObjectId
+
+    status: OrchestratorSessionStatusType
+    currentPhase: InterviewPhaseValue
+    followUpCount: number           // follow-ups in current phase
+    projectFollowUpCount: number    // total project deep-dive follow-ups
+    questionIndex: number           // questions asked within current phase
+    llmCallCount: number            // total LLM calls this session (budget guard)
+
+    transcript: Array<{
+        speaker: 'AI' | 'CANDIDATE'
+        text: string
+        timestamp: Date
+    }>
+
+    evaluations: IOrchestratorEvaluation[]
+    aiConfig: IOrchestratorAIConfig
+    candidateContext: ICandidateContext
+    fundamentalsQueue?: string[]    // pre-selected blueprint questions for FUNDAMENTALS phase
+
+    startedAt: Date
+    endedAt?: Date
+    overallScore?: number               // 0–100 weighted final score
+    recommendation?: 'HIRE' | 'NO_HIRE' | 'FURTHER_REVIEW'
+    scoreBreakdown?: Record<string, number>  // dimension → score
+
+    createdAt: Date
+    updatedAt: Date
+}
+
+const OrchestratorEvaluationSchema = new Schema<IOrchestratorEvaluation>({
+    phase: { type: String, enum: Object.values(InterviewPhase), required: true },
+    question: { type: String, required: true },
+    answer: { type: String, required: true },
+    metrics: {
+        correctnessScore: { type: Number, required: true },
+        depthScore: { type: Number, required: true },
+        communicationScore: { type: Number, required: true },
+        relevanceScore: { type: Number, required: true },
+        feedback: { type: String },
+        redFlags: [{ type: String }],  // per-answer flags from LLM evaluator
+    },
+}, { _id: false })
+
+const AIInterviewSessionSchema = new Schema<IAIInterviewSession>({
+    attemptId: { type: Schema.Types.ObjectId, ref: 'AssessmentAttempt', required: true, index: true },
+    roundId: { type: Schema.Types.ObjectId },
+    candidateId: { type: Schema.Types.ObjectId, ref: 'Candidate', required: true, index: true },
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+
+    status: {
+        type: String,
+        enum: Object.values(OrchestratorSessionStatus),
+        default: OrchestratorSessionStatus.ACTIVE,
+    },
+    currentPhase: {
+        type: String,
+        enum: Object.values(InterviewPhase),
+        default: InterviewPhase.INTRO,
+    },
+    followUpCount: { type: Number, default: 0 },
+    projectFollowUpCount: { type: Number, default: 0 },
+    questionIndex: { type: Number, default: 0 },
+
+    transcript: [{
+        speaker: { type: String, enum: ['AI', 'CANDIDATE'], required: true },
+        text: { type: String, required: true },
+        timestamp: { type: Date, default: Date.now },
+    }],
+
+    evaluations: [OrchestratorEvaluationSchema],
+
+    aiConfig: {
+        role: { type: String, enum: ['FRONTEND', 'BACKEND', 'FULLSTACK', 'DEVOPS'], default: 'BACKEND' },
+        difficulty: { type: String, enum: ['JUNIOR', 'MID', 'SENIOR'], default: 'MID' },
+        maxDurationMinutes: { type: Number, default: 45 },
+        maxFundamentalQuestions: { type: Number, default: 5 },
+        maxProjectFollowUps: { type: Number, default: 2 },
+        grillingIntensity: { type: String, enum: ['LOW', 'MEDIUM', 'HIGH'], default: 'MEDIUM' },
+    },
+
+    candidateContext: {
+        role: { type: String },
+        yearsOfExperience: { type: Number },
+        projects: [{ type: String }],
+        techStack: [{ type: String }],
+    },
+
+    startedAt: { type: Date, default: Date.now },
+    endedAt: { type: Date },
+    overallScore: { type: Number },
+    recommendation: { type: String, enum: ['HIRE', 'NO_HIRE', 'FURTHER_REVIEW'] },
+    scoreBreakdown: { type: Schema.Types.Mixed },
+    fundamentalsQueue: [{ type: String }],      // pre-selected blueprint question strings (FIFO)
+    llmCallCount: { type: Number, default: 0 }, // budget tracker — max calls guard
+}, { timestamps: true })
+
+AIInterviewSessionSchema.index({ attemptId: 1, status: 1 })
+
+export const AIInterviewSession = mongoose.model<IAIInterviewSession>('AIInterviewSession', AIInterviewSessionSchema)
+
 
 // ============================================
 // ORGANIZATION ONBOARDING CONFIG MODEL

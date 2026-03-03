@@ -9,6 +9,7 @@ export const WorkflowTrigger = {
     SCREENING_COMPLETED: 'SCREENING_COMPLETED',
     SCREENING_SCORE_ABOVE: 'SCREENING_SCORE_ABOVE',
     SCREENING_SCORE_BELOW: 'SCREENING_SCORE_BELOW',
+    AI_SCREENING_COMPLETED: 'AI_SCREENING_COMPLETED',
 } as const
 export type WorkflowTriggerType = typeof WorkflowTrigger[keyof typeof WorkflowTrigger]
 
