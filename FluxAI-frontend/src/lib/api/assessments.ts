@@ -102,4 +102,12 @@ export const assessmentsApi = {
     async invite(assessmentId: string, payload: { emails: string[] }) {
         return apiClient.post<{ invited: number; emails: string[] }>(`/assessments/${assessmentId}/invite`, payload)
     },
+
+    /**
+     * Clone an assessment as a new DRAFT (copies all round configs).
+     * Optional title to rename the clone before saving.
+     */
+    async clone(id: string, title?: string) {
+        return apiClient.post<Assessment>(`/assessments/${id}/clone`, { title })
+    },
 }
