@@ -1,9 +1,11 @@
 /**
- * AI Interview Controller — V2 (Async Recording + Processing)
+ * AI Interview Controller — V2 (Async Recording + Processing) + Orchestrator
  */
 
 import { Request, Response, NextFunction } from 'express'
+import { z } from 'zod'
 import { aiInterviewService } from './ai-interview.service.js'
+import { interviewOrchestrator } from './services/interviewOrchestrator.js'
 import {
     startAISessionSchema,
     endAISessionSchema,
@@ -11,6 +13,30 @@ import {
     completeUploadSchema,
     completeSessionSchema,
 } from './ai-interview.types.js'
+
+// ─── Orchestrator request schemas ─────────────────────────────────────────────
+
+const createOrchestratorSessionSchema = z.object({
+    attemptId: z.string().min(1),
+    candidateContext: z.object({
+        role: z.string().optional(),
+        yearsOfExperience: z.number().min(0).max(50).optional(),
+        projects: z.array(z.string()).optional(),
+        techStack: z.array(z.string()).optional(),
+    }).optional().default({}),
+    aiConfig: z.object({
+        role: z.enum(['FRONTEND', 'BACKEND', 'FULLSTACK', 'DEVOPS']).optional(),
+        difficulty: z.enum(['JUNIOR', 'MID', 'SENIOR']).optional(),
+        maxDurationMinutes: z.number().int().min(15).max(90).optional(),
+        maxFundamentalQuestions: z.number().int().min(2).max(10).optional(),
+        maxProjectFollowUps: z.number().int().min(1).max(5).optional(),
+        grillingIntensity: z.enum(['LOW', 'MEDIUM', 'HIGH']).optional(),
+    }).optional(),
+})
+
+const submitTurnSchema = z.object({
+    answer: z.string().min(1, 'Answer cannot be empty').max(10000),
+})
 
 class AIInterviewController {
     /**
@@ -144,6 +170,72 @@ class AIInterviewController {
                 path: '/',
                 maxAge: 60 * 60 * 1000, // 1 hour
             })
+            return res.json({ success: true, data: result })
+        } catch (error) { next(error) }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // ORCHESTRATOR HANDLERS — LLM state machine interview
+    // ══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * POST /api/ai-interview/orchestrator/sessions
+     * Create a new AI orchestrator interview session.
+     * Body: { attemptId, candidateContext?, aiConfig? }
+     */
+    async createOrchestratorSession(req: Request, res: Response, next: NextFunction) {
+        try {
+            const parseResult = createOrchestratorSessionSchema.safeParse(req.body)
+            if (!parseResult.success) {
+                return res.status(400).json({ success: false, error: 'Invalid request body', details: parseResult.error.errors })
+            }
+            const { attemptId, candidateContext, aiConfig } = parseResult.data
+            const result = await interviewOrchestrator.createSession(
+                attemptId,
+                candidateContext ?? {},
+                aiConfig,
+            )
+            return res.status(201).json({ success: true, data: result })
+        } catch (error) { next(error) }
+    }
+
+    /**
+     * POST /api/ai-interview/orchestrator/sessions/:sessionId/turn
+     * Submit a candidate answer and receive the next AI question.
+     * Body: { answer: string }
+     */
+    async submitOrchestratorTurn(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { sessionId } = req.params
+            const parseResult = submitTurnSchema.safeParse(req.body)
+            if (!parseResult.success) {
+                return res.status(400).json({ success: false, error: 'Invalid request body', details: parseResult.error.errors })
+            }
+            const result = await interviewOrchestrator.submitTurn(sessionId, parseResult.data.answer)
+            return res.json({ success: true, data: result })
+        } catch (error) { next(error) }
+    }
+
+    /**
+     * GET /api/ai-interview/orchestrator/sessions/:sessionId
+     * Get current session state (for reconnection / frontend polling).
+     */
+    async getOrchestratorSession(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { sessionId } = req.params
+            const result = await interviewOrchestrator.getSessionState(sessionId)
+            return res.json({ success: true, data: result })
+        } catch (error) { next(error) }
+    }
+
+    /**
+     * POST /api/ai-interview/orchestrator/sessions/:sessionId/complete
+     * Manually trigger session completion (e.g., candidate disconnects or time runs out).
+     */
+    async completeOrchestratorSession(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { sessionId } = req.params
+            const result = await interviewOrchestrator.completeSession(sessionId)
             return res.json({ success: true, data: result })
         } catch (error) { next(error) }
     }
