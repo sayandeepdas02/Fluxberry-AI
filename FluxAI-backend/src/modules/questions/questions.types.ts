@@ -8,6 +8,7 @@ export const listQuestionsQuerySchema = z.object({
     type: z.enum(['MCQ', 'DSA']).optional(),
     difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']).optional(),
     topic: z.string().optional(),
+    search: z.string().optional(),
     limit: z.coerce.number().min(1).max(100).default(50),
     offset: z.coerce.number().min(0).default(0),
 })
@@ -91,6 +92,8 @@ export interface DSADetailsResponse {
 
 export interface QuestionResponse {
     id: string
+    slug?: string
+    organizationId: string | null  // null = global/seeded question
     type: 'MCQ' | 'DSA'
     title: string
     difficulty: 'EASY' | 'MEDIUM' | 'HARD'

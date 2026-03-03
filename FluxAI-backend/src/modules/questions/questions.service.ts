@@ -9,30 +9,31 @@ import {
 
 export class QuestionsService {
     /**
-     * List questions with optional filters
-     * Read-only - no mutations allowed
+     * List questions for a given org.
+     * Returns both org-owned questions AND global seeded questions (organizationId: null).
      */
-    async list(query: ListQuestionsQuery): Promise<QuestionListResponse> {
+    async list(query: ListQuestionsQuery, organizationId?: string): Promise<QuestionListResponse> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const filter: Record<string, any> = {}
 
-        if (query.type) {
-            filter.type = query.type
+        // Org filter: show org's own questions + global seeded questions
+        if (organizationId) {
+            filter.$or = [
+                { organizationId },
+                { organizationId: null },
+            ]
         }
 
-        if (query.difficulty) {
-            filter.difficulty = query.difficulty
-        }
-
-        if (query.topic) {
-            filter.topics = query.topic
-        }
+        if (query.type) filter.type = query.type
+        if (query.difficulty) filter.difficulty = query.difficulty
+        if (query.topic) filter.topics = query.topic
+        if (query.search) filter.title = { $regex: query.search, $options: 'i' }
 
         const [questions, total] = await Promise.all([
             Question.find(filter)
                 .limit(query.limit)
                 .skip(query.offset)
-                .sort({ createdAt: -1 }),
+                .sort({ organizationId: -1, createdAt: -1 }), // org questions first
             Question.countDocuments(filter),
         ])
 
@@ -45,15 +46,16 @@ export class QuestionsService {
     }
 
     /**
-     * Create a new question (MCQ or DSA with optional test cases)
+     * Create a new question owned by the given org (MCQ or DSA).
      */
-    async create(body: CreateQuestionBody): Promise<QuestionResponse> {
+    async create(body: CreateQuestionBody, organizationId: string): Promise<QuestionResponse> {
         const doc: Record<string, unknown> = {
             type: body.type,
             title: body.title,
             difficulty: body.difficulty,
             topics: body.topics ?? [],
             metadata: body.metadata ?? undefined,
+            organizationId,
         }
         if (body.type === 'MCQ' && body.mcqDetails) {
             doc.mcqDetails = body.mcqDetails
@@ -72,9 +74,9 @@ export class QuestionsService {
     }
 
     /**
-     * Update an existing question (partial)
+     * Update an existing question. Org-owned questions only.
      */
-    async update(id: string, body: UpdateQuestionBody): Promise<QuestionResponse> {
+    async update(id: string, body: UpdateQuestionBody, organizationId: string): Promise<QuestionResponse> {
         const question = await Question.findById(id)
         if (!question) {
             const error = new Error('Question not found') as Error & { statusCode: number; code: string }
@@ -82,6 +84,15 @@ export class QuestionsService {
             error.code = 'NOT_FOUND'
             throw error
         }
+
+        // Only allow editing questions this org owns (not global seeded questions)
+        if (question.organizationId?.toString() !== organizationId) {
+            const error = new Error('Cannot edit a question you do not own') as Error & { statusCode: number; code: string }
+            error.statusCode = 403
+            error.code = 'FORBIDDEN'
+            throw error
+        }
+
         if (body.title != null) question.title = body.title
         if (body.difficulty != null) question.difficulty = body.difficulty
         if (body.topics != null) question.topics = body.topics
@@ -107,24 +118,42 @@ export class QuestionsService {
     }
 
     /**
-     * Get a single question by ID
+     * Delete a question (org-owned only).
      */
-    async getById(id: string): Promise<QuestionResponse> {
+    async delete(id: string, organizationId: string): Promise<void> {
         const question = await Question.findById(id)
-
         if (!question) {
             const error = new Error('Question not found') as Error & { statusCode: number; code: string }
             error.statusCode = 404
             error.code = 'NOT_FOUND'
             throw error
         }
+        if (question.organizationId?.toString() !== organizationId) {
+            const error = new Error('Cannot delete a question you do not own') as Error & { statusCode: number; code: string }
+            error.statusCode = 403
+            error.code = 'FORBIDDEN'
+            throw error
+        }
+        await question.deleteOne()
+    }
 
+    /**
+     * Get a single question by ID.
+     */
+    async getById(id: string): Promise<QuestionResponse> {
+        const question = await Question.findById(id)
+        if (!question) {
+            const error = new Error('Question not found') as Error & { statusCode: number; code: string }
+            error.statusCode = 404
+            error.code = 'NOT_FOUND'
+            throw error
+        }
         return this.formatQuestion(question)
     }
 
     /**
      * Get questions by IDs or slugs (for validation).
-     * Supports both MongoDB ObjectIds and string slugs (e.g. from frontend mock bank).
+     * Supports both MongoDB ObjectIds and string slugs.
      */
     async getByIds(ids: string[]): Promise<QuestionResponse[]> {
         if (ids.length === 0) return []
@@ -146,11 +175,13 @@ export class QuestionsService {
     }
 
     /**
-     * Format question for response
+     * Format question for API response
      */
     private formatQuestion(question: IQuestion): QuestionResponse {
         return {
-            id: (question.slug ?? question._id.toString()) as string,
+            id: question._id.toString(),
+            slug: question.slug,
+            organizationId: question.organizationId?.toString() ?? null,
             type: question.type as 'MCQ' | 'DSA',
             title: question.title,
             difficulty: question.difficulty as 'EASY' | 'MEDIUM' | 'HARD',
