@@ -306,8 +306,20 @@ export function Sidebar() {
                                 >
                                     Assessments
                                 </Link>
+                                <Link
+                                    href="/dashboard/question-bank"
+                                    className={cn(
+                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                        isActive("/dashboard/question-bank")
+                                            ? "text-foreground bg-muted"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                    )}
+                                >
+                                    Question Bank
+                                </Link>
                             </div>
                         </div>
+
 
                         {/* Talent Onboarding */}
                         <div className="space-y-1">

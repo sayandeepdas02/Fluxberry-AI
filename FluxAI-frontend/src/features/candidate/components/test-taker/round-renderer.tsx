@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { SecureShell } from "./secure-shell"
 import { MCQInterface } from "./mcq-interface"
 import { DSAInterface } from "./dsa-interface"
-import { RibbonAIInterviewGate } from "./ribbon-ai-interview-gate"
+import { AIInterviewRoom } from "./AIInterviewRoom"
 import { getAttemptId, getRoundTypes, setRoundTypes } from "@/features/candidate/lib/attempt-storage"
 import { attemptsApi, RoundQuestionResponse } from "@/lib/api/attempts"
 import { AttemptRound } from "@/lib/api/types"
@@ -225,7 +225,7 @@ export function RoundRenderer({ assessmentId, roundId }: { assessmentId: string;
                 />
             )}
             {roundType === "AI" && (
-                <RibbonAIInterviewGate
+                <AIInterviewRoom
                     attemptId={attemptId}
                     assessmentId={assessmentId}
                     onComplete={() => handleAIComplete({})}
