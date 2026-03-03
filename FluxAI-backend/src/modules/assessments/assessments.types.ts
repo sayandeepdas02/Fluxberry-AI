@@ -23,8 +23,18 @@ export const dsaRoundConfigSchema = z.object({
     questionIds: z.array(z.string()).length(4, 'DSA requires exactly 4 questions'),
 })
 
+export const aiConfigSchema = z.object({
+    role: z.enum(['FRONTEND', 'BACKEND', 'FULLSTACK', 'DEVOPS']).default('BACKEND'),
+    difficulty: z.enum(['JUNIOR', 'MID', 'SENIOR']).default('MID'),
+    maxDurationMinutes: z.number().int().min(15).max(90).default(45),
+    maxFundamentalQuestions: z.number().int().min(2).max(10).default(5),
+    maxProjectFollowUps: z.number().int().min(1).max(5).default(2),
+    grillingIntensity: z.enum(['LOW', 'MEDIUM', 'HIGH']).default('MEDIUM'),
+})
+
 export const aiRoundConfigSchema = z.object({
     agentId: z.string().min(1, 'AI round requires exactly 1 agent'),
+    aiConfig: aiConfigSchema.optional(),
 })
 
 export const roundConfigSchema = z.object({
@@ -57,6 +67,7 @@ export type UpdateAssessmentInput = z.infer<typeof updateAssessmentSchema>
 export type MCQRoundConfig = z.infer<typeof mcqRoundConfigSchema>
 export type DSARoundConfig = z.infer<typeof dsaRoundConfigSchema>
 export type AIRoundConfig = z.infer<typeof aiRoundConfigSchema>
+export type AIConfig = z.infer<typeof aiConfigSchema>
 export type RoundConfigInput = z.infer<typeof roundConfigSchema>
 
 // ============================================

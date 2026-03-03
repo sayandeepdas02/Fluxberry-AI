@@ -257,6 +257,41 @@ export class AssessmentsService {
     }
 
     /**
+     * Clone an existing assessment as a new DRAFT.
+     * Copies all round configurations exactly. Title defaults to "Copy of <original>".
+     * Optional titleOverride lets the caller rename before save.
+     */
+    async clone(id: string, organizationId: string, titleOverride?: string): Promise<AssessmentResponse> {
+        const original = await Assessment.findOne({ _id: id, organizationId })
+        if (!original) {
+            const error = new Error('Assessment not found') as Error & { statusCode: number; code: string }
+            error.statusCode = 404
+            error.code = 'NOT_FOUND'
+            throw error
+        }
+
+        const clonedTitle = titleOverride?.trim() || `Copy of ${original.title}`
+
+        // Deep-copy rounds (without _id so Mongoose generates new ones)
+        const clonedRounds = original.rounds.map(r => ({
+            roundType: r.roundType,
+            enabled: r.enabled,
+            order: r.order,
+            config: r.config ? JSON.parse(JSON.stringify(r.config)) : {},
+        }))
+
+        const cloned = await Assessment.create({
+            organizationId,
+            title: clonedTitle,
+            jobId: original.jobId,
+            status: 'DRAFT',
+            rounds: clonedRounds,
+        })
+
+        return this.formatAssessment(cloned)
+    }
+
+    /**
      * Format assessment for response
      */
     private formatAssessment(assessment: IAssessment): AssessmentResponse {

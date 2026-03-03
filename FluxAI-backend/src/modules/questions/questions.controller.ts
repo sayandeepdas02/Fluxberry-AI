@@ -2,16 +2,18 @@ import { Request, Response, NextFunction } from 'express'
 import { questionsService } from './questions.service.js'
 import { listQuestionsQuerySchema, createQuestionBodySchema, updateQuestionBodySchema } from './questions.types.js'
 import { successResponse } from '../../common/utils/api-response.js'
+import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
 
 export class QuestionsController {
     /**
      * GET /api/questions
-     * List questions with optional filters
+     * List questions — returns org's own + global seeded questions.
      */
     async list(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const query = listQuestionsQuerySchema.parse(req.query)
-            const result = await questionsService.list(query)
+            const organizationId = (req as AuthenticatedRequest).user?.organizationId ?? undefined
+            const result = await questionsService.list(query, organizationId ?? undefined)
             res.json(successResponse(result))
         } catch (error) {
             next(error)
@@ -20,7 +22,6 @@ export class QuestionsController {
 
     /**
      * GET /api/questions/:id
-     * Get a single question
      */
     async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
@@ -34,12 +35,17 @@ export class QuestionsController {
 
     /**
      * POST /api/questions
-     * Create a question (MCQ or DSA; DSA can include test cases)
+     * Create a question owned by the authenticated org.
      */
     async create(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const body = createQuestionBodySchema.parse(req.body)
-            const question = await questionsService.create(body)
+            const organizationId = (req as AuthenticatedRequest).user?.organizationId
+            if (!organizationId) {
+                res.status(403).json({ success: false, error: { message: 'Organization required to create questions' } })
+                return
+            }
+            const question = await questionsService.create(body, organizationId)
             res.status(201).json(successResponse(question))
         } catch (error) {
             next(error)
@@ -48,14 +54,38 @@ export class QuestionsController {
 
     /**
      * PATCH /api/questions/:id
-     * Update a question (partial; e.g. add or edit DSA test cases)
+     * Update a question (org-owned only).
      */
     async update(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { id } = req.params
             const body = updateQuestionBodySchema.parse(req.body)
-            const question = await questionsService.update(id, body)
+            const organizationId = (req as AuthenticatedRequest).user?.organizationId
+            if (!organizationId) {
+                res.status(403).json({ success: false, error: { message: 'Organization required' } })
+                return
+            }
+            const question = await questionsService.update(id, body, organizationId)
             res.json(successResponse(question))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    /**
+     * DELETE /api/questions/:id
+     * Hard-delete a question (org-owned only).
+     */
+    async delete(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { id } = req.params
+            const organizationId = (req as AuthenticatedRequest).user?.organizationId
+            if (!organizationId) {
+                res.status(403).json({ success: false, error: { message: 'Organization required' } })
+                return
+            }
+            await questionsService.delete(id, organizationId)
+            res.json(successResponse({ deleted: true }))
         } catch (error) {
             next(error)
         }

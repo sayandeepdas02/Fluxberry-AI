@@ -19,6 +19,9 @@ router.put('/:id/rounds', (req, res, next) => assessmentsController.configureRou
 // Publishing
 router.post('/:id/publish', (req, res, next) => assessmentsController.publish(req, res, next))
 
+// Clone as new DRAFT
+router.post('/:id/clone', (req, res, next) => assessmentsController.clone(req, res, next))
+
 // Invite candidates (enqueue invite emails)
 router.post('/:id/invite', (req, res, next) => assessmentsController.invite(req, res, next))
 

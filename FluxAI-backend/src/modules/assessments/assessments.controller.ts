@@ -140,6 +140,25 @@ export class AssessmentsController {
             next(error)
         }
     }
+    /**
+     * POST /api/assessments/:id/clone
+     * Clone an assessment as a new DRAFT. Optional body: { title?: string }
+     */
+    async clone(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const organizationId = req.user?.organizationId
+            if (!organizationId) {
+                res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
+                return
+            }
+            const { id } = req.params
+            const titleOverride: string | undefined = typeof req.body?.title === 'string' ? req.body.title : undefined
+            const assessment = await assessmentsService.clone(id, organizationId, titleOverride)
+            res.status(201).json(successResponse(assessment))
+        } catch (error) {
+            next(error)
+        }
+    }
 }
 
 export const assessmentsController = new AssessmentsController()

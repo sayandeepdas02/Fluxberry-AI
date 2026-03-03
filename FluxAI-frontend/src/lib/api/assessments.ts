@@ -31,7 +31,19 @@ export interface UpdateAssessmentInput {
 export interface RoundConfigInput {
     MCQ?: { enabled: boolean; order: number; config: { singleCorrectQuestionIds: string[]; multiCorrectQuestionIds: string[] } | null }
     DSA?: { enabled: boolean; order: number; config: { questionIds: string[] } | null }
-    AI?: { enabled: boolean; order: number; config: { agentId: string } | null }
+    AI?: {
+        enabled: boolean
+        order: number
+        config: {
+            role?: 'FRONTEND' | 'BACKEND' | 'FULLSTACK' | 'DEVOPS'
+            difficulty?: 'JUNIOR' | 'MID' | 'SENIOR'
+            maxDurationMinutes?: number
+            grillingIntensity?: 'LOW' | 'MEDIUM' | 'HIGH'
+            maxFundamentalQuestions?: number
+            maxProjectFollowUps?: number
+            agentId?: string  // legacy Ribbon compat
+        } | null
+    }
 }
 
 export const assessmentsApi = {
@@ -89,5 +101,13 @@ export const assessmentsApi = {
      */
     async invite(assessmentId: string, payload: { emails: string[] }) {
         return apiClient.post<{ invited: number; emails: string[] }>(`/assessments/${assessmentId}/invite`, payload)
+    },
+
+    /**
+     * Clone an assessment as a new DRAFT (copies all round configs).
+     * Optional title to rename the clone before saving.
+     */
+    async clone(id: string, title?: string) {
+        return apiClient.post<Assessment>(`/assessments/${id}/clone`, { title })
     },
 }

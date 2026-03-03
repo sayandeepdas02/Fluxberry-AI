@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -12,10 +10,16 @@ import { cn } from "@/lib/utils"
 import { assessmentsApi, type RoundConfigInput } from "@/lib/api/assessments"
 import { MCQSelector } from "@/features/assessments/components/mcq-selector"
 import { DSASelector } from "@/features/assessments/components/dsa-selector"
-import { mcqBank, dsaBank, aiAgents } from "@/features/assessments/mocks/question-bank"
+import { dsaBank } from "@/features/assessments/mocks/question-bank"
+import { AIRoundConfigForm, AI_ROUND_CONFIG_DEFAULT, type AIRoundConfig } from "./ai-round-config-form"
+import { useQuestionBank } from "@/features/assessments/hooks/useQuestionBank"
 
 export function ConfigureAssessment({ assessmentId }: { assessmentId: string }) {
     const router = useRouter()
+
+    // Load MCQ questions from API (org + global)
+    const { questions: mcqQuestions, isLoading: mcqLoading } = useQuestionBank({ type: 'MCQ' })
+
     // Round Toggle State
     const [rounds, setRounds] = useState({
         mcq: true,
@@ -26,7 +30,7 @@ export function ConfigureAssessment({ assessmentId }: { assessmentId: string }) 
     // Configuration Data State
     const [mcqConfig, setMcqConfig] = useState<{ mode: 'default' | 'custom', selectedIds: string[] }>({ mode: 'default', selectedIds: [] })
     const [dsaConfig, setDsaConfig] = useState<string[]>([])
-    const [aiConfig, setAiConfig] = useState<string | null>(null)
+    const [aiConfig, setAiConfig] = useState<AIRoundConfig>(AI_ROUND_CONFIG_DEFAULT)
 
     // Modals
     const [showMcqModal, setShowMcqModal] = useState(false)
@@ -36,10 +40,10 @@ export function ConfigureAssessment({ assessmentId }: { assessmentId: string }) 
     const [isSaving, setIsSaving] = useState(false)
     const [saveError, setSaveError] = useState<string | null>(null)
 
-    // Validation
-    const isMcqValid = !rounds.mcq || (mcqConfig.mode === 'default' || mcqConfig.selectedIds.length === 30) // 20+10
+    // Validation — at least 1 question selected or default mode
+    const isMcqValid = !rounds.mcq || mcqConfig.mode === 'default' || mcqConfig.selectedIds.length >= 1
     const isDsaValid = !rounds.dsa || dsaConfig.length === 4
-    const isAiValid = !rounds.ai || aiConfig !== null
+    const isAiValid = !rounds.ai // AI config always valid
     const isAllValid = isMcqValid && isDsaValid && isAiValid
 
     // Prevent empty assessment
@@ -47,13 +51,13 @@ export function ConfigureAssessment({ assessmentId }: { assessmentId: string }) 
 
     function buildMcqConfig(): { singleCorrectQuestionIds: string[]; multiCorrectQuestionIds: string[] } {
         if (mcqConfig.mode === 'default') {
-            const single = mcqBank.filter(q => q.type === 'Single').slice(0, 20).map(q => q.id)
-            const multi = mcqBank.filter(q => q.type === 'Multi').slice(0, 10).map(q => q.id)
+            const single = mcqQuestions.filter(q => !q.mcqDetails?.isMultiCorrect).slice(0, 20).map(q => q.id)
+            const multi = mcqQuestions.filter(q => q.mcqDetails?.isMultiCorrect).slice(0, 10).map(q => q.id)
             return { singleCorrectQuestionIds: single, multiCorrectQuestionIds: multi }
         }
-        const selected = mcqBank.filter(q => mcqConfig.selectedIds.includes(q.id))
-        const single = selected.filter(q => q.type === 'Single').slice(0, 20).map(q => q.id)
-        const multi = selected.filter(q => q.type === 'Multi').slice(0, 10).map(q => q.id)
+        const selected = mcqQuestions.filter(q => mcqConfig.selectedIds.includes(q.id))
+        const single = selected.filter(q => !q.mcqDetails?.isMultiCorrect).map(q => q.id)
+        const multi = selected.filter(q => q.mcqDetails?.isMultiCorrect).map(q => q.id)
         return { singleCorrectQuestionIds: single, multiCorrectQuestionIds: multi }
     }
 
@@ -76,7 +80,14 @@ export function ConfigureAssessment({ assessmentId }: { assessmentId: string }) 
                 AI: {
                     enabled: rounds.ai,
                     order: 3,
-                    config: rounds.ai && aiConfig ? { agentId: aiConfig } : null,
+                    config: rounds.ai ? {
+                        role: aiConfig.role,
+                        difficulty: aiConfig.difficulty,
+                        maxDurationMinutes: aiConfig.maxDurationMinutes,
+                        grillingIntensity: aiConfig.grillingIntensity,
+                        maxFundamentalQuestions: aiConfig.maxFundamentalQuestions,
+                        maxProjectFollowUps: aiConfig.maxProjectFollowUps,
+                    } : null,
                 },
             }
             await assessmentsApi.configureRounds(assessmentId, payload)
@@ -242,34 +253,7 @@ export function ConfigureAssessment({ assessmentId }: { assessmentId: string }) 
                                 </div>
 
                                 {rounds.ai && (
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-                                        {aiAgents.map(agent => (
-                                            <div
-                                                key={agent.id}
-                                                className={cn(
-                                                    "p-4 rounded-lg border cursor-pointer hover:shadow-md transition-all relative",
-                                                    aiConfig === agent.id ? "border-purple-500 ring-1 ring-purple-500 bg-purple-50/20" : "border-neutral-200"
-                                                )}
-                                                onClick={() => setAiConfig(agent.id)}
-                                            >
-                                                {aiConfig === agent.id && (
-                                                    <div className="absolute top-2 right-2">
-                                                        <CheckCircle2 className="w-4 h-4 text-purple-600" />
-                                                    </div>
-                                                )}
-                                                <div className={cn("w-8 h-8 rounded-full flex items-center justify-center mb-3 text-xs font-bold", agent.color.replace('text-', 'bg-').replace('100', '100'))}>
-                                                    AG
-                                                </div>
-                                                <h4 className="font-semibold text-sm mb-1">{agent.role}</h4>
-                                                <div className="flex flex-wrap gap-1 mb-2">
-                                                    {agent.focus.slice(0, 2).map(t => (
-                                                        <span key={t} className="text-[10px] bg-neutral-100 px-1.5 py-0.5 rounded text-neutral-600">{t}</span>
-                                                    ))}
-                                                </div>
-                                                <p className="text-xs text-neutral-500 line-clamp-2">{agent.description}</p>
-                                            </div>
-                                        ))}
-                                    </div>
+                                    <AIRoundConfigForm value={aiConfig} onChange={setAiConfig} />
                                 )}
                             </div>
                         </div>
@@ -302,6 +286,8 @@ export function ConfigureAssessment({ assessmentId }: { assessmentId: string }) 
                 open={showMcqModal}
                 onOpenChange={setShowMcqModal}
                 initialSelection={mcqConfig.selectedIds}
+                questions={mcqQuestions}
+                isLoading={mcqLoading}
                 onSave={(ids) => {
                     setMcqConfig({ mode: 'custom', selectedIds: ids })
                     setShowMcqModal(false)
