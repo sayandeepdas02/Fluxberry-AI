@@ -22,6 +22,10 @@ async function main() {
     // Initialize Jobs
     await initScheduler()
 
+    // Start the Queue Processors (including new AI Voice Queue)
+    const { VoiceQueueManager } = await import('./services/ai-voice/voicePlaybackQueue.js')
+    VoiceQueueManager.initializeWorker();
+
     // Start advanced offer/onboarding reminder Cron
     const mod = await import('./jobs/reminder.engine.js')
     if (mod.reminderEngine) {
@@ -48,6 +52,17 @@ async function main() {
 
     // Initialize the AI Interview real-time gateway
     createGateway(io)
+
+    // Inject the global socket instance for pipeline emission
+    const { TranscriptEmitter } = await import('./services/voice/transcriptEmitter.js')
+    const { InterviewOrchestrator } = await import('./ai/interview/interviewOrchestrator.js')
+    const { VoiceQueueManager: VQM } = await import('./services/ai-voice/voicePlaybackQueue.js')
+    const { VoiceStreamService } = await import('./services/ai-voice/voiceStream.service.js')
+
+    TranscriptEmitter.setSocketServer(io);
+    InterviewOrchestrator.setSocketServer(io);
+    VQM.setSocketServer(io);
+    VoiceStreamService.setSocketServer(io);
 
     // Graceful shutdown
     const shutdown = async () => {

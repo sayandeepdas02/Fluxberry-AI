@@ -1587,3 +1587,4 @@ const ActivityLogSchema = new Schema<IActivityLog>({
 
 export const ActivityLog = mongoose.model<IActivityLog>('ActivityLog', ActivityLogSchema)
 
+export * from './interview-transcript.model'
