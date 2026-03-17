@@ -1,10 +1,10 @@
 import { Navbar } from "@/components/shared/Navbar";
 import { Separator } from "@/components/ui/separator";
 import { Hero } from "@/features/landing/components/hero";
-import { ValueProposition } from "@/features/landing/components/value-proposition";
-import { CustomizableSolutions } from "@/features/landing/components/customizable-solutions";
 import { Features } from "@/features/landing/components/features";
 import { WhyChooseUs } from "@/features/landing/components/why-choose-us";
+import { Products } from "@/features/landing/components/products";
+import { Pricing } from "@/features/landing/components/pricing";
 import { Testimonials } from "@/features/landing/components/testimonials";
 import { FAQ } from "@/features/landing/components/faq";
 import { FinalCTA } from "@/features/landing/components/final-cta";
@@ -15,20 +15,20 @@ export default function Page() {
         <>
             <Navbar />
 
-            <div className="mx-auto md:max-w-6xl">
+            <div className="mx-auto md:max-w-7xl">
                 <Hero />
+                <Separator />
+
+                <Features />
                 <Separator />
 
                 <WhyChooseUs />
                 <Separator />
 
-                <ValueProposition />
+                <Products />
                 <Separator />
 
-                <CustomizableSolutions />
-                <Separator />
-
-                <Features />
+                <Pricing />
                 <Separator />
 
                 <Testimonials />

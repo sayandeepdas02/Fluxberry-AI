@@ -387,9 +387,9 @@ export function Sidebar() {
                 </button>
 
                 <div className="flex items-center gap-2 px-2">
-                    <div className="w-5 h-5 bg-orange-500 rounded flex items-center justify-center">
-                        <span className="text-[10px] font-bold text-white">F</span>
-                    </div>
+                    <svg width="20" height="20" viewBox="5 5 22 22" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M 24 8 L 14 8 A 6 6 0 0 0 8 14 L 8 18 A 6 6 0 0 0 14 24 L 24 24" />
+                    </svg>
                     <span className="font-semibold text-sm">Fluxberry AI</span>
                 </div>
             </div>

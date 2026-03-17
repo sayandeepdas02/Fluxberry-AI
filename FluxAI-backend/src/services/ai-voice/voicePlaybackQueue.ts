@@ -8,7 +8,7 @@ import { VoiceSessionManager } from './voiceSessionManager';
 import { SpeechSessionManager } from '../voice/SpeechSessionManager';
 
 // Using standard ioredis connection
-const redisConnection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+const redisConnection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', { maxRetriesPerRequest: null });
 
 export interface VoicePlaybackJob {
     interviewId: string;

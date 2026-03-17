@@ -1,138 +1,188 @@
-import { Panel, PanelContent, PanelHeader, PanelTitle } from "@/components/ui/panel";
-import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { ArrowUpRight } from "lucide-react";
 
 export function Pricing() {
-    const plans = [
-        {
-            name: "Starter",
-            originalPrice: "$4,000",
-            price: "$2,000",
-            discount: "20% off",
-            description: "Perfect for MVPs, landing pages, or focused docs.",
-            features: [
-                "Up to 100 applications/month",
-                "Basic resume parsing",
-                "3 custom application forms",
-                "Email support",
-                "Basic analytics dashboard",
-            ],
-            cta: "Start today",
-            highlighted: false,
-        },
-        {
-            name: "Professional",
-            originalPrice: "$9,000",
-            price: "$6,500",
-            discount: "40% off",
-            description: "Full documentation site with a structured system.",
-            features: [
-                "Unlimited applications",
-                "Advanced AI screening & scoring",
-                "Unlimited custom forms",
-                "Priority support (24/7)",
-                "Advanced analytics & reporting",
-                "Custom integrations (webhooks)",
-                "Team collaboration tools",
-            ],
-            cta: "Start today",
-            highlighted: true,
-        },
-        {
-            name: "Enterprise",
-            price: "$12k+",
-            description: "End-to-end developer portal, fully tailored.",
-            features: [
-                "Everything in Professional",
-                "Custom AI model training",
-                "White-label solution",
-                "SLA guarantee (99.9% uptime)",
-                "On-premise deployment option",
-                "Custom workflows & automation",
-                "Dedicated account manager",
-            ],
-            cta: "Start today",
-            highlighted: false,
-        },
-    ];
+  const [isAnnual, setIsAnnual] = useState(false);
+  const cards = [
+    {
+      id: "starter",
+      tag: "STARTER",
+      description: "For early-stage teams setting up structured hiring",
+      price: isAnnual ? "$79" : "$99",
+      period: "/MONTH",
+      buttonText: "CHOOSE STARTER",
+      buttonColor: "bg-[#f64124] hover:bg-[#e2361a] text-white",
+      features: [
+        "Data updates & task automation",
+        "Basic workflow routing",
+        "Core tool integrations",
+        "Activity logs & visibility",
+        "Simple setup, no code"
+      ]
+    },
+    {
+      id: "growth",
+      tag: "GROWTH",
+      popular: true,
+      description: "For scaling teams optimizing hiring speed and quality",
+      price: isAnnual ? "$229" : "$299",
+      period: "/MONTH",
+      buttonText: "CHOOSE GROWTH",
+      buttonColor: "bg-[#292D32] hover:bg-[#1a1c1f] text-white",
+      features: [
+        "Everything in Starter",
+        "Smart workflow automation",
+        "AI-based task prioritization",
+        "Workflow analytics & insights",
+        "Priority support"
+      ]
+    },
+    {
+      id: "scale",
+      tag: "SCALE",
+      description: "For high-growth companies building a hiring engine",
+      price: "Custom",
+      period: "",
+      buttonText: "TALK TO SALES",
+      buttonColor: "bg-[#f64124] hover:bg-[#e2361a] text-white",
+      features: [
+        "Everything in Growth",
+        "End-to-end AI system design",
+        "Unlimited integrations",
+        "Real-time data syncronization",
+        "Dedicated support & advisory"
+      ]
+    }
+  ];
 
-    return (
-        <Panel id="pricing">
-            <PanelHeader>
-                <PanelTitle>Simple Plans, Built for Serious Teams</PanelTitle>
-            </PanelHeader>
+  return (
+    <section className="relative w-full py-24 bg-[#f8f8f8]" id="pricing">
+      <div className="max-w-[1240px] mx-auto px-4 md:px-8">
+        
+        {/* HEADER SECTION */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-10 mb-16">
+          <div className="max-w-[640px]">
+             {/* PRICING BADGE */}
+             <div className="flex items-center gap-2 bg-[#EBEBEB] w-fit px-3 py-1.5 rounded-full mb-8">
+               <div className="w-2.5 h-2.5 rounded-full bg-[#f64124]" />
+               <span className="text-[10px] font-mono tracking-wider font-bold text-black/60 uppercase">PRICING</span>
+             </div>
+             
+             {/* MAIN HEADLINE */}
+             <h2 className="text-[#111] text-[48px] md:text-[68px] font-heading font-medium leading-[1.05] tracking-tight">
+               Invest in efficiency<br />
+               and <span className="text-[#888]">meaningful</span><br />
+               <span className="text-[#888]">outcomes</span>
+             </h2>
+          </div>
 
-            <PanelContent className="py-16">
-                <p className="text-center text-muted-foreground mb-4">
-                    Anvil has a plan designed to meet your needs.
-                </p>
-                <p className="text-center text-muted-foreground mb-12">
-                    No bloat, no fluff — just what works.
-                </p>
+          {/* TOGGLE SWITCH UI */}
+          <div className="bg-[#EBEBEB] rounded-full p-1.5 flex items-center mb-4 md:mb-6 shadow-inner relative">
+             <button 
+               onClick={() => setIsAnnual(false)}
+               className={`font-mono text-[11px] font-medium tracking-wider px-8 py-3 rounded-full transition-all duration-300 z-10 ${!isAnnual ? 'bg-white text-black shadow-sm' : 'text-[#888] hover:text-black'}`}
+             >
+               MONTHLY
+             </button>
+             <button 
+               onClick={() => setIsAnnual(true)}
+               className={`font-mono text-[11px] font-medium tracking-wider px-8 py-3 rounded-full transition-all duration-300 z-10 ${isAnnual ? 'bg-white text-black shadow-sm' : 'text-[#888] hover:text-black'}`}
+             >
+               ANNUAL
+             </button>
+          </div>
+        </div>
 
-                <div className="grid gap-6 md:grid-cols-3">
-                    {plans.map((plan, index) => (
-                        <div
-                            key={index}
-                            className={cn(
-                                "relative border rounded-lg p-6 transition-all duration-200",
-                                plan.highlighted
-                                    ? "border-foreground bg-background"
-                                    : "border-border bg-background hover:border-foreground/50"
-                            )}
-                        >
-                            <div className="mb-6">
-                                <h3 className="text-base font-medium text-muted-foreground mb-4">
-                                    {plan.name}
-                                </h3>
-
-                                <div className="flex items-baseline gap-2 mb-4">
-                                    {plan.originalPrice && (
-                                        <span className="text-lg text-muted-foreground line-through">
-                                            {plan.originalPrice}
-                                        </span>
-                                    )}
-                                    <span className="text-3xl font-semibold">{plan.price}</span>
-                                    {plan.discount && (
-                                        <span className="text-sm text-muted-foreground">{plan.discount}</span>
-                                    )}
-                                </div>
-
-                                <p className="text-sm text-muted-foreground leading-relaxed">
-                                    {plan.description}
-                                </p>
-                            </div>
-
-                            <ul className="space-y-3 mb-8">
-                                {plan.features.map((feature, featureIndex) => (
-                                    <li key={featureIndex} className="flex items-start gap-2">
-                                        <Check className="size-4 text-foreground flex-shrink-0 mt-0.5" />
-                                        <span className="text-sm text-foreground">{feature}</span>
-                                    </li>
-                                ))}
-                            </ul>
-
-                            <Button
-                                className={cn(
-                                    "w-full",
-                                    plan.highlighted ? "" : "bg-background border border-foreground text-foreground hover:bg-foreground hover:text-background"
-                                )}
-                                variant={plan.highlighted ? "default" : "outline"}
-                            >
-                                {plan.cta}
-                            </Button>
-                        </div>
-                    ))}
+        {/* PRICING GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+          
+          {cards.map((card, index) => (
+            <div 
+              key={card.id} 
+              className="relative bg-[#EFEFEF] rounded-[24px] p-8 lg:p-10 flex flex-col border border-black/[0.03]"
+            >
+              
+              {/* POPULAR BADGE */}
+              {card.popular && (
+                <div className="absolute top-0 right-8 bg-[#f64124] text-white text-[10px] font-mono font-bold tracking-wider px-4 py-2 rounded-b-lg uppercase z-10 shadow-sm">
+                  POPULAR
                 </div>
+              )}
 
-                <p className="text-center text-sm text-muted-foreground mt-8">
-                    ⓘ Limited time discount on plans
-                </p>
-            </PanelContent>
-        </Panel>
-    );
+              {/* TIER TAG */}
+              <div className="flex items-center gap-2 bg-white w-fit px-3 py-1 rounded-full mb-6">
+                 <div className="w-1.5 h-1.5 rounded-full bg-[#f64124]" />
+                 <span className="text-[9px] font-mono tracking-wider font-bold text-[#666] uppercase">{card.tag}</span>
+              </div>
+
+              {/* TIER DESCRIPTION */}
+              <p className="text-[#555] text-[15px] leading-relaxed mb-12 min-h-[44px]">
+                {card.description}
+              </p>
+
+              {/* PRICE BLOCK */}
+              <div className="flex items-baseline gap-1 mb-8">
+                 <span className="text-[#111] text-[64px] lg:text-[72px] font-heading font-medium tracking-tighter leading-none">
+                   {card.price}
+                 </span>
+                 {card.period && (
+                   <span className="text-[#888] font-mono text-[10px] font-bold tracking-widest pl-2">
+                     {card.period}
+                   </span>
+                 )}
+              </div>
+
+              {/* CTA BUTTON */}
+              <button className={`w-full ${card.buttonColor} font-mono text-[12px] font-medium tracking-widest py-4 rounded-full flex items-center justify-center gap-2 transition-colors mb-12 uppercase`}>
+                {card.buttonText} 
+                <ArrowUpRight size={16} />
+              </button>
+
+              {/* FEATURE LIST */}
+              <div className="flex flex-col flex-1">
+                {card.features.map((feature, i) => (
+                  <div 
+                    key={i} 
+                    className="flex items-center gap-4 py-4 border-b border-dashed border-[#ccc] last:border-b-0"
+                  >
+                     <DualCheckmark />
+                     <span className="text-[#555] text-[14px]">
+                       {feature}
+                     </span>
+                  </div>
+                ))}
+              </div>
+
+            </div>
+          ))}
+
+        </div>
+
+      </div>
+    </section>
+  );
 }
 
-function cn(...inputs: any[]) {
-    return inputs.filter(Boolean).join(" ");
+// Custom Dual Checkmark SVG mirroring the Figma design precisely
+function DualCheckmark() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
+      <path 
+        d="M2.5 13L7 17.5L16 8.5" 
+        stroke="#f64124" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+      />
+      <path 
+        d="M10 17.5L14 21.5L23 12.5" 
+        stroke="#f64124" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }

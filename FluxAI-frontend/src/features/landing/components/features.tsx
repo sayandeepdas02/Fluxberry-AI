@@ -1,273 +1,345 @@
 "use client";
 
-import { Panel, PanelContent, PanelHeader, PanelTitle } from "@/components/ui/panel";
-import { BrainCircuit, Link2, Search, LineChart, FileText, Share2, Plus, Zap } from "lucide-react";
+import { Panel, PanelContent } from "@/components/ui/panel";
+import { Mic, Check, Plus } from "lucide-react";
 
 export function Features() {
-    return (
-        <Panel id="features">
-            <PanelHeader>
-                <div className="flex flex-col items-start gap-4 mb-4">
-                    <span className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-                        <span className="text-foreground text-xs">●</span> Features
-                    </span>
-                    <PanelTitle className="text-3xl md:text-5xl max-w-xl leading-tight">
-                        Everything you need<br />to get <span className="text-muted-foreground">better</span> at hiring
-                    </PanelTitle>
+  return (
+    <Panel id="features">
+      <PanelContent className="py-20 md:py-24">
+        {/* HEADER */}
+        <div className="flex flex-col md:flex-row md:items-start justify-between mb-12 gap-8">
+          <h2 className="text-[40px] md:text-[56px] font-heading font-medium tracking-[-0.03em] leading-[1.05] text-[#111]">
+            The platform <br />
+            behind <span className="text-[#6B6B6B]">efficient</span> <br />
+            <span className="text-[#6B6B6B]">hiring workflows</span>
+          </h2>
+
+          <div className="flex flex-col items-start pt-2 md:max-w-[400px] text-left md:ml-auto">
+             <div className="flex items-center gap-2 bg-[#F2F2F2] px-3 py-1.5 rounded-full border border-black/5 mb-6 md:self-start shadow-sm">
+               <div className="w-2.5 h-2.5 rounded-full bg-[#f64124]" />
+               <span className="text-[11px] font-mono tracking-wider font-semibold text-[#111]">FEATURES</span>
+             </div>
+             <p className="text-[#555] text-[15px] leading-relaxed">
+               Fluxberry AI is designed as a hiring operating system — not just another ATS.
+               <br /><br />
+               It connects sourcing, screening, evaluation, and onboarding into one continuous pipeline powered by AI.
+             </p>
+          </div>
+        </div>
+
+        {/* BENTO GRID CONTEXT */}
+        <div className="flex flex-col gap-6 w-full mx-auto">
+          
+          {/* TOP ROW: 2 CARDS */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-auto lg:h-[420px]">
+             
+             {/* Card 1: Workflow Automation */}
+             <div className="flex flex-col bg-white border border-black/5 rounded-[24px] shadow-sm overflow-hidden h-full transform transition hover:shadow-md">
+                <div className="relative flex-1 w-full flex items-center justify-center p-6 bg-[#FAFAFA] overflow-hidden min-h-[260px]">
+                   {/* Centered Graphic Container */}
+                   <div className="flex items-center w-full max-w-[420px] justify-between relative z-10 mx-auto">
+                      
+                      {/* Left Block */}
+                      <div className="bg-white border border-black/5 shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-[14px] p-3 w-[150px] relative z-20">
+                         <div className="text-[10px] font-bold mb-3 flex items-center justify-between text-[#111]">Upcoming tasks <span className="bg-gray-100 text-gray-400 px-1 rounded">...</span></div>
+                         <div className="flex items-start gap-2 mb-2.5 relative">
+                            <div className="absolute left-0 top-[2px] bottom-[2px] w-[2px] bg-[#f64124] rounded-full" />
+                            <div className="pl-2">
+                              <div className="text-[9.5px] font-bold leading-tight text-[#111]">Approve expense request</div>
+                              <div className="text-[7.5px] text-gray-400 mt-[2px] font-medium">09:00 AM</div>
+                            </div>
+                         </div>
+                         <div className="flex items-start gap-2 mb-2.5 relative">
+                            <div className="absolute left-0 top-[2px] bottom-[2px] w-[2px] bg-[#f64124] rounded-full" />
+                            <div className="pl-2">
+                              <div className="text-[9.5px] font-bold leading-tight text-[#111]">Update project status</div>
+                              <div className="text-[7.5px] text-gray-400 mt-[2px] font-medium">10:45 AM</div>
+                            </div>
+                         </div>
+                         <div className="flex flex-col gap-2 relative opacity-50">
+                            <div className="pl-2 relative">
+                              <div className="absolute left-0 top-[2px] bottom-[2px] w-[2px] bg-[#f64124] rounded-full" />
+                              <div className="pl-2">
+                                <div className="text-[9.5px] font-bold leading-tight text-[#111]">Sync customer data to <br/> spreadsheet</div>
+                                <div className="text-[7.5px] text-gray-400 mt-[2px] font-medium">01:30 PM - 02:00 PM</div>
+                              </div>
+                            </div>
+                         </div>
+                         <div className="flex flex-col gap-2 relative opacity-20 mt-2">
+                            <div className="pl-2 relative">
+                              <div className="text-[9.5px] font-bold leading-tight text-[#111]">Send weekly ops report</div>
+                            </div>
+                         </div>
+                      </div>
+                      
+                      {/* Center Node */}
+                      <div className="w-[52px] h-[52px] bg-[#f64124] border-[4px] border-white shadow-[0_4px_16px_rgba(246,65,36,0.3)] rounded-[16px] flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30">
+                         <svg width="24" height="24" viewBox="5 5 22 22" fill="none" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"><path d="M 24 8 L 14 8 A 6 6 0 0 0 8 14 L 8 18 A 6 6 0 0 0 14 24 L 24 24" /></svg>
+                      </div>
+
+                      {/* Right Output Blocks */}
+                      <div className="flex flex-col gap-3 w-[150px] relative z-20">
+                         <div className="bg-white border border-black/5 shadow-sm rounded-full py-1.5 px-2 flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-full bg-[#f64124] text-white flex items-center justify-center shrink-0"><Check size={10} strokeWidth={4}/></div>
+                            <span className="text-[8.5px] font-semibold text-[#111]">Approve expense request</span>
+                         </div>
+                         <div className="bg-white border border-black/5 shadow-sm rounded-full py-1.5 px-2 flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-full bg-[#f64124] text-white flex items-center justify-center shrink-0"><Check size={10} strokeWidth={4}/></div>
+                            <span className="text-[8.5px] font-semibold text-[#111]">Update project status</span>
+                         </div>
+                         <div className="bg-white border border-black/5 shadow-sm rounded-full py-1.5 px-2 flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-full bg-[#f64124] text-white flex items-center justify-center shrink-0"><Check size={10} strokeWidth={4}/></div>
+                            <span className="text-[8.5px] font-semibold text-[#111]">Sync customer data to spreadsheet</span>
+                         </div>
+                         <div className="bg-white border border-black/5 shadow-sm rounded-full py-1.5 px-2 flex items-center gap-2 opacity-50">
+                            <div className="w-4 h-4 rounded-full bg-[#444] text-white flex items-center justify-center shrink-0"><Check size={10} strokeWidth={4}/></div>
+                            <span className="text-[8.5px] font-semibold text-[#111]">Send weekly ops report</span>
+                         </div>
+                      </div>
+
+                      {/* Simulated Connecting Lines */}
+                      <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
+                         {/* Left to Mid */}
+                         <path d="M150 130 C180 130, 190 130, 210 130" fill="none" stroke="#f64124" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
+                         <path d="M150 130 C180 130, 190 130, 210 130" fill="none" stroke="#f64124" strokeWidth="1" opacity="0.8" />
+                         
+                         {/* Mid to Right 1 */}
+                         <path d="M250 130 C270 130, 250 82, 270 82" fill="none" stroke="#f64124" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
+                         {/* Mid to Right 2 */}
+                         <path d="M250 130 C270 130, 250 115, 270 115" fill="none" stroke="#f64124" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
+                         {/* Mid to Right 3 */}
+                         <path d="M250 130 C270 130, 250 148, 270 148" fill="none" stroke="#f64124" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
+                         {/* Mid to Right 4 */}
+                         <path d="M250 130 C270 130, 250 180, 270 180" fill="none" stroke="#444" strokeWidth="1" strokeDasharray="3 3" opacity="0.2" />
+                      </svg>
+
+                   </div>
                 </div>
-            </PanelHeader>
+                {/* Bottom Text */}
+                <div className="p-8 flex items-end bg-white border-t border-black/5 shrink-0 h-[38%]">
+                   <div>
+                       <h3 className="text-[22px] font-semibold mb-2.5 text-[#111] font-heading tracking-tight">Workflow Automation</h3>
+                       <p className="text-[#555] text-[15px] leading-[1.6]">
+                         Automate repetitive hiring tasks across tools — from outreach and screening to scheduling and follow-ups — so your team spends less time coordinating and more time making decisions.
+                       </p>
+                   </div>
+                </div>
+             </div>
 
-            <PanelContent className="py-8">
+             {/* Card 2: Speak your workflows */}
+             <div className="flex flex-col bg-white border border-black/5 rounded-[24px] shadow-sm overflow-hidden h-full transform transition hover:shadow-md">
+                <div className="relative flex-1 w-full flex items-center justify-center p-6 bg-[#FAFAFA] overflow-hidden min-h-[260px]">
+                   {/* Decorative background glow & dots */}
+                   <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-[300px] h-[160px] bg-[#f64124]/15 blur-[50px] rounded-[100%]" />
+                      <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at center, #f64124 1px, transparent 1px)', backgroundSize: '16px 16px', opacity: 0.15, maskImage: 'radial-gradient(ellipse at center, black 10%, transparent 50%)', WebkitMaskImage: 'radial-gradient(ellipse at center, black 10%, transparent 50%)' }} />
+                   </div>
+                   
+                   {/* Input Pill */}
+                   <div className="relative z-10 flex items-center justify-between bg-white border border-[#f64124]/15 shadow-[0_8px_32px_rgba(246,65,36,0.08)] rounded-full px-2 py-2 w-[280px]">
+                      <span className="text-[14px] font-medium text-[#222] ml-4 font-heading">Ask me to automate anything...</span>
+                      <div className="w-9 h-9 rounded-full bg-[#f64124] flex items-center justify-center text-white shadow-md">
+                         <Mic strokeWidth={2.5} className="w-[16px] h-[16px]" />
+                      </div>
+                   </div>
+                </div>
+                <div className="p-8 flex items-end bg-white border-t border-black/5 shrink-0 h-[38%]">
+                   <div>
+                       <h3 className="text-[22px] font-semibold mb-2.5 text-[#111] font-heading tracking-tight">Speak your workflows</h3>
+                       <p className="text-[#555] text-[15px] leading-[1.6]">
+                         Describe what needs to happen, and Fluxberry AI turns it into structured workflows — tasks, updates, approvals, and follow-ups — automatically executed across your hiring pipeline.
+                       </p>
+                   </div>
+                </div>
+             </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          </div>
 
-                    {/* ---------- ROW 1 ---------- */}
+          {/* BOTTOM ROW: 3 COLS */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[480px]">
+             
+             {/* Card 3 (Col 1): Live workflow status */}
+             <div className="flex flex-col bg-white border border-black/5 rounded-[24px] shadow-sm overflow-hidden h-full transform transition hover:shadow-md lg:col-span-1">
+                <div className="relative flex-1 w-full flex flex-col items-center justify-center p-6 bg-[#FAFAFA] overflow-hidden min-h-[260px]">
+                   <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-[200px] h-[200px] bg-[#f64124]/10 blur-[50px] rounded-[100%]" />
+                      <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at center, #f64124 1px, transparent 1px)', backgroundSize: '12px 12px', opacity: 0.1, maskImage: 'radial-gradient(ellipse at center, black 20%, transparent 60%)', WebkitMaskImage: 'radial-gradient(ellipse at center, black 20%, transparent 60%)' }} />
+                   </div>
+                   
+                   {/* Stacked Pills */}
+                   <div className="relative z-10 flex flex-col gap-3 w-[90%] max-w-[280px]">
+                      
+                      <div className="bg-white/80 backdrop-blur-md border border-white shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-[14px] p-2.5 flex items-center gap-3 w-full transform -rotate-1 relative left-2">
+                         <div className="w-8 h-8 shrink-0 rounded-full border-[3px] border-gray-100 relative items-center justify-center flex">
+                            <svg className="absolute inset-0 w-full h-full -rotate-90">
+                               <circle cx="16" cy="16" r="14" fill="none" stroke="#f64124" strokeWidth="4" strokeDasharray="87.96" strokeDashoffset="15" strokeLinecap="round" />
+                            </svg>
+                         </div>
+                         <div className="flex-1">
+                           <div className="text-[12px] font-bold text-[#111] leading-tight">Quarterly budget review</div>
+                           <div className="text-[9px] text-gray-400 mt-0.5">Finance review in progress</div>
+                         </div>
+                         {/* Tiny Profile Face */}
+                         <div className="w-5 h-5 shrink-0 rounded-full bg-slate-200 border border-white overflow-hidden shadow-sm flex items-center justify-center text-[8px]">👩</div>
+                      </div>
 
-                    {/* 1. Smart Hiring (1/3) */}
-                    <div className="col-span-1 border border-border rounded-xl p-8 bg-background flex flex-col hover:border-foreground/20 transition-colors shadow-sm relative overflow-hidden h-[400px]">
-                        <div className="z-10 relative mb-8">
-                            <BrainCircuit className="w-5 h-5 text-foreground mb-4" />
-                            <h3 className="text-lg font-bold mb-2">Smart Hiring</h3>
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                                Automate screening, rank candidates, halve hiring time.
-                            </p>
-                        </div>
+                      <div className="bg-white/80 backdrop-blur-md border border-white shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-[14px] p-2.5 flex items-center gap-3 w-[96%] opacity-90 relative -left-1">
+                         <div className="w-8 h-8 shrink-0 rounded-full border-[3px] border-gray-100 relative items-center justify-center flex">
+                            <svg className="absolute inset-0 w-full h-full -rotate-90">
+                               <circle cx="16" cy="16" r="14" fill="none" stroke="#f64124" strokeWidth="4" strokeDasharray="87.96" strokeDashoffset="50" strokeLinecap="round" />
+                            </svg>
+                         </div>
+                         <div className="flex-1">
+                           <div className="text-[12px] font-bold text-[#111] leading-tight">Hiring approval</div>
+                           <div className="text-[9px] text-gray-400 mt-0.5">Waiting for final sign off</div>
+                         </div>
+                         {/* Tiny Profile Face */}
+                         <div className="w-5 h-5 shrink-0 rounded-full bg-slate-300 border border-white overflow-hidden shadow-sm flex items-center justify-center text-[8px]">👨</div>
+                      </div>
 
-                        {/* Mock UI: Candidate List */}
-                        <div className="mt-auto -mx-4 -mb-4 bg-muted/20 border border-border rounded-t-xl p-4 opacity-80 pointer-events-none translate-y-4 shadow-sm h-[200px]">
-                            <div className="flex items-center justify-between mb-4 border-b border-border pb-2">
-                                <span className="text-xs font-semibold">Smart recruiting</span>
-                                <div className="flex items-center gap-1 text-[10px] bg-background border border-border px-2 py-0.5 rounded-full text-muted-foreground">
-                                    <Search className="w-3 h-3" /> Search
-                                </div>
-                            </div>
-                            <div className="space-y-3">
-                                {[
-                                    { name: "Nuray Aksoy", role: "Product Manager", skill: "Time Management" },
-                                    { name: "Arthur Taylor", role: "Entrepreneur / CEO", skill: "Leadership Skills" }
-                                ].map((c, i) => (
-                                    <div key={i} className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-6 h-6 rounded-full bg-foreground/10" />
-                                            <div>
-                                                <div className="text-[10px] font-bold">{c.name}</div>
-                                                <div className="text-[8px] text-muted-foreground">{c.role}</div>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-[10px] font-medium">{c.skill}</div>
-                                            <div className="text-[8px] text-muted-foreground">Aug 21</div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
+                      <div className="bg-white/80 backdrop-blur-md border border-white shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-[14px] p-2.5 flex items-center gap-3 w-[100%] opacity-80 relative left-3 transform rotate-1">
+                         <div className="w-8 h-8 shrink-0 rounded-full border-[3px] border-gray-100 relative items-center justify-center flex">
+                            <svg className="absolute inset-0 w-full h-full -rotate-90">
+                               <circle cx="16" cy="16" r="14" fill="none" stroke="#f64124" strokeWidth="4" strokeDasharray="87.96" strokeDashoffset="8" strokeLinecap="round"/>
+                            </svg>
+                         </div>
+                         <div className="flex-1">
+                           <div className="text-[12px] font-bold text-[#111] leading-tight">Website launch</div>
+                           <div className="text-[9px] text-gray-400 mt-0.5">Final tasks 90% complete</div>
+                         </div>
+                         <div className="w-5 h-5 shrink-0 rounded-full bg-slate-400 border border-white overflow-hidden shadow-sm flex items-center justify-center text-[8px]">👱</div>
+                      </div>
 
-                    {/* 2. Predictive Insights (2/3) */}
-                    <div className="col-span-1 md:col-span-2 border border-border rounded-xl p-8 bg-background flex flex-col hover:border-foreground/20 transition-colors shadow-sm relative overflow-hidden h-[400px]">
-                        <div className="z-10 relative mb-8">
-                            <LineChart className="w-5 h-5 text-foreground mb-4" />
-                            <h3 className="text-lg font-bold mb-2">Predictive Insights</h3>
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                                AI highlights attrition, performance, and workforce gaps early.
-                            </p>
-                        </div>
+                   </div>
+                </div>
+                <div className="p-8 flex items-end bg-white border-t border-black/5 shrink-0 h-[36%]">
+                   <div>
+                       <h3 className="text-[22px] font-semibold mb-2.5 text-[#111] font-heading tracking-tight">Live workflow status</h3>
+                       <p className="text-[#555] text-[14px] leading-relaxed">
+                         Track candidate progress, ownership, and stage updates in real time — without switching between tools or chasing updates across teams.
+                       </p>
+                   </div>
+                </div>
+             </div>
+             
+             {/* Center Stack (Col 2): Tools & Automate Badge */}
+             <div className="flex flex-col gap-6 h-full lg:col-span-1">
+                
+                {/* Fits naturally into the tools you trust */}
+                <div className="flex-1 w-full bg-[#FAFAFA] border border-black/5 rounded-[24px] shadow-sm flex flex-col p-6 overflow-hidden transform transition hover:shadow-md relative">
+                   <div className="text-[#6B6B6B] text-[20px] md:text-[24px] font-heading leading-tight tracking-[-0.03em] mb-4 w-[85%] relative z-20">
+                     Fits naturally <br/>
+                     into <span className="text-[#111] font-semibold">the tools<br/>you trust</span>
+                   </div>
+                   
+                   {/* Absolute/relative logos scatter */}
+                   <div className="absolute inset-0 opacity-90 pointer-events-none">
+                      {/* Slack Style */}
+                      <div className="absolute right-[12%] top-[25%] w-[42px] h-[42px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-red-500 font-bold text-xl">#</div>
+                      {/* Drive Style */}
+                      <div className="absolute right-[32%] top-[10%] w-[38px] h-[38px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-green-500 font-bold text-lg">▲</div>
+                      {/* Google */}
+                      <div className="absolute left-[38%] top-[50%] w-[38px] h-[38px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-orange-500 font-bold text-xl font-heading">G</div>
+                      {/* Kit */}
+                      <div className="absolute right-[35%] top-[52%] w-[42px] h-[42px] bg-black text-white border-2 border-white rounded-[10px] flex items-center justify-center text-[13px] font-bold shadow-[0_4px_12px_rgba(0,0,0,0.06)]">Kit</div>
+                      {/* Notion */}
+                      <div className="absolute right-[8%] top-[55%] w-[40px] h-[40px] bg-white border-2 border-black/10 rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center font-bold font-serif text-xl">N</div>
+                      {/* Jira */}
+                      <div className="absolute left-[15%] bottom-[12%] w-[42px] h-[42px] bg-blue-600 text-white rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center font-bold text-lg">J</div>
+                      {/* Dropbox */}
+                      <div className="absolute left-[40%] bottom-[8%] w-[38px] h-[38px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-blue-500 font-bold">D</div>
+                      {/* Generic Mail/Lines */}
+                      <div className="absolute right-[36%] bottom-[10%] w-[44px] h-[44px] bg-white/80 border border-black/5 backdrop-blur-sm rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center font-bold text-indigo-500">M</div>
+                      {/* Gmail mock */}
+                      <div className="absolute right-[10%] bottom-[15%] w-[38px] h-[38px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-red-500 font-bold">M</div>
+                   </div>
+                </div>
 
-                        {/* Mock UI: Employee Spotlight */}
-                        <div className="mt-auto mx-auto w-full max-w-lg bg-background border border-border rounded-t-xl p-6 shadow-md pointer-events-none translate-y-4 h-[250px] relative">
-                            <div className="flex items-center justify-between mb-6">
-                                <span className="text-xs font-bold">Employee Spotlight</span>
-                                <div className="text-[10px] font-medium flex items-center gap-1 text-muted-foreground">
-                                    <Share2 className="w-3 h-3" /> Share
-                                </div>
-                            </div>
+                {/* Designed to automate repetitive manual interviews */}
+                <div className="h-[120px] shrink-0 w-full bg-[#FAFAFA] border border-black/5 rounded-[24px] shadow-sm flex items-center p-6 gap-5 transform transition hover:shadow-md">
+                   <div className="w-[48px] h-[48px] shrink-0 bg-[#222] rounded-[16px] flex items-center justify-center">
+                      <svg width="24" height="24" viewBox="5 5 22 22" fill="none" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"><path d="M 24 8 L 14 8 A 6 6 0 0 0 8 14 L 8 18 A 6 6 0 0 0 14 24 L 24 24" /></svg>
+                   </div>
+                   <div className="text-[#6B6B6B] text-[16px] font-heading leading-[1.3] tracking-[-0.01em]">
+                     Designed to <br/>
+                     automate <span className="text-[#111] font-bold">repetitive <br />manual interviews</span>
+                   </div>
+                </div>
 
-                            <div className="grid grid-cols-3 gap-2 mb-8 bg-muted/40 p-1 rounded-lg">
-                                <div className="text-center text-[10px] font-bold bg-background py-1.5 rounded border border-border shadow-sm">Overview</div>
-                                <div className="text-center text-[10px] font-medium text-muted-foreground py-1.5">Comments</div>
-                                <div className="text-center text-[10px] font-medium text-muted-foreground py-1.5">Rewards</div>
-                            </div>
+             </div>
 
-                            <div className="text-center flex flex-col items-center">
-                                <h4 className="text-sm font-bold">Matthew Johnson</h4>
-                                <p className="text-[10px] text-muted-foreground mb-4">Software Engineer</p>
-
-                                <div className="w-16 h-16 rounded-full bg-muted/50 border-4 border-background flex items-center justify-center relative shadow-sm">
-                                    <div className="w-12 h-12 rounded-full bg-foreground/10" />
-                                    {/* Abstract Badge Ribbon */}
-                                    <div className="absolute -bottom-2 -left-4 -right-4 h-4 bg-muted/30 border border-border -z-10 transform -rotate-2"></div>
-                                    <div className="absolute -bottom-2 -left-4 -right-4 h-4 bg-muted/30 border border-border -z-10 transform rotate-2"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* ---------- ROW 2 ---------- */}
-
-                    {/* 3. Workflow Automation (2/3) */}
-                    <div className="col-span-1 md:col-span-2 border border-border rounded-xl p-8 bg-background flex flex-col hover:border-foreground/20 transition-colors shadow-sm relative overflow-hidden h-[400px]">
-                        <div className="z-10 relative mb-8">
-                            <Link2 className="w-5 h-5 text-foreground mb-4" />
-                            <h3 className="text-lg font-bold mb-2">Workflow Automation</h3>
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                                Fluxberry AI automates HR tasks, teams focus on people.
-                            </p>
-                        </div>
-
-                        {/* Mock UI: Available Automations */}
-                        <div className="mt-auto w-full bg-background border border-border rounded-xl p-6 shadow-sm pointer-events-none translate-y-4">
-                            <h4 className="text-xs font-bold mb-1">Available Automations</h4>
-                            <p className="text-[10px] text-muted-foreground mb-6">
-                                Access the integrated tools and apps ready for your HR tasks.
-                            </p>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="border border-border/60 rounded-lg p-4 bg-muted/10 relative">
-                                    <div className="absolute top-4 right-4 w-6 h-3 bg-foreground rounded-full" />
-                                    <div className="w-8 h-8 rounded bg-[#0078D4] text-white flex items-center justify-center font-bold text-xs mb-3">M</div>
-                                    <div className="text-xs font-bold mb-1">Microsoft Office 365</div>
-                                    <div className="text-[9px] text-muted-foreground mb-3 leading-tight">Seamless collaboration and document management.</div>
-                                    <div className="border border-border text-[10px] text-center py-1.5 rounded bg-background font-medium">Manage</div>
-                                </div>
-
-                                <div className="border border-border/60 rounded-lg p-4 bg-muted/10 relative">
-                                    <div className="absolute top-4 right-4 w-6 h-3 bg-muted border border-border rounded-full" />
-                                    <div className="w-8 h-8 rounded bg-[#2D8CFF] text-white flex items-center justify-center font-bold text-xs mb-3">Z</div>
-                                    <div className="text-xs font-bold mb-1">Zoom</div>
-                                    <div className="text-[9px] text-muted-foreground mb-3 leading-tight">For conducting virtual meetings and interviews natively.</div>
-                                    <div className="border border-border text-[10px] text-center py-1.5 rounded bg-muted/30 text-muted-foreground font-medium">Disconnected</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 4. Employee Engagement Analytics (1/3) */}
-                    <div className="col-span-1 border border-border rounded-xl p-8 bg-background flex flex-col hover:border-foreground/20 transition-colors shadow-sm relative overflow-hidden h-[400px]">
-                        <div className="z-10 relative mb-8">
-                            <FileText className="w-5 h-5 text-foreground mb-4" />
-                            <h3 className="text-lg font-bold mb-2 text-foreground">Employee Engagement analytics</h3>
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                                Surveys drive action, improving culture and retention.
-                            </p>
-                        </div>
-
-                        {/* Mock UI: Sparkline Graph */}
-                        <div className="mt-auto -mx-4 -mb-4 bg-background border border-border border-b-0 rounded-t-xl p-6 opacity-90 shadow-[0_-10px_20px_rgba(0,0,0,0.02)] pointer-events-none translate-y-4 h-[200px]">
-                            <div className="text-[10px] font-bold mb-4">Work Hour Analysis</div>
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-6 h-6 rounded-full bg-foreground/10 flex items-center justify-center">
-                                    <div className="w-2 h-2 rounded-full bg-foreground"></div>
-                                </div>
+             {/* Card 6 (Col 3): Shared work without chaos */}
+             <div className="flex flex-col bg-white border border-black/5 rounded-[24px] shadow-sm overflow-hidden h-full transform transition hover:shadow-md lg:col-span-1">
+                <div className="relative flex-1 w-full flex items-center justify-center p-6 bg-[#FAFAFA] min-h-[260px]">
+                    
+                    <div className="bg-white border border-black/5 shadow-[0_12px_40px_rgba(0,0,0,0.06)] rounded-[18px] w-[95%] max-w-[280px] p-5 pb-12 relative flex flex-col gap-4">
+                       <div className="flex justify-between items-center mb-1">
+                          <span className="text-[13px] font-bold text-[#111]">Team members</span>
+                          <div className="w-6 h-3 bg-gray-100 border border-black/5 rounded-full flex gap-0.5 items-center justify-center">
+                             <span className="w-[3px] h-[3px] bg-gray-400 rounded-full"/>
+                             <span className="w-[3px] h-[3px] bg-gray-400 rounded-full"/>
+                             <span className="w-[3px] h-[3px] bg-gray-400 rounded-full"/>
+                          </div>
+                       </div>
+                       
+                       <div className="flex flex-col gap-3.5">
+                          <div className="flex items-center justify-between">
+                             <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-[12px] shadow-sm">👩🏻‍💼</div>
                                 <div>
-                                    <div className="text-[8px] text-muted-foreground uppercase tracking-wider">Total Work</div>
-                                    <div className="text-xs font-bold">38 hours <span className="text-muted-foreground font-normal">· 12 mins</span></div>
+                                  <div className="text-[12px] font-bold text-[#111]">Emma Collins</div>
+                                  <div className="text-[10px] text-gray-400">@emma.c</div>
                                 </div>
-                            </div>
+                             </div>
+                             <span className="text-[10px] font-medium text-gray-500">Admin</span>
+                          </div>
 
-                            <div className="w-full h-px bg-border my-4 relative">
-                                <div className="absolute left-1/3 w-1/3 h-[2px] bg-foreground bottom-0"></div>
-                            </div>
-
-                            {/* Abstract SVG line graph */}
-                            <div className="w-full h-16 mt-4 relative">
-                                <svg className="w-full h-full text-foreground/20" viewBox="0 0 100 40" preserveAspectRatio="none">
-                                    <polyline fill="none" stroke="currentColor" strokeWidth="2" points="0,30 20,20 40,35 60,10 80,25 100,5" />
-                                    <circle cx="60" cy="10" r="3" fill="var(--background)" stroke="var(--foreground)" strokeWidth="2" />
-                                </svg>
-                                <div className="absolute top-0 left-[60%] -translate-x-1/2 -mt-4 bg-foreground text-background text-[8px] px-1.5 py-0.5 rounded shadow">
-                                    Monday, 6h
+                          <div className="flex items-center justify-between">
+                             <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center text-[12px] shadow-sm">👨🏼‍💻</div>
+                                <div>
+                                  <div className="text-[12px] font-bold text-[#111]">Lukas Meyer</div>
+                                  <div className="text-[10px] text-gray-400">@lukas.m</div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
+                             </div>
+                             <span className="text-[10px] font-medium text-gray-500">Member</span>
+                          </div>
 
-                    {/* ---------- ROW 3 ---------- */}
-
-                    {/* 5. Real time performance reporting (1/3) */}
-                    <div className="col-span-1 border border-border rounded-xl p-8 bg-background flex flex-col hover:border-foreground/20 transition-colors shadow-sm relative overflow-hidden h-[400px]">
-                        <div className="z-10 relative mb-8">
-                            <Zap className="w-5 h-5 text-foreground mb-4" />
-                            <h3 className="text-lg font-bold mb-2">Real time performance reporting</h3>
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                                Generates live performance reports for faster decisions.
-                            </p>
-                        </div>
-
-                        {/* Mock UI: Simple list */}
-                        <div className="mt-auto -mx-2 bg-muted/20 border border-border rounded-xl p-4 opacity-80 pointer-events-none h-[200px]">
-                            <div className="flex justify-between items-center mb-4">
-                                <span className="text-[10px] font-bold">Current Project</span>
-                                <span className="text-[8px] text-muted-foreground">See</span>
-                            </div>
-
-                            <div className="bg-background border border-border rounded p-3 mb-2 shadow-sm">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-[9px] font-bold flex items-center gap-1">
-                                        <div className="w-2 h-2 rounded-sm bg-orange-400" /> Monday.com Redesign
-                                    </span>
-                                    <span className="text-[8px] text-background bg-foreground px-1.5 py-0.5 rounded-full">In Progress</span>
+                          <div className="flex items-center justify-between opacity-[0.35] blur-[1px]">
+                             <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-[12px] shadow-sm">👩🏽‍🎨</div>
+                                <div>
+                                  <div className="text-[12px] font-bold text-[#111]">Sophia...</div>
+                                  <div className="text-[10px] text-gray-400">...</div>
                                 </div>
-                                <div className="flex justify-between items-center mt-3 border-t border-border/50 pt-2">
-                                    <div className="flex -space-x-1">
-                                        <div className="w-4 h-4 rounded-full bg-foreground/20 border border-background"></div>
-                                        <div className="w-4 h-4 rounded-full bg-foreground/30 border border-background"></div>
-                                        <div className="w-4 h-4 rounded-full bg-foreground/10 border border-background"></div>
-                                    </div>
-                                    <span className="text-[8px] text-muted-foreground">12/10/2022 - 01/04/2023</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                             </div>
+                             <span className="text-[10px] font-medium text-gray-500">Member</span>
+                          </div>
+                       </div>
 
-                    {/* 6. Advanced Talent Analytics (2/3) */}
-                    <div className="col-span-1 md:col-span-2 border border-border rounded-xl p-8 bg-background flex flex-col hover:border-foreground/20 transition-colors shadow-sm relative overflow-hidden h-[400px]">
-                        <div className="z-10 relative mb-8">
-                            <Plus className="w-5 h-5 text-foreground mb-4" />
-                            <h3 className="text-lg font-bold mb-2">Advanced Talent Analytics</h3>
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                                Fluxberry AI predicts gaps, automates learning, future-proofs teams.
-                            </p>
-                        </div>
-
-                        {/* Mock UI: Compensation Planner List */}
-                        <div className="mt-auto mx-auto w-full max-w-lg bg-background border border-border rounded-t-xl p-6 shadow-[0_-5px_15px_rgba(0,0,0,0.03)] pointer-events-none translate-y-4 h-[250px]">
-                            <div className="flex justify-between items-center mb-6 pb-4 border-b border-border">
-                                <span className="text-sm font-bold">Compensation planner</span>
-                                <span className="text-[10px] font-medium text-muted-foreground bg-muted p-1 rounded px-2">See All</span>
-                            </div>
-
-                            <div className="mb-4">
-                                <span className="text-[10px] text-muted-foreground uppercase tracking-widest block mb-3">Absent</span>
-                                <div className="flex items-center justify-between bg-muted/20 p-2 rounded">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-foreground/10" />
-                                        <div>
-                                            <div className="text-xs font-bold text-foreground flex items-center gap-1">James Brown <span className="w-2 h-2 rounded-full bg-red-400"></span></div>
-                                            <div className="text-[10px] text-muted-foreground">Replaced by Arthur T.</div>
-                                        </div>
-                                    </div>
-                                    <span className="text-[9px] text-muted-foreground bg-muted px-2 py-1 rounded-full">● Absent</span>
-                                </div>
-                            </div>
-
-                            <div>
-                                <span className="text-[10px] text-muted-foreground uppercase tracking-widest block mb-3">Away</span>
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-8 h-8 rounded-full bg-foreground/10" />
-                                    <div>
-                                        <div className="text-xs font-bold text-foreground">Sophia Williams</div>
-                                        <div className="text-[10px] text-muted-foreground">Synergy</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
+                       {/* Floating add button */}
+                       <div className="absolute bottom-6 left-[60%] shrink-0 -translate-x-1/2 bg-white shadow-[0_8px_24px_rgba(0,0,0,0.12)] border border-black/5 rounded-full pr-4 pl-[5px] py-[5px] flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform">
+                           <div className="w-7 h-7 rounded-full bg-[#f64124] text-white flex items-center justify-center"><Plus size={16} /></div>
+                           <span className="text-[11px] font-semibold text-[#111]">Add members</span>
+                       </div>
                     </div>
 
                 </div>
+                <div className="p-8 flex items-end bg-white border-t border-black/5 shrink-0 h-[36%]">
+                   <div>
+                       <h3 className="text-[22px] font-semibold mb-2.5 text-[#111] font-heading tracking-tight">Shared work without chaos</h3>
+                       <p className="text-[#555] text-[14px] leading-relaxed">
+                         Keep recruiters, hiring managers, and interviewers aligned with clear ownership, automated handoffs, and centralised communication — all in one place.
+                       </p>
+                   </div>
+                </div>
+             </div>
 
-            </PanelContent>
-        </Panel>
-    );
+          </div>
+
+        </div>
+      </PanelContent>
+    </Panel>
+  );
 }

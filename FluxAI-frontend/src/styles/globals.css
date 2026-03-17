@@ -20,8 +20,9 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --font-sans: var(--font-ibm-plex-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-inter-display);
+  --font-mono: var(--font-ibm-plex-mono);
 }
 
 :root {

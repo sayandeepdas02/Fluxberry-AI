@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "../styles/globals.css";
-import { fontSans, fontMono } from "@/lib/fonts";
+import { fontSans, fontMono, fontHeading } from "@/lib/fonts";
 import { AuthProvider } from "@/lib/context/auth-context";
 import { Toaster } from "sonner";
 
@@ -15,7 +15,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en" className={`${fontSans.variable} ${fontMono.variable}`}>
+        <html lang="en" className={`${fontSans.variable} ${fontMono.variable} ${fontHeading.variable}`}>
             <body>
                 <AuthProvider>
                     {children}

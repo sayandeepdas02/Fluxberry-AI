@@ -1,142 +1,111 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
 export function Navbar() {
-    const [isScrolled, setIsScrolled] = useState(false);
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
-    useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 10);
-        };
+  const navItems = ["Products", "Pricing", "Testimonials"];
 
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
+  return (
+    <header className="sticky top-6 z-50 flex justify-center w-full">
+      <div className="w-full max-w-[1200px] px-4 flex items-center justify-between">
+        
+        {/* LEFT CAPSULE */}
+        <div className="hidden md:flex items-center h-[52px] bg-[#F2F2F2] rounded-full px-7 border border-black/5 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]">
+          {/* LOGO */}
+          <Link
+            href="/"
+            className="flex items-center font-mono text-[16px] leading-[16px] font-medium tracking-[0.05em] text-black mr-6"
+          >
+            <svg width="15" height="15" viewBox="5 5 22 22" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" className="mr-[10px]">
+              <path d="M 24 8 L 14 8 A 6 6 0 0 0 8 14 L 8 18 A 6 6 0 0 0 14 24 L 24 24" />
+            </svg>
+            FLUXBERRY AI<sup className="text-[10px] -mt-3 ml-[2px]">®</sup>
+          </Link>
 
-    const scrollToSection = (sectionId: string) => {
-        const element = document.getElementById(sectionId);
-        if (element) {
-            element.scrollIntoView({ behavior: "smooth" });
-            setIsMobileMenuOpen(false);
-        }
-    };
+          {/* DASHED DIVIDER */}
+          <div className="h-5 w-[1px] border-l border-dashed border-gray-400" />
 
-    const navItems = [
-        { label: "Features", href: "/#features" },
-        { label: "Solutions", href: "/#solutions" },
-        { label: "Pricing", href: "/pricing" },
-        { label: "Testimonials", href: "/#testimonials" },
-    ];
+          {/* NAV LINKS */}
+          <nav className="flex flex-1 justify-center items-center space-x-9 ml-9">
+            {navItems.map((item) => (
+              <Link
+                key={item}
+                href={`/#${item.toLowerCase()}`}
+                className="font-sans text-[12px] font-normal uppercase tracking-[0.05em] text-black hover:opacity-70 transition"
+              >
+                {item}
+              </Link>
+            ))}
+          </nav>
+        </div>
 
-    return (
-        <header
-            className={cn(
-                "sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-shadow duration-300",
-                isScrolled && "shadow-sm"
-            )}
-        >
-            <div className="mx-auto md:max-w-6xl">
-                <div className="screen-line-before screen-line-after border-x border-edge">
-                    <div className="flex h-14 items-center justify-between px-4">
-                        {/* Logo/Brand */}
-                        <Link href="/" className="flex items-center space-x-2">
-                            <span className="text-xl font-bold">Fluxberry AI</span>
-                        </Link>
+        {/* RIGHT CAPSULE */}
+        <div className="hidden md:flex items-center gap-1.5 bg-[#F2F2F2] rounded-full p-[4px] border border-black/5 h-[52px] shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]">
+          {/* SIGN IN */}
+          <Link href="/login" className="h-full">
+            <button className="flex items-center justify-center h-full font-mono text-[14px] leading-[20px] font-normal uppercase tracking-[0.05em] text-black border border-black rounded-full px-6 hover:bg-black/5 transition">
+              SIGN IN <span className="ml-[6px] text-[14px] font-sans">↗</span>
+            </button>
+          </Link>
 
-                        <nav className="hidden md:flex items-center space-x-6">
-                            {navItems.map((item) => (
-                                item.href.startsWith('/') ? (
-                                    <Link
-                                        key={item.href}
-                                        href={item.href}
-                                        className="font-sans text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
-                                    >
-                                        {item.label}
-                                    </Link>
-                                ) : (
-                                    <button
-                                        key={item.href}
-                                        onClick={() => scrollToSection(item.href)}
-                                        className="font-sans text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
-                                    >
-                                        {item.label}
-                                    </button>
-                                )
-                            ))}
-                        </nav>
+          {/* CTA */}
+          <Link href="/contact" className="h-full">
+            <button className="flex items-center justify-center h-full rounded-full bg-[#f64124] text-white font-mono text-[14px] leading-[20px] font-normal uppercase tracking-[0.05em] px-6 hover:bg-[#e2361a] transition border border-transparent shadow-sm">
+              BOOK A DEMO <span className="ml-[6px] text-[14px] font-sans">↗</span>
+            </button>
+          </Link>
+        </div>
 
-                        {/* CTA Buttons */}
-                        <div className="hidden md:flex items-center space-x-3">
-                            <Link href="/contact">
-                                <Button variant="outline" size="sm">
-                                    Book a Demo
-                                </Button>
-                            </Link>
-                            <Link href="/signup">
-                                <Button size="sm">Get Started</Button>
-                            </Link>
-                        </div>
+        {/* MOBILE BUTTON */}
+        <div className="md:hidden flex items-center justify-between w-full bg-[#F2F2F2] rounded-full px-5 h-[52px] border border-black/5">
+           <Link
+            href="/"
+            className="flex items-center font-mono text-[16px] leading-[16px] font-medium tracking-wide text-black"
+          >
+            <svg width="14" height="14" viewBox="5 5 22 22" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+              <path d="M 24 8 L 14 8 A 6 6 0 0 0 8 14 L 8 18 A 6 6 0 0 0 14 24 L 24 24" />
+            </svg>
+            FLUXBERRY AI<sup className="text-[9px] -mt-2 ml-[1px]">®</sup>
+          </Link>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            {isOpen ? <X className="w-5 h-5"/> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
+      </div>
 
-                        {/* Mobile Menu Button */}
-                        <button
-                            className="md:hidden"
-                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        >
-                            {isMobileMenuOpen ? (
-                                <X className="h-6 w-6" />
-                            ) : (
-                                <Menu className="h-6 w-6" />
-                            )}
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Mobile Menu */}
-            {isMobileMenuOpen && (
-                <div className="md:hidden border-t border-edge bg-background">
-                    <div className="mx-auto md:max-w-6xl px-4 py-4 space-y-3">
-                        {navItems.map((item) => (
-                            item.href.startsWith('/') && !item.href.includes('#') ? (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className="block w-full text-left font-sans text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 py-2"
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                >
-                                    {item.label}
-                                </Link>
-                            ) : (
-                                <button
-                                    key={item.href}
-                                    onClick={() => scrollToSection(item.href.replace('/#', ''))}
-                                    className="block w-full text-left font-sans text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 py-2"
-                                >
-                                    {item.label}
-                                </button>
-                            )
-                        ))}
-                        <div className="flex flex-col space-y-2 pt-3">
-                            <Link href="/contact" className="w-full">
-                                <Button variant="outline" size="sm" className="w-full">
-                                    Book a Demo
-                                </Button>
-                            </Link>
-                            <Link href="/signup" className="w-full">
-                                <Button size="sm" className="w-full">
-                                    Get Started
-                                </Button>
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </header>
-    );
+      {/* MOBILE MENU */}
+      {isOpen && (
+        <div className="absolute top-[70px] left-4 right-4 md:hidden rounded-2xl border border-black/10 bg-white p-4 space-y-4 shadow-lg">
+          {navItems.map((item) => (
+            <Link
+              key={item}
+              href={`/#${item.toLowerCase()}`}
+              className="block font-sans text-[12px] font-normal uppercase tracking-[0.05em] text-black/80"
+              onClick={() => setIsOpen(false)}
+            >
+              {item}
+            </Link>
+          ))}
+          <div className="pt-2 space-y-2">
+            <Link href="/login" className="block w-full">
+              <button className="w-full rounded-full border border-black py-3 font-mono text-[14px] leading-[20px] font-normal uppercase tracking-[0.05em]">
+                SIGN IN <span className="ml-[2px] text-[14px] font-sans">↗</span>
+              </button>
+            </Link>
+            <Link href="/contact" className="block w-full">
+              <button className="w-full h-full rounded-full bg-[#f64124] text-white py-3 font-mono text-[14px] leading-[20px] font-normal uppercase tracking-[0.05em]">
+                BOOK A DEMO <span className="ml-[2px] text-[14px] font-sans">↗</span>
+              </button>
+            </Link>
+          </div>
+        </div>
+      )}
+    </header>
+  );
 }
