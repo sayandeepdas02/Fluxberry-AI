@@ -47,7 +47,7 @@ export function Footer() {
     { label: "Home", href: "/" },
     { label: "Product", href: "/#products" },
     { label: "Solutions", href: "/#features" },
-    { label: "Contact", href: "/contact" },
+    { label: "Contact", href: "/demo" },
   ];
 
   const resourceLinks = [

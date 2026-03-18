@@ -45,7 +45,7 @@ export function FinalCTA() {
         </p>
 
         {/* ── CTA BUTTON ── */}
-        <Link href="/contact">
+        <Link href="/demo">
           <button className="group bg-[#f64124] hover:bg-[#e53a1e] text-white font-mono text-[12px] font-medium tracking-[0.1em] uppercase px-9 py-4 rounded-full flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-xl hover:scale-[1.02] cursor-pointer">
             Get Started
             <span className="text-[14px] leading-none transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">↗</span>

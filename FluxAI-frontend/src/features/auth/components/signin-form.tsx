@@ -3,8 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/context/auth-context";
 
 export function SignInForm() {
@@ -31,7 +29,6 @@ export function SignInForm() {
         const result = await login(formData);
 
         if (result.success && result.user) {
-            // Keep isLoading=true during navigation to prevent button flash
             if (result.user.onboardingCompleted) {
                 router.push("/dashboard");
             } else {
@@ -43,136 +40,76 @@ export function SignInForm() {
         }
     };
 
-    const handleGoogleSignIn = () => {
-        // OAuth not implemented yet
-        console.log("Google sign-in clicked");
-    };
-
     return (
-        <div className="w-full max-w-md mx-auto">
-            <div className="mb-8 text-center">
-                <h1 className="text-3xl font-bold mb-2">Welcome back</h1>
-                <p className="text-sm text-muted-foreground">
-                    Sign in to your Fluxberry AI account
-                </p>
-            </div>
+        <form
+            onSubmit={handleSubmit}
+            className="bg-white rounded-[20px] p-8 md:p-10 lg:p-12 shadow-[0_20px_60px_rgba(0,0,0,0.15)] w-full"
+        >
+            <h2 className="font-sans text-[28px] md:text-[32px] font-semibold text-[#111] mb-8">
+                Sign In
+            </h2>
 
             {/* Error Message */}
             {error && (
-                <div className="mb-4 p-3 rounded-md bg-destructive/10 text-destructive text-sm">
+                <div className="mb-6 p-3 rounded-[10px] bg-red-50 text-red-600 text-sm">
                     {error}
                 </div>
             )}
 
-            {/* Google Sign In */}
-            <button
-                type="button"
-                onClick={handleGoogleSignIn}
-                className={cn(
-                    "w-full flex items-center justify-center gap-3 px-4 py-2.5",
-                    "border border-border rounded-md text-sm font-medium",
-                    "hover:bg-muted transition-colors"
-                )}
-            >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                    <path
-                        fill="#4285F4"
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                        fill="#34A853"
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                        fill="#FBBC05"
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    />
-                    <path
-                        fill="#EA4335"
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    />
-                </svg>
-                Continue with Google
-            </button>
-
-            <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-border"></div>
-                </div>
-                <div className="relative flex justify-center text-xs">
-                    <span className="bg-background px-2 text-muted-foreground">
-                        or continue with email
-                    </span>
-                </div>
-            </div>
-
-            {/* Sign In Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Form Fields Grid */}
+            <div className="space-y-5">
                 {/* Email */}
                 <div>
-                    <label htmlFor="email" className="block text-sm font-medium mb-2">
-                        Email
+                    <label className="block font-sans text-[13px] font-medium text-[#333] mb-2">
+                        Work Email address<span className="text-[#f64124]">*</span>
                     </label>
                     <input
                         type="email"
-                        id="email"
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        className={cn(
-                            "w-full px-4 py-2.5 border rounded-md text-sm",
-                            "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
-                            "transition-colors border-border hover:border-foreground/50"
-                        )}
-                        placeholder="john@company.com"
+                        className="w-full px-4 py-3 bg-white border border-[#E5E5E5] rounded-[10px] text-[14px] text-[#333] focus:outline-none focus:ring-2 focus:ring-[#f64124]/30 focus:border-[#f64124] transition-all"
                         required
                         disabled={isLoading}
                     />
                 </div>
 
-                {/* Password */}
+                {/* Password Setting */}
                 <div>
                     <div className="flex items-center justify-between mb-2">
-                        <label htmlFor="password" className="block text-sm font-medium">
-                            Password
+                        <label className="block font-sans text-[13px] font-medium text-[#333]">
+                            Password<span className="text-[#f64124]">*</span>
                         </label>
-                        <Link
-                            href="#"
-                            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                        >
+                        <Link href="#" className="font-sans text-[12px] text-black/50 hover:text-[#f64124] hover:underline transition-colors shrink-0">
                             Forgot password?
                         </Link>
                     </div>
                     <input
+
                         type="password"
-                        id="password"
                         name="password"
                         value={formData.password}
                         onChange={handleChange}
-                        className={cn(
-                            "w-full px-4 py-2.5 border rounded-md text-sm",
-                            "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
-                            "transition-colors border-border hover:border-foreground/50"
-                        )}
-                        placeholder="••••••••"
+                        className="w-full px-4 py-3 bg-white border border-[#E5E5E5] rounded-[10px] text-[14px] text-[#333] focus:outline-none focus:ring-2 focus:ring-[#f64124]/30 focus:border-[#f64124] transition-all"
                         required
                         disabled={isLoading}
                     />
                 </div>
+            </div>
 
-                {/* Submit Button */}
-                <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+            <div className="mt-8 flex items-center justify-between">
+                <p className="text-sm font-sans text-black/50">
+                    New here? <Link href="/signup" className="text-black hover:text-[#f64124] underline">Sign up</Link>
+                </p>
+
+                <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="bg-[#f64124] hover:bg-[#e53a1e] text-white font-mono text-[13px] font-medium tracking-[0.1em] uppercase py-3.5 px-8 rounded-full transition-all duration-200 cursor-pointer shadow-sm hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
+                >
                     {isLoading ? "Signing in..." : "Sign In"}
-                </Button>
-            </form>
-
-            {/* Sign Up Link */}
-            <p className="text-center text-sm text-muted-foreground mt-6">
-                Don't have an account?{" "}
-                <Link href="/signup" className="text-foreground font-medium hover:underline">
-                    Sign up
-                </Link>
-            </p>
-        </div>
+                </button>
+            </div>
+        </form>
     );
 }
