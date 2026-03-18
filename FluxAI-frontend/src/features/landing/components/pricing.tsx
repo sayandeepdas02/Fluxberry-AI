@@ -59,7 +59,7 @@ export function Pricing() {
 
   return (
     <section className="relative w-full py-24 bg-[#f8f8f8]" id="pricing">
-      <div className="max-w-[1240px] mx-auto px-4 md:px-8">
+      <div className="max-w-[1280px] mx-auto px-6 lg:px-8">
         
         {/* HEADER SECTION */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-10 mb-16">

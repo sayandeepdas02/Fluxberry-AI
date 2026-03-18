@@ -5,8 +5,11 @@ import { AuthProvider } from "@/lib/context/auth-context";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
-    title: "Fluxberry AI - Hire Smarter, Faster",
-    description: "Fluxberry AI helps companies design better hiring funnels, automatically screen candidates, and hire high-quality talent.",
+    title: "Fluxberry AI - AI Native Hiring Automation",
+    description: "AI-native hiring platform automating sourcing, ATS, assessments, interviews, analytics, and onboarding in one system. Fluxberry AI helps startups & enterprises to hire best talent, faster and removing dependency on engineering team to hire tech talent.",
+    icons: {
+        icon: "/icon.jpg",
+    },
 };
 
 export default function RootLayout({

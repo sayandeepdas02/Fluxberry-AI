@@ -10,7 +10,7 @@ export function WhyChooseUs() {
       <div className="absolute top-[20%] right-[-5%] w-[800px] h-[800px] bg-white/[0.04] rounded-[120px] transform -rotate-12 pointer-events-none" />
       <div className="absolute bottom-[-20%] left-[20%] w-[700px] h-[700px] bg-black/[0.03] rounded-[140px] transform rotate-45 pointer-events-none" />
 
-      <div className="relative z-10 mx-auto px-4 md:px-8 max-w-7xl">
+      <div className="relative z-10 max-w-[1280px] mx-auto px-6 lg:px-8">
         
         {/* HEADER SECTION */}
         <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-20">

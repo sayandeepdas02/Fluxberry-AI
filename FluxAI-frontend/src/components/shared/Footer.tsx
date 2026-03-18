@@ -1,104 +1,150 @@
 import Link from "next/link";
+import Image from "next/image";
+
+/* ═══════════════════════════════════════════════
+   FOOTER LINK COLUMN
+   ═══════════════════════════════════════════════ */
+
+interface FooterLink {
+  label: string;
+  href: string;
+}
+
+function FooterColumn({
+  heading,
+  links,
+}: {
+  heading: string;
+  links: FooterLink[];
+}) {
+  return (
+    <div className="flex flex-col">
+      <h4 className="font-mono text-[10px] text-white/30 tracking-[0.14em] uppercase mb-5">
+        {heading}
+      </h4>
+      <ul className="flex flex-col gap-4">
+        {links.map((link) => (
+          <li key={link.label}>
+            <Link
+              href={link.href}
+              className="font-sans text-[16px] leading-[22px] text-white/65 hover:text-white transition-colors duration-200"
+            >
+              {link.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════ */
 
 export function Footer() {
+  const companyLinks: FooterLink[] = [
+    { label: "Home", href: "/" },
+    { label: "Product", href: "/#products" },
+    { label: "Solutions", href: "/#features" },
+    { label: "Contact", href: "/contact" },
+  ];
+
+  const resourceLinks: FooterLink[] = [
+    { label: "Pricing", href: "/pricing" },
+    { label: "Testimonials", href: "/#testimonials" },
+    { label: "Blogs", href: "#" },
+    { label: "FAQ", href: "/#faq" },
+  ];
+
+  const connectLinks: FooterLink[] = [
+    { label: "LinkedIn", href: "#" },
+    { label: "YouTube", href: "#" },
+    { label: "Instagram", href: "#" },
+    { label: "X", href: "#" },
+  ];
+
   return (
-    <div className="w-full bg-[#FAFAFA] pb-12 px-4 md:px-8">
-      {/* FLOATING BLACK CONTAINER */}
-      <footer className="max-w-[1300px] mx-auto bg-black text-white rounded-[32px] overflow-hidden">
-        
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-8 px-8 md:px-16 pt-20 pb-16">
-          
-          {/* LEFT COLUMN: Brand & Newsletter */}
-          <div className="lg:col-span-6 flex flex-col justify-between">
-            
-            {/* BRAND LOGO */}
-            <div className="flex items-center gap-3 w-fit mb-24 md:mb-32">
-               {/* Custom SVG Logo matching mockup */}
-               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12H18C18 15.31 15.31 18 12 18C8.69 18 6 15.31 6 12C6 8.69 8.69 6 12 6V2Z" fill="currentColor"/>
-                  <rect x="5" y="5" width="4" height="4" fill="currentColor" />
-                  <rect x="5" y="15" width="4" height="4" fill="currentColor" />
-               </svg>
-               <span className="font-mono text-[20px] font-bold tracking-widest leading-[1]">FLUXBERRY AI<sup className="text-[10px]">®</sup></span>
+    <div className="w-full bg-[#FAFAFA] pb-10 px-6 lg:px-8">
+      <footer className="max-w-[1280px] mx-auto bg-[#111111] text-white rounded-[28px] overflow-hidden">
+        {/* ── TOP SECTION ── */}
+        <div className="px-8 md:px-12 lg:px-14 pt-14 pb-14">
+          <div className="flex flex-col lg:flex-row justify-between gap-14 lg:gap-8">
+            {/* Logo */}
+            <div className="shrink-0">
+              <Link href="/" className="inline-flex items-center gap-2.5">
+                <Image
+                  src="/fluxberry-logo-white.png"
+                  alt="Fluxberry AI"
+                  width={180}
+                  height={32}
+                  className="h-[180px] w-auto"
+                  priority
+                />
+              </Link>
             </div>
 
-            {/* NEWSLETTER */}
-            <div className="max-w-[480px]">
-               <h3 className="font-mono text-[16px] md:text-[18px] tracking-widest uppercase mb-4 text-[#ddd]">
-                 STAY IN THE LOOP.
-               </h3>
-               <p className="text-[#888] font-sans text-[14px] leading-relaxed mb-6">
-                 Get product updates, new features, and practical insights<br className="hidden md:block"/>
-                 about hiring — delivered occasionally, never spam.
-               </p>
-
-               <div className="flex items-center bg-white rounded-full p-1.5 focus-within:ring-2 focus-within:ring-white/20 transition-all shadow-inner">
-                  <input 
-                    type="email" 
-                    placeholder="Enter your email" 
-                    className="flex-1 bg-transparent px-6 py-2 outline-none text-black font-sans text-[15px] placeholder:text-[#888]"
-                  />
-                  <button className="bg-[#f64124] hover:bg-[#e2361a] text-white font-mono text-[12px] md:text-[13px] font-medium tracking-widest px-8 md:px-10 py-3.5 rounded-full transition-colors uppercase">
-                    SUBSCRIBE
-                  </button>
-               </div>
+            {/* Link Columns */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-10 lg:gap-16">
+              <FooterColumn heading="Company" links={companyLinks} />
+              <FooterColumn heading="Resources" links={resourceLinks} />
+              <FooterColumn heading="Connect" links={connectLinks} />
             </div>
-
           </div>
-
-          {/* RIGHT COLUMNS: Navigation Grid */}
-          <div className="lg:col-span-6 grid grid-cols-2 md:grid-cols-3 gap-12 lg:gap-8 justify-items-start lg:justify-items-end">
-             
-             {/* COMPANY COL */}
-             <div className="flex flex-col gap-6 w-full lg:w-fit">
-               <h4 className="font-mono text-[10px] text-[#555] tracking-widest uppercase mb-2">COMPANY</h4>
-               <ul className="flex flex-col gap-5 text-[15px] font-sans text-[#ddd]">
-                 <li><Link href="/" className="hover:text-white transition-colors">Home</Link></li>
-                 <li><Link href="#" className="hover:text-white transition-colors">Product</Link></li>
-                 <li><Link href="#" className="hover:text-white transition-colors">Solutions</Link></li>
-                 <li><Link href="#" className="hover:text-white transition-colors">Contact</Link></li>
-               </ul>
-             </div>
-
-             {/* RESOURCES COL */}
-             <div className="flex flex-col gap-6 w-full lg:w-fit">
-               <h4 className="font-mono text-[10px] text-[#555] tracking-widest uppercase mb-2">RESOURCES</h4>
-               <ul className="flex flex-col gap-5 text-[15px] font-sans text-[#ddd]">
-                 <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
-                 <li><Link href="#testimonials" className="hover:text-white transition-colors">Testimonials</Link></li>
-                 <li><Link href="#blog" className="hover:text-white transition-colors">Blogs</Link></li>
-                 <li><Link href="#faq" className="hover:text-white transition-colors">FAQ</Link></li>
-               </ul>
-             </div>
-
-             {/* CONNECT COL */}
-             <div className="flex flex-col gap-6 w-full lg:w-fit">
-               <h4 className="font-mono text-[10px] text-[#555] tracking-widest uppercase mb-2">CONNECT</h4>
-               <ul className="flex flex-col gap-5 text-[15px] font-sans text-[#ddd]">
-                 <li><Link href="#" className="hover:text-white transition-colors">LinkedIn</Link></li>
-                 <li><Link href="#" className="hover:text-white transition-colors">YouTube</Link></li>
-                 <li><Link href="#" className="hover:text-white transition-colors">Instagram</Link></li>
-                 <li><Link href="#" className="hover:text-white transition-colors">X</Link></li>
-               </ul>
-             </div>
-
-          </div>
-
         </div>
 
-        {/* BOTTOM LEGAL BAR */}
-        <div className="mx-8 md:mx-16 border-t border-dashed border-[#333] py-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-           <div className="font-mono text-[10px] md:text-[11px] text-[#666] tracking-widest uppercase">
-             © {new Date().getFullYear()} FLUXBERRY AI. ALL RIGHTS RESERVED.
-           </div>
-           
-           <div className="flex flex-wrap items-center gap-6 md:gap-10 font-mono text-[10px] md:text-[11px] text-[#666] tracking-widest uppercase">
-             <Link href="#" className="hover:text-[#aaa] transition-colors">TERMS OF SERVICE</Link>
-             <Link href="#" className="hover:text-[#aaa] transition-colors">PRIVACY POLICY</Link>
-             <Link href="#" className="hover:text-[#aaa] transition-colors">COOKIES POLICY</Link>
-           </div>
+        {/* ── NEWSLETTER SECTION ── */}
+        <div className="px-8 md:px-12 lg:px-14 pb-14">
+          <div className="max-w-[520px]">
+            <h3 className="font-mono text-[16px] font-medium tracking-[0.12em] uppercase mb-3 text-white/90">
+              Stay in the loop.
+            </h3>
+            <p className="font-mono text-[14px] leading-[20px] font-normal text-white/40 mb-6">
+              Get product updates, new features, and practical insights about
+              hiring — delivered occasionally, never spam.
+            </p>
+
+            {/* Email Input */}
+            <div className="flex items-center bg-white rounded-full p-1.5 max-w-[460px] focus-within:ring-2 focus-within:ring-white/10 transition-all">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="flex-1 bg-transparent px-5 py-2 outline-none text-black font-sans text-[15px] placeholder:text-[#999] min-w-0"
+              />
+              <button className="bg-[#f64124] hover:bg-[#e2361a] text-white font-mono text-[12px] font-medium tracking-[0.12em] px-7 py-3 rounded-full transition-colors uppercase shrink-0 cursor-pointer">
+                Subscribe
+              </button>
+            </div>
+          </div>
         </div>
 
+        {/* ── BOTTOM LEGAL BAR ── */}
+        <div className="mx-8 md:mx-12 lg:mx-14 border-t border-white/[0.08] py-7 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <span className="font-mono text-[10px] text-white/30 tracking-[0.12em] uppercase">
+            © 2026 Fluxberry AI. All rights reserved.
+          </span>
+
+          <div className="flex flex-wrap items-center gap-6 md:gap-8">
+            <Link
+              href="#"
+              className="font-mono text-[10px] text-white/30 tracking-[0.12em] uppercase hover:text-white/50 transition-colors"
+            >
+              Terms of Service
+            </Link>
+            <Link
+              href="#"
+              className="font-mono text-[10px] text-white/30 tracking-[0.12em] uppercase hover:text-white/50 transition-colors"
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              href="#"
+              className="font-mono text-[10px] text-white/30 tracking-[0.12em] uppercase hover:text-white/50 transition-colors"
+            >
+              Cookies Policy
+            </Link>
+          </div>
+        </div>
       </footer>
     </div>
   );

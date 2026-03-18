@@ -31,7 +31,7 @@ export function FAQ() {
 
   return (
     <section className="relative w-full py-24 bg-[#FAFAFA]" id="faq">
-      <div className="max-w-[1240px] mx-auto px-4 md:px-8">
+      <div className="max-w-[1280px] mx-auto px-6 lg:px-8">
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 pb-32 border-b border-dashed border-[#ccc]">
           

@@ -1,12 +1,11 @@
 "use client";
 
-import { Panel, PanelContent } from "@/components/ui/panel";
 import { Mic, Check, Plus } from "lucide-react";
 
 export function Features() {
   return (
-    <Panel id="features">
-      <PanelContent className="py-20 md:py-24">
+    <section id="features" className="w-full bg-[#FAFAFA] pb-24 border-none">
+      <div className="max-w-[1280px] mx-auto px-6 lg:px-8">
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-start justify-between mb-12 gap-8">
           <h2 className="text-[40px] md:text-[56px] font-heading font-medium tracking-[-0.03em] leading-[1.05] text-[#111]">
@@ -339,7 +338,7 @@ export function Features() {
           </div>
 
         </div>
-      </PanelContent>
-    </Panel>
+      </div>
+    </section>
   );
 }

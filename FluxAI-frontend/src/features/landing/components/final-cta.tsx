@@ -5,7 +5,7 @@ import { ArrowUpRight } from "lucide-react";
 export function FinalCTA() {
   return (
     <section className="w-full py-24 md:py-32 bg-[#FAFAFA]" id="cta">
-      <div className="max-w-[1000px] mx-auto px-4 flex flex-col items-center text-center">
+      <div className="max-w-[1280px] mx-auto px-6 lg:px-8 flex flex-col items-center text-center">
         
         {/* HUGE TYPOGRAPHY HEADLINE */}
         <h2 className="text-[#111] text-[48px] md:text-[72px] lg:text-[84px] font-heading font-medium leading-[1.05] tracking-tight mb-6">

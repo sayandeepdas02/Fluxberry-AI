@@ -1,106 +1,120 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
-  const navItems = ["Products", "Pricing", "Testimonials"];
+  const navItems = [
+    { label: "Products", href: "/#products" },
+    { label: "Features", href: "/#features" },
+    { label: "Pricing", href: "/#pricing" },
+    { label: "Testimonials", href: "/#testimonials" },
+  ];
 
   return (
-    <header className="sticky top-6 z-50 flex justify-center w-full">
-      <div className="w-full max-w-[1200px] px-4 flex items-center justify-between">
-        
-        {/* LEFT CAPSULE */}
-        <div className="hidden md:flex items-center h-[52px] bg-[#F2F2F2] rounded-full px-7 border border-black/5 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]">
-          {/* LOGO */}
-          <Link
-            href="/"
-            className="flex items-center font-mono text-[16px] leading-[16px] font-medium tracking-[0.05em] text-black mr-6"
-          >
-            <svg width="15" height="15" viewBox="5 5 22 22" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" className="mr-[10px]">
-              <path d="M 24 8 L 14 8 A 6 6 0 0 0 8 14 L 8 18 A 6 6 0 0 0 14 24 L 24 24" />
-            </svg>
-            FLUXBERRY AI<sup className="text-[10px] -mt-3 ml-[2px]">®</sup>
+    <header className="sticky top-0 z-50 w-full pt-4 pb-3">
+      <div className="max-w-[1280px] mx-auto px-6 lg:px-8 flex items-center justify-between">
+
+        {/* ── LEFT PILL ── */}
+        <div className="hidden md:flex items-center h-[52px] bg-[#F0F0F0] rounded-full pl-5 pr-6 border border-black/[0.04] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+
+          {/* Logo */}
+          <Link href="/" className="flex items-center shrink-0 mr-5">
+            <Image
+              src="/fluxberry-logo.png"
+              alt="Fluxberry AI"
+              width={160}
+              height={28}
+              className="h-[150px] w-auto"
+              priority
+            />
           </Link>
 
-          {/* DASHED DIVIDER */}
-          <div className="h-5 w-[1px] border-l border-dashed border-gray-400" />
+          {/* Divider */}
+          <div className="w-px h-[22px] bg-black/10 mr-5" />
 
-          {/* NAV LINKS */}
-          <nav className="flex flex-1 justify-center items-center space-x-9 ml-9">
+          {/* Nav Links */}
+          <nav className="flex items-center gap-7">
             {navItems.map((item) => (
               <Link
-                key={item}
-                href={`/#${item.toLowerCase()}`}
-                className="font-sans text-[12px] font-normal uppercase tracking-[0.05em] text-black hover:opacity-70 transition"
+                key={item.label}
+                href={item.href}
+                className="font-mono text-[11.5px] font-medium uppercase tracking-[0.08em] text-black/70 hover:text-black transition-colors duration-200"
               >
-                {item}
+                {item.label}
               </Link>
             ))}
           </nav>
         </div>
 
-        {/* RIGHT CAPSULE */}
-        <div className="hidden md:flex items-center gap-1.5 bg-[#F2F2F2] rounded-full p-[4px] border border-black/5 h-[52px] shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]">
-          {/* SIGN IN */}
-          <Link href="/login" className="h-full">
-            <button className="flex items-center justify-center h-full font-mono text-[14px] leading-[20px] font-normal uppercase tracking-[0.05em] text-black border border-black rounded-full px-6 hover:bg-black/5 transition">
-              SIGN IN <span className="ml-[6px] text-[14px] font-sans">↗</span>
+        {/* ── RIGHT PILL ── */}
+        <div className="hidden md:flex items-center gap-[6px] h-[52px] bg-[#F0F0F0] rounded-full p-[5px] border border-black/[0.04] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+
+          {/* Sign In */}
+          <Link href="/login">
+            <button className="h-[42px] px-5 rounded-full bg-white border border-black/[0.08] font-mono text-[11.5px] font-medium uppercase tracking-[0.08em] text-black/80 flex items-center gap-1.5 hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
+              Sign In
+              <span className="text-[13px] leading-none">↗</span>
             </button>
           </Link>
 
-          {/* CTA */}
-          <Link href="/contact" className="h-full">
-            <button className="flex items-center justify-center h-full rounded-full bg-[#f64124] text-white font-mono text-[14px] leading-[20px] font-normal uppercase tracking-[0.05em] px-6 hover:bg-[#e2361a] transition border border-transparent shadow-sm">
-              BOOK A DEMO <span className="ml-[6px] text-[14px] font-sans">↗</span>
+          {/* Book a Demo */}
+          <Link href="/contact">
+            <button className="h-[42px] px-6 rounded-full bg-[#f64124] font-mono text-[11.5px] font-medium uppercase tracking-[0.08em] text-white flex items-center gap-1.5 hover:bg-[#e53a1e] transition-colors duration-200 cursor-pointer shadow-sm">
+              Book a Demo
+              <span className="text-[13px] leading-none">↗</span>
             </button>
           </Link>
         </div>
 
-        {/* MOBILE BUTTON */}
-        <div className="md:hidden flex items-center justify-between w-full bg-[#F2F2F2] rounded-full px-5 h-[52px] border border-black/5">
-           <Link
-            href="/"
-            className="flex items-center font-mono text-[16px] leading-[16px] font-medium tracking-wide text-black"
-          >
-            <svg width="14" height="14" viewBox="5 5 22 22" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-              <path d="M 24 8 L 14 8 A 6 6 0 0 0 8 14 L 8 18 A 6 6 0 0 0 14 24 L 24 24" />
-            </svg>
-            FLUXBERRY AI<sup className="text-[9px] -mt-2 ml-[1px]">®</sup>
+        {/* ── MOBILE ── */}
+        <div className="md:hidden flex items-center justify-between w-full">
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/fluxberry-logo.png"
+              alt="Fluxberry AI"
+              width={140}
+              height={24}
+              className="h-[20px] w-auto"
+              priority
+            />
           </Link>
           <button
             onClick={() => setIsOpen(!isOpen)}
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-[#F0F0F0] border border-black/[0.04]"
+            aria-label="Toggle menu"
           >
-            {isOpen ? <X className="w-5 h-5"/> : <Menu className="w-5 h-5" />}
+            {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
 
-      {/* MOBILE MENU */}
+      {/* ── MOBILE MENU ── */}
       {isOpen && (
-        <div className="absolute top-[70px] left-4 right-4 md:hidden rounded-2xl border border-black/10 bg-white p-4 space-y-4 shadow-lg">
+        <div className="md:hidden absolute top-[72px] left-4 right-4 bg-white rounded-2xl border border-black/[0.06] shadow-[0_12px_40px_rgba(0,0,0,0.1)] p-5 space-y-1 z-50">
           {navItems.map((item) => (
             <Link
-              key={item}
-              href={`/#${item.toLowerCase()}`}
-              className="block font-sans text-[12px] font-normal uppercase tracking-[0.05em] text-black/80"
+              key={item.label}
+              href={item.href}
+              className="block py-3 px-4 font-mono text-[12px] font-medium uppercase tracking-[0.08em] text-black/70 hover:text-black hover:bg-black/[0.02] rounded-xl transition-colors"
               onClick={() => setIsOpen(false)}
             >
-              {item}
+              {item.label}
             </Link>
           ))}
-          <div className="pt-2 space-y-2">
-            <Link href="/login" className="block w-full">
-              <button className="w-full rounded-full border border-black py-3 font-mono text-[14px] leading-[20px] font-normal uppercase tracking-[0.05em]">
-                SIGN IN <span className="ml-[2px] text-[14px] font-sans">↗</span>
+          <div className="pt-3 mt-2 border-t border-black/[0.06] space-y-2">
+            <Link href="/login" className="block" onClick={() => setIsOpen(false)}>
+              <button className="w-full h-[44px] rounded-full border border-black/10 font-mono text-[12px] font-medium uppercase tracking-[0.08em] text-black/80 hover:bg-black/[0.02] transition-colors cursor-pointer">
+                Sign In ↗
               </button>
             </Link>
-            <Link href="/contact" className="block w-full">
-              <button className="w-full h-full rounded-full bg-[#f64124] text-white py-3 font-mono text-[14px] leading-[20px] font-normal uppercase tracking-[0.05em]">
-                BOOK A DEMO <span className="ml-[2px] text-[14px] font-sans">↗</span>
+            <Link href="/contact" className="block" onClick={() => setIsOpen(false)}>
+              <button className="w-full h-[44px] rounded-full bg-[#f64124] text-white font-mono text-[12px] font-medium uppercase tracking-[0.08em] hover:bg-[#e53a1e] transition-colors cursor-pointer">
+                Book a Demo ↗
               </button>
             </Link>
           </div>

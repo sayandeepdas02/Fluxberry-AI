@@ -5,7 +5,7 @@ import { ScanFace } from "lucide-react"; // Generic fallback for logos
 export function Testimonials() {
   return (
     <section className="relative w-full py-24 bg-[#FAFAFA]" id="testimonials">
-      <div className="max-w-[1240px] mx-auto px-4 md:px-8">
+      <div className="max-w-[1280px] mx-auto px-6 lg:px-8">
         
         {/* HEADER */}
         <div className="flex flex-col lg:flex-row justify-between items-start gap-12 mb-16">

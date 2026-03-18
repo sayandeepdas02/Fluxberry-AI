@@ -12,36 +12,33 @@ import { Footer } from "@/components/shared/Footer";
 
 export default function Page() {
     return (
-        <>
+        <main className="flex min-h-screen flex-col bg-[#FAFAFA]">
             <Navbar />
-
-            <div className="mx-auto md:max-w-7xl">
-                <Hero />
+            <Hero />
                 <Separator />
 
-                <Features />
+            <Features />
                 <Separator />
 
-                <WhyChooseUs />
+            <WhyChooseUs />
                 <Separator />
 
-                <Products />
+            <Products />
                 <Separator />
 
-                <Pricing />
+            <Pricing />
                 <Separator />
 
-                <Testimonials />
+            <Testimonials />
                 <Separator />
 
-                <FAQ />
+            <FAQ />
                 <Separator />
 
-                <FinalCTA />
+            <FinalCTA />
                 <Separator />
 
-                <Footer />
-            </div>
-        </>
+            <Footer />
+        </main>
     );
 }
