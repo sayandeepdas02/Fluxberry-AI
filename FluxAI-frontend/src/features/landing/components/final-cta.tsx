@@ -1,41 +1,56 @@
 "use client";
 
-import { ArrowUpRight } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 export function FinalCTA() {
   return (
-    <section className="w-full py-24 md:py-32 bg-[#FAFAFA]" id="cta">
+    <section className="w-full py-28 md:py-36 bg-[#FAFAFA] relative" id="cta">
+      {/* Subtle top separator — dashed line */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1280px] px-6 lg:px-8">
+        <div className="border-t border-dashed border-black/[0.08]" />
+      </div>
+
       <div className="max-w-[1280px] mx-auto px-6 lg:px-8 flex flex-col items-center text-center">
-        
-        {/* HUGE TYPOGRAPHY HEADLINE */}
-        <h2 className="text-[#111] text-[48px] md:text-[72px] lg:text-[84px] font-heading font-medium leading-[1.05] tracking-tight mb-6">
+        {/* ── HEADLINE WITH INLINE ICONS ── */}
+        <h2 className="text-[#111] text-[40px] md:text-[60px] lg:text-[72px] font-sans font-medium leading-[1.1] tracking-[-0.03em] mb-6">
           Experience the{" "}
-          <span className="inline-flex align-middle mx-2 -my-2 w-14 h-14 md:w-20 md:h-20 bg-[#222730] rotate-12 rounded-[16px] md:rounded-[24px] items-center justify-center shadow-lg">
-            <svg width="60%" height="60%" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6M2.13 15.57a9 9 0 0 0 16.59-1.34L21.5 8"/><path d="M2.5 22v-6h6M21.87 8.43a9 9 0 0 0-16.59 1.34L2.5 16"/></svg>
+          <span className="inline-flex align-middle mx-1.5 w-[48px] h-[48px] md:w-[68px] md:h-[68px] lg:w-[80px] lg:h-[80px] -my-1">
+            <Image
+              src="/future-icon.png"
+              alt=""
+              width={80}
+              height={80}
+              className="w-full h-full object-cover"
+            />
           </span>{" "}
-          future of <br />
+          future of
+          <br className="hidden md:block" />{" "}
           hiring with{" "}
-          <span className="inline-flex align-middle mx-2 -my-2 w-14 h-14 md:w-20 md:h-20 bg-[#f64124] -rotate-12 rounded-[16px] md:rounded-[24px] items-center justify-center shadow-lg relative">
-             {/* Faux generic logo construction */}
-             <div className="absolute w-[45%] h-[45%] border-[3.5px] border-white rounded-[6px]" />
-             <div className="absolute w-2 h-2 bg-white rounded-sm -top-1" />
-             <div className="absolute w-2 h-2 bg-white rounded-sm -bottom-1" />
-             <div className="absolute w-2 h-2 bg-white rounded-sm -left-1" />
-             <div className="absolute w-2 h-2 bg-white rounded-sm -right-1" />
+          <span className="inline-flex align-middle mx-1.5 w-[48px] h-[48px] md:w-[68px] md:h-[68px] lg:w-[80px] lg:h-[80px] -my-1">
+            <Image
+              src="/tilted-logo.png"
+              alt=""
+              width={80}
+              height={80}
+              className="w-full h-full object-cover"
+            />
           </span>{" "}
           Fluxberry AI
         </h2>
 
-        {/* SUBHEADING TEXT */}
-        <p className="text-[#666] text-[16px] md:text-[18px] mb-12 max-w-[600px]">
+        {/* ── SUBHEADING ── */}
+        <p className="text-[#777] text-[16px] md:text-[17px] font-sans leading-[1.6] mb-12 max-w-[500px]">
           Fluxberry AI helps you hire faster, cheaper with better decisions.
         </p>
 
-        {/* CTA BUTTON */}
-        <button className="bg-[#f64124] hover:bg-[#e2361a] text-white font-mono text-[12px] md:text-[13px] font-medium tracking-widest px-10 py-4 rounded-full flex items-center gap-2 transition-colors uppercase shadow-md hover:shadow-lg">
-          GET STARTED <ArrowUpRight size={18} />
-        </button>
-
+        {/* ── CTA BUTTON ── */}
+        <Link href="/contact">
+          <button className="group bg-[#f64124] hover:bg-[#e53a1e] text-white font-mono text-[12px] font-medium tracking-[0.1em] uppercase px-9 py-4 rounded-full flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-xl hover:scale-[1.02] cursor-pointer">
+            Get Started
+            <span className="text-[14px] leading-none transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">↗</span>
+          </button>
+        </Link>
       </div>
     </section>
   );

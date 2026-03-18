@@ -18,16 +18,16 @@ function FooterColumn({
   links: FooterLink[];
 }) {
   return (
-    <div className="flex flex-col">
-      <h4 className="font-mono text-[10px] text-white/30 tracking-[0.14em] uppercase mb-5">
+    <div>
+      <h4 className="font-mono text-[10px] tracking-[0.14em] uppercase text-white/30 mb-4">
         {heading}
       </h4>
-      <ul className="flex flex-col gap-4">
+      <ul className="flex flex-col gap-3">
         {links.map((link) => (
           <li key={link.label}>
             <Link
               href={link.href}
-              className="font-sans text-[16px] leading-[22px] text-white/65 hover:text-white transition-colors duration-200"
+              className="text-[15px] text-white/65 hover:text-white transition-colors"
             >
               {link.label}
             </Link>
@@ -43,21 +43,21 @@ function FooterColumn({
    ═══════════════════════════════════════════════ */
 
 export function Footer() {
-  const companyLinks: FooterLink[] = [
+  const companyLinks = [
     { label: "Home", href: "/" },
     { label: "Product", href: "/#products" },
     { label: "Solutions", href: "/#features" },
     { label: "Contact", href: "/contact" },
   ];
 
-  const resourceLinks: FooterLink[] = [
+  const resourceLinks = [
     { label: "Pricing", href: "/pricing" },
     { label: "Testimonials", href: "/#testimonials" },
     { label: "Blogs", href: "#" },
     { label: "FAQ", href: "/#faq" },
   ];
 
-  const connectLinks: FooterLink[] = [
+  const connectLinks = [
     { label: "LinkedIn", href: "#" },
     { label: "YouTube", href: "#" },
     { label: "Instagram", href: "#" },
@@ -65,27 +65,28 @@ export function Footer() {
   ];
 
   return (
-    <div className="w-full bg-[#FAFAFA] pb-10 px-6 lg:px-8">
-      <footer className="max-w-[1280px] mx-auto bg-[#111111] text-white rounded-[28px] overflow-hidden">
-        {/* ── TOP SECTION ── */}
-        <div className="px-8 md:px-12 lg:px-14 pt-14 pb-14">
-          <div className="flex flex-col lg:flex-row justify-between gap-14 lg:gap-8">
+    <div className="w-full bg-[#FAFAFA] px-6 lg:px-8 pb-12">
+      <footer className="max-w-[1200px] mx-auto bg-[#0E0E0E] text-white rounded-[24px] overflow-hidden">
+
+        {/* ── TOP SECTION: Logo + Link Columns ── */}
+        <div className="px-8 md:px-10 lg:px-10 pt-10 pb-8">
+          <div className="flex flex-col lg:flex-row justify-between gap-10">
             {/* Logo */}
             <div className="shrink-0">
-              <Link href="/" className="inline-flex items-center gap-2.5">
+              <Link href="/" className="inline-flex items-center gap-2">
                 <Image
                   src="/fluxberry-logo-white.png"
                   alt="Fluxberry AI"
-                  width={180}
-                  height={32}
-                  className="h-[180px] w-auto"
+                  width={140}
+                  height={28}
+                  className="h-[150px] w-auto"
                   priority
                 />
               </Link>
             </div>
 
             {/* Link Columns */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-10 lg:gap-16">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-12 gap-y-8">
               <FooterColumn heading="Company" links={companyLinks} />
               <FooterColumn heading="Resources" links={resourceLinks} />
               <FooterColumn heading="Connect" links={connectLinks} />
@@ -93,54 +94,45 @@ export function Footer() {
           </div>
         </div>
 
-        {/* ── NEWSLETTER SECTION ── */}
-        <div className="px-8 md:px-12 lg:px-14 pb-14">
-          <div className="max-w-[520px]">
-            <h3 className="font-mono text-[16px] font-medium tracking-[0.12em] uppercase mb-3 text-white/90">
+        {/* ── NEWSLETTER ── */}
+        <div className="px-8 md:px-10 lg:px-10 pb-8">
+          <div className="max-w-[420px]">
+            <h3 className="font-mono text-[14px] tracking-[0.12em] uppercase text-white/90 mb-2">
               Stay in the loop.
             </h3>
-            <p className="font-mono text-[14px] leading-[20px] font-normal text-white/40 mb-6">
+            <p className="text-[13px] text-white/40 leading-[20px] mb-5">
               Get product updates, new features, and practical insights about
               hiring — delivered occasionally, never spam.
             </p>
 
-            {/* Email Input */}
-            <div className="flex items-center bg-white rounded-full p-1.5 max-w-[460px] focus-within:ring-2 focus-within:ring-white/10 transition-all">
+            {/* Input */}
+            <div className="flex items-center bg-white rounded-full p-1">
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="flex-1 bg-transparent px-5 py-2 outline-none text-black font-sans text-[15px] placeholder:text-[#999] min-w-0"
+                className="flex-1 px-4 py-2 bg-transparent text-black text-[14px] outline-none placeholder:text-[#999] min-w-0"
               />
-              <button className="bg-[#f64124] hover:bg-[#e2361a] text-white font-mono text-[12px] font-medium tracking-[0.12em] px-7 py-3 rounded-full transition-colors uppercase shrink-0 cursor-pointer">
+              <button className="bg-[#f64124] hover:bg-[#e2361a] text-white text-[11px] tracking-[0.12em] px-5 py-2.5 rounded-full uppercase transition-colors shrink-0 cursor-pointer">
                 Subscribe
               </button>
             </div>
           </div>
         </div>
 
-        {/* ── BOTTOM LEGAL BAR ── */}
-        <div className="mx-8 md:mx-12 lg:mx-14 border-t border-white/[0.08] py-7 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <span className="font-mono text-[10px] text-white/30 tracking-[0.12em] uppercase">
+        {/* ── BOTTOM BAR ── */}
+        <div className="px-8 md:px-10 lg:px-10 border-t border-white/[0.06] py-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+          <span className="text-[10px] text-white/30 tracking-[0.12em] uppercase">
             © 2026 Fluxberry AI. All rights reserved.
           </span>
 
-          <div className="flex flex-wrap items-center gap-6 md:gap-8">
-            <Link
-              href="#"
-              className="font-mono text-[10px] text-white/30 tracking-[0.12em] uppercase hover:text-white/50 transition-colors"
-            >
+          <div className="flex gap-6">
+            <Link href="#" className="text-[10px] text-white/30 tracking-[0.12em] uppercase hover:text-white/50 transition-colors">
               Terms of Service
             </Link>
-            <Link
-              href="#"
-              className="font-mono text-[10px] text-white/30 tracking-[0.12em] uppercase hover:text-white/50 transition-colors"
-            >
+            <Link href="#" className="text-[10px] text-white/30 tracking-[0.12em] uppercase hover:text-white/50 transition-colors">
               Privacy Policy
             </Link>
-            <Link
-              href="#"
-              className="font-mono text-[10px] text-white/30 tracking-[0.12em] uppercase hover:text-white/50 transition-colors"
-            >
+            <Link href="#" className="text-[10px] text-white/30 tracking-[0.12em] uppercase hover:text-white/50 transition-colors">
               Cookies Policy
             </Link>
           </div>
