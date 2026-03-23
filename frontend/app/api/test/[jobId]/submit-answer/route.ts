@@ -20,6 +20,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ jobId: 
     const question = job.questions[0];
     const isCorrect = question.correctAnswer === answer
 
+    // Safely remove any previous answer for this question
+    await Candidate.findByIdAndUpdate(candidateId, {
+        $pull: {
+            answers: { questionId }
+        }
+    });
+
     await Candidate.findByIdAndUpdate(candidateId, {
         $push: {
             answers: {

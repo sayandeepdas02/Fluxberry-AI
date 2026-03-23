@@ -17,7 +17,7 @@ export default async function JobApplicationPage({ params }: PageProps) {
 
     await connectDB();
 
-    const jobDoc = await Job.findOne({ shareableLink }).lean();
+    const jobDoc = JSON.parse(JSON.stringify(await Job.findOne({ shareableLink }).lean()));
 
     if (!jobDoc) {
         notFound()
@@ -25,9 +25,9 @@ export default async function JobApplicationPage({ params }: PageProps) {
 
     const job = {
         ...jobDoc,
-        id: jobDoc._id.toString(),
-        questions: jobDoc.questions?.map((q: any) => ({ ...q, id: q._id.toString() })) || [],
-        customFields: jobDoc.customFields?.map((f: any) => ({ ...f, id: f._id.toString() })) || []
+        id: jobDoc._id,
+        questions: jobDoc.questions?.map((q: any) => ({ ...q, id: q._id })) || [],
+        customFields: jobDoc.customFields?.map((f: any) => ({ ...f, id: f._id })) || []
     }
 
 

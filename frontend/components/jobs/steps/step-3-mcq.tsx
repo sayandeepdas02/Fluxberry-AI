@@ -8,35 +8,32 @@ import { Button } from "@/components/ui/button"
 import { Sparkles, Trash2, Plus } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
+import { QUESTION_TEMPLATES } from "@/lib/question-bank"
 
 interface StepProps {
     data: JobData
     updateData: (data: Partial<JobData>) => void
 }
 
-const QUESTION_TEMPLATES: Record<string, any[]> = {
-    "Frontend": [
-        { text: "What is the virtual DOM in React?", options: ["A direct copy of the HTML DOM", "A lightweight copy of the DOM", "A new browser engine", "A state management library"], correctAnswer: "A lightweight copy of the DOM" },
-        { text: "Which hook is used for side effects in React?", options: ["useState", "useEffect", "useContext", "useReducer"], correctAnswer: "useEffect" },
-        { text: "What does CSS 'flex: 1' represent?", options: ["flex-grow: 1", "flex-shrink: 1", "flex-basis: 0", "All of the above"], correctAnswer: "All of the above" },
-    ],
-    "Backend": [
-        { text: "What is Node.js?", options: ["A framework", "A library", "A JavaScript runtime environment", "A programming language"], correctAnswer: "A JavaScript runtime environment" },
-        { text: "Which status code indicates 'Not Found'?", options: ["200", "404", "500", "403"], correctAnswer: "404" },
-    ],
-    "Full Stack": [
-        { text: "What is REST?", options: ["Representational State Transfer", "React State Transfer", "Recursive State Transfer", "None of the above"], correctAnswer: "Representational State Transfer" },
-    ]
-}
-
 export function Step3MCQ({ data, updateData }: StepProps) {
 
     const generateQuestions = () => {
         const role = data.roleType || "Frontend" // Default fallback
-        // Use templates, or mix them if full stack
-        let newQuestions = [...QUESTION_TEMPLATES[role] || QUESTION_TEMPLATES["Frontend"]]
+        let targetBank = QUESTION_TEMPLATES[role]
+        
+        // If not found, create a mixed bank from available categories
+        if (!targetBank) {
+            targetBank = [
+                ...(QUESTION_TEMPLATES["Frontend"] || []),
+                ...(QUESTION_TEMPLATES["Backend"] || []),
+                ...(QUESTION_TEMPLATES["Data Structures & Algorithms"] || [])
+            ]
+        }
+        
+        // Shuffle and pick 5 matching questions
+        const shuffled = [...targetBank].sort(() => 0.5 - Math.random())
+        const newQuestions = shuffled.slice(0, 5)
 
-        // Add more dummy questions to reach 5 usually, but here we just sample
         updateData({ questions: [...data.questions, ...newQuestions] })
     }
 

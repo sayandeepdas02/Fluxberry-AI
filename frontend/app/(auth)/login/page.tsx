@@ -48,8 +48,10 @@ export default function LoginPage() {
         setIsLoading(false)
 
         if (!signInResult?.ok) {
-            // Handle error
-            console.error("Login failed")
+            form.setError("root", {
+                type: "manual",
+                message: "Invalid email or password"
+            })
             return
         }
 
@@ -93,6 +95,11 @@ export default function LoginPage() {
                                 </FormItem>
                             )}
                         />
+                        {form.formState.errors.root && (
+                            <div className="text-sm font-medium text-destructive text-center">
+                                {form.formState.errors.root.message}
+                            </div>
+                        )}
                         <Button className="w-full" type="submit" disabled={isLoading}>
                             {isLoading && "Signing in..."}
                             {!isLoading && "Sign In"}

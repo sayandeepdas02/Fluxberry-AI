@@ -10,18 +10,34 @@ import { Card, CardContent } from "@/components/ui/card"
 export function ApplicationForm({ job, onSuccess }: { job: any, onSuccess: (id: string) => void }) {
     const { register, handleSubmit, formState: { errors } } = useForm()
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [resumeFile, setResumeFile] = useState<File | null>(null)
 
     const onSubmit = async (data: any) => {
         setIsSubmitting(true)
+        console.log("Submitting form...", data)
         try {
-            // In a real app, upload file to S3/Cloudinary here and get URL
-            // For now, we simulate file upload
+            let parsedResume = null;
+            if (resumeFile) {
+                // Call parse-resume API
+                const fd = new FormData();
+                fd.append("file", resumeFile);
+                const parseRes = await fetch("/api/parse-resume", {
+                    method: "POST",
+                    body: fd
+                });
+                if (parseRes.ok) {
+                    const parsedData = await parseRes.json();
+                    parsedResume = parsedData.details;
+                }
+            }
+
             const formData = {
                 ...data,
                 jobId: job.id,
-                resumeUrl: "https://example.com/resume.pdf", // Mock URL
+                resumeUrl: resumeFile ? URL.createObjectURL(resumeFile) : "https://example.com/resume.pdf", 
                 currentCTC: parseFloat(data.currentCTC),
-                expectedCTC: parseFloat(data.expectedCTC)
+                expectedCTC: parseFloat(data.expectedCTC),
+                parsedResume: parsedResume
             }
 
             const res = await fetch("/api/applications", {
@@ -32,7 +48,7 @@ export function ApplicationForm({ job, onSuccess }: { job: any, onSuccess: (id: 
             if (!res.ok) throw new Error("Submission failed")
 
             const result = await res.json()
-            onSuccess(result.id)
+            onSuccess(result.id || result._id)
         } catch (error) {
             console.error(error)
             alert("Failed to submit application")
@@ -75,7 +91,7 @@ export function ApplicationForm({ job, onSuccess }: { job: any, onSuccess: (id: 
 
                 <div className="space-y-2">
                     <Label htmlFor="resume">Resume (PDF) *</Label>
-                    <Input id="resume" type="file" accept=".pdf" required />
+                    <Input id="resume" type="file" accept=".pdf" required onChange={(e) => setResumeFile(e.target.files?.[0] || null)} />
                     <p className="text-xs text-muted-foreground">Max 5MB</p>
                 </div>
 
@@ -86,7 +102,15 @@ export function ApplicationForm({ job, onSuccess }: { job: any, onSuccess: (id: 
                     </div>
                 ))}
 
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isSubmitting}
+                    onClick={() => {
+                        console.log("Button clicked, looking for errors:", Object.keys(errors));
+                        if(Object.keys(errors).length > 0) alert("Validation errors: " + Object.keys(errors).join(', '));
+                    }}
+                >
                     {isSubmitting ? "Submitting..." : job.testEnabled ? "Submit & Start Test" : "Submit Application"}
                 </Button>
             </form>

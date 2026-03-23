@@ -50,10 +50,23 @@ export default function RegisterPage() {
         setIsLoading(false)
 
         if (!response?.ok) {
-            // Handle validate error
             const text = await response.text()
-            console.error(text)
-            // Add toast here
+            let errorMessage = text || "Registration failed. Please try again."
+
+            try {
+                // If it's a Zod error array
+                const parsed = JSON.parse(text)
+                if (Array.isArray(parsed) && parsed[0]?.message) {
+                    errorMessage = parsed[0].message
+                }
+            } catch (e) {
+                // Keep as text if not JSON
+            }
+
+            form.setError("root", {
+                type: "manual",
+                message: errorMessage,
+            })
             return
         }
 
@@ -123,6 +136,11 @@ export default function RegisterPage() {
                                 </FormItem>
                             )}
                         />
+                        {form.formState.errors.root && (
+                            <div className="text-sm font-medium text-destructive text-center">
+                                {form.formState.errors.root.message}
+                            </div>
+                        )}
                         <Button className="w-full" type="submit" disabled={isLoading}>
                             {isLoading && (
                                 "Creating account..."
