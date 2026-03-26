@@ -200,16 +200,16 @@ export function CandidatesTable() {
                 </Select>
             </div>
 
-            <div className="bg-card rounded-[12px] border shadow-sm overflow-hidden mix-blend-multiply">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mt-6">
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Name</TableHead>
+                            <TableHead>Candidate</TableHead>
                             <TableHead>Applied Job</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Test Score</TableHead>
                             <TableHead>Anti-Cheat</TableHead>
-                            <TableHead>Applied Date</TableHead>
+                            <TableHead>Date</TableHead>
                             <TableHead></TableHead>
                         </TableRow>
                     </TableHeader>
@@ -218,11 +218,11 @@ export function CandidatesTable() {
                             <TableRow key={c.id}>
                                 <TableCell>
                                     <div className="flex flex-col">
-                                        <span className="font-medium">{c.name}</span>
-                                        <span className="text-xs text-muted-foreground">{c.email}</span>
+                                        <span className="font-semibold text-slate-900">{c.name}</span>
+                                        <span className="text-[13px] text-slate-500">{c.email}</span>
                                     </div>
                                 </TableCell>
-                                <TableCell>{c.job.title}</TableCell>
+                                <TableCell className="text-slate-600 font-medium">{c.job.title}</TableCell>
                                 <TableCell>
                                     <Select
                                         defaultValue={c.status || "APPLIED"}

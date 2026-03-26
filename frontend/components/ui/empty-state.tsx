@@ -12,20 +12,22 @@ export function EmptyState({ icon, title, description, action, className, ...pro
     return (
         <div
             className={cn(
-                "flex flex-col items-center justify-center text-center p-8 md:p-12 border bg-card rounded-2xl shadow-sm mx-auto max-w-[500px]",
+                "flex flex-col items-center justify-center text-center p-10 md:p-14 border-2 border-dashed border-slate-200 bg-white/50 rounded-3xl mx-auto w-full max-w-3xl",
                 className
             )}
             {...props}
         >
             {icon && (
-                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 text-slate-500 mb-6 border border-slate-100">
-                    {icon}
+                <div className="flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-tr from-orange-50 to-red-50 text-red-600 mb-6 shadow-sm ring-1 ring-red-100/50">
+                    <div className="flex items-center justify-center w-12 h-12 bg-white rounded-full shadow-sm">
+                        {icon}
+                    </div>
                 </div>
             )}
-            <h3 className="text-xl font-semibold tracking-tight text-foreground mb-2">
+            <h3 className="text-[22px] font-semibold tracking-tight text-slate-900 mb-2">
                 {title}
             </h3>
-            <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
+            <p className="text-[15px] text-slate-500 mb-8 max-w-[420px] mx-auto leading-relaxed">
                 {description}
             </p>
             {action && <div>{action}</div>}

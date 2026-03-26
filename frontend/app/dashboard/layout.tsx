@@ -2,8 +2,9 @@ import { getServerSession } from "next-auth"
 import { redirect } from "next/navigation"
 import { authOptions } from "../api/auth/[...nextauth]/route"
 import { DashboardNav } from "@/components/dashboard/dashboard-nav"
-import { UserNav } from "@/components/dashboard/user-nav"
 import Link from "next/link"
+import { TopNav } from "@/components/dashboard/top-nav"
+import Image from "next/image"
 
 export default async function DashboardLayout({
     children,
@@ -17,11 +18,14 @@ export default async function DashboardLayout({
     }
 
     return (
-        <div className="flex min-h-screen bg-background">
+        <div className="flex min-h-screen bg-[#FAFAFA]">
             {/* Sidebar Desktop */}
-            <aside className="hidden lg:flex flex-col w-[240px] fixed inset-y-0 z-50 bg-card border-r border-border">
-                <div className="h-[60px] flex items-center px-6 border-b border-border">
-                    <Link href="/dashboard" className="font-semibold text-[16px] tracking-tight">
+            <aside className="hidden lg:flex flex-col w-[260px] fixed inset-y-0 z-50 bg-[#FDFCFC] border-r border-border/40">
+                <div className="h-16 flex items-center px-6 border-b border-border/40">
+                    <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-[16px] tracking-tight">
+                        <div className="h-6 w-6 rounded bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+                            <span className="text-white text-xs font-bold leading-none">AI</span>
+                        </div>
                         Interview AI
                     </Link>
                 </div>
@@ -31,21 +35,9 @@ export default async function DashboardLayout({
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 lg:pl-[240px] flex flex-col min-h-screen">
-                {/* TopNav */}
-                <header className="h-[60px] bg-card border-b border-border flex items-center justify-between px-6 sticky top-0 z-40">
-                    <div className="lg:hidden flex items-center">
-                        <Link href="/dashboard" className="font-semibold text-lg tracking-tight">
-                            Interview AI
-                        </Link>
-                    </div>
-                    <div className="hidden lg:block"></div>
-                    <div className="flex flex-1 items-center justify-end space-x-4">
-                        <UserNav />
-                    </div>
-                </header>
-
-                <div className="flex-1 h-full w-full">
+            <main className="flex-1 lg:pl-[260px] flex flex-col min-h-screen">
+                <TopNav />
+                <div className="flex-1 w-full max-w-7xl mx-auto p-6 md:p-8 lg:p-10">
                     {children}
                 </div>
             </main>

@@ -155,7 +155,7 @@
   [role="menu"] {
     border-radius: var(--radius-xl);
     border: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 4px 12px rgba(0, 0, 0, 0.04);
   }
 
   .dark .card,
@@ -163,7 +163,7 @@
   .dark [role="dialog"],
   .dark [role="menu"] {
     border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   }
 
   button,

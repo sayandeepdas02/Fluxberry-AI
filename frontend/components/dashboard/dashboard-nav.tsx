@@ -33,10 +33,10 @@ export function DashboardNav() {
     ]
 
     return (
-        <nav className="grid items-start gap-3">
-            <div className="px-2 py-2">
+        <nav className="grid items-start gap-2">
+            <div className="px-2 py-3 mb-2">
                 <Link href="/dashboard/jobs/new">
-                    <Button className="w-full justify-start" size="sm">
+                    <Button variant="gradient" className="w-full justify-start shadow-md hover:shadow-lg transition-all" size="default">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Create Job
                     </Button>
@@ -44,21 +44,23 @@ export function DashboardNav() {
             </div>
             {items.map((item, index) => {
                 const Icon = item.icon
+                const isActive = pathname === item.href
                 return (
                     <Link
                         key={index}
                         href={item.href}
+                        className="px-2"
                     >
                         <span
                             className={cn(
-                                "group flex items-center rounded-lg px-4 py-[16px] text-[14px] font-medium transition-colors hover:bg-slate-50 hover:text-slate-900 border-l-[3px] border-transparent",
-                                pathname === item.href
-                                    ? "bg-primary/5 text-primary border-primary font-semibold"
-                                    : "text-muted-foreground"
+                                "group flex items-center rounded-xl px-4 py-3 text-[14px] font-medium transition-all duration-200",
+                                isActive
+                                    ? "bg-red-50 text-red-700 shadow-sm ring-1 ring-red-100"
+                                    : "text-slate-500 hover:bg-slate-100/80 hover:text-slate-900"
                             )}
                         >
-                            <Icon className={cn("mr-3 h-[18px] w-[18px]", pathname === item.href ? "text-primary" : "text-muted-foreground group-hover:text-slate-900")} />
-                            <span>{item.title}</span>
+                            <Icon className={cn("mr-3 h-[18px] w-[18px] transition-colors", isActive ? "text-red-600" : "text-slate-400 group-hover:text-slate-600")} />
+                            {item.title}
                         </span>
                     </Link>
                 )
