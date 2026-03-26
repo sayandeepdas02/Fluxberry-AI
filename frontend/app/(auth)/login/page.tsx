@@ -1,120 +1,43 @@
-"use client"
+import { Navbar } from "@/components/shared/Navbar";
+import { SignInForm } from "@/features/auth/components/signin-form";
+import { Footer } from "@/components/shared/Footer";
+import { FinalCTA } from "@/features/landing/components/final-cta";
+import { Separator } from "@/components/ui/separator";
+import Image from "next/image";
 
-import { useState } from "react"
-import Link from "next/link"
-import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-
-import { Button } from "@/components/ui/button"
-import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { userAuthSchema } from "@/lib/validations/auth"
-
-type LoginFormValues = z.infer<typeof userAuthSchema>
-
-export default function LoginPage() {
-    const router = useRouter()
-    const [isLoading, setIsLoading] = useState(false)
-
-    const form = useForm<LoginFormValues>({
-        resolver: zodResolver(userAuthSchema),
-        defaultValues: {
-            email: "",
-            password: "",
-        },
-    })
-
-    async function onSubmit(data: LoginFormValues) {
-        setIsLoading(true)
-
-        const signInResult = await signIn("credentials", {
-            email: data.email.toLowerCase(),
-            password: data.password,
-            redirect: false,
-            callbackUrl: "/dashboard",
-        })
-
-        setIsLoading(false)
-
-        if (!signInResult?.ok) {
-            form.setError("root", {
-                type: "manual",
-                message: "Invalid email or password"
-            })
-            return
-        }
-
-        router.push("/dashboard")
-    }
-
+export default function SignInPage() {
     return (
-        <Card>
-            <CardHeader className="space-y-1">
-                <CardTitle className="text-2xl">Sign In</CardTitle>
-                <CardDescription>
-                    Enter your email and password to sign in
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4">
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <FormField
-                            control={form.control}
-                            name="email"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Email</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="m@example.com" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
+        <main className="flex min-h-screen flex-col bg-[#FAFAFA]">
+            <Navbar />
+
+            <section className="w-full pt-6 md:pt-10 pb-0">
+                <div className="max-w-[1280px] mx-auto px-6 lg:px-8">
+                    <div className="relative w-full rounded-[28px] overflow-hidden min-h-[600px] lg:min-h-[640px] flex items-center justify-center p-6 md:p-10 lg:p-12 mb-20">
+                        {/* Background image */}
+                        <Image
+                            src="/demo-bg.png"
+                            alt=""
+                            fill
+                            className="object-cover"
+                            priority
+                            quality={90}
                         />
-                        <FormField
-                            control={form.control}
-                            name="password"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Password</FormLabel>
-                                    <FormControl>
-                                        <Input type="password" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        {form.formState.errors.root && (
-                            <div className="text-sm font-medium text-destructive text-center">
-                                {form.formState.errors.root.message}
-                            </div>
-                        )}
-                        <Button className="w-full" type="submit" disabled={isLoading}>
-                            {isLoading && "Signing in..."}
-                            {!isLoading && "Sign In"}
-                        </Button>
-                    </form>
-                </Form>
-            </CardContent>
-            <CardFooter>
-                <div className="text-sm text-gray-500 text-center w-full">
-                    Don&apos;t have an account?{" "}
-                    <Link href="/register" className="underline underline-offset-4 hover:text-primary">
-                        Sign Up
-                    </Link>
+
+                        {/* Dark overlay for readability */}
+                        <div className="absolute inset-0 bg-black/20" />
+
+                        {/* Foreground Content */}
+                        <div className="relative z-10 w-full max-w-[500px]">
+                            <SignInForm />
+                        </div>
+                    </div>
                 </div>
-            </CardFooter>
-        </Card>
-    )
+            </section>
+
+            <Separator />
+            <FinalCTA />
+            <Separator />
+            <Footer />
+        </main>
+    );
 }
