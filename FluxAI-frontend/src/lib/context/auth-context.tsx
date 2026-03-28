@@ -11,6 +11,7 @@ interface AuthContextType {
     isLoading: boolean
     isAuthenticated: boolean
     login: (input: LoginInput) => Promise<{ success: boolean; user?: User; error?: string }>
+    googleLogin: (credential: string) => Promise<{ success: boolean; user?: User; error?: string }>
     signup: (input: SignupInput) => Promise<{ success: boolean; error?: string }>
     logout: () => void
     refreshUser: () => Promise<void>
@@ -23,8 +24,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [isLoading, setIsLoading] = useState(true)
     const router = useRouter()
 
-    const logout = useCallback(() => {
-        authApi.logout()
+    const logout = useCallback(async () => {
+        await authApi.logout()
         setUser(null)
         router.push('/signin')
     }, [router])
@@ -75,6 +76,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return () => window.removeEventListener('auth:unauthorized', handleUnauthorized)
     }, [logout])
 
+    const googleLogin = async (credential: string) => {
+        const response = await authApi.googleLogin(credential)
+
+        if (response.success && response.data) {
+            setUser(response.data.user)
+            return { success: true, user: response.data.user }
+        }
+
+        return {
+            success: false,
+            error: response.error?.message || 'Google Login failed'
+        }
+    }
+
     const login = async (input: LoginInput) => {
         const response = await authApi.login(input)
 
@@ -110,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 isLoading,
                 isAuthenticated: !!user,
                 login,
+                googleLogin,
                 signup,
                 logout,
                 refreshUser,

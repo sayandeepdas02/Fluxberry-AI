@@ -49,7 +49,7 @@ export function JobCard({ job, onPublish, onClose, onDelete, onEdit, onClick }: 
 
     return (
         <div
-            className="group border border-edge rounded-lg p-5 bg-background hover:bg-muted/10 transition-all cursor-pointer"
+            className="group border border-line rounded-none p-5 bg-background hover:bg-muted/10 hover:border-foreground/30 transition-all cursor-pointer"
             onClick={() => onClick?.(job._id)}
         >
             <div className="flex items-start justify-between gap-4">
@@ -78,7 +78,7 @@ export function JobCard({ job, onPublish, onClose, onDelete, onEdit, onClick }: 
                             {job.requiredSkills.slice(0, 4).map((skill, i) => (
                                 <span
                                     key={i}
-                                    className="text-[10px] px-2 py-0.5 rounded-full bg-muted/40 text-muted-foreground border border-edge"
+                                    className="text-[10px] px-2 py-0.5 rounded-none bg-muted/40 text-muted-foreground border border-line"
                                 >
                                     {skill}
                                 </span>
@@ -112,7 +112,7 @@ export function JobCard({ job, onPublish, onClose, onDelete, onEdit, onClick }: 
                     </button>
 
                     {menuOpen && (
-                        <div className="absolute right-0 top-8 z-50 w-48 bg-background border border-edge rounded-lg shadow-lg py-1 animate-in fade-in-0 zoom-in-95">
+                        <div className="absolute right-0 top-8 z-50 w-48 bg-background border border-line rounded-none shadow-none py-1 animate-in fade-in-0 zoom-in-95">
                             <button
                                 className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-muted/50 transition-colors"
                                 onClick={(e) => {
@@ -178,7 +178,7 @@ export function JobCard({ job, onPublish, onClose, onDelete, onEdit, onClick }: 
                                 </>
                             )}
 
-                            <div className="border-t border-edge my-1" />
+                            <div className="border-t border-line my-1" />
 
                             <button
                                 className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-500 hover:bg-red-500/5 transition-colors"

@@ -309,13 +309,8 @@ function MockDashboard() {
       <div className="w-[185px] shrink-0 bg-[#FDF8F7] border-r border-[#F5E8E5] p-4 flex flex-col">
         {/* Logo */}
         <div className="flex items-center gap-2.5 mb-7 px-1">
-          <div className="w-5 h-5 rounded-md bg-gradient-to-br from-[#f64124] to-[#ff7b5c] flex items-center justify-center">
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <circle cx="3" cy="3" r="1.5" fill="white" />
-              <circle cx="7" cy="3" r="1.5" fill="white" />
-              <circle cx="3" cy="7" r="1.5" fill="white" />
-              <circle cx="7" cy="7" r="1.5" fill="white" />
-            </svg>
+          <div className="w-5 h-5 rounded-md bg-[#6366B8] flex items-center justify-center">
+            <svg width="10" height="10" viewBox="0 0 32 32" fill="none"><path d="M 22 8 L 14 8 A 6 6 0 0 0 8 14 L 8 18 A 6 6 0 0 0 14 24 L 22 24" stroke="white" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
           </div>
           <span className="font-semibold text-[13px] text-[#222]">
             Fluxberry AI

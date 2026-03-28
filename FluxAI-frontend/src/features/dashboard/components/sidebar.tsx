@@ -79,7 +79,7 @@ export function Sidebar() {
     ];
 
     return (
-        <div className="w-64 h-screen border-r border-edge bg-background flex flex-col sticky top-0">
+        <div className="w-64 h-screen border-r border-line bg-background flex flex-col sticky top-0">
             {/* Header: Workspace with Dropdown */}
             <div className="p-4 pb-2 relative" ref={dropdownRef}>
                 <div
@@ -87,7 +87,7 @@ export function Sidebar() {
                     className="flex items-center gap-3 mb-1 cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors"
                 >
                     {/* Workspace avatar */}
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                    <div className="w-8 h-8 rounded-none border border-line bg-primary shadow-none flex items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
                         {getInitials(workspaceName)}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -107,7 +107,7 @@ export function Sidebar() {
                     <div className="absolute left-2 right-2 top-[calc(100%-4px)] mt-1 bg-background border border-border rounded-xl shadow-xl z-50 overflow-hidden">
                         {/* Profile header */}
                         <div className="p-3 flex items-center gap-3 border-b border-border">
-                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
+                            <div className="w-10 h-10 rounded-none border border-line bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold shrink-0">
                                 {getInitials(userName)}
                             </div>
                             <div className="min-w-0">
@@ -147,7 +147,7 @@ export function Sidebar() {
                                     className="w-full flex items-center gap-2.5 px-2 py-2 text-sm rounded-lg hover:bg-muted transition-colors"
                                     onClick={() => setIsDropdownOpen(false)}
                                 >
-                                    <div className="w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                                    <div className="w-6 h-6 rounded-none border border-line bg-primary flex items-center justify-center text-primary-foreground text-[10px] font-bold shrink-0">
                                         {ws.initials}
                                     </div>
                                     <span className="flex-1 text-left truncate font-medium text-sm">{ws.name}</span>
@@ -221,7 +221,7 @@ export function Sidebar() {
                                     className={cn(
                                         "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
                                         isActive("/dashboard") && !pathname?.startsWith("/dashboard/onboarding") && !pathname?.startsWith("/dashboard/analytics") && !pathname?.startsWith("/dashboard/assessments")
-                                            ? "text-foreground bg-muted"
+                                            ? "text-primary bg-primary/10 font-semibold"
                                             : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                     )}
                                 >
@@ -233,7 +233,7 @@ export function Sidebar() {
                                     className={cn(
                                         "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
                                         isActive("/dashboard/manage-jobs")
-                                            ? "text-foreground bg-muted"
+                                            ? "text-primary bg-primary/10 font-semibold"
                                             : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                     )}
                                 >
@@ -245,7 +245,7 @@ export function Sidebar() {
                                     className={cn(
                                         "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
                                         isActive("/dashboard/candidate-pool")
-                                            ? "text-foreground bg-muted"
+                                            ? "text-primary bg-primary/10 font-semibold"
                                             : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                     )}
                                 >
@@ -267,7 +267,7 @@ export function Sidebar() {
                                     className={cn(
                                         "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
                                         isActive("/dashboard/ats-screening")
-                                            ? "text-foreground bg-muted"
+                                            ? "text-primary bg-primary/10 font-semibold"
                                             : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                     )}
                                 >
@@ -289,7 +289,7 @@ export function Sidebar() {
                                     className={cn(
                                         "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
                                         isActive("/dashboard/analytics")
-                                            ? "text-foreground bg-muted"
+                                            ? "text-primary bg-primary/10 font-semibold"
                                             : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                     )}
                                 >
@@ -300,7 +300,7 @@ export function Sidebar() {
                                     className={cn(
                                         "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
                                         isActive("/dashboard/assessments")
-                                            ? "text-foreground bg-muted"
+                                            ? "text-primary bg-primary/10 font-semibold"
                                             : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                     )}
                                 >
@@ -311,7 +311,7 @@ export function Sidebar() {
                                     className={cn(
                                         "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
                                         isActive("/dashboard/question-bank")
-                                            ? "text-foreground bg-muted"
+                                            ? "text-primary bg-primary/10 font-semibold"
                                             : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                     )}
                                 >
@@ -334,7 +334,7 @@ export function Sidebar() {
                                     className={cn(
                                         "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
                                         isActive("/dashboard/onboarding/offers")
-                                            ? "text-foreground bg-muted"
+                                            ? "text-primary bg-primary/10 font-semibold"
                                             : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                     )}
                                 >
@@ -345,7 +345,7 @@ export function Sidebar() {
                                     className={cn(
                                         "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
                                         isActive("/dashboard/onboarding/active")
-                                            ? "text-foreground bg-muted"
+                                            ? "text-primary bg-primary/10 font-semibold"
                                             : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                     )}
                                 >
@@ -356,7 +356,7 @@ export function Sidebar() {
                                     className={cn(
                                         "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
                                         isActive("/dashboard/onboarding/completed")
-                                            ? "text-foreground bg-muted"
+                                            ? "text-primary bg-primary/10 font-semibold"
                                             : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                     )}
                                 >
@@ -367,7 +367,7 @@ export function Sidebar() {
                                     className={cn(
                                         "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
                                         isActive("/dashboard/onboarding/templates")
-                                            ? "text-foreground bg-muted"
+                                            ? "text-primary bg-primary/10 font-semibold"
                                             : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                     )}
                                 >
@@ -380,16 +380,14 @@ export function Sidebar() {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-edge space-y-4">
+            <div className="p-4 border-t border-line space-y-4">
                 <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                     <ExternalLink className="w-4 h-4" />
                     <span>Public View</span>
                 </button>
 
                 <div className="flex items-center gap-2 px-2">
-                    <svg width="20" height="20" viewBox="5 5 22 22" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M 24 8 L 14 8 A 6 6 0 0 0 8 14 L 8 18 A 6 6 0 0 0 14 24 L 24 24" />
-                    </svg>
+                    <img src="/favicon.png" alt="Fluxberry AI" className="w-5 h-5 rounded-[4px]" />
                     <span className="font-semibold text-sm">Fluxberry AI</span>
                 </div>
             </div>

@@ -1,25 +1,25 @@
-import { Inter, IBM_Plex_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 
-export const fontSans = Inter({
-    weight: ["400", "500", "600", "700"],
+export const fontSans = Geist({
+    weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
     style: ["normal"],
     display: "swap",
     subsets: ["latin"],
-    variable: "--font-inter",
+    variable: "--font-geist",
 });
 
-export const fontHeading = Inter({
-    weight: ["400", "500", "600", "700"],
+export const fontHeading = Geist({
+    weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
     style: ["normal"],
     display: "swap",
     subsets: ["latin"],
-    variable: "--font-inter-display",
+    variable: "--font-geist-display",
 });
 
-export const fontMono = IBM_Plex_Mono({
-    weight: ["400", "500", "600", "700"],
-    style: ["normal", "italic"],
+export const fontMono = Geist_Mono({
+    weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+    style: ["normal"],
     display: "swap",
     subsets: ["latin"],
-    variable: "--font-ibm-plex-mono",
+    variable: "--font-geist-mono",
 });

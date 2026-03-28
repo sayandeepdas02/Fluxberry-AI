@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useOnboarding } from "@/features/onboarding/hooks/onboarding-context";
 import { onboardingApi } from "@/lib/api/onboarding";
@@ -66,61 +68,53 @@ export function OnboardingStep3() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4">
-            <div className="w-full max-w-2xl">
+        <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+            <div className="w-full max-w-xl border border-line p-8 md:p-12">
                 {/* Header */}
-                <div className="mb-12">
-                    <h1 className="text-4xl font-bold mb-3">Create your workspace</h1>
-                    <p className="text-lg text-muted-foreground">
+                <div className="mb-10 pb-8 border-b border-line">
+                    <h1 className="text-3xl font-semibold mb-2 tracking-tight">Create your workspace</h1>
+                    <p className="text-muted-foreground">
                         This is where all your hiring activity will live.
                     </p>
                 </div>
 
                 {/* Error Message */}
                 {error && (
-                    <div className="mb-6 p-3 rounded-md bg-destructive/10 text-destructive text-sm">
+                    <div className="mb-6 p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm">
                         {error}
                     </div>
                 )}
 
                 {/* Workspace Card */}
-                <div className="border border-border rounded-lg p-8 mb-12 bg-muted/20">
-                    <div className="flex items-start gap-6">
+                <div className="border border-line p-8 mb-8 bg-muted/20">
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                         {/* Logo Placeholder */}
                         <div className="flex-shrink-0">
                             <div
                                 className={cn(
-                                    "w-20 h-20 rounded-lg flex items-center justify-center",
-                                    "bg-foreground text-background text-2xl font-bold"
+                                    "w-20 h-20 flex items-center justify-center",
+                                    "bg-foreground text-background text-2xl font-semibold tracking-tighter"
                                 )}
                             >
                                 {workspaceName ? getInitials(workspaceName) : "?"}
                             </div>
-                            <p className="text-xs text-muted-foreground mt-2 text-center">
-                                Auto-generated
+                            <p className="text-[10px] text-muted-foreground mt-2 text-center uppercase tracking-widest font-mono">
+                                System
                             </p>
                         </div>
 
                         {/* Workspace Name Input */}
-                        <div className="flex-1">
-                            <label htmlFor="workspaceName" className="block text-sm font-medium mb-2">
-                                Workspace Name
-                            </label>
-                            <input
-                                type="text"
+                        <div className="flex-1 w-full space-y-3">
+                            <Label htmlFor="workspaceName">Workspace Name</Label>
+                            <Input
                                 id="workspaceName"
                                 name="workspaceName"
                                 value={workspaceName}
                                 onChange={(e) => setWorkspaceName(e.target.value)}
-                                className={cn(
-                                    "w-full px-4 py-2.5 border rounded-md text-sm",
-                                    "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
-                                    "transition-colors border-border hover:border-foreground/50"
-                                )}
                                 placeholder="Acme Corp"
                                 disabled={isLoading}
                             />
-                            <p className="text-xs text-muted-foreground mt-2">
+                            <p className="text-xs text-muted-foreground">
                                 Usually your company or team name
                             </p>
                         </div>
@@ -128,21 +122,21 @@ export function OnboardingStep3() {
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <Button onClick={handleBack} variant="outline" size="lg" disabled={isLoading}>
-                            Back
-                        </Button>
-                        <p className="text-sm text-muted-foreground">Step 3 of 3</p>
-                    </div>
-                    <Button
-                        onClick={handleCreateWorkspace}
-                        disabled={!workspaceName.trim() || isLoading}
-                        size="lg"
-                        className="min-w-40"
-                    >
-                        {isLoading ? "Creating..." : "Create Workspace"}
+                <div className="mt-12 pt-8 border-t border-line flex items-center justify-between">
+                    <Button onClick={handleBack} variant="outline" className="px-6" disabled={isLoading}>
+                        Back
                     </Button>
+                    
+                    <div className="flex items-center gap-6">
+                        <p className="text-xs text-muted-foreground font-mono uppercase tracking-widest">Step 3 of 3</p>
+                        <Button
+                            onClick={handleCreateWorkspace}
+                            disabled={!workspaceName.trim() || isLoading}
+                            className="px-8 min-w-[160px]"
+                        >
+                            {isLoading ? "Creating..." : "Create Workspace"}
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

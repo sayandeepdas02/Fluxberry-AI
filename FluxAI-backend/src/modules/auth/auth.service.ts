@@ -1,6 +1,7 @@
 
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { OAuth2Client } from 'google-auth-library'
 import {
     User,
     Organization,
@@ -12,7 +13,11 @@ import {
 import { SignupInput, LoginInput, AuthResponse, AuthUser, AuthTokens, JwtPayload } from './auth.types.js'
 
 const SALT_ROUNDS = 10
-const JWT_EXPIRES_IN_SECONDS = 7 * 24 * 60 * 60 // 7 days
+const ACCESS_EXPIRES_IN = 15 * 60 // 15 minutes
+const REFRESH_EXPIRES_IN = 7 * 24 * 60 * 60 // 7 days
+
+const googleClient = new OAuth2Client()
+
 
 export class AuthService {
     /**
@@ -148,20 +153,123 @@ export class AuthService {
         // For now, this satisfies the basic GDPR requirement of removing the user record.
     }
 
+    // Google OAuth Login / Signup
+    async googleAuth({ credential }: { credential: string }): Promise<AuthResponse> {
+        const clientId = process.env.GOOGLE_CLIENT_ID
+        if (!clientId) throw new Error('GOOGLE_CLIENT_ID not configured')
+
+        const ticket = await googleClient.verifyIdToken({
+            idToken: credential,
+            audience: clientId,
+        })
+        const payload = ticket.getPayload()
+        if (!payload || !payload.email || !payload.email_verified) {
+            const error = new Error('Invalid Google Token format or unverified email') as Error & { statusCode: number; code: string }
+            error.statusCode = 401
+            error.code = 'INVALID_CREDENTIALS'
+            throw error
+        }
+
+        let user = await User.findOne({ email: payload.email })
+        
+        // If not exists, register the user implicitly with an auto-generated Org
+        if (!user) {
+            const organizationName = `${payload.given_name || 'User'}'s Organization`
+            const slug = await this.generateUniqueSlug(organizationName)
+            
+            const organization = await Organization.create({
+                name: organizationName,
+                slug,
+            })
+            
+            user = await User.create({
+                email: payload.email,
+                firstName: payload.given_name || 'User',
+                lastName: payload.family_name || 'Unknown',
+                authProvider: 'google',
+                authProviderId: payload.sub,
+            })
+            
+            await OrganizationMember.create({
+                userId: user._id,
+                organizationId: organization._id,
+                role: 'OWNER',
+            })
+        } else if (!user.authProviderId && user.authProvider === 'email') {
+            // Upgrade existing email user to google linked
+            user.authProvider = 'google'
+            user.authProviderId = payload.sub
+            await user.save()
+        }
+
+        const membership = await OrganizationMember.findOne({ userId: user._id }).populate('organizationId')
+        const organization = membership?.organizationId as unknown as IOrganization | null
+        const role = membership?.role ?? null
+
+        const tokens = this.generateTokens({
+            id: user._id.toString(),
+            email: user.email,
+            organizationId: organization?._id?.toString() ?? null,
+            role,
+        })
+
+        return {
+            user: this.formatUser(user, organization, role),
+            tokens,
+        }
+    }
+
+    // Refresh Token Flow
+    async refreshToken(token: string): Promise<AuthTokens> {
+        const secret = process.env.JWT_SECRET
+        if (!secret) throw new Error('JWT_SECRET not configured')
+
+        try {
+            const payload = jwt.verify(token, secret) as JwtPayload
+            if (payload.type !== 'refresh') {
+                throw new Error('Invalid token type')
+            }
+
+            const user = await User.findById(payload.id)
+            if (!user) {
+                const err = new Error('User not found') as Error & { statusCode: number; code: string }
+                err.statusCode = 401; err.code = 'TOKEN_EXPIRED'; throw err
+            }
+
+            const membership = await OrganizationMember.findOne({ userId: user._id }).populate('organizationId')
+            const organization = membership?.organizationId as unknown as IOrganization | null
+            const role = membership?.role ?? null
+
+            return this.generateTokens({
+                id: user._id.toString(),
+                email: user.email,
+                organizationId: organization?._id?.toString() ?? null,
+                role: role,
+            })
+        } catch (e: any) {
+            const err = new Error(e.message || 'Invalid refresh token') as Error & { statusCode: number; code: string }
+            err.statusCode = 401
+            err.code = 'TOKEN_EXPIRED'
+            throw err
+        }
+    }
+
     /**
      * Generate JWT tokens
      */
-    private generateTokens(payload: Omit<JwtPayload, 'iat' | 'exp'>): AuthTokens {
+    private generateTokens(payload: Omit<JwtPayload, 'iat' | 'exp' | 'type'>): AuthTokens {
         const secret = process.env.JWT_SECRET
         if (!secret) {
             throw new Error('JWT_SECRET not configured')
         }
 
-        const accessToken = jwt.sign(payload, secret, { expiresIn: JWT_EXPIRES_IN_SECONDS })
+        const accessToken = jwt.sign({ ...payload, type: 'access' }, secret, { expiresIn: ACCESS_EXPIRES_IN })
+        const refreshToken = jwt.sign({ ...payload, type: 'refresh' }, secret, { expiresIn: REFRESH_EXPIRES_IN })
 
         return {
             accessToken,
-            expiresIn: JWT_EXPIRES_IN_SECONDS,
+            refreshToken,
+            expiresIn: ACCESS_EXPIRES_IN,
         }
     }
 

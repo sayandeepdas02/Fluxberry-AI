@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { PremiumEmptyState } from "@/components/ui/empty-state"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -51,13 +52,13 @@ export function AtsCandidateTable({ jobId, candidates, isLoading, onOpenBreakdow
     }
 
     const getDecisionBadge = (decision: string, inProgress: boolean) => {
-        if (inProgress) return <Badge variant="outline" className="animate-pulse">Screening...</Badge>
+        if (inProgress) return <Badge variant="outline" className="animate-pulse rounded-full px-3 py-1 font-medium">Screening...</Badge>
         switch (decision) {
-            case 'SHORTLISTED': return <Badge className="bg-green-500 hover:bg-green-600">Shortlisted</Badge>
-            case 'REVIEW': return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border-yellow-200">Needs Review</Badge>
-            case 'REJECTED': return <Badge variant="destructive">Rejected</Badge>
-            case 'ERROR': return <Badge variant="destructive">Error</Badge>
-            default: return <Badge variant="outline">Pending</Badge>
+            case 'SHORTLISTED': return <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 shadow-none border border-emerald-500/20 rounded-full px-3 py-1 font-semibold">Shortlisted</Badge>
+            case 'REVIEW': return <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 shadow-none border border-amber-500/20 rounded-full px-3 py-1 font-semibold">Needs Review</Badge>
+            case 'REJECTED': return <Badge variant="destructive" className="bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 shadow-none border border-rose-500/20 rounded-full px-3 py-1 font-semibold">Rejected</Badge>
+            case 'ERROR': return <Badge variant="destructive" className="rounded-full px-3 py-1 font-semibold">Error</Badge>
+            default: return <Badge variant="outline" className="rounded-full px-3 py-1 font-medium">Pending</Badge>
         }
     }
 
@@ -66,11 +67,18 @@ export function AtsCandidateTable({ jobId, candidates, isLoading, onOpenBreakdow
     }
 
     if (candidates.length === 0) {
-        return <div className="p-8 text-center text-muted-foreground border rounded-md">No candidates have applied yet.</div>
+        return (
+            <PremiumEmptyState 
+                title="No screening data"
+                description="Waiting for candidates to apply. AI will automatically evaluate resumes based on your configured rubric."
+                actionLabel="Analyze Resumes with AI"
+                onAction={() => {}}
+            />
+        );
     }
 
     return (
-        <div className="rounded-md border bg-card">
+        <div className="rounded-none border border-line bg-background overflow-hidden shadow-none">
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -85,8 +93,15 @@ export function AtsCandidateTable({ jobId, candidates, isLoading, onOpenBreakdow
                     {candidates.map((candidate) => {
                         const isPending = candidate.status === 'PENDING'
                         return (
-                            <TableRow key={candidate.id}>
-                                <TableCell className="font-medium">{candidate.name}</TableCell>
+                            <TableRow key={candidate.id} className="hover:bg-muted/30 group transition-colors">
+                                <TableCell>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-none border border-primary/20 bg-primary/10 flex items-center justify-center text-primary text-xs font-bold shrink-0">
+                                            {candidate.name ? candidate.name[0] : 'U'}
+                                        </div>
+                                        <span className="font-semibold text-foreground">{candidate.name}</span>
+                                    </div>
+                                </TableCell>
                                 <TableCell>
                                     <span className={isPending ? "text-muted-foreground" : getScoreColorClass(candidate.score)}>
                                         {isPending ? '-' : candidate.score}

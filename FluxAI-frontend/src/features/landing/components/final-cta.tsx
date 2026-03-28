@@ -29,11 +29,11 @@ export function FinalCTA() {
           hiring with{" "}
           <span className="inline-flex align-middle mx-1.5 w-[48px] h-[48px] md:w-[68px] md:h-[68px] lg:w-[80px] lg:h-[80px] -my-1">
             <Image
-              src="/tilted-logo.png"
+              src="/favicon.png"
               alt=""
               width={80}
               height={80}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover rounded-[12px]"
             />
           </span>{" "}
           Fluxberry AI

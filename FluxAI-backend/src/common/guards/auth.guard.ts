@@ -43,6 +43,15 @@ export function authGuard(req: AuthenticatedRequest, res: Response, next: NextFu
             email: string
             organizationId: string | null
             role: string | null
+            type: string
+        }
+
+        if (payload.type !== 'access') {
+            res.status(401).json({
+                success: false,
+                error: { code: 'UNAUTHORIZED', message: 'Invalid token type' },
+            })
+            return
         }
 
         req.user = {
@@ -53,10 +62,11 @@ export function authGuard(req: AuthenticatedRequest, res: Response, next: NextFu
         }
 
         next()
-    } catch {
+    } catch (err: any) {
+        const isExpired = err.name === 'TokenExpiredError'
         res.status(401).json({
             success: false,
-            error: { code: 'UNAUTHORIZED', message: 'Invalid or expired token' },
+            error: { code: isExpired ? 'TOKEN_EXPIRED' : 'UNAUTHORIZED', message: isExpired ? 'Token expired' : 'Invalid token' },
         })
     }
 }

@@ -23,25 +23,34 @@ export function clearStoredToken(): void {
 // API Client
 class ApiClient {
     private baseUrl: string
+    private isRefreshing = false
+    private failedQueue: { resolve: (token: string) => void; reject: (error: any) => void; }[] = []
 
     constructor(baseUrl: string) {
         this.baseUrl = baseUrl
     }
 
+    private processQueue(error: any, token: string | null = null) {
+        this.failedQueue.forEach(prom => {
+            if (error) prom.reject(error)
+            else prom.resolve(token as string)
+        })
+        this.failedQueue = []
+    }
+
     private async request<T>(
         endpoint: string,
-        options: RequestInit = {}
+        options: RequestInit = {},
+        tokenOverride?: string
     ): Promise<ApiResponse<T>> {
-        const token = getStoredToken()
+        const token = tokenOverride !== undefined ? tokenOverride : getStoredToken()
 
         const headers: HeadersInit = {
             'Content-Type': 'application/json',
             ...options.headers,
         }
 
-        // If body is FormData, remove Content-Type to let browser set boundary
         if (options.body instanceof FormData) {
-            // Check if headers is an object or Headers instance
             if (headers && typeof headers === 'object' && !('delete' in headers)) {
                 delete (headers as Record<string, string>)['Content-Type'];
             }
@@ -52,24 +61,74 @@ class ApiClient {
         }
 
         try {
-            const response = await fetch(`${this.baseUrl}${endpoint}`, {
+            let response = await fetch(`${this.baseUrl}${endpoint}`, {
                 ...options,
                 headers,
+                credentials: 'include',
             })
 
-            // ... rest is same
-            const data = await response.json()
+            let data: any
+            try {
+                data = await response.json()
+            } catch (e) {
+                return { success: false, error: { code: 'NETWORK_ERROR', message: 'Invalid response format' } }
+            }
 
             if (!response.ok) {
-                // Global 401 interceptor: fire an event so the auth context can auto-logout
-                if (response.status === 401) {
-                    if (typeof window !== 'undefined') {
-                        window.dispatchEvent(new Event('auth:unauthorized'))
+                const errCode = data.error?.code
+
+                // Interceptor Logic
+                if (response.status === 401 && errCode === 'TOKEN_EXPIRED') {
+                    if (this.isRefreshing) {
+                        return new Promise((resolve) => {
+                            this.failedQueue.push({
+                                resolve: (newToken) => resolve(this.request<T>(endpoint, options, newToken)),
+                                reject: () => resolve({ success: false, error: { code: 'UNAUTHORIZED', message: 'Session expired' } })
+                            })
+                        })
                     }
+
+                    this.isRefreshing = true
+
+                    try {
+                        const refreshRes = await fetch(`${this.baseUrl}/auth/refresh`, {
+                            method: 'POST',
+                            credentials: 'include'
+                        })
+                        const refreshData = await refreshRes.json()
+
+                        if (refreshRes.ok && refreshData.success && refreshData.data?.tokens) {
+                            const newToken = refreshData.data.tokens.accessToken
+                            setStoredToken(newToken)
+                            this.processQueue(null, newToken)
+                            
+                            // Retry original
+                            response = await fetch(`${this.baseUrl}${endpoint}`, {
+                                ...options,
+                                headers: { ...headers, Authorization: `Bearer ${newToken}` },
+                                credentials: 'include',
+                            })
+                            data = await response.json()
+                        } else {
+                            throw new Error('Refresh failed')
+                        }
+                    } catch (refreshErr) {
+                        this.processQueue(refreshErr, null)
+                        clearStoredToken()
+                        if (typeof window !== 'undefined') window.dispatchEvent(new Event('auth:unauthorized'))
+                        return { success: false, error: { code: 'UNAUTHORIZED', message: 'Session expired' } }
+                    } finally {
+                        this.isRefreshing = false
+                    }
+                } else if (response.status === 401) {
+                    if (typeof window !== 'undefined') window.dispatchEvent(new Event('auth:unauthorized'))
                 }
-                return {
-                    success: false,
-                    error: data.error || { code: 'UNKNOWN', message: 'Request failed' },
+
+                if (!response.ok) { 
+                    return {
+                        success: false,
+                        error: data.error || { code: 'UNKNOWN', message: 'Request failed' },
+                    }
                 }
             }
 

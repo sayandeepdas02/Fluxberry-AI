@@ -9,7 +9,7 @@ import type { CreateJobInput, UpdateJobInput, ApplicationSchema, Job } from '@/l
 interface JobFormProps {
     mode: 'create' | 'edit'
     initialData?: Partial<Job>
-    onSubmit: (data: CreateJobInput) => Promise<Job | null>
+    onSubmit: (data: CreateJobInput) => Promise<Job>
 }
 
 const EMPLOYMENT_TYPES = [
@@ -63,12 +63,8 @@ export function JobForm({ mode, initialData, onSubmit }: JobFormProps) {
                 }
             }
 
-            const result = await onSubmit(data)
-            if (result) {
-                router.push('/dashboard/manage-jobs')
-            } else {
-                setError('Failed to save job. Please try again.')
-            }
+            await onSubmit(data)
+            router.push('/dashboard/manage-jobs')
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'An unexpected error occurred')
         } finally {
@@ -122,7 +118,7 @@ export function JobForm({ mode, initialData, onSubmit }: JobFormProps) {
                             onChange={e => setTitle(e.target.value)}
                             required
                             placeholder="e.g. Senior Frontend Engineer"
-                            className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
+                            className="w-full h-10 px-3 text-sm rounded-none border border-input bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
                         />
                     </div>
 
@@ -136,7 +132,7 @@ export function JobForm({ mode, initialData, onSubmit }: JobFormProps) {
                             required
                             rows={5}
                             placeholder="Describe the role, responsibilities, and expectations..."
-                            className="w-full px-3 py-2 text-sm rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring resize-y"
+                            className="w-full px-3 py-2 text-sm rounded-none border border-input bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring resize-y"
                         />
                     </div>
 
@@ -148,7 +144,7 @@ export function JobForm({ mode, initialData, onSubmit }: JobFormProps) {
                                 value={department}
                                 onChange={e => setDepartment(e.target.value)}
                                 placeholder="e.g. Engineering"
-                                className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
+                                className="w-full h-10 px-3 text-sm rounded-none border border-input bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
                             />
                         </div>
                         <div>
@@ -158,7 +154,7 @@ export function JobForm({ mode, initialData, onSubmit }: JobFormProps) {
                                 value={location}
                                 onChange={e => setLocation(e.target.value)}
                                 placeholder="e.g. Remote, San Francisco"
-                                className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
+                                className="w-full h-10 px-3 text-sm rounded-none border border-input bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
                             />
                         </div>
                     </div>
@@ -168,7 +164,7 @@ export function JobForm({ mode, initialData, onSubmit }: JobFormProps) {
                         <select
                             value={employmentType}
                             onChange={e => setEmploymentType(e.target.value)}
-                            className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                            className="w-full h-10 px-3 text-sm rounded-none border border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                         >
                             {EMPLOYMENT_TYPES.map(t => (
                                 <option key={t.value} value={t.value}>{t.label}</option>
@@ -192,7 +188,7 @@ export function JobForm({ mode, initialData, onSubmit }: JobFormProps) {
                             value={skillsInput}
                             onChange={e => setSkillsInput(e.target.value)}
                             placeholder="e.g. React, TypeScript, Node.js, PostgreSQL"
-                            className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
+                            className="w-full h-10 px-3 text-sm rounded-none border border-input bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
                         />
                     </div>
 
@@ -204,7 +200,7 @@ export function JobForm({ mode, initialData, onSubmit }: JobFormProps) {
                                 value={salaryMin}
                                 onChange={e => setSalaryMin(e.target.value)}
                                 placeholder="0"
-                                className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
+                                className="w-full h-10 px-3 text-sm rounded-none border border-input bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
                             />
                         </div>
                         <div>
@@ -214,7 +210,7 @@ export function JobForm({ mode, initialData, onSubmit }: JobFormProps) {
                                 value={salaryMax}
                                 onChange={e => setSalaryMax(e.target.value)}
                                 placeholder="0"
-                                className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
+                                className="w-full h-10 px-3 text-sm rounded-none border border-input bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
                             />
                         </div>
                         <div>
@@ -222,7 +218,7 @@ export function JobForm({ mode, initialData, onSubmit }: JobFormProps) {
                             <select
                                 value={salaryCurrency}
                                 onChange={e => setSalaryCurrency(e.target.value)}
-                                className="w-full h-10 px-3 text-sm rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                                className="w-full h-10 px-3 text-sm rounded-none border border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                             >
                                 <option value="USD">USD</option>
                                 <option value="EUR">EUR</option>
@@ -242,18 +238,18 @@ export function JobForm({ mode, initialData, onSubmit }: JobFormProps) {
                 </section>
 
                 {/* Submit */}
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-edge">
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-line">
                     <button
                         type="button"
                         onClick={() => router.back()}
-                        className="px-4 py-2 text-sm font-medium rounded-lg border border-edge text-foreground hover:bg-muted/50 transition-colors"
+                        className="px-4 py-2 text-sm font-medium rounded-none border border-line text-foreground hover:bg-muted/50 transition-colors"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={saving || !title || !description}
-                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-foreground text-background hover:bg-foreground/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-none bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <Save className="w-4 h-4" />
                         {saving ? 'Saving...' : mode === 'create' ? 'Create Draft' : 'Save Changes'}

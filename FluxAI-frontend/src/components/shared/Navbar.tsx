@@ -2,123 +2,235 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Menu, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
+/* ─────────────────────────────────────────────────
+   NAV ITEMS
+   ───────────────────────────────────────────────── */
+const navItems = [
+  { label: "Products", href: "/#products" },
+  { label: "Features", href: "/#features" },
+  { label: "Pricing", href: "/#pricing" },
+];
+
+/* ─────────────────────────────────────────────────
+   NAVBAR COMPONENT
+   Chanhdai-style: solid bg, screen-line-bottom, sharp
+   ───────────────────────────────────────────────── */
 export function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  const navItems = [
-    { label: "Products", href: "/#products" },
-    { label: "Features", href: "/#features" },
-    { label: "Pricing", href: "/#pricing" },
-    { label: "Testimonials", href: "/#testimonials" },
-  ];
+  const handleScroll = useCallback(() => {
+    setIsScrolled(window.scrollY > 10);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileOpen]);
 
   return (
-    <header className="sticky top-0 z-50 w-full pt-4 pb-3">
-      <div className="max-w-[1280px] mx-auto px-6 lg:px-8 flex items-center justify-between">
-
-        {/* ── LEFT PILL ── */}
-        <div className="hidden md:flex items-center h-[52px] bg-[#F0F0F0] rounded-full pl-5 pr-6 border border-black/[0.04] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-
-          {/* Logo */}
-          <Link href="/" className="flex items-center shrink-0 mr-5">
-            <Image
-              src="/fluxberry-logo.png"
-              alt="Fluxberry AI"
-              width={160}
-              height={28}
-              className="h-[150px] w-auto"
-              priority
-            />
-          </Link>
-
-          {/* Divider */}
-          <div className="w-px h-[22px] bg-black/10 mr-5" />
-
-          {/* Nav Links */}
-          <nav className="flex items-center gap-7">
-            {navItems.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="font-mono text-[11.5px] font-medium uppercase tracking-[0.08em] text-black/70 hover:text-black transition-colors duration-200"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-
-        {/* ── RIGHT PILL ── */}
-        <div className="hidden md:flex items-center gap-[6px] h-[52px] bg-[#F0F0F0] rounded-full p-[5px] border border-black/[0.04] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-
-          {/* Sign In */}
-          <Link href="/signin">
-            <button className="h-[42px] px-5 rounded-full bg-white border border-black/[0.08] font-mono text-[11.5px] font-medium uppercase tracking-[0.08em] text-black/80 flex items-center gap-1.5 hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
-              Sign In
-              <span className="text-[13px] leading-none">↗</span>
-            </button>
-          </Link>
-
-          {/* Book a Demo */}
-          <Link href="/demo">
-            <button className="h-[42px] px-6 rounded-full bg-[#f64124] font-mono text-[11.5px] font-medium uppercase tracking-[0.08em] text-white flex items-center gap-1.5 hover:bg-[#e53a1e] transition-colors duration-200 cursor-pointer shadow-sm">
-              Book a Demo
-              <span className="text-[13px] leading-none">↗</span>
-            </button>
-          </Link>
-        </div>
-
-        {/* ── MOBILE ── */}
-        <div className="md:hidden flex items-center justify-between w-full">
-          <Link href="/" className="flex items-center">
-            <Image
-              src="/fluxberry-logo.png"
-              alt="Fluxberry AI"
-              width={140}
-              height={24}
-              className="h-[20px] w-auto"
-              priority
-            />
-          </Link>
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-[#F0F0F0] border border-black/[0.04]"
-            aria-label="Toggle menu"
+    <header
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 transition-colors",
+        "duration-200 ease-out",
+        "bg-background screen-line-bottom",
+        isScrolled ? "border-b border-line" : ""
+      )}
+      style={{ height: "48px" }}
+    >
+      {/* Container: max-width 1200px, centered */}
+      <div
+        className="mx-auto flex h-full items-center justify-between"
+        style={{
+          maxWidth: "var(--container-max)",
+          paddingInline: "clamp(1rem, 3vw, 2rem)",
+        }}
+      >
+        {/* ── LEFT: Logo ── */}
+        <Link
+          href="/"
+          className="flex items-center gap-[8px] shrink-0 cursor-pointer"
+          aria-label="Fluxberry AI Home"
+        >
+          <Image
+            src="/favicon.png"
+            alt="Fluxberry AI"
+            width={32}
+            height={32}
+            className="h-[24px] w-[24px]"
+            priority
+          />
+          <span
+            className="font-semibold tracking-tight text-foreground"
+            style={{ fontSize: "var(--text-body-sm)" }}
           >
-            {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-        </div>
-      </div>
+            FLUXBERRY AI
+          </span>
+        </Link>
 
-      {/* ── MOBILE MENU ── */}
-      {isOpen && (
-        <div className="md:hidden absolute top-[72px] left-4 right-4 bg-white rounded-2xl border border-black/[0.06] shadow-[0_12px_40px_rgba(0,0,0,0.1)] p-5 space-y-1 z-50">
+        {/* ── CENTER: Navigation ── */}
+        <nav className="hidden md:flex items-center gap-[24px]">
           {navItems.map((item) => (
             <Link
               key={item.label}
               href={item.href}
-              className="block py-3 px-4 font-mono text-[12px] font-medium uppercase tracking-[0.08em] text-black/70 hover:text-black hover:bg-black/[0.02] rounded-xl transition-colors"
-              onClick={() => setIsOpen(false)}
+              className={cn(
+                "font-medium text-muted-foreground cursor-pointer",
+                "hover:text-foreground",
+                "transition-colors duration-150 ease-out"
+              )}
+              style={{ fontSize: "var(--text-body-sm)" }}
             >
               {item.label}
             </Link>
           ))}
-          <div className="pt-3 mt-2 border-t border-black/[0.06] space-y-2">
-            <Link href="/login" className="block" onClick={() => setIsOpen(false)}>
-              <button className="w-full h-[44px] rounded-full border border-black/10 font-mono text-[12px] font-medium uppercase tracking-[0.08em] text-black/80 hover:bg-black/[0.02] transition-colors cursor-pointer">
-                Sign In ↗
-              </button>
-            </Link>
-            <Link href="/demo" className="block" onClick={() => setIsOpen(false)}>
-              <button className="w-full h-[44px] rounded-full bg-[#f64124] text-white font-mono text-[12px] font-medium uppercase tracking-[0.08em] hover:bg-[#e53a1e] transition-colors cursor-pointer">
-                Book a Demo ↗
-              </button>
-            </Link>
-          </div>
+        </nav>
+
+        {/* ── RIGHT: CTAs ── */}
+        <div className="hidden md:flex items-center gap-[12px]">
+          {/* Secondary: Book a Demo */}
+          <Link href="/demo">
+            <button
+              className={cn(
+                "cursor-pointer font-medium",
+                "text-muted-foreground",
+                "hover:text-foreground",
+                "transition-colors duration-200 ease-out"
+              )}
+              style={{
+                padding: "6px 14px",
+                fontSize: "var(--text-body-sm)",
+              }}
+            >
+              Book a Demo
+            </button>
+          </Link>
+
+          {/* Primary: Start free trial — sharp rectangular */}
+          <Link href="/signup">
+            <button
+              className={cn(
+                "cursor-pointer font-medium text-white",
+                "hover:opacity-90",
+                "transition-all duration-200 ease-out"
+              )}
+              style={{
+                padding: "6px 16px",
+                fontSize: "var(--text-body-sm)",
+                backgroundColor: "#5561c8",
+              }}
+            >
+              Start free trial
+            </button>
+          </Link>
         </div>
+
+        {/* ── MOBILE: Hamburger ── */}
+        <button
+          onClick={() => setIsMobileOpen(!isMobileOpen)}
+          className={cn(
+            "md:hidden flex items-center justify-center w-9 h-9 cursor-pointer",
+            "border border-line bg-background",
+            "hover:bg-muted transition-colors duration-200"
+          )}
+          aria-label="Toggle menu"
+        >
+          {isMobileOpen ? (
+            <X className="w-4 h-4 text-foreground" />
+          ) : (
+            <Menu className="w-4 h-4 text-foreground" />
+          )}
+        </button>
+      </div>
+
+      {/* ── MOBILE MENU OVERLAY ── */}
+      {isMobileOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="md:hidden fixed inset-0 bg-black/20 z-40"
+            style={{ top: "48px" }}
+            onClick={() => setIsMobileOpen(false)}
+          />
+
+          {/* Menu Panel — sharp, no rounded corners */}
+          <div
+            className={cn(
+              "md:hidden fixed left-0 right-0 z-50",
+              "bg-background",
+              "border-b border-line",
+              "p-5 space-y-1"
+            )}
+            style={{ top: "48px" }}
+          >
+            {navItems.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={cn(
+                  "block py-3 px-4",
+                  "font-medium text-muted-foreground",
+                  "hover:text-foreground hover:bg-muted",
+                  "transition-colors duration-150"
+                )}
+                style={{ fontSize: "var(--text-body)" }}
+                onClick={() => setIsMobileOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+
+            <div className="pt-3 mt-2 border-t border-line space-y-2">
+              <Link
+                href="/demo"
+                className="block"
+                onClick={() => setIsMobileOpen(false)}
+              >
+                <button
+                  className="w-full border border-border text-foreground font-medium cursor-pointer hover:bg-muted transition-colors duration-200"
+                  style={{
+                    height: "44px",
+                    fontSize: "var(--text-body-sm)",
+                  }}
+                >
+                  Book a Demo
+                </button>
+              </Link>
+              <Link
+                href="/signup"
+                className="block"
+                onClick={() => setIsMobileOpen(false)}
+              >
+                <button
+                  className="w-full text-white font-medium cursor-pointer transition-colors duration-200"
+                  style={{
+                    height: "44px",
+                    fontSize: "var(--text-body-sm)",
+                    backgroundColor: "#5561c8",
+                  }}
+                >
+                  Start free trial
+                </button>
+              </Link>
+            </div>
+          </div>
+        </>
       )}
     </header>
   );

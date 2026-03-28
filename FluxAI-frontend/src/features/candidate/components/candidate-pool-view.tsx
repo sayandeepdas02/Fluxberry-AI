@@ -10,6 +10,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { PremiumEmptyState } from "@/components/ui/empty-state"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -118,10 +119,10 @@ export function CandidatePoolView() {
                 </div>
             </div>
 
-            <div className="border border-edge rounded-lg overflow-hidden bg-card">
+            <div className="border border-line rounded-none overflow-hidden bg-background shadow-none">
                 <Table>
                     <TableHeader>
-                        <TableRow className="hover:bg-transparent border-b border-edge">
+                        <TableRow className="hover:bg-transparent border-b border-line">
                             <TableHead className="w-[200px] text-muted-foreground font-medium">Candidate Name</TableHead>
                             <TableHead className="text-muted-foreground font-medium">Email</TableHead>
                             <TableHead className="text-muted-foreground font-medium">Phone</TableHead>
@@ -132,22 +133,34 @@ export function CandidatePoolView() {
                     <TableBody>
                         {candidates.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                                    No candidates found.
+                                <TableCell colSpan={5} className="p-8">
+                                    <PremiumEmptyState 
+                                        title="No candidates yet"
+                                        description="Build your talent pool instantly. Ask AI to source candidates matching your latest job descriptions."
+                                        actionLabel="Generate with AI ⚡"
+                                        onAction={() => {}}
+                                    />
                                 </TableCell>
                             </TableRow>
                         ) : (
                             candidates.map((candidate) => (
-                                <TableRow key={candidate._id} className="hover:bg-muted/50 border-b border-edge last:border-0 transition-colors">
-                                    <TableCell className="font-medium text-foreground">
-                                        {candidate.firstName && candidate.lastName
-                                            ? `${candidate.firstName} ${candidate.lastName}`
-                                            : 'Unknown Name'}
+                                <TableRow key={candidate._id} className="hover:bg-muted/30 border-b border-line group transition-colors">
+                                    <TableCell>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-none bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xs font-bold shrink-0">
+                                                {candidate.firstName ? candidate.firstName[0] : 'U'}
+                                            </div>
+                                            <p className="font-semibold text-foreground">
+                                                {candidate.firstName && candidate.lastName
+                                                    ? `${candidate.firstName} ${candidate.lastName}`
+                                                    : 'Unknown Name'}
+                                            </p>
+                                        </div>
                                     </TableCell>
                                     <TableCell className="text-muted-foreground">{candidate.email}</TableCell>
                                     <TableCell className="text-muted-foreground">{candidate.phone || '-'}</TableCell>
                                     <TableCell>
-                                        <Badge variant="outline" className="font-normal text-muted-foreground">
+                                        <Badge variant="outline" className="rounded-none bg-muted/50 font-medium text-muted-foreground border-line px-3 py-1 shadow-none">
                                             {candidate.source || 'Direct'}
                                         </Badge>
                                     </TableCell>

@@ -48,10 +48,23 @@ export const authApi = {
         return apiClient.get<User>('/auth/me')
     },
 
+    async googleLogin(credential: string) {
+        const response = await apiClient.post<LoginResponse>('/auth/google', { credential })
+        if (response.success && response.data) {
+            setStoredToken(response.data.tokens.accessToken)
+        }
+        return response
+    },
+
     /**
      * Logout - clear stored token
      */
-    logout() {
+    async logout() {
+        try {
+            await apiClient.post('/auth/logout')
+        } catch {
+            // Ignore if backend logout fails, we still want to clear local state
+        }
         clearStoredToken()
     },
 }

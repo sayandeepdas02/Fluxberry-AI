@@ -68,7 +68,7 @@ export function WhyChooseUs() {
               className="hidden lg:flex absolute z-20 w-[48px] h-[48px] bg-[#222] rounded-full items-center justify-center border-[6px] border-[#f64124]"
               style={{ right: '-32px', bottom: '-32px' }}
             >
-               <svg width="20" height="20" viewBox="5 5 22 22" fill="none" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"><path d="M 24 8 L 14 8 A 6 6 0 0 0 8 14 L 8 18 A 6 6 0 0 0 14 24 L 24 24" /></svg>
+               <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="6" fill="#6366B8"/><path d="M 22 8 L 14 8 A 6 6 0 0 0 8 14 L 8 18 A 6 6 0 0 0 14 24 L 22 24" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
             </div>
           </div>
 

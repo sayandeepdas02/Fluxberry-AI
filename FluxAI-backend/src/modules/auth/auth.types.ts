@@ -17,8 +17,13 @@ export const loginSchema = z.object({
     password: z.string().min(1, 'Password is required'),
 })
 
+export const googleAuthSchema = z.object({
+    credential: z.string().min(1, 'Credential is required'),
+})
+
 export type SignupInput = z.infer<typeof signupSchema>
 export type LoginInput = z.infer<typeof loginSchema>
+export type GoogleAuthInput = z.infer<typeof googleAuthSchema>
 
 // ============================================
 // RESPONSE TYPES
@@ -26,6 +31,7 @@ export type LoginInput = z.infer<typeof loginSchema>
 
 export interface AuthTokens {
     accessToken: string
+    refreshToken: string
     expiresIn: number
 }
 
@@ -59,6 +65,7 @@ export interface JwtPayload {
     email: string
     organizationId: string | null
     role: string | null
+    type: 'access' | 'refresh'
     iat?: number
     exp?: number
 }

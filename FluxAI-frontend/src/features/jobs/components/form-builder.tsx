@@ -73,7 +73,7 @@ export function FormBuilder({ value, onChange }: FormBuilderProps) {
                 <button
                     type="button"
                     onClick={addField}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-edge hover:bg-muted/50 transition-colors text-foreground"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-none border border-line hover:bg-muted/50 transition-colors text-foreground"
                 >
                     <Plus className="w-3.5 h-3.5" />
                     Add Field
@@ -81,7 +81,7 @@ export function FormBuilder({ value, onChange }: FormBuilderProps) {
             </div>
 
             {fields.length === 0 && (
-                <div className="border border-dashed border-edge rounded-lg p-8 text-center">
+                <div className="border border-dashed border-line rounded-none p-8 text-center">
                     <p className="text-sm text-muted-foreground">
                         No fields added yet. Click &ldquo;Add Field&rdquo; to start building your application form.
                     </p>
@@ -92,7 +92,7 @@ export function FormBuilder({ value, onChange }: FormBuilderProps) {
                 {fields.map((field, index) => (
                     <div
                         key={index}
-                        className="border border-edge rounded-lg p-4 bg-muted/5 space-y-3"
+                        className="border border-line rounded-none p-4 bg-muted/5 space-y-3"
                     >
                         {/* Field Header */}
                         <div className="flex items-center justify-between">
@@ -107,7 +107,7 @@ export function FormBuilder({ value, onChange }: FormBuilderProps) {
                                     type="button"
                                     onClick={() => moveField(index, 'up')}
                                     disabled={index === 0}
-                                    className="p-1 rounded hover:bg-muted/50 transition-colors disabled:opacity-30"
+                                    className="p-1 rounded-none hover:bg-muted/50 transition-colors disabled:opacity-30"
                                 >
                                     <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
                                 </button>
@@ -115,7 +115,7 @@ export function FormBuilder({ value, onChange }: FormBuilderProps) {
                                     type="button"
                                     onClick={() => moveField(index, 'down')}
                                     disabled={index === fields.length - 1}
-                                    className="p-1 rounded hover:bg-muted/50 transition-colors disabled:opacity-30"
+                                    className="p-1 rounded-none hover:bg-muted/50 transition-colors disabled:opacity-30"
                                 >
                                     <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                                 </button>
@@ -138,7 +138,7 @@ export function FormBuilder({ value, onChange }: FormBuilderProps) {
                                     value={field.label}
                                     onChange={e => updateField(index, { label: e.target.value })}
                                     placeholder="e.g. Full Name"
-                                    className="w-full h-9 px-3 text-sm rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
+                                    className="w-full h-9 px-3 text-sm rounded-none border border-input bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
                                 />
                             </div>
                             <div>
@@ -146,7 +146,7 @@ export function FormBuilder({ value, onChange }: FormBuilderProps) {
                                 <select
                                     value={field.type}
                                     onChange={e => updateField(index, { type: e.target.value as ApplicationField['type'] })}
-                                    className="w-full h-9 px-3 text-sm rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                                    className="w-full h-9 px-3 text-sm rounded-none border border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                                 >
                                     {FIELD_TYPES.map(t => (
                                         <option key={t.value} value={t.value}>{t.label}</option>
@@ -168,7 +168,7 @@ export function FormBuilder({ value, onChange }: FormBuilderProps) {
                                         options: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
                                     })}
                                     placeholder="e.g. Frontend, Backend, Fullstack"
-                                    className="w-full h-9 px-3 text-sm rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
+                                    className="w-full h-9 px-3 text-sm rounded-none border border-input bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
                                 />
                             </div>
                         )}
@@ -189,11 +189,11 @@ export function FormBuilder({ value, onChange }: FormBuilderProps) {
 
             {/* Preview */}
             {fields.length > 0 && (
-                <div className="border-t border-edge pt-4">
+                <div className="border-t border-line pt-4">
                     <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
                         Preview
                     </h4>
-                    <div className="border border-edge rounded-lg p-4 space-y-3 bg-muted/5">
+                    <div className="border border-line rounded-none p-4 space-y-3 bg-muted/5">
                         {fields.map((field, index) => (
                             <div key={index}>
                                 <label className="text-sm text-foreground block mb-1">
@@ -201,17 +201,17 @@ export function FormBuilder({ value, onChange }: FormBuilderProps) {
                                     {field.required && <span className="text-red-500 ml-0.5">*</span>}
                                 </label>
                                 {field.type === 'textarea' ? (
-                                    <div className="w-full h-16 rounded-md border border-input bg-muted/10" />
+                                    <div className="w-full h-16 rounded-none border border-input bg-muted/10" />
                                 ) : field.type === 'select' ? (
-                                    <div className="w-full h-9 rounded-md border border-input bg-muted/10 flex items-center px-3 text-xs text-muted-foreground/50">
+                                    <div className="w-full h-9 rounded-none border border-input bg-muted/10 flex items-center px-3 text-xs text-muted-foreground/50">
                                         Select {field.label || '...'}
                                     </div>
                                 ) : field.type === 'file' ? (
-                                    <div className="w-full h-9 rounded-md border border-dashed border-input bg-muted/10 flex items-center justify-center text-xs text-muted-foreground/50">
+                                    <div className="w-full h-9 rounded-none border border-dashed border-input bg-muted/10 flex items-center justify-center text-xs text-muted-foreground/50">
                                         Choose file...
                                     </div>
                                 ) : (
-                                    <div className="w-full h-9 rounded-md border border-input bg-muted/10" />
+                                    <div className="w-full h-9 rounded-none border border-input bg-muted/10" />
                                 )}
                             </div>
                         ))}

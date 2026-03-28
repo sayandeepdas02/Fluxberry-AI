@@ -16,7 +16,7 @@ export function Features() {
 
           <div className="flex flex-col items-start pt-2 md:max-w-[400px] text-left md:ml-auto">
              <div className="flex items-center gap-2 bg-[#F2F2F2] px-3 py-1.5 rounded-full border border-black/5 mb-6 md:self-start shadow-sm">
-               <div className="w-2.5 h-2.5 rounded-full bg-[#f64124]" />
+               <div className="w-2.5 h-2.5 rounded-full bg-[#111]" />
                <span className="text-[11px] font-mono tracking-wider font-semibold text-[#111]">FEATURES</span>
              </div>
              <p className="text-[#555] text-[15px] leading-relaxed">
@@ -43,14 +43,14 @@ export function Features() {
                       <div className="bg-white border border-black/5 shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-[14px] p-3 w-[150px] relative z-20">
                          <div className="text-[10px] font-bold mb-3 flex items-center justify-between text-[#111]">Upcoming tasks <span className="bg-gray-100 text-gray-400 px-1 rounded">...</span></div>
                          <div className="flex items-start gap-2 mb-2.5 relative">
-                            <div className="absolute left-0 top-[2px] bottom-[2px] w-[2px] bg-[#f64124] rounded-full" />
+                            <div className="absolute left-0 top-[2px] bottom-[2px] w-[2px] bg-[#111] rounded-full" />
                             <div className="pl-2">
                               <div className="text-[9.5px] font-bold leading-tight text-[#111]">Approve expense request</div>
                               <div className="text-[7.5px] text-gray-400 mt-[2px] font-medium">09:00 AM</div>
                             </div>
                          </div>
                          <div className="flex items-start gap-2 mb-2.5 relative">
-                            <div className="absolute left-0 top-[2px] bottom-[2px] w-[2px] bg-[#f64124] rounded-full" />
+                            <div className="absolute left-0 top-[2px] bottom-[2px] w-[2px] bg-[#111] rounded-full" />
                             <div className="pl-2">
                               <div className="text-[9.5px] font-bold leading-tight text-[#111]">Update project status</div>
                               <div className="text-[7.5px] text-gray-400 mt-[2px] font-medium">10:45 AM</div>
@@ -58,7 +58,7 @@ export function Features() {
                          </div>
                          <div className="flex flex-col gap-2 relative opacity-50">
                             <div className="pl-2 relative">
-                              <div className="absolute left-0 top-[2px] bottom-[2px] w-[2px] bg-[#f64124] rounded-full" />
+                              <div className="absolute left-0 top-[2px] bottom-[2px] w-[2px] bg-[#111] rounded-full" />
                               <div className="pl-2">
                                 <div className="text-[9.5px] font-bold leading-tight text-[#111]">Sync customer data to <br/> spreadsheet</div>
                                 <div className="text-[7.5px] text-gray-400 mt-[2px] font-medium">01:30 PM - 02:00 PM</div>
@@ -73,22 +73,22 @@ export function Features() {
                       </div>
                       
                       {/* Center Node */}
-                      <div className="w-[52px] h-[52px] bg-[#f64124] border-[4px] border-white shadow-[0_4px_16px_rgba(246,65,36,0.3)] rounded-[16px] flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30">
-                         <svg width="24" height="24" viewBox="5 5 22 22" fill="none" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"><path d="M 24 8 L 14 8 A 6 6 0 0 0 8 14 L 8 18 A 6 6 0 0 0 14 24 L 24 24" /></svg>
-                      </div>
+                       <div className="w-[52px] h-[52px] bg-[#6366B8] border-[4px] border-white shadow-[0_4px_16px_rgba(99,102,184,0.3)] rounded-none flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30">
+                         <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><path d="M 22 8 L 14 8 A 6 6 0 0 0 8 14 L 8 18 A 6 6 0 0 0 14 24 L 22 24" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+                       </div>
 
                       {/* Right Output Blocks */}
                       <div className="flex flex-col gap-3 w-[150px] relative z-20">
                          <div className="bg-white border border-black/5 shadow-sm rounded-full py-1.5 px-2 flex items-center gap-2">
-                            <div className="w-4 h-4 rounded-full bg-[#f64124] text-white flex items-center justify-center shrink-0"><Check size={10} strokeWidth={4}/></div>
+                            <div className="w-4 h-4 rounded-full bg-[#111] text-white flex items-center justify-center shrink-0"><Check size={10} strokeWidth={4}/></div>
                             <span className="text-[8.5px] font-semibold text-[#111]">Approve expense request</span>
                          </div>
                          <div className="bg-white border border-black/5 shadow-sm rounded-full py-1.5 px-2 flex items-center gap-2">
-                            <div className="w-4 h-4 rounded-full bg-[#f64124] text-white flex items-center justify-center shrink-0"><Check size={10} strokeWidth={4}/></div>
+                            <div className="w-4 h-4 rounded-full bg-[#111] text-white flex items-center justify-center shrink-0"><Check size={10} strokeWidth={4}/></div>
                             <span className="text-[8.5px] font-semibold text-[#111]">Update project status</span>
                          </div>
                          <div className="bg-white border border-black/5 shadow-sm rounded-full py-1.5 px-2 flex items-center gap-2">
-                            <div className="w-4 h-4 rounded-full bg-[#f64124] text-white flex items-center justify-center shrink-0"><Check size={10} strokeWidth={4}/></div>
+                            <div className="w-4 h-4 rounded-full bg-[#111] text-white flex items-center justify-center shrink-0"><Check size={10} strokeWidth={4}/></div>
                             <span className="text-[8.5px] font-semibold text-[#111]">Sync customer data to spreadsheet</span>
                          </div>
                          <div className="bg-white border border-black/5 shadow-sm rounded-full py-1.5 px-2 flex items-center gap-2 opacity-50">
@@ -100,15 +100,15 @@ export function Features() {
                       {/* Simulated Connecting Lines */}
                       <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
                          {/* Left to Mid */}
-                         <path d="M150 130 C180 130, 190 130, 210 130" fill="none" stroke="#f64124" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
-                         <path d="M150 130 C180 130, 190 130, 210 130" fill="none" stroke="#f64124" strokeWidth="1" opacity="0.8" />
+                         <path d="M150 130 C180 130, 190 130, 210 130" fill="none" stroke="#111" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
+                         <path d="M150 130 C180 130, 190 130, 210 130" fill="none" stroke="#111" strokeWidth="1" opacity="0.8" />
                          
                          {/* Mid to Right 1 */}
-                         <path d="M250 130 C270 130, 250 82, 270 82" fill="none" stroke="#f64124" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
+                         <path d="M250 130 C270 130, 250 82, 270 82" fill="none" stroke="#111" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
                          {/* Mid to Right 2 */}
-                         <path d="M250 130 C270 130, 250 115, 270 115" fill="none" stroke="#f64124" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
+                         <path d="M250 130 C270 130, 250 115, 270 115" fill="none" stroke="#111" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
                          {/* Mid to Right 3 */}
-                         <path d="M250 130 C270 130, 250 148, 270 148" fill="none" stroke="#f64124" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
+                         <path d="M250 130 C270 130, 250 148, 270 148" fill="none" stroke="#111" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
                          {/* Mid to Right 4 */}
                          <path d="M250 130 C270 130, 250 180, 270 180" fill="none" stroke="#444" strokeWidth="1" strokeDasharray="3 3" opacity="0.2" />
                       </svg>
@@ -131,14 +131,14 @@ export function Features() {
                 <div className="relative flex-1 w-full flex items-center justify-center p-6 bg-[#FAFAFA] overflow-hidden min-h-[260px]">
                    {/* Decorative background glow & dots */}
                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-[300px] h-[160px] bg-[#f64124]/15 blur-[50px] rounded-[100%]" />
-                      <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at center, #f64124 1px, transparent 1px)', backgroundSize: '16px 16px', opacity: 0.15, maskImage: 'radial-gradient(ellipse at center, black 10%, transparent 50%)', WebkitMaskImage: 'radial-gradient(ellipse at center, black 10%, transparent 50%)' }} />
+                      <div className="w-[300px] h-[160px] bg-[#111]/15 blur-[50px] rounded-[100%]" />
+                      <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at center, #111 1px, transparent 1px)', backgroundSize: '16px 16px', opacity: 0.15, maskImage: 'radial-gradient(ellipse at center, black 10%, transparent 50%)', WebkitMaskImage: 'radial-gradient(ellipse at center, black 10%, transparent 50%)' }} />
                    </div>
                    
                    {/* Input Pill */}
-                   <div className="relative z-10 flex items-center justify-between bg-white border border-[#f64124]/15 shadow-[0_8px_32px_rgba(246,65,36,0.08)] rounded-full px-2 py-2 w-[280px]">
+                   <div className="relative z-10 flex items-center justify-between bg-white border border-[#111]/15 shadow-[0_8px_32px_rgba(17,17,17,0.08)] rounded-full px-2 py-2 w-[280px]">
                       <span className="text-[14px] font-medium text-[#222] ml-4 font-heading">Ask me to automate anything...</span>
-                      <div className="w-9 h-9 rounded-full bg-[#f64124] flex items-center justify-center text-white shadow-md">
+                      <div className="w-9 h-9 rounded-full bg-[#111] flex items-center justify-center text-white shadow-md">
                          <Mic strokeWidth={2.5} className="w-[16px] h-[16px]" />
                       </div>
                    </div>
@@ -162,8 +162,8 @@ export function Features() {
              <div className="flex flex-col bg-white border border-black/5 rounded-[24px] shadow-sm overflow-hidden h-full transform transition hover:shadow-md lg:col-span-1">
                 <div className="relative flex-1 w-full flex flex-col items-center justify-center p-6 bg-[#FAFAFA] overflow-hidden min-h-[260px]">
                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-[200px] h-[200px] bg-[#f64124]/10 blur-[50px] rounded-[100%]" />
-                      <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at center, #f64124 1px, transparent 1px)', backgroundSize: '12px 12px', opacity: 0.1, maskImage: 'radial-gradient(ellipse at center, black 20%, transparent 60%)', WebkitMaskImage: 'radial-gradient(ellipse at center, black 20%, transparent 60%)' }} />
+                      <div className="w-[200px] h-[200px] bg-[#111]/10 blur-[50px] rounded-[100%]" />
+                      <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at center, #111 1px, transparent 1px)', backgroundSize: '12px 12px', opacity: 0.1, maskImage: 'radial-gradient(ellipse at center, black 20%, transparent 60%)', WebkitMaskImage: 'radial-gradient(ellipse at center, black 20%, transparent 60%)' }} />
                    </div>
                    
                    {/* Stacked Pills */}
@@ -172,7 +172,7 @@ export function Features() {
                       <div className="bg-white/80 backdrop-blur-md border border-white shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-[14px] p-2.5 flex items-center gap-3 w-full transform -rotate-1 relative left-2">
                          <div className="w-8 h-8 shrink-0 rounded-full border-[3px] border-gray-100 relative items-center justify-center flex">
                             <svg className="absolute inset-0 w-full h-full -rotate-90">
-                               <circle cx="16" cy="16" r="14" fill="none" stroke="#f64124" strokeWidth="4" strokeDasharray="87.96" strokeDashoffset="15" strokeLinecap="round" />
+                               <circle cx="16" cy="16" r="14" fill="none" stroke="#111" strokeWidth="4" strokeDasharray="87.96" strokeDashoffset="15" strokeLinecap="round" />
                             </svg>
                          </div>
                          <div className="flex-1">
@@ -186,7 +186,7 @@ export function Features() {
                       <div className="bg-white/80 backdrop-blur-md border border-white shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-[14px] p-2.5 flex items-center gap-3 w-[96%] opacity-90 relative -left-1">
                          <div className="w-8 h-8 shrink-0 rounded-full border-[3px] border-gray-100 relative items-center justify-center flex">
                             <svg className="absolute inset-0 w-full h-full -rotate-90">
-                               <circle cx="16" cy="16" r="14" fill="none" stroke="#f64124" strokeWidth="4" strokeDasharray="87.96" strokeDashoffset="50" strokeLinecap="round" />
+                               <circle cx="16" cy="16" r="14" fill="none" stroke="#111" strokeWidth="4" strokeDasharray="87.96" strokeDashoffset="50" strokeLinecap="round" />
                             </svg>
                          </div>
                          <div className="flex-1">
@@ -200,7 +200,7 @@ export function Features() {
                       <div className="bg-white/80 backdrop-blur-md border border-white shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-[14px] p-2.5 flex items-center gap-3 w-[100%] opacity-80 relative left-3 transform rotate-1">
                          <div className="w-8 h-8 shrink-0 rounded-full border-[3px] border-gray-100 relative items-center justify-center flex">
                             <svg className="absolute inset-0 w-full h-full -rotate-90">
-                               <circle cx="16" cy="16" r="14" fill="none" stroke="#f64124" strokeWidth="4" strokeDasharray="87.96" strokeDashoffset="8" strokeLinecap="round"/>
+                               <circle cx="16" cy="16" r="14" fill="none" stroke="#111" strokeWidth="4" strokeDasharray="87.96" strokeDashoffset="8" strokeLinecap="round"/>
                             </svg>
                          </div>
                          <div className="flex-1">
@@ -257,9 +257,9 @@ export function Features() {
 
                 {/* Designed to automate repetitive manual interviews */}
                 <div className="h-[120px] shrink-0 w-full bg-[#FAFAFA] border border-black/5 rounded-[24px] shadow-sm flex items-center p-6 gap-5 transform transition hover:shadow-md">
-                   <div className="w-[48px] h-[48px] shrink-0 bg-[#222] rounded-[16px] flex items-center justify-center">
-                      <svg width="24" height="24" viewBox="5 5 22 22" fill="none" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"><path d="M 24 8 L 14 8 A 6 6 0 0 0 8 14 L 8 18 A 6 6 0 0 0 14 24 L 24 24" /></svg>
-                   </div>
+                    <div className="w-[48px] h-[48px] shrink-0 bg-[#6366B8] rounded-none flex items-center justify-center">
+                       <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><path d="M 22 8 L 14 8 A 6 6 0 0 0 8 14 L 8 18 A 6 6 0 0 0 14 24 L 22 24" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+                    </div>
                    <div className="text-[#6B6B6B] text-[16px] font-heading leading-[1.3] tracking-[-0.01em]">
                      Designed to <br/>
                      automate <span className="text-[#111] font-bold">repetitive <br />manual interviews</span>
@@ -319,7 +319,7 @@ export function Features() {
 
                        {/* Floating add button */}
                        <div className="absolute bottom-6 left-[60%] shrink-0 -translate-x-1/2 bg-white shadow-[0_8px_24px_rgba(0,0,0,0.12)] border border-black/5 rounded-full pr-4 pl-[5px] py-[5px] flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform">
-                           <div className="w-7 h-7 rounded-full bg-[#f64124] text-white flex items-center justify-center"><Plus size={16} /></div>
+                           <div className="w-7 h-7 rounded-full bg-[#111] text-white flex items-center justify-center"><Plus size={16} /></div>
                            <span className="text-[11px] font-semibold text-[#111]">Add members</span>
                        </div>
                     </div>

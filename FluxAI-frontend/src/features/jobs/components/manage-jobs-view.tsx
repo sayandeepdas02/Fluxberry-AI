@@ -51,13 +51,13 @@ export function ManageJobsView() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-xl font-semibold text-foreground">Manage Jobs</h1>
+                    <h1 className="text-xl font-semibold text-foreground font-mono uppercase tracking-widest">Manage Jobs</h1>
                     <p className="text-sm text-muted-foreground mt-1">
                         Create and manage job postings for your organization
                     </p>
                 </div>
                 <button
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-foreground text-background hover:bg-foreground/90 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-none bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-none"
                     onClick={() => router.push('/dashboard/manage-jobs/new')}
                 >
                     <Plus className="w-4 h-4" />
@@ -66,7 +66,7 @@ export function ManageJobsView() {
             </div>
 
             {/* Filter Tabs */}
-            <div className="border-b border-edge">
+            <div className="border-b border-line">
                 <div className="flex items-center gap-6">
                     {FILTERS.map((filter) => (
                         <button

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useOnboarding } from "@/features/onboarding/hooks/onboarding-context";
 
@@ -43,12 +45,12 @@ export function OnboardingStep1() {
     const isValid = formData.fullName.trim() && formData.companyName.trim() && formData.role;
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4">
-            <div className="w-full max-w-2xl">
+        <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+            <div className="w-full max-w-xl border border-line p-8 md:p-12">
                 {/* Header */}
-                <div className="mb-12">
-                    <h1 className="text-4xl font-bold mb-3">Welcome to Fluxberry AI</h1>
-                    <p className="text-lg text-muted-foreground">
+                <div className="mb-10 pb-8 border-b border-line">
+                    <h1 className="text-3xl font-semibold mb-2 tracking-tight">Welcome to Fluxberry</h1>
+                    <p className="text-muted-foreground">
                         Let's get your account set up in a few steps.
                     </p>
                 </div>
@@ -56,69 +58,49 @@ export function OnboardingStep1() {
                 {/* Form */}
                 <div className="space-y-6">
                     {/* Full Name */}
-                    <div>
-                        <label htmlFor="fullName" className="block text-sm font-medium mb-2">
-                            Full Name
-                        </label>
-                        <input
+                    <div className="space-y-3">
+                        <Label htmlFor="fullName">Full Name</Label>
+                        <Input
                             type="text"
                             id="fullName"
                             name="fullName"
                             value={formData.fullName}
                             onChange={handleChange}
-                            className={cn(
-                                "w-full px-4 py-2.5 border rounded-md text-sm",
-                                "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
-                                "transition-colors border-border hover:border-foreground/50"
-                            )}
                             placeholder="John Doe"
                         />
                     </div>
 
                     {/* Company Name */}
-                    <div>
-                        <label htmlFor="companyName" className="block text-sm font-medium mb-2">
-                            Company Name
-                        </label>
-                        <input
+                    <div className="space-y-3">
+                        <Label htmlFor="companyName">Company Name</Label>
+                        <Input
                             type="text"
                             id="companyName"
                             name="companyName"
                             value={formData.companyName}
                             onChange={handleChange}
-                            className={cn(
-                                "w-full px-4 py-2.5 border rounded-md text-sm",
-                                "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
-                                "transition-colors border-border hover:border-foreground/50"
-                            )}
                             placeholder="Acme Corp"
                         />
                     </div>
 
                     {/* Company Website */}
-                    <div>
-                        <label htmlFor="companyWebsite" className="block text-sm font-medium mb-2">
-                            Company Website / URL{" "}
-                            <span className="text-muted-foreground font-normal">(optional)</span>
-                        </label>
-                        <input
+                    <div className="space-y-3">
+                        <Label htmlFor="companyWebsite">
+                            Company Website <span className="text-muted-foreground font-normal">(optional)</span>
+                        </Label>
+                        <Input
                             type="url"
                             id="companyWebsite"
                             name="companyWebsite"
                             value={formData.companyWebsite}
                             onChange={handleChange}
-                            className={cn(
-                                "w-full px-4 py-2.5 border rounded-md text-sm",
-                                "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
-                                "transition-colors border-border hover:border-foreground/50"
-                            )}
                             placeholder="https://acme.com"
                         />
                     </div>
 
                     {/* Role Selection */}
-                    <div>
-                        <label className="block text-sm font-medium mb-3">Role</label>
+                    <div className="space-y-3 pt-2">
+                        <Label>Role</Label>
                         <div className="flex flex-wrap gap-2">
                             {roles.map((role) => (
                                 <button
@@ -126,11 +108,10 @@ export function OnboardingStep1() {
                                     type="button"
                                     onClick={() => handleRoleSelect(role)}
                                     className={cn(
-                                        "px-4 py-2 rounded-full text-sm font-medium transition-all",
-                                        "border",
+                                        "px-4 py-2 border text-sm font-medium transition-colors select-none",
                                         formData.role === role
-                                            ? "bg-foreground text-background border-foreground"
-                                            : "bg-background text-foreground border-border hover:border-foreground/50"
+                                            ? "bg-primary text-primary-foreground border-primary"
+                                            : "bg-background text-foreground border-line hover:bg-muted"
                                     )}
                                 >
                                     {role}
@@ -141,13 +122,12 @@ export function OnboardingStep1() {
                 </div>
 
                 {/* Footer */}
-                <div className="mt-12 flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">Step 1 of 3</p>
+                <div className="mt-12 pt-8 border-t border-line flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground font-mono uppercase tracking-widest">Step 1 of 3</p>
                     <Button
                         onClick={handleContinue}
                         disabled={!isValid}
-                        size="lg"
-                        className="min-w-32"
+                        className="px-8"
                     >
                         Continue
                     </Button>

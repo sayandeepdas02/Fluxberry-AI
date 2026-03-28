@@ -1,135 +1,438 @@
-import { Check, Paperclip, Github, Mic, ArrowUp } from "lucide-react";
+"use client";
 
-/* ─────────────────────────────────────────────
-   FEATURE TAG PILL (reusable)
-   ───────────────────────────────────────────── */
-function TagPill({ children }: { children: React.ReactNode }) {
+import { useEffect, useRef } from "react";
+import Link from "next/link";
+import {
+  Search,
+  Users,
+  Calendar,
+  BarChart3,
+  CheckCircle2,
+  ArrowRight,
+  Bot,
+  BrainCircuit,
+  Zap,
+  MessageSquare,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+/* ─────────────────────────────────────────────────
+   HERO SECTION — Chanhdai-style Editorial
+   Flat bg, sharp edges, border-driven depth
+   ───────────────────────────────────────────────── */
+export function Hero() {
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    const elements = sectionRef.current?.querySelectorAll(".section-enter");
+    elements?.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="inline-flex items-center gap-2.5 bg-white/[0.08] backdrop-blur-md border border-white/[0.08] rounded-full px-4 py-2.5">
-      <span className="flex items-center justify-center w-[20px] h-[20px] bg-[#f64124] rounded-full shrink-0">
-        <Check className="w-[11px] h-[11px] text-white stroke-[3]" />
-      </span>
-      <span className="text-[13px] font-sans text-white/90 leading-none">{children}</span>
+    <section
+      ref={sectionRef}
+      id="hero"
+      className="relative w-full screen-line-bottom"
+      style={{
+        paddingTop: "calc(48px + var(--space-20))",
+        paddingBottom: "var(--space-16)",
+      }}
+    >
+      {/* ── Content Container ── */}
+      <div
+        className="mx-auto relative z-10"
+        style={{
+          paddingInline: "clamp(1rem, 3vw, 2rem)",
+        }}
+      >
+        {/* ═══ TEXT CONTENT — Centered ═══ */}
+        <div className="flex flex-col items-center text-center">
+          {/* Headline */}
+          <h1
+            className="font-bold tracking-tight text-foreground text-balance"
+            style={{
+              fontSize: "clamp(2.25rem, 5vw, var(--text-hero))",
+              lineHeight: "1.08",
+              letterSpacing: "-0.02em",
+              maxWidth: "720px",
+            }}
+          >
+            Your{" "}
+            <span style={{ color: "#5561c8" }}>AI hiring team</span>
+            {" "}— from sourcing to onboarding
+          </h1>
+
+          {/* Subtext */}
+          <p
+            className="text-muted-foreground font-normal"
+            style={{
+              fontSize: "clamp(1rem, 2vw, var(--text-body-lg))",
+              lineHeight: "1.6",
+              maxWidth: "600px",
+              marginTop: "var(--space-4)",
+            }}
+          >
+            Fluxberry AI runs your entire hiring pipeline — screening, scheduling,
+            evaluation, and onboarding — automatically.
+          </p>
+
+          {/* CTA Buttons — SHARP rectangular */}
+          <div
+            className="flex flex-wrap items-center justify-center"
+            style={{
+              gap: "var(--space-3)",
+              marginTop: "var(--space-8)",
+            }}
+          >
+            {/* Secondary: Book a Demo */}
+            <Link href="/demo">
+              <button
+                className={cn(
+                  "cursor-pointer font-medium",
+                  "border border-border bg-transparent text-foreground",
+                  "flex items-center",
+                  "hover:bg-muted hover:border-foreground/20",
+                  "active:bg-border",
+                  "transition-all duration-200 ease-out"
+                )}
+                style={{
+                  padding: "10px 24px",
+                  fontSize: "15px",
+                  gap: "var(--space-2)",
+                }}
+              >
+                Book a Demo
+              </button>
+            </Link>
+
+            {/* Primary: Start free trial */}
+            <Link href="/signup">
+              <button
+                className={cn(
+                  "cursor-pointer font-medium text-white",
+                  "flex items-center",
+                  "hover:opacity-90",
+                  "transition-all duration-200 ease-out"
+                )}
+                style={{
+                  padding: "10px 24px",
+                  fontSize: "15px",
+                  backgroundColor: "#5561c8",
+                  gap: "var(--space-2)",
+                }}
+              >
+                Start free trial
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </Link>
+          </div>
+        </div>
+
+        {/* ═══ DASHBOARD VISUAL ═══ */}
+        <div
+          className="section-enter relative mx-auto"
+          style={{
+            marginTop: "var(--space-12)",
+            maxWidth: "960px",
+          }}
+        >
+          <DashboardMockup />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────────────────────────────────────────
+   DASHBOARD MOCKUP — Sharp edges, ring border
+   ───────────────────────────────────────────────── */
+function DashboardMockup() {
+  return (
+    <div
+      className="relative overflow-hidden border border-line bg-white"
+    >
+      {/* ── Top Bar ── */}
+      <div className="flex items-center justify-between border-b border-line bg-muted/30"
+        style={{ padding: "10px 20px" }}
+      >
+        <div className="flex items-center" style={{ gap: "var(--space-3)" }}>
+          <div className="flex items-center" style={{ gap: "var(--space-2)" }}>
+            <div className="w-3 h-3 rounded-full bg-red-400/70" />
+            <div className="w-3 h-3 rounded-full bg-amber-400/70" />
+            <div className="w-3 h-3 rounded-full bg-green-400/70" />
+          </div>
+          <div className="flex items-center" style={{ gap: "var(--space-2)" }}>
+            <BrainCircuit className="w-4 h-4" style={{ color: "#5561c8" }} />
+            <span
+              className="font-semibold text-foreground"
+              style={{ fontSize: "var(--text-caption)" }}
+            >
+              Fluxberry AI
+            </span>
+          </div>
+        </div>
+        <div
+          className="hidden sm:flex items-center border border-line bg-white"
+          style={{ padding: "5px 12px", gap: "var(--space-2)" }}
+        >
+          <Search className="w-3.5 h-3.5 text-muted-foreground" />
+          <span
+            className="text-muted-foreground"
+            style={{ fontSize: "var(--text-micro)" }}
+          >
+            Search candidates...
+          </span>
+        </div>
+      </div>
+
+      {/* ── Dashboard Content ── */}
+      <div className="flex">
+        {/* Sidebar */}
+        <div
+          className="hidden md:flex flex-col border-r border-line bg-muted/20"
+          style={{
+            width: "200px",
+            padding: "var(--space-4)",
+            gap: "var(--space-1)",
+          }}
+        >
+          <SidebarItem icon={<BarChart3 className="w-4 h-4" />} label="Dashboard" active />
+          <SidebarItem icon={<Users className="w-4 h-4" />} label="Candidates" />
+          <SidebarItem icon={<Calendar className="w-4 h-4" />} label="Interviews" />
+          <SidebarItem icon={<MessageSquare className="w-4 h-4" />} label="Messages" />
+        </div>
+
+        {/* Main Content Area */}
+        <div className="flex-1" style={{ padding: "var(--space-5)" }}>
+          {/* Stats Row */}
+          <div
+            className="grid grid-cols-2 sm:grid-cols-4"
+            style={{ gap: "var(--space-3)", marginBottom: "var(--space-5)" }}
+          >
+            <StatCard label="Applications" value="1,248" change="+15%" positive />
+            <StatCard label="Shortlisted" value="312" change="+8%" positive />
+            <StatCard label="Interviews" value="89" change="+22%" positive />
+            <StatCard label="Offers Sent" value="24" change="+3%" positive />
+          </div>
+
+          {/* Content Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: "var(--space-3)" }}>
+            {/* Pipeline */}
+            <div
+              className="border border-line bg-muted/20"
+              style={{ padding: "var(--space-4)" }}
+            >
+              <span
+                className="font-semibold text-foreground block"
+                style={{ fontSize: "var(--text-body-sm)", marginBottom: "var(--space-3)" }}
+              >
+                Hiring Pipeline
+              </span>
+              <div className="flex flex-col" style={{ gap: "var(--space-2)" }}>
+                <PipelineBar label="Sourced" width="100%" color="#5561c8" value="1,248" />
+                <PipelineBar label="Screened" width="65%" color="#6e79d6" value="812" />
+                <PipelineBar label="Interviewed" width="28%" color="#8b93e0" value="350" />
+                <PipelineBar label="Offered" width="8%" color="#a8b0ea" value="98" />
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div
+              className="border border-line bg-muted/20"
+              style={{ padding: "var(--space-4)" }}
+            >
+              <span
+                className="font-semibold text-foreground block"
+                style={{ fontSize: "var(--text-body-sm)", marginBottom: "var(--space-3)" }}
+              >
+                AI Activity
+              </span>
+              <div className="flex flex-col" style={{ gap: "var(--space-3)" }}>
+                <ActivityItem
+                  icon={<Bot className="w-3.5 h-3.5" />}
+                  text="Screened 42 resumes"
+                  time="2m ago"
+                />
+                <ActivityItem
+                  icon={<Calendar className="w-3.5 h-3.5" />}
+                  text="Scheduled 3 interviews"
+                  time="15m ago"
+                />
+                <ActivityItem
+                  icon={<CheckCircle2 className="w-3.5 h-3.5" />}
+                  text="Evaluated Sarah Chen"
+                  time="1h ago"
+                />
+                <ActivityItem
+                  icon={<Zap className="w-3.5 h-3.5" />}
+                  text="Sent offer to James K."
+                  time="3h ago"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-/* ─────────────────────────────────────────────
-   HERO SECTION
-   ───────────────────────────────────────────── */
-export function Hero() {
+/* ─────────────────────────────────────────────────
+   INTERNAL SUB-COMPONENTS — all sharp edges
+   ───────────────────────────────────────────────── */
+
+function SidebarItem({
+  icon,
+  label,
+  active,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+}) {
   return (
-    <section id="hero" className="w-full pt-12 md:pt-20 pb-20 bg-[#FAFAFA]">
-      <div className="max-w-[1280px] mx-auto px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-10 items-start">
+    <div
+      className={cn(
+        "flex items-center cursor-pointer transition-colors duration-150",
+        active
+          ? "bg-brand-subtle text-foreground font-medium"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+      )}
+      style={{
+        padding: "8px 12px",
+        gap: "var(--space-2)",
+        fontSize: "var(--text-body-sm)",
+      }}
+    >
+      <span className={active ? "text-[#5561c8]" : ""}>{icon}</span>
+      {label}
+    </div>
+  );
+}
 
-          {/* ── LEFT COLUMN ── */}
-          <div className="flex flex-col justify-between lg:min-h-[620px] pt-4">
-
-            {/* Updates Badge */}
-            <div>
-              <div className="inline-flex items-center gap-2 bg-[#F2F2F2] rounded-full p-1 pr-3.5 mb-10 border border-black/[0.04]">
-                <span className="bg-[#f64124] text-white text-[11px] font-sans font-medium px-2.5 py-[3px] rounded-full uppercase tracking-wide">
-                  Updates
-                </span>
-                <span className="text-[12.5px] font-sans text-black/70 flex items-center gap-1.5">
-                  Fluxberry AI v1.0 is open to public
-                  <span className="text-[14px] text-black/40">→</span>
-                </span>
-              </div>
-
-              {/* Heading */}
-              <h1 className="font-sans text-[52px] md:text-[68px] lg:text-[76px] font-medium leading-[0.92] tracking-[-0.035em] mb-7">
-                <span className="text-[#111] block">AI Native Hiring</span>
-                <span className="text-[#111] block">automation for</span>
-                <span className="text-[#9A9A9A] block">growing teams</span>
-              </h1>
-
-              {/* Description */}
-              <p className="font-sans text-[16px] md:text-[17px] text-black/50 leading-[1.6] max-w-[440px] mb-14">
-                Fluxberry AI turns fragmented hiring workflows into a single{" "}
-                AI-native system — from sourcing candidates to onboarding them.
-              </p>
-            </div>
-
-            {/* CTA Buttons (pinned to bottom on desktop) */}
-            <div className="flex flex-wrap items-center gap-3">
-              <button className="h-[52px] px-8 rounded-full bg-[#f64124] text-white font-mono text-[13px] font-medium uppercase tracking-[0.08em] flex items-center gap-2 hover:bg-[#e53a1e] transition-colors duration-200 cursor-pointer shadow-sm">
-                Book a Demo
-                <span className="text-[15px] leading-none">↗</span>
-              </button>
-
-              <button className="h-[52px] px-8 rounded-full bg-[#F0F0F0] text-black/80 font-mono text-[13px] font-medium uppercase tracking-[0.08em] flex items-center hover:bg-[#E5E5E5] transition-colors duration-200 border border-black/[0.04] cursor-pointer">
-                Learn More
-              </button>
-            </div>
-          </div>
-
-          {/* ── RIGHT COLUMN — GRADIENT CARD ── */}
-          <div className="relative w-full min-h-[560px] lg:min-h-[620px] rounded-[28px] overflow-hidden flex flex-col justify-between shadow-[0_20px_60px_rgba(0,0,0,0.15)]">
-
-            {/* Background gradient layers */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#2C1610] via-[#5C2215] to-[#E8854A]" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_70%_20%,_#3D1A0F_0%,_transparent_70%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_100%_80%_at_50%_100%,_#F5A665_0%,_transparent_60%)] opacity-60" />
-
-            {/* ── TAG PILLS ── */}
-            <div className="relative z-10 flex flex-col gap-2.5 p-7 pt-8">
-              <div className="flex flex-wrap gap-2.5">
-                <TagPill>Automate everyday internal workflows</TagPill>
-              </div>
-              <div className="flex flex-wrap gap-2.5">
-                <TagPill>Move tasks forward automatically</TagPill>
-              </div>
-              <div className="flex flex-wrap gap-2.5">
-                <TagPill>Sync data across tools in real time</TagPill>
-              </div>
-              <div className="flex flex-wrap gap-2.5">
-                <TagPill>Eliminate operational bottlenecks</TagPill>
-              </div>
-              <div className="flex flex-wrap gap-2.5">
-                <TagPill>Maintain clear visibility across teams</TagPill>
-              </div>
-            </div>
-
-            {/* ── CHAT BOX ── */}
-            <div className="relative z-10 mx-5 mb-5">
-              <div className="rounded-[20px] overflow-hidden border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
-                {/* Chat body — warm gradient */}
-                <div className="bg-gradient-to-br from-[#FCEADC] via-[#F8D4B0] to-[#F0A76A] p-6 pb-5">
-                  <p className="text-[14px] md:text-[15px] font-sans text-[#333] mb-16 leading-relaxed">
-                    How will I manage end to end hiring on Fluxberry AI ?
-                  </p>
-
-                  {/* Bottom controls */}
-                  <div className="flex items-center justify-between">
-                    {/* Left icons */}
-                    <div className="flex gap-2">
-                      <button className="flex items-center justify-center w-[34px] h-[34px] rounded-full bg-[#222] text-white hover:bg-[#333] transition-colors cursor-pointer">
-                        <Paperclip className="w-[15px] h-[15px]" />
-                      </button>
-                      <button className="flex items-center justify-center w-[34px] h-[34px] rounded-full bg-[#222] text-white hover:bg-[#333] transition-colors cursor-pointer">
-                        <Github className="w-[16px] h-[16px]" />
-                      </button>
-                    </div>
-
-                    {/* Right icons */}
-                    <div className="flex gap-2">
-                      <button className="flex items-center justify-center w-[34px] h-[34px] rounded-full bg-[#222] text-white hover:bg-[#333] transition-colors cursor-pointer">
-                        <Mic className="w-[15px] h-[15px]" />
-                      </button>
-                      <button className="flex items-center justify-center w-[34px] h-[34px] rounded-full bg-[#f64124] text-white hover:bg-[#e53a1e] transition-colors cursor-pointer shadow-sm">
-                        <ArrowUp className="w-[15px] h-[15px] stroke-[2.5]" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
+function StatCard({
+  label,
+  value,
+  change,
+  positive,
+}: {
+  label: string;
+  value: string;
+  change: string;
+  positive?: boolean;
+}) {
+  return (
+    <div
+      className="border border-line bg-white"
+      style={{ padding: "var(--space-3) var(--space-4)" }}
+    >
+      <span
+        className="block text-muted-foreground"
+        style={{ fontSize: "var(--text-micro)", marginBottom: "var(--space-1)" }}
+      >
+        {label}
+      </span>
+      <div className="flex items-baseline" style={{ gap: "var(--space-2)" }}>
+        <span
+          className="font-semibold text-foreground"
+          style={{ fontSize: "var(--text-heading-sm)" }}
+        >
+          {value}
+        </span>
+        <span
+          className="font-medium"
+          style={{
+            fontSize: "var(--text-micro)",
+            color: positive ? "#22c55e" : "#ef4444",
+          }}
+        >
+          {change}
+        </span>
       </div>
-    </section>
+    </div>
+  );
+}
+
+function PipelineBar({
+  label,
+  width,
+  color,
+  value,
+}: {
+  label: string;
+  width: string;
+  color: string;
+  value: string;
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between" style={{ marginBottom: "var(--space-1)" }}>
+        <span className="text-muted-foreground" style={{ fontSize: "var(--text-micro)" }}>
+          {label}
+        </span>
+        <span className="font-medium text-foreground" style={{ fontSize: "var(--text-micro)" }}>
+          {value}
+        </span>
+      </div>
+      <div className="w-full h-1.5 bg-muted overflow-hidden">
+        <div
+          className="h-full"
+          style={{ width, backgroundColor: color }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ActivityItem({
+  icon,
+  text,
+  time,
+}: {
+  icon: React.ReactNode;
+  text: string;
+  time: string;
+}) {
+  return (
+    <div className="flex items-center" style={{ gap: "var(--space-3)" }}>
+      <div
+        className="flex items-center justify-center shrink-0"
+        style={{
+          width: "28px",
+          height: "28px",
+          background: "rgba(85, 97, 200, 0.08)",
+          color: "#5561c8",
+        }}
+      >
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <span
+          className="text-foreground block truncate"
+          style={{ fontSize: "var(--text-body-sm)" }}
+        >
+          {text}
+        </span>
+      </div>
+      <span
+        className="text-muted-foreground shrink-0"
+        style={{ fontSize: "var(--text-micro)" }}
+      >
+        {time}
+      </span>
+    </div>
   );
 }

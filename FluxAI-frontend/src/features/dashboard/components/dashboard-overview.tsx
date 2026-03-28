@@ -6,8 +6,12 @@ import { HorizontalBarChart } from "@/features/dashboard/components/horizontal-b
 import { VerticalBarChart } from "@/features/dashboard/components/vertical-bar-chart"
 import { DonutChart } from "@/features/dashboard/components/donut-chart"
 import { useDashboard } from "@/features/dashboard/hooks/use-dashboard"
+import { useAuth } from "@/lib/context/auth-context"
+import { Briefcase, FileSearch, CheckSquare, Sparkles, ArrowRight } from "lucide-react"
 
 export function DashboardOverview() {
+    const { user } = useAuth();
+    const userName = user?.firstName || "User";
     const { summary, analytics, isLoading, error } = useDashboard()
 
     if (isLoading) {
@@ -61,7 +65,57 @@ export function DashboardOverview() {
         : [{ country: 'No Data', percentage: 100 }]
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
+            {/* Welcome Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h1 className="text-[28px] font-heading font-semibold tracking-tight text-foreground">
+                        Welcome back, {userName}
+                    </h1>
+                    <p className="text-muted-foreground mt-1 text-[14px]">
+                        Here's what's happening in your workspace today.
+                    </p>
+                </div>
+                
+                {/* AI Suggestion Chip */}
+                <div className="bg-primary/5 border border-primary/20 rounded-none px-4 py-2 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium text-foreground">
+                        AI suggests reviewing 3 new candidates for "Senior Engineer"
+                    </span>
+                    <button className="text-muted-foreground hover:text-primary ml-1 transition-colors">
+                        <ArrowRight className="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+
+            {/* Quick Actions / Mission Control */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <button className="group relative overflow-hidden bg-background border border-line p-6 text-left hover:border-foreground/30 transition-all duration-300">
+                    <div className="w-10 h-10 border border-line bg-muted/30 flex items-center justify-center mb-4 transition-colors group-hover:bg-primary/5 group-hover:border-primary/20">
+                        <Briefcase className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
+                    <h3 className="font-semibold text-[15px] text-foreground mb-1">Create Job</h3>
+                    <p className="text-[13px] text-muted-foreground leading-relaxed">Draft and publish a new open role instantly.</p>
+                </button>
+                
+                <button className="group relative overflow-hidden bg-background border border-line p-6 text-left hover:border-foreground/30 transition-all duration-300">
+                    <div className="w-10 h-10 border border-line bg-muted/30 flex items-center justify-center mb-4 transition-colors group-hover:bg-primary/5 group-hover:border-primary/20">
+                        <FileSearch className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
+                    <h3 className="font-semibold text-[15px] text-foreground mb-1">Start Screening</h3>
+                    <p className="text-[13px] text-muted-foreground leading-relaxed">Automate inbound ATS filtering using AI.</p>
+                </button>
+
+                <button className="group relative overflow-hidden bg-background border border-line p-6 text-left hover:border-foreground/30 transition-all duration-300">
+                    <div className="w-10 h-10 border border-line bg-muted/30 flex items-center justify-center mb-4 transition-colors group-hover:bg-primary/5 group-hover:border-primary/20">
+                        <CheckSquare className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
+                    <h3 className="font-semibold text-[15px] text-foreground mb-1">Create Assessment</h3>
+                    <p className="text-[13px] text-muted-foreground leading-relaxed">Build an automated technical interview.</p>
+                </button>
+            </div>
+
             {/* KPI Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <KPICard

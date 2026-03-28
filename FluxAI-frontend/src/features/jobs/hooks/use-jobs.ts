@@ -33,31 +33,43 @@ export function useJobs(initialQuery?: ListJobsQuery) {
         fetchJobs()
     }, [fetchJobs])
 
-    const createJob = async (input: CreateJobInput): Promise<Job | null> => {
+    const createJob = async (input: CreateJobInput): Promise<Job> => {
         try {
             const res = await jobsApi.create(input)
             if (res.success && res.data) {
                 await fetchJobs()
                 return res.data
             }
-            return null
+
+            let errorMessage = res.error?.message || 'Failed to create job'
+            if (res.error?.code === 'VALIDATION_ERROR' && Array.isArray(res.error.details)) {
+                errorMessage = res.error.details.map((d: any) => d.message).join(', ')
+            }
+            throw new Error(errorMessage)
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : 'Failed to create job')
-            return null
+            const msg = err instanceof Error ? err.message : 'Failed to create job'
+            setError(msg)
+            throw new Error(msg)
         }
     }
 
-    const updateJob = async (id: string, input: UpdateJobInput): Promise<Job | null> => {
+    const updateJob = async (id: string, input: UpdateJobInput): Promise<Job> => {
         try {
             const res = await jobsApi.update(id, input)
             if (res.success && res.data) {
                 setJobs(prev => prev.map(j => j._id === id ? res.data! : j))
                 return res.data
             }
-            return null
+
+            let errorMessage = res.error?.message || 'Failed to update job'
+            if (res.error?.code === 'VALIDATION_ERROR' && Array.isArray(res.error.details)) {
+                errorMessage = res.error.details.map((d: any) => d.message).join(', ')
+            }
+            throw new Error(errorMessage)
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : 'Failed to update job')
-            return null
+            const msg = err instanceof Error ? err.message : 'Failed to update job'
+            setError(msg)
+            throw new Error(msg)
         }
     }
 

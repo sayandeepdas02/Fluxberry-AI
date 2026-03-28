@@ -16,6 +16,7 @@ import {
     SelectTrigger,
     SelectValue
 } from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
 
 import {
     AreaChart,
@@ -41,7 +42,7 @@ import {
     DemographicsData
 } from "@/lib/api/analytics"
 import { jobsApi, Job } from "@/lib/api/jobs"
-import { Users, FileText, CheckCircle, Clock, TrendingUp, Zap } from "lucide-react"
+import { Users, FileText, CheckCircle, Clock, TrendingUp, Zap, Sparkles } from "lucide-react"
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
@@ -106,7 +107,27 @@ export default function AnalyticsDashboard() {
     }
 
     if (loading && !kpis) {
-        return <div className="p-8 flex justify-center">Loading analytics...</div>
+        return (
+            <div className="space-y-6 animate-in fade-in duration-500">
+                <div className="flex justify-between">
+                    <div className="space-y-2">
+                        <Skeleton className="h-8 w-[200px]" />
+                        <Skeleton className="h-4 w-[300px]" />
+                    </div>
+                    <div className="flex gap-2">
+                        <Skeleton className="h-10 w-[120px]" />
+                        <Skeleton className="h-10 w-[200px]" />
+                    </div>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-none" />)}
+                </div>
+                <div className="grid gap-4 md:grid-cols-7">
+                    <Skeleton className="col-span-4 h-[400px] rounded-none" />
+                    <Skeleton className="col-span-3 h-[400px] rounded-none" />
+                </div>
+            </div>
+        )
     }
 
     return (
@@ -146,6 +167,19 @@ export default function AnalyticsDashboard() {
                 </div>
             </div>
 
+            {/* AI Insights Banner */}
+            <div className="bg-primary/5 border border-primary/20 rounded-none p-4 flex items-start sm:items-center gap-3">
+                <div className="bg-background border border-primary/20 p-2 rounded-none shrink-0">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                    <h3 className="font-semibold text-primary text-[14px]">AI Pipeline Insight</h3>
+                    <p className="text-[13px] text-muted-foreground mt-0.5 leading-relaxed">
+                        Your hiring efficiency increased by <strong className="text-foreground font-semibold">28%</strong> this month. Candidates are moving from "Applied" to "Interview" 3 days faster on average.
+                    </p>
+                </div>
+            </div>
+
             {/* KPI Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <KPICard
@@ -182,7 +216,7 @@ export default function AnalyticsDashboard() {
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 {/* Application Volume Chart */}
-                <Card className="col-span-4">
+                <Card className="col-span-4 rounded-none border border-line shadow-none">
                     <CardHeader>
                         <CardTitle>Application Volume</CardTitle>
                         <CardDescription>
@@ -195,8 +229,8 @@ export default function AnalyticsDashboard() {
                                 <AreaChart data={trends}>
                                     <defs>
                                         <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -225,7 +259,7 @@ export default function AnalyticsDashboard() {
                                     <Area
                                         type="monotone"
                                         dataKey="value"
-                                        stroke="#f97316"
+                                        stroke="hsl(var(--primary))"
                                         fillOpacity={1}
                                         fill="url(#colorValue)"
                                     />
@@ -236,7 +270,7 @@ export default function AnalyticsDashboard() {
                 </Card>
 
                 {/* Funnel Chart */}
-                <Card className="col-span-3">
+                <Card className="col-span-3 rounded-none border border-line shadow-none">
                     <CardHeader>
                         <CardTitle>Hiring Funnel</CardTitle>
                         <CardDescription>Conversion from Application to Hire.</CardDescription>
@@ -268,7 +302,7 @@ export default function AnalyticsDashboard() {
                                         cursor={{ fill: 'transparent' }}
                                         contentStyle={{ backgroundColor: 'var(--background)', borderColor: 'var(--border)' }}
                                     />
-                                    <Bar dataKey="value" fill="#f97316" radius={[0, 4, 4, 0]} barSize={32} />
+                                    <Bar dataKey="value" fill="hsl(var(--primary))" radius={[0, 0, 0, 0]} barSize={32} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
@@ -276,7 +310,7 @@ export default function AnalyticsDashboard() {
                 </Card>
 
                 {/* Score Distribution Chart */}
-                <Card className="col-span-4 lg:col-span-3">
+                <Card className="col-span-4 lg:col-span-3 rounded-none border border-line shadow-none">
                     <CardHeader>
                         <CardTitle>ATS Score Distribution</CardTitle>
                         <CardDescription>How candidates are scoring in automated screening.</CardDescription>
@@ -306,7 +340,7 @@ export default function AnalyticsDashboard() {
                                         cursor={{ fill: 'transparent' }}
                                         contentStyle={{ backgroundColor: 'var(--background)', borderColor: 'var(--border)' }}
                                     />
-                                    <Bar dataKey="count" fill="#8884d8" radius={[4, 4, 0, 0]} barSize={40}>
+                                    <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 0, 0, 0]} barSize={40}>
                                         {(efficiency?.scoreDistribution || []).map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                         ))}
@@ -320,7 +354,7 @@ export default function AnalyticsDashboard() {
 
             <div className="grid gap-4 md:grid-cols-2">
                 {/* Source Breakdown */}
-                <Card>
+                <Card className="rounded-none border border-line shadow-none">
                     <CardHeader>
                         <CardTitle>Source Breakdown</CardTitle>
                         <CardDescription>Where are your candidates coming from?</CardDescription>
@@ -358,7 +392,7 @@ export default function AnalyticsDashboard() {
                 </Card>
 
                 {/* Conversion Rates Card */}
-                <Card>
+                <Card className="rounded-none border border-line shadow-none">
                     <CardHeader>
                         <CardTitle>Conversion Rates</CardTitle>
                         <CardDescription>Efficiency of your hiring process.</CardDescription>
@@ -396,16 +430,18 @@ export default function AnalyticsDashboard() {
 
 function KPICard({ title, value, icon: Icon, description }: { title: string, value: string | number, icon: any, description: string }) {
     return (
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
+        <Card className="relative overflow-hidden bg-background border border-line shadow-none rounded-none hover:border-foreground/30 transition-all duration-300">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                <CardTitle className="text-sm font-medium text-muted-foreground font-mono uppercase tracking-widest">
                     {title}
                 </CardTitle>
-                <Icon className="h-4 w-4 text-muted-foreground" />
+                <div className="border border-line bg-muted/30 p-2 rounded-none">
+                    <Icon className="h-4 w-4 text-primary" />
+                </div>
             </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">{value}</div>
-                <p className="text-xs text-muted-foreground">
+            <CardContent className="relative z-10">
+                <div className="text-4xl font-semibold tracking-tighter text-foreground mb-1 mt-2">{value}</div>
+                <p className="text-xs text-muted-foreground mt-4">
                     {description}
                 </p>
             </CardContent>

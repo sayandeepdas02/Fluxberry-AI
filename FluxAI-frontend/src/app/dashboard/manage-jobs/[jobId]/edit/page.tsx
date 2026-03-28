@@ -33,18 +33,19 @@ export default function EditJobPage({ params }: PageProps) {
         fetchJob();
     }, [jobId]);
 
-    const handleSubmit = async (data: CreateJobInput): Promise<Job | null> => {
+    const handleSubmit = async (data: CreateJobInput): Promise<Job> => {
         setIsSaving(true);
         setError(null);
         const response = await jobsApi.update(jobId, data);
+        setIsSaving(false);
         if (response.success && response.data) {
             router.push("/dashboard/manage-jobs");
             return response.data;
         } else {
-            setError(response.error?.message || "Failed to save job");
-            return null;
+            const errMsg = response.error?.message || "Failed to save job";
+            setError(errMsg);
+            throw new Error(errMsg);
         }
-        setIsSaving(false);
     };
 
     if (isLoading) {

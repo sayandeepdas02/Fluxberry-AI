@@ -2,7 +2,13 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ═══════════════════════════════════════════════════
+   DESIGN SYSTEM TOKENS — Chanhdai-style Editorial
+   Sharp edges, border-driven, panel-based layout
+   ═══════════════════════════════════════════════════ */
+
 @theme inline {
+  /* ── Semantic Color Tokens ── */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
@@ -16,147 +22,130 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-border: var(--border);
-  --color-edge: var(--edge);
+  --color-border-subtle: var(--border-subtle);
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --font-sans: var(--font-inter);
-  --font-heading: var(--font-inter-display);
-  --font-mono: var(--font-ibm-plex-mono);
+  /* ── LINE — border-line utility color ── */
+  --color-line: var(--line);
+
+  /* ── Brand Colors ── */
+  --color-brand: #5561c8;
+  --color-brand-light: #6e79d6;
+  --color-brand-dark: #434dab;
+  --color-brand-subtle: rgba(85, 97, 200, 0.08);
+
+  /* ── Font Families ── */
+  --font-sans: var(--font-geist);
+  --font-heading: var(--font-geist-display);
+  --font-mono: var(--font-geist-mono);
 }
 
 :root {
-  /* white */
-  --background: oklch(1 0 0);
+  /* ═══ SPACING SCALE (8px grid) ═══ */
+  --space-1: 0.25rem;    /*  4px */
+  --space-2: 0.5rem;     /*  8px */
+  --space-3: 0.75rem;    /* 12px */
+  --space-4: 1rem;       /* 16px */
+  --space-5: 1.25rem;    /* 20px */
+  --space-6: 1.5rem;     /* 24px */
+  --space-8: 2rem;       /* 32px */
+  --space-10: 2.5rem;    /* 40px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+  --space-20: 5rem;      /* 80px */
+  --space-24: 6rem;      /* 96px */
+  --space-30: 7.5rem;    /* 120px */
+  --space-40: 10rem;     /* 160px */
 
-  /* zinc-950 */
-  --foreground: oklch(0.141 0.005 285.823);
+  /* ═══ CONTAINER WIDTHS ═══ */
+  --container-max: 1200px;
+  --container-wide: 1400px;
+  --container-narrow: 800px;
 
-  /* zinc-950 */
-  --primary: oklch(0.141 0.005 285.823);
+  /* ═══ TYPOGRAPHY SCALE ═══ */
+  --text-hero: 3.5rem;         /* 56px */
+  --text-display: 2.75rem;     /* 44px */
+  --text-heading-lg: 2rem;     /* 32px */
+  --text-heading: 1.5rem;      /* 24px */
+  --text-heading-sm: 1.25rem;  /* 20px */
+  --text-body-lg: 1.125rem;    /* 18px */
+  --text-body: 1rem;           /* 16px */
+  --text-body-sm: 0.875rem;    /* 14px */
+  --text-caption: 0.8125rem;   /* 13px */
+  --text-micro: 0.75rem;       /* 12px */
 
-  /* zinc-50 */
-  --primary-foreground: oklch(0.985 0 0);
+  /* ═══ ANIMATION TOKENS ═══ */
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --duration-enter: 400ms;
+  --easing-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --easing-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
 
-  /* zinc-100 */
-  --secondary: oklch(0.967 0.001 286.375);
+  /* ═══ LIGHT MODE PALETTE ═══ */
+  --background: #ffffff;
+  --foreground: #0f172a;
 
-  /* zinc-950 */
-  --secondary-foreground: oklch(0.141 0.005 285.823);
+  --primary: #5561c8;
+  --primary-foreground: #ffffff;
 
-  /* zinc-100 */
-  --muted: oklch(0.967 0.001 286.375);
+  --secondary: #f4f4f5;
+  --secondary-foreground: #0f172a;
 
-  /* zinc-500 */
-  --muted-foreground: oklch(0.552 0.016 285.938);
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
 
-  /* white */
-  --card: oklch(1 0 0);
+  --card: #ffffff;
+  --card-foreground: #0f172a;
 
-  /* zinc-950 */
-  --card-foreground: oklch(0.141 0.005 285.823);
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
 
-  /* zinc-100 */
-  --accent: oklch(0.967 0.001 286.375);
+  --border: #e4e4e7;
+  --border-subtle: #f4f4f5;
 
-  /* zinc-900 */
-  --accent-foreground: oklch(0.21 0.006 285.885);
+  /* LINE — a softer border for editorial grid lines */
+  --line: color-mix(in srgb, var(--border) 64%, var(--background));
 
-  /* zinc-200 */
-  --border: oklch(0.92 0.004 286.32);
-
-  /* color-mix */
-  --edge: color-mix(in oklab, var(--border) 64%, var(--background));
-
-  /* zinc-200 */
-  --input: oklch(0.92 0.004 286.32);
-
-  /* zinc-400 */
-  --ring: oklch(0.705 0.015 286.067);
+  --input: #e4e4e7;
+  --ring: #a1a1aa;
 }
 
 .dark {
-  /* zinc-950 */
-  --background: oklch(0.141 0.005 285.823);
+  --background: #0a0a0b;
+  --foreground: #fafafa;
 
-  /* zinc-50 */
-  --foreground: oklch(0.985 0 0);
+  --primary: #6e79d6;
+  --primary-foreground: #ffffff;
 
-  /* zinc-50 */
-  --primary: oklch(0.985 0 0);
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
 
-  /* zinc-950 */
-  --primary-foreground: oklch(0.141 0.005 285.823);
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
 
-  /* zinc-800 */
-  --secondary: oklch(0.274 0.006 286.033);
+  --card: #18181b;
+  --card-foreground: #fafafa;
 
-  /* zinc-50 */
-  --secondary-foreground: oklch(0.985 0 0);
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
 
-  /* zinc-800 */
-  --muted: oklch(0.274 0.006 286.033);
+  --border: #27272a;
+  --border-subtle: #1c1c1e;
 
-  /* zinc-400 */
-  --muted-foreground: oklch(0.705 0.015 286.067);
+  --line: color-mix(in srgb, var(--border) 64%, var(--background));
 
-  /* zinc-900 */
-  --card: oklch(0.21 0.006 285.885);
-
-  /* zinc-50 */
-  --card-foreground: oklch(0.985 0 0);
-
-  /* zinc-800 */
-  --accent: oklch(0.274 0.006 286.033);
-
-  /* zinc-50 */
-  --accent-foreground: oklch(0.985 0 0);
-
-  /* zinc-800 */
-  --border: oklch(0.274 0.006 286.033);
-
-  /* zinc-800 */
-  --input: oklch(0.274 0.006 286.033);
-
-  /* zinc-500 */
-  --ring: oklch(0.552 0.016 285.938);
+  --input: #27272a;
+  --ring: #71717a;
 }
 
-@utility no-scrollbar {
-  -ms-overflow-style: none;
-  /* IE and Edge */
-  scrollbar-width: none;
-  /* Firefox */
-
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-@utility link {
-  @apply font-medium underline underline-offset-4;
-}
-
-@utility screen-line-before {
-  @apply relative before:absolute before:top-0 before:-left-[100vw] before:-z-1 before:h-px before:w-[200vw] before:bg-edge;
-}
-
-@utility screen-line-after {
-  @apply relative after:absolute after:bottom-0 after:-left-[100vw] after:-z-1 after:h-px after:w-[200vw] after:bg-edge;
-}
-
-@utility step {
-  counter-increment: step;
-
-  &::before {
-    @apply mr-2 inline-flex size-7 items-center justify-center rounded-full border border-muted-foreground/15 bg-muted text-center -indent-px text-sm font-medium text-muted-foreground ring-1 ring-edge ring-offset-1 ring-offset-background md:absolute md:-mt-0.5 md:-ml-11.5 md:size-8;
-    content: counter(step);
-  }
-}
+/* ═══════════════════════════════════════════════════
+   BASE STYLES
+   ═══════════════════════════════════════════════════ */
 
 @layer base {
-
   *,
   ::after,
   ::before,
@@ -169,36 +158,101 @@
     @apply bg-foreground text-background;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background font-sans text-foreground antialiased;
     font-synthesis-weight: none;
     text-rendering: optimizeLegibility;
   }
 
-  html {
-    scroll-behavior: smooth;
-  }
-
-  /* Custom scrollbar styling */
+  /* Scrollbar */
   ::-webkit-scrollbar {
     width: 5px;
   }
-
   ::-webkit-scrollbar-track {
     background: transparent;
   }
-
   ::-webkit-scrollbar-thumb {
     background: var(--border);
     border-radius: 5px;
   }
-
   * {
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
   }
 
+  /* Scroll offset for fixed navbar */
   [id] {
-    @apply scroll-mt-18;
+    scroll-margin-top: 64px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   CHANHDAI-STYLE UTILITIES
+   Screen-line: full-width horizontal rules
+   ═══════════════════════════════════════════════════ */
+
+@utility screen-line-top {
+  @apply before:bg-line relative before:absolute before:top-0 before:-left-[100vw] before:-z-1 before:h-px before:w-[200vw];
+}
+
+@utility screen-line-bottom {
+  @apply after:bg-line relative after:absolute after:bottom-0 after:-left-[100vw] after:-z-1 after:h-px after:w-[200vw];
+}
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility link {
+  @apply font-medium underline underline-offset-4;
+}
+
+/* ═══════════════════════════════════════════════════
+   ANIMATION UTILITIES
+   ═══════════════════════════════════════════════════ */
+
+@layer components {
+  /* Scroll-triggered section reveal */
+  .section-enter {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity var(--duration-enter) var(--easing-default),
+                transform var(--duration-enter) var(--easing-default);
+  }
+  .section-enter.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Hatched separator pattern between sections */
+  .hatched-separator {
+    position: relative;
+    width: 100%;
+    height: 8px;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 3px,
+      var(--line) 3px,
+      var(--line) 4px
+    );
+    opacity: 0.5;
+  }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .section-enter {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
   }
 }

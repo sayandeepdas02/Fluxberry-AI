@@ -3,7 +3,10 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Users, CheckCircle2, Copy, Loader2, MoreHorizontal, ArrowRight, Clock, Briefcase, X } from "lucide-react"
+import { Plus, Users, CheckCircle2, Copy, Loader2, MoreHorizontal, ArrowRight, Clock, Briefcase, X, Sparkles } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { PremiumEmptyState } from "@/components/ui/empty-state"
+import { GradientButton } from "@/components/ui/gradient-button"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useAssessments } from "@/lib/hooks/use-assessments"
@@ -175,18 +178,37 @@ export function AssessmentsList() {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button size="lg" className="gap-2 shadow-sm font-medium" asChild>
+                    <GradientButton variant="ai" size="lg" asChild>
+                        <Link href="/dashboard/assessments/new?ai=true">
+                            <Sparkles className="w-4 h-4 ml-[-2px]" /> Generate with AI
+                        </Link>
+                    </GradientButton>
+                    <Button size="lg" className="gap-2 shadow-sm font-medium border-line rounded-none bg-background hover:bg-muted text-foreground" variant="outline" asChild>
                         <Link href="/dashboard/assessments/new">
-                            <Plus className="w-4 h-4" /> New Assessment
+                            <Plus className="w-4 h-4" /> Blank
                         </Link>
                     </Button>
                 </div>
             </div>
 
             {isLoading && (
-                <div className="flex flex-col items-center justify-center py-20 gap-3">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary/60" />
-                    <p className="text-muted-foreground text-sm">Loading assessments...</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="h-[280px] rounded-none border border-line bg-background p-5 flex flex-col space-y-4">
+                            <div className="flex justify-between mt-2">
+                                <Skeleton className="h-6 w-20 rounded-full" />
+                                <Skeleton className="h-8 w-8 rounded-full" />
+                            </div>
+                            <div className="space-y-2 mt-4">
+                                <Skeleton className="h-6 w-[80%]" />
+                                <Skeleton className="h-4 w-[60%]" />
+                            </div>
+                            <div className="mt-auto flex gap-2">
+                                <Skeleton className="h-6 w-16" />
+                                <Skeleton className="h-6 w-16" />
+                            </div>
+                        </div>
+                    ))}
                 </div>
             )}
 
@@ -197,21 +219,20 @@ export function AssessmentsList() {
             )}
 
             {!isLoading && assessments.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-20 gap-4 rounded-lg border border-dashed border-border bg-muted/20">
-                    <Briefcase className="w-12 h-12 text-muted-foreground" />
-                    <p className="text-muted-foreground font-medium">No assessments yet</p>
-                    <p className="text-sm text-muted-foreground/80 text-center max-w-sm">Create your first assessment to start screening candidates.</p>
-                    <Button asChild>
-                        <Link href="/dashboard/assessments/new">New Assessment</Link>
-                    </Button>
-                </div>
+                <PremiumEmptyState
+                    title="No assessments yet"
+                    description="Create your first assessment block and start automatically evaluating candidate skills with AI."
+                    actionLabel="Generate with AI ✨"
+                    onAction={() => router.push('/dashboard/assessments/new?ai=true')}
+                    icon={<Briefcase className="w-8 h-8 text-primary" />}
+                />
             )}
 
             {/* Grid */}
             {!isLoading && assessments.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {assessments.map((assessment) => (
-                        <Card key={assessment.id} className="group relative flex flex-col overflow-hidden border-border/50 bg-card/50 hover:bg-card hover:border-border hover:shadow-md transition-all duration-300">
+                        <Card key={assessment.id} className="group relative flex flex-col overflow-hidden border border-line bg-background shadow-none rounded-none hover:border-foreground/30 transition-all duration-300">
                             {/* Status Stripe */}
                             <div className={`absolute top-0 left-0 w-1 h-full transition-colors duration-300
                                 ${assessment.status === 'ACTIVE' ? 'bg-emerald-500' :
@@ -222,7 +243,7 @@ export function AssessmentsList() {
 
                             <CardHeader className="p-5 pb-3">
                                 <div className="flex items-start justify-between gap-2">
-                                    <Badge variant="outline" className={`px-2.5 py-0.5 text-xs font-medium border ${getStatusColor(assessment.status)}`}>
+                                    <Badge variant="outline" className={`px-2.5 py-0.5 text-xs font-semibold shadow-none rounded-none border ${getStatusColor(assessment.status)}`}>
                                         {getStatusLabel(assessment.status)}
                                     </Badge>
                                     <DropdownMenu>
@@ -295,14 +316,14 @@ export function AssessmentsList() {
                                 {/* Actions Footer */}
                                 <div className="pt-2 flex items-center gap-2 relative z-10">
                                     {assessment.status === 'DRAFT' ? (
-                                        <Button size="sm" variant="outline" className="w-full justify-between group/btn hover:border-primary/50 hover:bg-primary/5" asChild>
+                                        <Button size="sm" variant="outline" className="w-full justify-between group/btn rounded-none bg-muted/20 border-line hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all" asChild>
                                             <Link href={`/dashboard/assessments/${assessment.id}/configure`}>
                                                 Continue Setup
                                                 <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover/btn:text-primary transition-colors" />
                                             </Link>
                                         </Button>
                                     ) : (
-                                        <Button size="sm" variant="secondary" className="w-full justify-between group/btn hover:bg-secondary/80" asChild>
+                                        <Button size="sm" variant="secondary" className="w-full justify-between group/btn rounded-none bg-foreground text-background hover:bg-foreground/90 transition-all shadow-none" asChild>
                                             <Link href={`/dashboard/assessments/${assessment.id}/results`}>
                                                 View Results
                                                 <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover/btn:text-foreground transition-colors" />
