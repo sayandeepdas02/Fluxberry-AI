@@ -37,8 +37,9 @@
 
   /* ── Font Families ── */
   --font-sans: var(--font-geist);
-  --font-heading: var(--font-geist-display);
-  --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-geist);
+  --font-mono: var(--font-geist);
+  --font-heading: var(--font-geist);
 }
 
 :root {
@@ -163,7 +164,8 @@
   }
 
   body {
-    @apply bg-background font-sans text-foreground antialiased;
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-geist), sans-serif;
     font-synthesis-weight: none;
     text-rendering: optimizeLegibility;
   }
