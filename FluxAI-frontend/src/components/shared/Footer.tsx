@@ -15,16 +15,14 @@ export function Footer() {
       id="footer"
       className="w-full relative overflow-hidden screen-line-top"
       style={{
-        paddingTop: "clamp(64px, 8vw, var(--space-20))",
-        paddingBottom: "var(--space-8)",
         backgroundColor: "#0f172a",
       }}
     >
       <div
-        className="mx-auto flex flex-col"
+        className="mx-auto flex flex-col w-full px-6 sm:px-8 max-w-[1200px] border-x border-white/10"
         style={{
-          maxWidth: "var(--container-max)",
-          paddingInline: "clamp(1rem, 3vw, 2rem)",
+          paddingTop: "clamp(64px, 8vw, var(--space-20))",
+          paddingBottom: "var(--space-8)",
         }}
       >
         {/* ═══ TOP GRIDS ═══ */}

@@ -71,8 +71,8 @@ export function Hero() {
             }}
           >
             Your{" "}
-            <span style={{ color: "#5561c8" }}>AI hiring team</span>
-            {" "}— from sourcing to onboarding
+            <span style={{ color: "#5561c8" }}>AI Native</span>
+            {" "}Hiring Automation for growing teams
           </h1>
 
           {/* Subtext */}
@@ -85,8 +85,8 @@ export function Hero() {
               marginTop: "var(--space-4)",
             }}
           >
-            Fluxberry AI runs your entire hiring pipeline — screening, scheduling,
-            evaluation, and onboarding — automatically.
+            Hire, scale, and automate effortlessly,
+            with one powerful hiring platform.
           </p>
 
           {/* CTA Buttons — SHARP rectangular */}

@@ -10,7 +10,7 @@ interface OnboardingData {
     role: string;
 
     // Step 2
-    productSelection: "ats" | "hire" | "";
+    productSelection: string;
 
     // Step 3
     workspaceName: string;

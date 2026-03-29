@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Search, Calendar, BrainCircuit, UserPlus, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 /* ─────────────────────────────────────────────────
-   AI AGENTS SECTION — Chanhdai-style Editorial
-   Sharp cards, border-driven, no shadows
+   PREMIUM FEATURE SECTION (WHY FLUXBERRY AI)
+   3-Column Modern SaaS Structure
    ───────────────────────────────────────────────── */
 export function AgentsSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -19,7 +20,7 @@ export function AgentsSection() {
             entry.target.classList.add("visible");
             const cards = entry.target.querySelectorAll(".agent-card-enter");
             cards.forEach((card, index) => {
-              (card as HTMLElement).style.transitionDelay = `${index * 100}ms`;
+              (card as HTMLElement).style.transitionDelay = `${index * 150}ms`;
               card.classList.add("visible");
             });
           }
@@ -38,115 +39,104 @@ export function AgentsSection() {
   return (
     <section
       ref={sectionRef}
-      id="agents"
-      className="section-enter relative w-full screen-line-top screen-line-bottom"
+      id="expertise"
+      className="section-enter relative w-full bg-background/50"
       style={{
-        paddingTop: "clamp(64px, 8vw, var(--space-24))",
-        paddingBottom: "clamp(64px, 8vw, var(--space-24))",
+        paddingTop: "clamp(80px, 12vw, 120px)",
+        paddingBottom: "clamp(80px, 12vw, 120px)",
       }}
     >
-      <div
-        className="mx-auto relative z-10"
-        style={{
-          paddingInline: "clamp(1rem, 3vw, 2rem)",
-        }}
-      >
+      {/* Subtle Background Pattern */}
+      <div className="absolute inset-0 -z-10 pointer-events-none" 
+           style={{ 
+             backgroundImage: "radial-gradient(var(--line) 1px, transparent 1px)", 
+             backgroundSize: "24px 24px",
+             opacity: 0.5,
+             maskImage: "linear-gradient(to bottom, transparent, white 20%, white 80%, transparent)"
+           }} 
+      />
+
+      <div className="mx-auto relative z-10 px-6 sm:px-8 max-w-[1200px]">
         {/* ═══ HEADER ═══ */}
-        <div className="flex flex-col items-center justify-center text-center">
-          {/* Section Badge — sharp rectangular */}
+        <div className="flex flex-col items-center justify-center text-center mb-16 md:mb-20">
           <div
-            className="inline-flex items-center font-medium"
+            className="inline-flex items-center font-medium bg-background border border-line rounded-full shadow-sm"
             style={{
-              padding: "4px 12px",
-              gap: "6px",
+              padding: "6px 16px",
+              gap: "8px",
               fontSize: "13px",
-              color: "var(--primary)",
-              background: "var(--primary-subtle)",
-              border: "1px solid rgba(85, 97, 200, 0.15)",
-              letterSpacing: "0.01em",
-              marginBottom: "var(--space-4)",
+              color: "var(--foreground)",
+              marginBottom: "24px",
             }}
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Intelligent Core</span>
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            <span>Our Expertise</span>
           </div>
 
           <h2
-            className="font-semibold tracking-tight text-foreground text-balance"
+            className="font-bold tracking-tight text-foreground text-balance"
             style={{
-              fontSize: "clamp(1.75rem, 4vw, var(--text-display))",
-              lineHeight: "1.12",
-              maxWidth: "600px",
+              fontSize: "clamp(2.5rem, 5vw, 4rem)",
+              lineHeight: "1.1",
+              maxWidth: "800px",
               letterSpacing: "-0.02em",
             }}
           >
-            Meet your <span style={{ color: "#5561c8" }}>AI hiring agents</span>
+            Why <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/70">Fluxberry AI</span>?
           </h2>
 
           <p
             className="text-muted-foreground font-normal"
             style={{
-              fontSize: "clamp(1rem, 2vw, var(--text-body-lg))",
+              fontSize: "clamp(1.125rem, 2vw, 1.25rem)",
               lineHeight: "1.6",
               maxWidth: "600px",
-              marginTop: "var(--space-4)",
+              marginTop: "24px",
             }}
           >
-            Fluxberry AI replaces manual workflows with intelligent agents that handle every step of hiring.
+            Effortlessly set up, integrate, and optimize your hiring workflow with intelligent automation.
           </p>
         </div>
 
-        {/* ═══ AGENTS GRID ═══ */}
-        <div
-          className="grid grid-cols-1 md:grid-cols-2 mx-auto"
-          style={{
-            marginTop: "var(--space-12)",
-            maxWidth: "960px",
-          }}
-        >
-          <AgentCard
-            icon={<Search className="w-5 h-5" />}
-            title="Screening Agent"
-            description="Analyzes and shortlists top candidates instantly using AI."
-            accentColor="#5561c8"
-            position="top-left"
+        {/* ═══ PREMIUM 3-COLUMN GRID ═══ */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-8 lg:gap-10 mx-auto max-w-[1100px]">
+          
+          {/* Card 1: Evaluation (Sign up gear style) -> Maps to Smart Screening per prompt specs */}
+          <FeatureCard
+            title="Smart Screening"
+            description="Analyze and shortlist top candidates instantly using AI."
+            illustration={<Image src="/illustrations/img2.png" alt="Screening" width={180} height={180} className="object-contain drop-shadow-sm transition-transform duration-500 hover:scale-105" />}
+            delay={0}
           />
           
-          <AgentCard
-            icon={<Calendar className="w-5 h-5" />}
-            title="Scheduling Agent"
-            description="Automatically schedules interviews across calendars."
-            accentColor="#10b981"
-            position="top-right"
+          {/* Card 2: Scheduling / Integration (Blocks) */}
+          <FeatureCard
+            title="Seamless Scheduling"
+            description="Automatically schedule interviews across calendars without manual effort."
+            illustration={<Image src="/illustrations/img1.png" alt="Scheduling" width={180} height={180} className="object-contain drop-shadow-sm transition-transform duration-500 hover:scale-105" />}
+            delay={1}
           />
           
-          <AgentCard
-            icon={<BrainCircuit className="w-5 h-5" />}
-            title="Evaluation Agent"
-            description="Scores candidates based on role fit and performance."
-            accentColor="#f59e0b"
-            position="bottom-left"
+          {/* Card 3: Evaluation (Gear) */}
+          <FeatureCard
+            title="Intelligent Evaluation"
+            description="Score candidates based on role fit, skills, and performance."
+            illustration={<Image src="/illustrations/img3.png" alt="Evaluation" width={180} height={180} className="object-contain drop-shadow-sm transition-transform duration-500 hover:scale-105" />}
+            delay={2}
           />
-          
-          <AgentCard
-            icon={<UserPlus className="w-5 h-5" />}
-            title="Onboarding Agent"
-            description="Streamlines onboarding workflows and documentation."
-            accentColor="#0ea5e9"
-            position="bottom-right"
-          />
+
         </div>
       </div>
 
       <style jsx global>{`
         .agent-card-enter {
           opacity: 0;
-          transform: translateY(16px);
-          transition: opacity 400ms ease-out, transform 400ms ease-out;
+          transform: translateY(24px) scale(0.98);
+          transition: opacity 500ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         .agent-card-enter.visible {
           opacity: 1;
-          transform: translateY(0);
+          transform: translateY(0) scale(1);
         }
       `}</style>
     </section>
@@ -154,71 +144,46 @@ export function AgentsSection() {
 }
 
 /* ─────────────────────────────────────────────────
-   AGENT CARD — Sharp rectangle, border-line grid
-   Looks like editorial grid cells with shared borders
+   FEATURE CARD — Premium 3-column setup
    ───────────────────────────────────────────────── */
-function AgentCard({
-  icon,
+function FeatureCard({
   title,
   description,
-  accentColor,
-  position,
+  illustration,
+  delay
 }: {
-  icon: React.ReactNode;
   title: string;
   description: string;
-  accentColor: string;
-  position: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  illustration: React.ReactNode;
+  delay: number;
 }) {
   return (
     <div
       className={cn(
         "agent-card-enter group relative flex flex-col overflow-hidden",
-        "bg-background",
-        "border border-line",
-        "transition-colors duration-200 ease-out cursor-pointer",
-        "hover:bg-muted/50",
-        /* Collapse shared borders for grid effect */
-        position === "top-right" && "md:-ml-px",
-        position === "bottom-left" && "md:-mt-px",
-        position === "bottom-right" && "md:-ml-px md:-mt-px",
-        "-mt-px md:mt-0",
-        position === "top-right" && "-mt-px md:mt-0",
+        "bg-white backdrop-blur-sm",
+        "border border-line/60 rounded-2xl",
+        "hover:border-primary/30",
+        "transition-all duration-300 ease-out cursor-pointer",
+        "hover:shadow-[0_12px_40px_-12px_rgba(85,97,200,0.12)] hover:-translate-y-1"
       )}
-      style={{
-        padding: "var(--space-8)",
-      }}
+      style={{ padding: "40px 32px" }}
     >
-      {/* Icon Wrapper — sharp rectangle */}
-      <div
-        className="flex items-center justify-center"
-        style={{
-          width: "44px",
-          height: "44px",
-          marginBottom: "var(--space-4)",
-          background: `rgba(${hexToRgb(accentColor)}, 0.08)`,
-          color: accentColor,
-        }}
-      >
-        {icon}
+      {/* Large Illustration Area */}
+      <div className="w-full flex items-center justify-center mb-10 overflow-visible relative h-[180px]">
+        {/* Subtle glow behind illustration */}
+        <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full scale-[1.5] transition-opacity opacity-0 group-hover:opacity-100" />
+        <div className="relative z-10 w-full h-full flex items-center justify-center">
+          {illustration}
+        </div>
       </div>
 
       {/* Content */}
-      <div className="flex flex-col" style={{ gap: "var(--space-2)" }}>
-        <h3
-          className="font-semibold text-foreground"
-          style={{ fontSize: "var(--text-heading-sm)" }}
-        >
+      <div className="flex flex-col mt-auto pb-2">
+        <h3 className="font-semibold text-neutral-900 text-xl mb-3 tracking-tight">
           {title}
         </h3>
-        
-        <p
-          className="text-muted-foreground font-normal line-clamp-2"
-          style={{ 
-            fontSize: "var(--text-body-sm)",
-            lineHeight: "1.5"
-          }}
-        >
+        <p className="text-neutral-500 font-normal leading-relaxed text-[15px]">
           {description}
         </p>
       </div>
@@ -226,9 +191,5 @@ function AgentCard({
   );
 }
 
-function hexToRgb(hex: string) {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? 
-    `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` 
-    : "85, 97, 200";
-}
+
+

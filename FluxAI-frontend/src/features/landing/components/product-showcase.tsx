@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { 
   FileText, 
@@ -14,40 +13,15 @@ import {
 } from "lucide-react";
 
 /* ─────────────────────────────────────────────────
-   PRODUCT SHOWCASE — Chanhdai-style Editorial
-   Sharp edges, border-line mockups, no shadows
+   PRODUCT SHOWCASE — Stacked Card Scroll System
+   Premium SaaS UI, hard overlap, no transparency
    ───────────────────────────────────────────────── */
 export function ProductShowcase() {
-  const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("visible");
-            const steps = entry.target.querySelectorAll(".step-enter");
-            steps.forEach((step, index) => {
-              (step as HTMLElement).style.transitionDelay = `${index * 150}ms`;
-              step.classList.add("visible");
-            });
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
   const steps = [
     {
       id: "apply",
       caption: "Candidates apply through your job postings",
+      description: "Fluxberry AI seamlessly integrates with your existing careers page and job boards, centralizing all inbound applications into a single, unified pipeline.",
       icon: <FileText className="w-5 h-5" />,
       color: "#5561c8",
       mockup: <ApplicationMockup />,
@@ -55,6 +29,7 @@ export function ProductShowcase() {
     {
       id: "screen",
       caption: "AI instantly identifies top candidates",
+      description: "Our proprietary AI engine evaluates resumes against your specific job criteria in seconds, highlighting the strongest matches while eliminating bias.",
       icon: <BrainCircuit className="w-5 h-5" />,
       color: "#8b93e0",
       mockup: <AIScreeningMockup />,
@@ -62,6 +37,7 @@ export function ProductShowcase() {
     {
       id: "schedule",
       caption: "Interviews are automatically scheduled",
+      description: "Stop the back-and-forth emails. Fluxberry AI syncs with your team's calendars and lets top candidates book their own interview slots instantly.",
       icon: <Calendar className="w-5 h-5" />,
       color: "#10b981",
       mockup: <SchedulingMockup />,
@@ -69,6 +45,7 @@ export function ProductShowcase() {
     {
       id: "onboard",
       caption: "Decisions and onboarding handled in one place",
+      description: "Once you make a hire, automatic workflows trigger offer letters, background checks, and day-one onboarding tasks without lifting a finger.",
       icon: <CheckCircle2 className="w-5 h-5" />,
       color: "#3b82f6",
       mockup: <OnboardingMockup />,
@@ -77,9 +54,8 @@ export function ProductShowcase() {
 
   return (
     <section
-      ref={sectionRef}
       id="product-tour"
-      className="section-enter relative w-full screen-line-top screen-line-bottom bg-muted/30"
+      className="relative w-full bg-background"
       style={{
         paddingTop: "clamp(64px, 8vw, var(--space-24))",
         paddingBottom: "clamp(64px, 8vw, var(--space-24))",
@@ -136,86 +112,71 @@ export function ProductShowcase() {
           </p>
         </div>
 
-        {/* ═══ FLOW STEPS ═══ */}
+        {/* ═══ STACKED CARDS SYSTEM ═══ */}
         <div
-          className="relative mx-auto"
+          className="relative mx-auto w-full"
           style={{
             marginTop: "clamp(48px, 6vw, var(--space-16))",
-            maxWidth: "960px",
+            maxWidth: "1080px",
           }}
         >
-          {/* Central Connecting Line (Desktop Only) */}
-          <div className="hidden md:block absolute left-1/2 top-10 bottom-10 w-px bg-line -translate-x-1/2 z-0" />
-
-          <div className="flex flex-col gap-12 md:gap-0">
+          <div className="flex flex-col">
             {steps.map((step, index) => (
               <FlowStep
                 key={step.id}
                 step={step}
                 index={index}
                 isEven={index % 2 === 0}
-                isLast={index === steps.length - 1}
               />
             ))}
           </div>
         </div>
       </div>
-
-      <style jsx global>{`
-        .step-enter {
-          opacity: 0;
-          transform: translateY(24px);
-          transition: opacity 500ms cubic-bezier(0.25, 0.1, 0.25, 1), transform 500ms cubic-bezier(0.25, 0.1, 0.25, 1);
-        }
-        .step-enter.visible {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      `}</style>
     </section>
   );
 }
 
 /* ─────────────────────────────────────────────────
-   FLOW STEP — Sharp, editorial
+   FLOW STEP — Sticky Stacked Card
    ───────────────────────────────────────────────── */
 function FlowStep({
   step,
   index,
   isEven,
-  isLast,
 }: {
   step: any;
   index: number;
   isEven: boolean;
-  isLast: boolean;
 }) {
   return (
-    <div className="step-enter relative z-10 flex flex-col md:flex-row items-center justify-between w-full md:py-12 group">
-      {/* Mobile Connection Line */}
-      {!isLast && (
-        <div className="md:hidden absolute left-6 top-16 bottom-[-48px] w-px bg-line z-0" />
+    <div
+      className={cn(
+        "group relative flex flex-col md:flex-row w-full bg-background overflow-hidden",
+        "border border-line rounded-2xl md:rounded-[2rem]",
+        "mb-12 md:mb-0 md:sticky"
       )}
-
+      style={{
+        // STICKY LOGIC
+        top: "clamp(80px, 10vh, 120px)",
+        height: "max(560px, calc(100vh - 140px))",
+        // Z-INDEX ESCALATION
+        zIndex: index + 1,
+        // SOLID BACKGROUND, NO OPACITY FADES
+        opacity: 1,
+        // ELEVATION HIERARCHY SHADOW
+        boxShadow: index === 0 ? "none" : `0 -${12 + index * 4}px ${32 + index * 8}px -12px rgba(85, 97, 200, ${0.03 + index * 0.01})`,
+      }}
+    >
       {/* ── Content Side ── */}
       <div
         className={cn(
-          "flex w-full md:w-1/2",
-          isEven ? "md:justify-end md:pr-16" : "md:order-last md:justify-start md:pl-16"
+          "flex flex-col justify-center w-full md:w-1/2 p-8 md:p-14 lg:p-16 xl:p-20",
+          isEven ? "md:order-last" : "md:order-first"
         )}
       >
-        <div className="flex items-center gap-4 bg-background p-4 border border-line transition-colors duration-300 group-hover:bg-muted/50 w-full max-w-[360px] relative z-[11] ml-12 md:ml-0">
-          
-          {/* Mobile Icon Node */}
-          <div 
-            className="md:hidden absolute -left-16 flex items-center justify-center bg-background border border-line z-20"
-            style={{ width: "40px", height: "40px", color: step.color }}
-          >
-            {step.icon}
-          </div>
-
+        <div className="flex items-center gap-4 mb-8">
           <div
-            className="flex items-center justify-center p-3 shrink-0"
+            className="flex items-center justify-center shrink-0 w-12 h-12 rounded-xl"
             style={{
               background: `rgba(${hexToRgb(step.color)}, 0.1)`,
               color: step.color,
@@ -224,29 +185,30 @@ function FlowStep({
             {step.icon}
           </div>
           <div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+            <div className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-1">
               Step 0{index + 1}
             </div>
-            <h3 className="text-sm font-medium text-foreground leading-snug">
-              {step.caption}
-            </h3>
           </div>
         </div>
-      </div>
 
-      {/* ── Central Node (Desktop Only) ── */}
-      <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center justify-center bg-background border border-line z-20 transition-transform duration-300 group-hover:scale-110" style={{ width: "48px", height: "48px", color: step.color }}>
-        {step.icon}
+        <h3 className="text-3xl md:text-4xl font-semibold text-foreground tracking-tight leading-snug mb-5 text-balance">
+          {step.caption}
+        </h3>
+        
+        <p className="text-muted-foreground text-[17px] leading-relaxed font-normal">
+          {step.description}
+        </p>
       </div>
 
       {/* ── Mockup Side ── */}
       <div
         className={cn(
-          "w-full md:w-1/2 mt-6 md:mt-0 pl-12 md:pl-0",
-          isEven ? "md:pl-16" : "md:order-first md:pr-16"
+          "relative flex items-center justify-center w-full md:w-1/2 p-8 md:p-12 lg:p-16 xl:p-20 bg-muted/20",
+          "border-t md:border-t-0",
+          !isEven ? "md:border-l border-line" : "md:border-r border-line"
         )}
       >
-        <div className="relative w-full max-w-[400px] mx-auto md:mx-0">
+        <div className="relative w-full max-w-[440px] mx-auto md:scale-95 transition-transform duration-700 md:group-hover:scale-100 origin-center">
            {step.mockup}
         </div>
       </div>

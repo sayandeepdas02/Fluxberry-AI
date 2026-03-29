@@ -33,7 +33,7 @@ export function OnboardingStep3() {
                 fullName: data.fullName,
                 companyRole: data.role,
                 companyWebsite: data.companyWebsite,
-                productSelection: data.productSelection || undefined,
+                productSelection: 'both', // Legacy compatcast for backend strictly expecting 'ats' | 'hire' | 'both'
                 workspaceName: workspaceName.trim(),
             });
 

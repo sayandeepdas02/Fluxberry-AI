@@ -69,7 +69,22 @@ export function useApplications(jobId: string, initialQuery?: ListApplicationsQu
         const response = await applicationsApi.listByJob(jobId, mergedQuery)
 
         if (response.success && response.data) {
-            setApplications(response.data.applications)
+            // MOCK AI INJECTION: Temporary frontend mock for AI features
+            const withAiMock = response.data.applications.map(app => {
+                const score = Math.floor(Math.random() * 40) + 60; // 60-100 score
+                const tags = ['React', 'Node.js', 'Typescript', 'AWS'].sort(() => 0.5 - Math.random()).slice(0, 2);
+                return {
+                    ...app,
+                    matchScore: app.matchScore || score,
+                    tags: app.tags || tags,
+                    aiSummary: app.aiSummary || {
+                        strengths: ['Strong technical background', 'Good communication'],
+                        weaknesses: ['Lacks direct industry experience', 'Junior level architecture exposure'],
+                        fitReasoning: `Candidate aligns well with frontend requirements. Matches core stack.`
+                    }
+                }
+            })
+            setApplications(withAiMock)
             setTotal(response.data.total)
         } else {
             const msg = response.error?.message || 'Failed to load applications'

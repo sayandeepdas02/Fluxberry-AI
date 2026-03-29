@@ -32,6 +32,13 @@ export interface JobApplicationResponse {
         color: string
         order: number
     }
+    matchScore?: number
+    aiSummary?: {
+        strengths: string[]
+        weaknesses: string[]
+        fitReasoning: string
+    }
+    tags?: string[]
     submittedAt: string
     createdAt: string
     updatedAt: string

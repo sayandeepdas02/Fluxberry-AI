@@ -16,15 +16,22 @@ import {
     Mail,
     Zap,
     CreditCard,
+    Search,
+    Clock,
+    LayoutGrid
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import { useAuth } from "@/lib/context/auth-context";
+import { useSubscription } from "@/lib/subscription/subscription-context";
 
 export function Sidebar() {
     const router = useRouter();
     const pathname = usePathname();
     const { user, logout } = useAuth();
+    const { config, getTrialDaysRemaining, hasAccessToApp } = useSubscription();
+
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -80,6 +87,16 @@ export function Sidebar() {
 
     return (
         <div className="w-64 h-screen border-r border-line bg-background flex flex-col sticky top-0">
+            {/* Trial Banner */}
+            {config.trialActive && (
+                <div className="bg-primary/10 border-b border-primary/20 px-4 py-2 flex items-center gap-2">
+                    <Clock className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-xs font-semibold text-primary">
+                        Free Trial ({getTrialDaysRemaining()} days left)
+                    </span>
+                </div>
+            )}
+
             {/* Header: Workspace with Dropdown */}
             <div className="p-4 pb-2 relative" ref={dropdownRef}>
                 <div
@@ -209,6 +226,7 @@ export function Sidebar() {
 
                     <div className="space-y-4">
                         {/* Job Board */}
+                        {hasAccessToApp('job_board') && (
                         <div className="space-y-1">
                             <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-foreground hover:text-foreground transition-colors group">
                                 <Briefcase className="w-4 h-4" />
@@ -219,42 +237,83 @@ export function Sidebar() {
                                 <Link
                                     href="/dashboard"
                                     className={cn(
-                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-md transition-colors relative",
                                         isActive("/dashboard") && !pathname?.startsWith("/dashboard/onboarding") && !pathname?.startsWith("/dashboard/analytics") && !pathname?.startsWith("/dashboard/assessments")
-                                            ? "text-primary bg-primary/10 font-semibold"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                            ? "text-primary font-semibold"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50 font-medium"
                                     )}
                                 >
+                                    {isActive("/dashboard") && !pathname?.startsWith("/dashboard/onboarding") && !pathname?.startsWith("/dashboard/analytics") && !pathname?.startsWith("/dashboard/assessments") && (
+                                        <motion.div layoutId="sidebar-active" className="absolute inset-0 bg-primary/10 rounded-md -z-10" />
+                                    )}
                                     Home
                                 </Link>
 
                                 <Link
                                     href="/dashboard/manage-jobs"
                                     className={cn(
-                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-md transition-colors relative",
                                         isActive("/dashboard/manage-jobs")
-                                            ? "text-primary bg-primary/10 font-semibold"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                            ? "text-primary font-semibold"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50 font-medium"
                                     )}
                                 >
+                                    {isActive("/dashboard/manage-jobs") && (
+                                        <motion.div layoutId="sidebar-active" className="absolute inset-0 bg-primary/10 rounded-md -z-10" />
+                                    )}
                                     Manage Jobs
                                 </Link>
 
                                 <Link
                                     href="/dashboard/candidate-pool"
                                     className={cn(
-                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-md transition-colors relative",
                                         isActive("/dashboard/candidate-pool")
-                                            ? "text-primary bg-primary/10 font-semibold"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                            ? "text-primary font-semibold"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50 font-medium"
                                     )}
                                 >
+                                    {isActive("/dashboard/candidate-pool") && (
+                                        <motion.div layoutId="sidebar-active" className="absolute inset-0 bg-primary/10 rounded-md -z-10" />
+                                    )}
                                     Candidate Pool
                                 </Link>
                             </div>
                         </div>
+                        )}
+
+                        {/* Talent Prospect (AI Sourcing) */}
+                        {hasAccessToApp('talent_prospect') && (
+                        <div className="space-y-1">
+                            <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-foreground hover:text-foreground transition-colors group">
+                                <Search className="w-4 h-4 text-primary" />
+                                <span>Talent Prospect</span>
+                                <span className="ml-auto px-1.5 py-0.5 rounded border border-primary/30 bg-primary/10 text-[10px] text-primary uppercase font-bold tracking-wider">
+                                    AI
+                                </span>
+                            </button>
+
+                            <div className="ml-4 space-y-0.5 border-l border-border/50 pl-2">
+                                <Link
+                                    href="/dashboard/talent-prospect"
+                                    className={cn(
+                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-md transition-colors relative",
+                                        isActive("/dashboard/talent-prospect")
+                                            ? "text-primary font-semibold"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50 font-medium"
+                                    )}
+                                >
+                                    {isActive("/dashboard/talent-prospect") && (
+                                        <motion.div layoutId="sidebar-active" className="absolute inset-0 bg-primary/10 rounded-md -z-10" />
+                                    )}
+                                    Global Search
+                                </Link>
+                            </div>
+                        </div>
+                        )}
 
                         {/* ATS Screening */}
+                        {hasAccessToApp('ats_screening') && (
                         <div className="space-y-1">
                             <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-foreground hover:text-foreground transition-colors group">
                                 <Activity className="w-4 h-4" />
@@ -265,18 +324,23 @@ export function Sidebar() {
                                 <Link
                                     href="/dashboard/ats-screening"
                                     className={cn(
-                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-md transition-colors relative",
                                         isActive("/dashboard/ats-screening")
-                                            ? "text-primary bg-primary/10 font-semibold"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                            ? "text-primary font-semibold"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50 font-medium"
                                     )}
                                 >
+                                    {isActive("/dashboard/ats-screening") && (
+                                        <motion.div layoutId="sidebar-active" className="absolute inset-0 bg-primary/10 rounded-md -z-10" />
+                                    )}
                                     Overview
                                 </Link>
                             </div>
                         </div>
+                        )}
 
                         {/* Interview Automation */}
+                        {hasAccessToApp('interview_agent') && (
                         <div className="space-y-1">
                             <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-foreground hover:text-foreground transition-colors group">
                                 <ShoppingBag className="w-4 h-4" />
@@ -319,9 +383,10 @@ export function Sidebar() {
                                 </Link>
                             </div>
                         </div>
-
+                        )}
 
                         {/* Talent Onboarding */}
+                        {hasAccessToApp('onboarding') && (
                         <div className="space-y-1">
                             <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-foreground hover:text-foreground transition-colors group">
                                 <FileText className="w-4 h-4" />
@@ -374,6 +439,18 @@ export function Sidebar() {
                                     Templates
                                 </Link>
                             </div>
+                        </div>
+                        )}
+
+                        {/* App Market */}
+                        <div className="space-y-1 mt-6 border-t border-line/50 pt-4">
+                            <Link href="/dashboard/apps" className={cn("w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-md transition-colors group relative", isActive("/dashboard/apps") ? "text-primary font-semibold" : "text-foreground hover:bg-muted/50 font-medium")}>
+                                {isActive("/dashboard/apps") && (
+                                    <motion.div layoutId="sidebar-active" className="absolute inset-0 bg-primary/10 rounded-md -z-10" />
+                                )}
+                                <LayoutGrid className={cn("w-4 h-4", isActive("/dashboard/apps") ? "text-primary" : "text-foreground/70 group-hover:text-foreground")} />
+                                <span>OS Marketplace</span>
+                            </Link>
                         </div>
                     </div>
                 </div>

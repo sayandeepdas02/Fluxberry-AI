@@ -2,59 +2,20 @@
 
 import * as React from "react";
 import { use, useState } from "react";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { FileText, Search, ChevronDown, X, Loader2 } from "lucide-react";
+import { Search, ChevronDown, X, Loader2, Users, FileBarChart, LayoutDashboard } from "lucide-react";
 import { useApplications } from "@/features/jobs/hooks/use-applications";
 import { JobApplicationResponse } from "@/lib/api/applications";
-import { PipelineStage } from "@/lib/api/types";
 import Link from "next/link";
-
-function StageBadge({ app, stages }: { app: JobApplicationResponse; stages: PipelineStage[] }) {
-    // Try to find stage by ID first, then by matching status type
-    const stage = app.currentStageId
-        ? stages.find(s => s._id === (typeof app.currentStageId === 'object' ? app.currentStageId._id : app.currentStageId))
-        : stages.find(s => s.type === app.status);
-
-    const label = stage ? stage.name : app.status;
-    const color = stage?.color || '#64748b'; // Default slate-500
-
-    return (
-        <span
-            className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border"
-            style={{
-                backgroundColor: `${color}15`, // 15% opacity
-                color: color,
-                borderColor: `${color}30` // 30% opacity
-            }}
-        >
-            {label}
-        </span>
-    );
-}
-
-function getCandidateInfo(app: JobApplicationResponse) {
-    const candidate = typeof app.candidateId === 'object' ? app.candidateId : null;
-    return {
-        name: candidate ? `${candidate.firstName || ''} ${candidate.lastName || ''}`.trim() || candidate.email : 'Unknown',
-        email: candidate?.email || '',
-        phone: candidate?.phone || '',
-        resumeUrl: candidate?.resumeUrl || app.resumeUrl || '',
-    };
-}
+import { toast } from "sonner";
+import { PipelineBoard } from "@/features/pipeline/components/pipeline-board";
+import { CandidateDrawer } from "@/features/pipeline/components/candidate-drawer";
 
 interface PageProps {
     params: Promise<{ jobId: string }>;
 }
 
-export default function JobApplicantsPage({ params }: PageProps) {
+export default function JobDetailsPage({ params }: PageProps) {
     const { jobId } = use(params);
     const {
         applications,
@@ -62,312 +23,183 @@ export default function JobApplicantsPage({ params }: PageProps) {
         total,
         isLoading,
         error,
-        stageFilter,
         search,
-        setStageFilter,
         setSearch,
         moveStage,
-        bulkMove,
-        bulkUpdate,
         refetch,
-        setPage,
-        page,
     } = useApplications(jobId);
 
-    const [selected, setSelected] = useState<Set<string>>(new Set());
-    const [showBulkDropdown, setShowBulkDropdown] = useState(false);
+    const [activeTab, setActiveTab] = useState<"overview" | "candidates" | "analytics">("candidates");
     const [searchInput, setSearchInput] = useState('');
-
-    const toggleSelect = (id: string) => {
-        setSelected(prev => {
-            const next = new Set(prev);
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
-            return next;
-        });
-    };
-
-    const toggleSelectAll = () => {
-        if (selected.size === applications.length) {
-            setSelected(new Set());
-        } else {
-            setSelected(new Set(applications.map(a => a._id)));
-        }
-    };
-
-    const handleBulkMoveStage = async (stageId: string) => {
-        if (selected.size === 0) return;
-        await bulkMove(Array.from(selected), stageId);
-        setSelected(new Set());
-        setShowBulkDropdown(false);
-    };
-
-    const handleBulkReject = async () => {
-        if (selected.size === 0) return;
-        await bulkUpdate({
-            applicationIds: Array.from(selected),
-            action: 'REJECT',
-        });
-        setSelected(new Set());
-    };
+    
+    // Drawer state
+    const [selectedCandidate, setSelectedCandidate] = useState<JobApplicationResponse | null>(null);
 
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setSearch(searchInput);
     };
 
-    const handleStageChange = async (appId: string, stageId: string) => {
-        await moveStage(appId, stageId);
+    const handleStageChange = async (appId: string, stageId: string): Promise<boolean> => {
+        try {
+            await moveStage(appId, stageId);
+            // Optimistically update the drawer state if open
+            if (selectedCandidate && selectedCandidate._id === appId) {
+                setSelectedCandidate(prev => prev ? {
+                    ...prev,
+                    currentStageId: stages.find(s => s._id === stageId) || prev.currentStageId,
+                    status: stages.find(s => s._id === stageId)?.type as any || prev.status
+                } : null);
+            }
+            toast.success("Candidate moved successfully");
+            return true;
+        } catch (error) {
+            console.error("Failed to move candidate:", error);
+            toast.error("Failed to move candidate");
+            return false;
+        }
     };
 
     return (
-        <div className="min-h-screen bg-background">
-            <div className="max-w-7xl mx-auto p-6 space-y-6">
-                {/* Breadcrumb */}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground/60">
-                    <Link href="/dashboard/manage-jobs" className="hover:text-foreground transition-colors">
-                        Manage Jobs
-                    </Link>
-                    <span>/</span>
-                    <span className="text-foreground font-medium">Applicants</span>
-                </div>
-
-                {/* Stage filter tabs */}
-                <div className="border-b border-edge">
-                    <div className="flex items-center gap-1 overflow-x-auto">
-                        <button
-                            onClick={() => setStageFilter(undefined)}
-                            className={cn(
-                                "px-3 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors",
-                                !stageFilter
-                                    ? "border-foreground text-foreground"
-                                    : "border-transparent text-muted-foreground hover:text-foreground/80"
-                            )}
-                        >
-                            All
-                        </button>
-                        {stages.map((stage) => (
-                            <button
-                                key={stage._id}
-                                onClick={() => setStageFilter(stage._id)}
-                                className={cn(
-                                    "px-3 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors",
-                                    stageFilter === stage._id
-                                        ? "border-foreground text-foreground"
-                                        : "border-transparent text-muted-foreground hover:text-foreground/80"
-                                )}
-                                style={{
-                                    borderColor: stageFilter === stage._id ? stage.color : undefined,
-                                    color: stageFilter === stage._id ? stage.color : undefined
-                                }}
-                            >
-                                {stage.name}
-                            </button>
-                        ))}
+        <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-background">
+            {/* Header Area */}
+            <div className="flex-none px-6 py-4 border-b border-line bg-card space-y-4">
+                {/* Breadcrumb & Global Actions */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground/60">
+                        <Link href="/dashboard/manage-jobs" className="hover:text-foreground transition-colors">
+                            Manage Jobs
+                        </Link>
+                        <span>/</span>
+                        <span className="text-foreground font-medium">Job Details</span>
                     </div>
-                </div>
 
-                {/* Summary + Search + Bulk Actions */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <h2 className="text-lg font-medium">
-                            Total: {total}
-                        </h2>
-                        {selected.size > 0 && (
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-muted-foreground">
-                                    {selected.size} selected
-                                </span>
-                                <div className="relative">
-                                    <button
-                                        onClick={() => setShowBulkDropdown(!showBulkDropdown)}
-                                        className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-md border border-edge bg-card hover:bg-muted/50 transition-colors"
-                                    >
-                                        Move Stage <ChevronDown className="w-3 h-3" />
-                                    </button>
-                                    {showBulkDropdown && (
-                                        <div className="absolute top-full left-0 mt-1 w-48 bg-card border border-edge rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
-                                            {stages.map((stage) => (
-                                                <button
-                                                    key={stage._id}
-                                                    onClick={() => handleBulkMoveStage(stage._id)}
-                                                    className="w-full text-left px-3 py-2 text-sm hover:bg-muted/50 transition-colors flex items-center gap-2"
-                                                >
-                                                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: stage.color }} />
-                                                    {stage.name}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
+                    <div className="flex items-center gap-3">
+                        <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-64">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50">
+                                <Search className="w-4 h-4" />
+                            </span>
+                            <input
+                                type="text"
+                                value={searchInput}
+                                onChange={(e) => setSearchInput(e.target.value)}
+                                placeholder="Search candidates..."
+                                className="w-full h-8 rounded-none border border-line bg-background pl-9 pr-4 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary"
+                            />
+                            {search && (
                                 <button
-                                    onClick={handleBulkReject}
-                                    className="px-3 py-1.5 text-sm rounded-md bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                                    type="button"
+                                    onClick={() => { setSearchInput(''); setSearch(''); }}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 hover:text-foreground"
                                 >
-                                    Reject
+                                    <X className="w-3 h-3 text-muted-foreground" />
                                 </button>
-                            </div>
-                        )}
+                            )}
+                        </form>
                     </div>
-
-                    <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-72">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50">
-                            <Search className="w-4 h-4" />
-                        </span>
-                        <input
-                            type="text"
-                            value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value)}
-                            placeholder="Search by name or email..."
-                            className="w-full h-9 rounded-md border border-input bg-card pl-9 pr-4 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
-                        />
-                        {search && (
-                            <button
-                                type="button"
-                                onClick={() => { setSearchInput(''); setSearch(''); }}
-                                className="absolute right-3 top-1/2 -translate-y-1/2"
-                            >
-                                <X className="w-3 h-3 text-muted-foreground" />
-                            </button>
-                        )}
-                    </form>
                 </div>
 
-                {/* Table */}
+                {/* Tab Navigation */}
+                <div className="flex items-center gap-6 mt-6">
+                    <button
+                        onClick={() => setActiveTab("overview")}
+                        className={cn(
+                            "flex items-center gap-2 pb-3 text-sm font-medium border-b-2 transition-colors",
+                            activeTab === "overview" 
+                                ? "border-primary text-foreground" 
+                                : "border-transparent text-muted-foreground hover:text-foreground"
+                        )}
+                    >
+                        <LayoutDashboard className="w-4 h-4" />
+                        Overview
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("candidates")}
+                        className={cn(
+                            "flex items-center gap-2 pb-3 text-sm font-medium border-b-2 transition-colors",
+                            activeTab === "candidates" 
+                                ? "border-primary text-foreground" 
+                                : "border-transparent text-muted-foreground hover:text-foreground"
+                        )}
+                    >
+                        <Users className="w-4 h-4" />
+                        Pipeline ({total})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("analytics")}
+                        className={cn(
+                            "flex items-center gap-2 pb-3 text-sm font-medium border-b-2 transition-colors",
+                            activeTab === "analytics" 
+                                ? "border-primary text-foreground" 
+                                : "border-transparent text-muted-foreground hover:text-foreground"
+                        )}
+                    >
+                        <FileBarChart className="w-4 h-4" />
+                        Analytics
+                    </button>
+                </div>
+            </div>
+
+            {/* Main Content Area */}
+            <div className="flex-1 overflow-hidden">
                 {isLoading ? (
-                    <div className="flex items-center justify-center py-20">
-                        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                    <div className="h-full flex items-center justify-center">
+                        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
                     </div>
                 ) : error ? (
-                    <div className="flex flex-col items-center justify-center py-20 gap-2">
-                        <p className="text-sm text-red-400">{error}</p>
-                        <button onClick={() => refetch()} className="text-sm text-muted-foreground hover:text-foreground underline">
+                    <div className="h-full flex flex-col items-center justify-center gap-2 text-center p-6">
+                        <p className="text-red-500 font-medium">Failed to load pipeline</p>
+                        <p className="text-sm text-muted-foreground mb-4">{error}</p>
+                        <button 
+                            onClick={() => refetch()} 
+                            className="bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90"
+                        >
                             Retry
                         </button>
                     </div>
-                ) : applications.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <p className="text-muted-foreground">No applications found</p>
-                        <p className="text-sm text-muted-foreground/60 mt-1">
-                            {stageFilter
-                                ? `No applications in "${stages.find(s => s._id === stageFilter)?.name || 'this'}" stage`
-                                : 'No applications for this job yet'}
-                        </p>
-                    </div>
                 ) : (
-                    <div className="border border-edge rounded-lg overflow-hidden bg-background">
-                        <Table>
-                            <TableHeader className="bg-muted/10">
-                                <TableRow className="hover:bg-transparent">
-                                    <TableHead className="w-10">
-                                        <input
-                                            type="checkbox"
-                                            checked={selected.size === applications.length && applications.length > 0}
-                                            onChange={toggleSelectAll}
-                                            className="rounded border-input"
-                                        />
-                                    </TableHead>
-                                    <TableHead className="text-muted-foreground/70 font-normal">Candidate</TableHead>
-                                    <TableHead className="text-muted-foreground/70 font-normal">Email</TableHead>
-                                    <TableHead className="text-muted-foreground/70 font-normal">Stage</TableHead>
-                                    <TableHead className="text-muted-foreground/70 font-normal">Applied</TableHead>
-                                    <TableHead className="text-center text-muted-foreground/70 font-normal">Resume</TableHead>
-                                    <TableHead className="text-muted-foreground/70 font-normal">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {applications.map((app) => {
-                                    const info = getCandidateInfo(app);
-                                    // Resolve current stage ID
-                                    const currentStageId = typeof app.currentStageId === 'object'
-                                        ? app.currentStageId._id
-                                        : (app.currentStageId || stages.find(s => s.type === app.status)?._id || '');
+                    <>
+                        {/* Tab Content */}
+                        {activeTab === "candidates" && (
+                            <PipelineBoard 
+                                applications={applications}
+                                stages={stages}
+                                onCandidateClick={(app) => setSelectedCandidate(app)}
+                                onMoveCandidate={handleStageChange}
+                            />
+                        )}
 
-                                    return (
-                                        <TableRow key={app._id} className={cn(
-                                            "hover:bg-muted/20 border-edge",
-                                            selected.has(app._id) && "bg-muted/10"
-                                        )}>
-                                            <TableCell>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selected.has(app._id)}
-                                                    onChange={() => toggleSelect(app._id)}
-                                                    className="rounded border-input"
-                                                />
-                                            </TableCell>
-                                            <TableCell className="font-medium text-foreground">
-                                                {info.name}
-                                            </TableCell>
-                                            <TableCell className="text-muted-foreground text-sm">
-                                                {info.email}
-                                            </TableCell>
-                                            <TableCell>
-                                                <StageBadge app={app} stages={stages} />
-                                            </TableCell>
-                                            <TableCell className="text-muted-foreground text-sm">
-                                                {new Date(app.submittedAt).toLocaleDateString()}
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                {info.resumeUrl ? (
-                                                    <a
-                                                        href={info.resumeUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-muted/50 transition-colors text-muted-foreground"
-                                                    >
-                                                        <FileText className="w-4 h-4" />
-                                                    </a>
-                                                ) : (
-                                                    <span className="text-muted-foreground/30">—</span>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                <select
-                                                    value={currentStageId}
-                                                    onChange={(e) => handleStageChange(app._id, e.target.value)}
-                                                    className="text-xs bg-card border border-edge rounded px-2 py-1 text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring max-w-[120px]"
-                                                >
-                                                    {stages.map((stage) => (
-                                                        <option key={stage._id} value={stage._id}>
-                                                            {stage.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </TableCell>
-                                        </TableRow>
-                                    );
-                                })}
-                            </TableBody>
-                        </Table>
-                    </div>
-                )}
+                        {activeTab === "overview" && (
+                            <div className="p-8 max-w-4xl space-y-6 overflow-y-auto h-full">
+                                <h1 className="text-2xl font-semibold">Job Details & Configuration</h1>
+                                <p className="text-muted-foreground">Configuration, Job Description, and Workflows will reside here.</p>
+                                <div className="p-6 border border-line bg-muted/5 flex items-center justify-center h-64 border-dashed">
+                                    <span className="text-muted-foreground/50">Overview Area Coming Soon</span>
+                                </div>
+                            </div>
+                        )}
 
-                {/* Pagination */}
-                {total > 0 && (
-                    <div className="flex items-center justify-between border-t border-edge pt-4">
-                        <div className="text-sm text-muted-foreground">
-                            Showing {((page - 1) * 20) + 1} to {Math.min(page * 20, total)} of {total} results
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setPage(page - 1)}
-                                disabled={page === 1}
-                                className="px-3 py-1 text-sm border border-edge rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/50 transition-colors"
-                            >
-                                Previous
-                            </button>
-                            <button
-                                onClick={() => setPage(page + 1)}
-                                disabled={page * 20 >= total}
-                                className="px-3 py-1 text-sm border border-edge rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/50 transition-colors"
-                            >
-                                Next
-                            </button>
-                        </div>
-                    </div>
+                        {activeTab === "analytics" && (
+                            <div className="p-8 max-w-4xl space-y-6 overflow-y-auto h-full">
+                                <h1 className="text-2xl font-semibold">Hiring Analytics</h1>
+                                <p className="text-muted-foreground">Conversion rates, time to hire, and pipeline velocity.</p>
+                                <div className="p-6 border border-line bg-muted/5 flex items-center justify-center h-64 border-dashed">
+                                    <span className="text-muted-foreground/50">Metrics Engine Coming Soon</span>
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
+
+            {/* Global Candidate Profile Drawer */}
+            <CandidateDrawer 
+                open={!!selectedCandidate} 
+                onOpenChange={(open) => !open && setSelectedCandidate(null)}
+                candidate={selectedCandidate}
+                stages={stages}
+                onMoveStage={handleStageChange}
+            />
         </div>
     );
 }
