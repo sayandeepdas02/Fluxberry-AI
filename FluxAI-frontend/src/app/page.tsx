@@ -8,6 +8,7 @@ import { TestimonialsSection } from "@/features/landing/components/testimonials-
 import { FAQSection } from "@/features/landing/components/faq-section";
 import { FinalCTASection } from "@/features/landing/components/final-cta-section";
 import { Footer } from "@/components/shared/Footer";
+import { Separator } from "@/components/shared/separator";
 
 export default function Page() {
     return (
@@ -19,19 +20,19 @@ export default function Page() {
                 style={{ maxWidth: "var(--container-max)" }}
             >
                 <Hero />
-                <div className="hatched-separator" />
+                <Separator />
                 <AgentsSection />
-                <div className="hatched-separator" />
+                <Separator />
                 <ProductShowcase />
-                <div className="hatched-separator" />
+                <Separator />
                 <MetricsSection />
-                <div className="hatched-separator" />
+                <Separator />
                 <TestimonialsSection />
-                <div className="hatched-separator" />
+                <Separator />
                 <PricingSection />
-                <div className="hatched-separator" />
+                <Separator />
                 <FAQSection />
-                <div className="hatched-separator" />
+                <Separator />
                 <FinalCTASection />
             </div>
             <Footer />

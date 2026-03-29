@@ -51,12 +51,9 @@ export function Hero() {
         paddingBottom: "var(--space-16)",
       }}
     >
-      {/* ── Content Container ── */}
+      {/* ── Content Container (Grid Synced) ── */}
       <div
-        className="mx-auto relative z-10"
-        style={{
-          paddingInline: "clamp(1rem, 3vw, 2rem)",
-        }}
+        className="mx-auto w-full px-6 sm:px-8 max-w-[1200px] border-x border-line relative z-10"
       >
         {/* ═══ TEXT CONTENT — Centered ═══ */}
         <div className="flex flex-col items-center text-center">

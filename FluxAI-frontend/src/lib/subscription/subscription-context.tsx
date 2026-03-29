@@ -152,6 +152,17 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
 export function useSubscription() {
     const context = useContext(SubscriptionContext);
-    if (!context) throw new Error("useSubscription must be wrapped within Provider.");
+    if (!context) {
+        // Return a safe fallback context for public pages (e.g., landing page)
+        return {
+            config: { plan: "free", trialActive: false, trialEndsAt: null, apps: {} },
+            isLoading: false,
+            getTrialDaysRemaining: () => 0,
+            installApp: () => {},
+            uninstallApp: () => {},
+            upgradePlan: () => {},
+            hasAccessToApp: () => false
+        } as any as SubscriptionContextType;
+    }
     return context;
 }

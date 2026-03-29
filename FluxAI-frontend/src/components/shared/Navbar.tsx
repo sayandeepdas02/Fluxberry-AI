@@ -102,41 +102,33 @@ export function Navbar() {
           ))}
         </nav>
 
-        {/* ── RIGHT: CTAs ── */}
-        <div className="hidden md:flex items-center gap-[12px]">
-          {/* Secondary: Book a Demo */}
-          <Link href="/demo">
-            <button
-              className={cn(
-                "cursor-pointer font-medium",
-                "text-muted-foreground",
-                "hover:text-foreground",
-                "transition-colors duration-200 ease-out"
-              )}
-              style={{
-                padding: "6px 14px",
-                fontSize: "var(--text-body-sm)",
-              }}
-            >
-              Book a Demo
-            </button>
+        {/* ── RIGHT: Minimal Auth / Action ── */}
+        <div className="hidden md:flex items-center gap-[16px]">
+          <Link
+            href="/signin"
+            className={cn(
+              "font-medium text-muted-foreground cursor-pointer",
+              "hover:text-foreground active:scale-[0.98]",
+              "transition-all duration-200 ease-out"
+            )}
+            style={{ fontSize: "var(--text-body-sm)" }}
+          >
+            Log in
           </Link>
-
-          {/* Primary: Start free trial — sharp rectangular */}
           <Link href="/signup">
             <button
               className={cn(
-                "cursor-pointer font-medium text-white",
-                "hover:opacity-90",
-                "transition-all duration-200 ease-out"
+                "cursor-pointer font-medium text-foreground",
+                "border border-line bg-background",
+                "hover:bg-muted active:scale-[0.98]",
+                "transition-all duration-200 ease-out rounded-none"
               )}
               style={{
-                padding: "6px 16px",
+                padding: "4px 12px",
                 fontSize: "var(--text-body-sm)",
-                backgroundColor: "#5561c8",
               }}
             >
-              Start free trial
+              Get Started
             </button>
           </Link>
         </div>
@@ -198,19 +190,12 @@ export function Navbar() {
 
             <div className="pt-3 mt-2 border-t border-line space-y-2">
               <Link
-                href="/demo"
-                className="block"
+                href="/signin"
+                className="block py-2 px-4 text-center text-muted-foreground font-medium hover:bg-muted"
                 onClick={() => setIsMobileOpen(false)}
+                style={{ fontSize: "var(--text-body-sm)" }}
               >
-                <button
-                  className="w-full border border-border text-foreground font-medium cursor-pointer hover:bg-muted transition-colors duration-200"
-                  style={{
-                    height: "44px",
-                    fontSize: "var(--text-body-sm)",
-                  }}
-                >
-                  Book a Demo
-                </button>
+                Log in
               </Link>
               <Link
                 href="/signup"
@@ -218,14 +203,13 @@ export function Navbar() {
                 onClick={() => setIsMobileOpen(false)}
               >
                 <button
-                  className="w-full text-white font-medium cursor-pointer transition-colors duration-200"
+                  className="w-full border border-line bg-background text-foreground font-medium cursor-pointer hover:bg-muted transition-colors duration-200 rounded-none"
                   style={{
-                    height: "44px",
+                    height: "40px",
                     fontSize: "var(--text-body-sm)",
-                    backgroundColor: "#5561c8",
                   }}
                 >
-                  Start free trial
+                  Get Started
                 </button>
               </Link>
             </div>

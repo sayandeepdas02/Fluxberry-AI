@@ -56,7 +56,7 @@ export function AgentsSection() {
            }} 
       />
 
-      <div className="mx-auto relative z-10 px-6 sm:px-8 max-w-[1200px]">
+      <div className="mx-auto flex flex-col items-center relative z-10 w-full px-6 sm:px-8 max-w-[1200px] border-x border-line">
         {/* ═══ HEADER ═══ */}
         <div className="flex flex-col items-center justify-center text-center mb-16 md:mb-20">
           <div
