@@ -7,8 +7,7 @@ const router = Router()
 // All routes require authentication
 router.use(authGuard)
 
-// Endpoints (scoped by jobId, org scope implicitly handled by auth/service)
-// Currently simplifying role check to active dashboard auth via authGuard
+// ── Stats & Candidates ──────────────────────────────────────
 router.get(
     '/:jobId/stats',
     atsScreeningController.getJobStats
@@ -24,11 +23,23 @@ router.get(
     atsScreeningController.getCandidateBreakdown
 )
 
+// ── Overrides ────────────────────────────────────────────────
 router.post(
     '/:jobId/candidates/:candidateId/override',
     atsScreeningController.overrideDecision
 )
 
+router.post(
+    '/:jobId/candidates/bulk-override',
+    atsScreeningController.bulkOverride
+)
+
+router.post(
+    '/:jobId/candidates/:candidateId/retry-parse',
+    atsScreeningController.retryParseFailed
+)
+
+// ── Job Profile & Settings ───────────────────────────────────
 router.get(
     '/:jobId/profile',
     atsScreeningController.getJobProfile
@@ -37,6 +48,23 @@ router.get(
 router.put(
     '/:jobId/profile',
     atsScreeningController.updateJobProfile
+)
+
+// ── Part 1: Weights Configuration ────────────────────────────
+router.get(
+    '/:jobId/weights',
+    atsScreeningController.getWeights
+)
+
+router.put(
+    '/:jobId/weights',
+    atsScreeningController.updateWeights
+)
+
+// ── Part 5: Feedback ─────────────────────────────────────────
+router.get(
+    '/:jobId/feedback-summary',
+    atsScreeningController.getFeedbackSummary
 )
 
 export const atsScreeningRoutes = router
