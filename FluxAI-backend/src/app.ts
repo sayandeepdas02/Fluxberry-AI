@@ -48,16 +48,16 @@ export function createApp() {
     app.use(helmet())
     app.use(compression())
 
-    // Rate limiting
-    app.use('/api/', apiLimiter)
-    app.use('/api/auth/', authLimiter)
-
     // CORS configuration - flexible for development
     const corsOrigins = process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000', 'http://localhost:3001']
     app.use(cors({
         origin: corsOrigins,
         credentials: true,
     }))
+
+    // Rate limiting
+    app.use('/api/', apiLimiter)
+    app.use('/api/auth/', authLimiter)
 
     // Ribbon webhook (must use raw body for signature verification; register before json parser)
     app.post('/api/webhooks/ribbon', express.raw({ type: 'application/json', limit: '1mb' }), (req, res) =>
