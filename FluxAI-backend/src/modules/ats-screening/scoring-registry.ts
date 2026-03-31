@@ -1,88 +1,174 @@
+/**
+ * ATS Scoring Engine — Strategy Registry
+ *
+ * Supports both V1 (rule-based) and V2 (semantic) strategies.
+ * The registry resolves the correct engine by version string.
+ *
+ * V1: Synchronous, rule-based scoring (wrapped in Promise for interface compat)
+ * V2: Async, embedding-powered semantic scoring
+ */
+
 import { IResumeParsedData } from './models/resume-profile.model.js';
 import { IJobScreeningProfile } from './models/job-screening-profile.model.js';
 import { IScoreBreakdown } from './models/screening-result.model.js';
 import * as ScoringV1 from './scoringEngine.js';
+import * as ScoringV2Engine from './scoring-v2/scoring-engine-v2.js';
+import { V2JobContext, V2ScoreBreakdown, DEFAULT_V2_WEIGHTS } from './scoring-v2/types.js';
+
+// ──────────────────────────────────────────────────────────────
+// Shared Config
+// ──────────────────────────────────────────────────────────────
 
 export interface ScoreConfig {
     weights: IJobScreeningProfile['weights'];
     hardGates: IJobScreeningProfile['hardGates'];
 }
 
+// ──────────────────────────────────────────────────────────────
+// Strategy Interface (Async for V2 embedding support)
+// ──────────────────────────────────────────────────────────────
+
 export interface IScoringStrategy {
     version: string;
     description: string;
-    evaluateHardGates(parsedData: IResumeParsedData | undefined, config: ScoreConfig): { passed: boolean; reason?: string };
-    generateBreakdown(parsedData: IResumeParsedData | undefined, config: ScoreConfig): IScoreBreakdown;
-    calculateFinalScore(breakdown: IScoreBreakdown, weights: ScoreConfig['weights']): number;
-    calculateConfidence(parsedData: IResumeParsedData | undefined): number;
+    evaluateHardGates(
+        parsedData: IResumeParsedData | undefined,
+        config: ScoreConfig,
+        jobContext?: V2JobContext,
+    ): Promise<{ passed: boolean; reason?: string }>;
+    generateBreakdown(
+        parsedData: IResumeParsedData | undefined,
+        config: ScoreConfig,
+        jobContext?: V2JobContext,
+    ): Promise<IScoreBreakdown>;
+    calculateFinalScore(
+        breakdown: IScoreBreakdown,
+        weights: ScoreConfig['weights'],
+    ): Promise<number>;
+    calculateConfidence(
+        parsedData: IResumeParsedData | undefined,
+    ): Promise<number>;
 }
+
+// ──────────────────────────────────────────────────────────────
+// V1 Strategy (Rule-Based — sync wrapped in Promise)
+// ──────────────────────────────────────────────────────────────
 
 class ScoringStrategyV1 implements IScoringStrategy {
     version = '1.0.0';
     description = 'Standard rule-based evaluation';
 
-    evaluateHardGates(parsedData: IResumeParsedData | undefined, config: ScoreConfig) {
+    async evaluateHardGates(parsedData: IResumeParsedData | undefined, config: ScoreConfig) {
         return ScoringV1.HardGate(parsedData, config.hardGates);
     }
 
-    generateBreakdown(parsedData: IResumeParsedData | undefined, config: ScoreConfig) {
+    async generateBreakdown(parsedData: IResumeParsedData | undefined, config: ScoreConfig) {
         return ScoringV1.generateScoreBreakdown(parsedData, config);
     }
 
-    calculateFinalScore(breakdown: IScoreBreakdown, weights: ScoreConfig['weights']) {
+    async calculateFinalScore(breakdown: IScoreBreakdown, weights: ScoreConfig['weights']) {
         return ScoringV1.FinalWeightedScore(breakdown, weights);
     }
 
-    calculateConfidence(parsedData: IResumeParsedData | undefined) {
+    async calculateConfidence(parsedData: IResumeParsedData | undefined) {
         return ScoringV1.ConfidenceScore(parsedData);
     }
 }
 
+// ──────────────────────────────────────────────────────────────
+// V2 Strategy (Semantic — delegates to scoring-engine-v2)
+// ──────────────────────────────────────────────────────────────
+
 class ScoringStrategyV2 implements IScoringStrategy {
     version = '2.0.0';
-    description = 'Advanced AI Accuracy with Semantic Relevancy';
+    description = 'Hybrid semantic + structured scoring with explainability';
 
-    evaluateHardGates(parsedData: IResumeParsedData | undefined, config: ScoreConfig) {
-        return ScoringV1.HardGate(parsedData, config.hardGates); // Same hard gates for now
+    /**
+     * V2 uses a single-pass orchestrator (scoreCandidate) that computes
+     * everything together. The processor calls generateBreakdown first,
+     * which runs the full pipeline and caches the result. Subsequent calls
+     * return cached values.
+     */
+    private _cachedResult: Awaited<ReturnType<typeof ScoringV2Engine.scoreCandidate>> | null = null;
+    private _cacheKey: string = '';
+
+    private getCacheKey(parsedData: IResumeParsedData | undefined): string {
+        if (!parsedData) return 'empty';
+        return JSON.stringify({
+            skills: parsedData.skills?.slice(0, 3),
+            expCount: parsedData.experience?.length,
+            projCount: parsedData.projects?.length,
+        });
     }
 
-    generateBreakdown(parsedData: IResumeParsedData | undefined, config: ScoreConfig) {
-        const breakdown = ScoringV1.generateScoreBreakdown(parsedData, config);
-
-        // V2 Mock enhancement: Project Semantic Similarity boosts score
-        if (parsedData?.projects && parsedData.projects.length > 0) {
-            // Mock: Assumes embedding similarity pushes project score higher
-            breakdown.projectScore = Math.min(100, breakdown.projectScore + 15);
+    private async ensureScored(
+        parsedData: IResumeParsedData | undefined,
+        config: ScoreConfig,
+        jobContext?: V2JobContext,
+    ) {
+        const key = this.getCacheKey(parsedData);
+        if (this._cachedResult && this._cacheKey === key) {
+            return this._cachedResult;
         }
 
-        return breakdown;
+        const ctx: V2JobContext = jobContext || {
+            jobDescription: '',
+            jobTitle: '',
+            requiredSkills: config.hardGates.minimumSkills || [],
+            targetExperienceYears: config.hardGates.minimumExperienceYears || 0,
+            requiredEducationLevel: config.hardGates.requiredEducationLevel,
+        };
+
+        this._cachedResult = await ScoringV2Engine.scoreCandidate(
+            parsedData,
+            ctx,
+            DEFAULT_V2_WEIGHTS,
+        );
+        this._cacheKey = key;
+        return this._cachedResult;
     }
 
-    calculateFinalScore(breakdown: IScoreBreakdown, weights: ScoreConfig['weights']) {
-        return ScoringV1.FinalWeightedScore(breakdown, weights);
+    async evaluateHardGates(
+        parsedData: IResumeParsedData | undefined,
+        config: ScoreConfig,
+        jobContext?: V2JobContext,
+    ) {
+        const result = await this.ensureScored(parsedData, config, jobContext);
+        return {
+            passed: result.hardGatePassed,
+            reason: result.hardGateReason,
+        };
     }
 
-    calculateConfidence(parsedData: IResumeParsedData | undefined) {
-        if (!parsedData) return 0;
+    async generateBreakdown(
+        parsedData: IResumeParsedData | undefined,
+        config: ScoreConfig,
+        jobContext?: V2JobContext,
+    ): Promise<V2ScoreBreakdown> {
+        const result = await this.ensureScored(parsedData, config, jobContext);
+        return result.breakdown;
+    }
 
-        let confidence = 100;
+    async calculateFinalScore(breakdown: IScoreBreakdown, _weights: ScoreConfig['weights']) {
+        // Final score is already computed by the orchestrator during generateBreakdown.
+        if (this._cachedResult) {
+            return this._cachedResult.finalScore;
+        }
+        // Fallback: use V1 calculation
+        return ScoringV1.FinalWeightedScore(breakdown, _weights);
+    }
 
-        // Base penalties
-        if (!parsedData.experience || parsedData.experience.length === 0) confidence -= 20;
-        if (!parsedData.education || parsedData.education.length === 0) confidence -= 20;
-        if (!parsedData.skills || parsedData.skills.length === 0) confidence -= 20;
-
-        // V2 Penalties: Feature completeness / Parsing reliability
-        const hasDates = parsedData.experience?.some(exp => exp.startDate);
-        if (!hasDates) confidence -= 15;
-
-        // V2 Penalty: Resume density (too short)
-        const allDescriptions = parsedData.experience?.map(e => e.description || '').join(' ');
-        if (allDescriptions && allDescriptions.length < 100) confidence -= 10;
-
-        return Math.max(0, confidence);
+    async calculateConfidence(parsedData: IResumeParsedData | undefined) {
+        if (this._cachedResult) {
+            return this._cachedResult.confidence;
+        }
+        return ScoringV2Engine.computeConfidenceV2(parsedData);
     }
 }
+
+// ──────────────────────────────────────────────────────────────
+// Registry (Singleton)
+// ──────────────────────────────────────────────────────────────
 
 class ScoringEngineRegistryClass {
     private strategies: Map<string, IScoringStrategy> = new Map();
@@ -101,6 +187,10 @@ class ScoringEngineRegistryClass {
         if (!strategy) {
             console.warn(`[ScoringRegistry] Version ${version} not found. Falling back to 1.0.0.`);
             return this.strategies.get('1.0.0')!;
+        }
+        // For V2, return a fresh instance to avoid cross-candidate cache collisions
+        if (version === '2.0.0') {
+            return new ScoringStrategyV2();
         }
         return strategy;
     }

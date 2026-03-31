@@ -16,11 +16,25 @@ export interface IJobScreeningProfile extends Document {
         educationWeight: number;
         bonusWeight: number;
     };
+    /** V2-specific weights (5-weight model). Falls back to `weights` if absent. */
+    weightsV2?: {
+        skillWeight: number;
+        experienceWeight: number;
+        projectWeight: number;
+        educationWeight: number;
+        signalBoostWeight: number;
+    };
     thresholds: {
         shortlist: number;
         reviewZone: number;
         autoReject: number;
     };
+    /** Job-level scoring version toggle */
+    scoringVersion?: 'v1' | 'v2';
+    /** Required skills for V2 semantic matching (falls back to hardGates.minimumSkills) */
+    requiredSkills?: string[];
+    /** Cached job title for V2 experience role matching */
+    jobTitle?: string;
     jdEmbedding?: number[];
     createdAt: Date;
     updatedAt: Date;
@@ -41,11 +55,21 @@ const JobScreeningProfileSchema = new Schema<IJobScreeningProfile>({
         educationWeight: { type: Number, default: 0.1 },
         bonusWeight: { type: Number, default: 0.1 },
     },
+    weightsV2: {
+        skillWeight:      { type: Number, default: 0.35 },
+        experienceWeight: { type: Number, default: 0.30 },
+        projectWeight:    { type: Number, default: 0.20 },
+        educationWeight:  { type: Number, default: 0.10 },
+        signalBoostWeight:{ type: Number, default: 0.05 },
+    },
     thresholds: {
         shortlist: { type: Number, default: 80 },
         reviewZone: { type: Number, default: 60 },
         autoReject: { type: Number, default: 0 },
     },
+    scoringVersion: { type: String, enum: ['v1', 'v2'], default: 'v2' },
+    requiredSkills: [{ type: String }],
+    jobTitle: { type: String },
     jdEmbedding: [{ type: Number }]
 }, { timestamps: true });
 
