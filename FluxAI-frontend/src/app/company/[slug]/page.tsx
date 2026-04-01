@@ -7,7 +7,7 @@ import {
     Building2, Globe, MapPin, Briefcase, Clock, ChevronRight,
     AlertCircle, ArrowLeft
 } from 'lucide-react'
-import { publicApi, type PublicCompany, type PublicJobCard } from '@/lib/api/public'
+import { publicApi, type PublicCompany, type PublicJob } from '@/lib/api/public'
 
 const EMP_LABEL: Record<string, string> = {
     FULL_TIME: 'Full-time', PART_TIME: 'Part-time',
@@ -25,7 +25,7 @@ function timeAgo(iso?: string): string {
     return `${Math.floor(d / 30)}mo ago`
 }
 
-function JobCard({ job }: { job: PublicJobCard }) {
+function JobCard({ job }: { job: PublicJob }) {
     const skills = job.requiredSkills?.slice(0, 3) ?? []
     return (
         <Link
@@ -71,7 +71,7 @@ export default function CompanyPage() {
     const slug    = params.slug as string
 
     const [company, setCompany] = React.useState<PublicCompany | null>(null)
-    const [jobs,    setJobs]    = React.useState<PublicJobCard[]>([])
+    const [jobs,    setJobs]    = React.useState<PublicJob[]>([])
     const [loading, setLoading] = React.useState(true)
     const [error,   setError]   = React.useState<string | null>(null)
 
@@ -85,7 +85,7 @@ export default function CompanyPage() {
                     publicApi.getCompanyJobs(slug),
                 ])
                 if (compRes.success && compRes.data) setCompany(compRes.data)
-                if (jobsRes.success && jobsRes.data) setJobs(jobsRes.data as PublicJobCard[])
+                if (jobsRes.success && jobsRes.data) setJobs(jobsRes.data as PublicJob[])
             } catch {
                 setError('Company not found')
             } finally {

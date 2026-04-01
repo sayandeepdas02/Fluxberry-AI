@@ -223,3 +223,74 @@ export const atsScreeningApi = {
     getFeedbackSummary: (jobId: string) =>
         apiClient.get<{ summary: FeedbackSummary }>(`/ats-screening/${jobId}/feedback-summary`),
 }
+
+// ─────────────────────────────────────────────
+// AI Hiring Copilot Types
+// ─────────────────────────────────────────────
+
+export interface CopilotRecommendation {
+    candidateId:    string
+    name:           string
+    score:          number
+    confidence:     number
+    classification: 'strong' | 'high_potential' | 'borderline' | 'at_risk'
+    reason:         string
+    riskFlags:      string[]
+    strengths:      string[]
+    weaknesses:     string[]
+    topSkills:      string[]
+}
+
+export interface CopilotOutput {
+    topRecommendations: CopilotRecommendation[]
+    insights:           string[]
+    suggestedActions:   string[]
+    generatedAt:        string
+    candidateCount:     number
+    scoredCount:        number
+}
+
+export interface CandidateCopilotSummary {
+    summary:         string
+    riskFlags:       string[]
+    topStrengths:    string[]
+    topWeaknesses:   string[]
+    classification:  CopilotRecommendation['classification']
+}
+
+// ─────────────────────────────────────────────
+// Copilot API Client
+// ─────────────────────────────────────────────
+
+export const copilotApi = {
+    /** Get top recommendations + pool insights (Redis-cached 5min on backend) */
+    getInsights: (jobId: string) =>
+        apiClient.get<{ data: CopilotOutput }>(`/ats-screening/${jobId}/copilot`),
+
+    /** Per-candidate AI summary for breakdown modal (Redis-cached 10min on backend) */
+    getCandidateSummary: (jobId: string, candidateId: string) =>
+        apiClient.get<{ data: CandidateCopilotSummary }>(`/ats-screening/${jobId}/copilot/candidate/${candidateId}`),
+
+    /** Generate 5 tailored interview questions (not cached — fresh per request) */
+    generateQuestions: (jobId: string, candidateId: string) =>
+        apiClient.post<{ data: string[] }>(`/ats-screening/${jobId}/copilot/questions`, { candidateId }),
+}
+
+// ─────────────────────────────────────────────
+// Compare API Client
+// ─────────────────────────────────────────────
+
+export interface CandidateCompareResult {
+    candidates: AtsCandidate[]
+    breakdowns: Record<string, AtsScoreBreakdownData>
+    recommendation: {
+        winnerId: string | null
+        reason: string
+    }
+}
+
+export const compareApi = {
+    compareCandidates: (jobId: string, c1: string, c2: string) =>
+        apiClient.get<{ data: CandidateCompareResult }>(`/ats-screening/${jobId}/compare`, { c1, c2 })
+}
+
