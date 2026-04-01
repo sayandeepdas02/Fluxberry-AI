@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "../styles/globals.css";
-import { fontSans, fontMono, fontHeading } from "@/lib/fonts";
 import { AuthProvider } from "@/lib/context/auth-context";
 import { Toaster } from "sonner";
 import { GoogleOAuthProvider } from "@react-oauth/google";
@@ -19,7 +18,12 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en" className={`${fontSans.variable} ${fontMono.variable} ${fontHeading.variable}`}>
+        <html lang="en">
+            <head>
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+                <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
+            </head>
             <body>
                 <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
                     <AuthProvider>
