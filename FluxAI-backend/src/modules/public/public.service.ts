@@ -5,7 +5,92 @@ import { validateApplicationData } from '../../common/utils/application-schema.v
 import { generateUploadUrl, generateStorageKey } from '../storage/s3.client.js'
 import { enqueueAtsScreeningJob } from '../../jobs/queues/index.js'
 
+export interface PublicJobListQuery {
+    search?:         string
+    location?:       string
+    employmentType?: string
+    remote?:         boolean
+    expMin?:         number
+    page?:           number
+    limit?:          number
+}
+
 class PublicService {
+    /**
+     * List all published jobs globally — powers the /jobs public board.
+     * Supports text search, filters, and cursor-based pagination.
+     */
+    async listPublicJobs(query: PublicJobListQuery = {}) {
+        const { page = 1, limit = 20, search, location, employmentType, remote, expMin } = query
+        const skip = (Math.max(1, page) - 1) * Math.min(limit, 50)
+        const safeLimit = Math.min(limit, 50)
+
+        const filter: Record<string, unknown> = {
+            status: 'PUBLISHED',
+            deletedAt: null,
+        }
+
+        if (search && search.trim()) {
+            const re = new RegExp(search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
+            filter['$or'] = [
+                { title: re },
+                { department: re },
+                { requiredSkills: re },
+                { location: re },
+            ]
+        }
+
+        if (location && location.trim()) {
+            filter['location'] = new RegExp(location.trim(), 'i')
+        }
+
+        if (employmentType) {
+            filter['employmentType'] = employmentType.toUpperCase()
+        }
+
+        if (remote) {
+            const existing = Array.isArray(filter['$or']) ? filter['$or'] : []
+            filter['$or'] = [...existing, { location: /remote/i }]
+        }
+
+        if (expMin !== undefined && expMin > 0) {
+            filter['experienceRange.max'] = { $gte: expMin }
+        }
+
+        const [jobs, total] = await Promise.all([
+            Job.find(filter)
+                .select('title department location employmentType requiredSkills optionalSkills experienceRange salaryRange publicSlug publishedAt organizationId')
+                .populate('organizationId', 'name slug logoUrl')
+                .sort({ publishedAt: -1, createdAt: -1 })
+                .skip(skip)
+                .limit(safeLimit)
+                .lean(),
+            Job.countDocuments(filter),
+        ])
+
+        const cards = jobs.map(job => ({
+            _id:             job._id,
+            title:           job.title,
+            department:      job.department,
+            location:        job.location,
+            employmentType:  job.employmentType,
+            requiredSkills:  (job.requiredSkills || []).slice(0, 5),
+            optionalSkills:  (job.optionalSkills  || []).slice(0, 3),
+            experienceRange: job.experienceRange,
+            salaryRange:     job.salaryRange,
+            publicSlug:      job.publicSlug,
+            publishedAt:     job.publishedAt,
+            company:         job.organizationId, // populated
+        }))
+
+        return {
+            jobs:       cards,
+            total,
+            page,
+            totalPages: Math.ceil(total / safeLimit),
+        }
+    }
+
     async getCompanyBySlug(slug: string) {
         const organization = await Organization.findOne({ slug }).select('name slug logoUrl website branding')
 
@@ -15,6 +100,7 @@ class PublicService {
 
         return organization
     }
+
 
     async getCompanyJobs(slug: string) {
         const organization = await this.getCompanyBySlug(slug)

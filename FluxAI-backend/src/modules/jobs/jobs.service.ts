@@ -1,7 +1,83 @@
 import { Job, IJob, AuditLog, JobApplication } from '../../database/models/index.js'
 import { ListJobsQuery, CreateJobInput, UpdateJobInput } from './jobs.types.js'
 import { pipelineService } from './pipeline.service.js'
+import { normalizeSkills } from '../ats-screening/scoring-v2/skill-normalizer.js'
+import { enqueueRescoringJob } from '../../jobs/queues/index.js'
+import { fluxEvents, DomainEvent } from '../../common/services/events.service.js'
+import {
+    DEFAULT_SCORING_CONFIG,
+    fromLegacyProfile,
+    type IScoringConfig,
+} from '../ats-screening/scoring-config.types.js'
 import crypto from 'crypto'
+
+// ──────────────────────────────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────────────────────────────
+
+/**
+ * Build the initial scoringConfig for a new Job.
+ * Priority order: caller-provided scoringConfig > DEFAULT_SCORING_CONFIG
+ * Then syncs requiredSkills and experienceRange into hardGates.
+ */
+function buildInitialScoringConfig(
+    requiredSkills: string[],
+    experienceRangeMin: number | undefined,
+    overrides?: Partial<IScoringConfig>,
+): IScoringConfig {
+    const base: IScoringConfig = {
+        ...DEFAULT_SCORING_CONFIG,
+        weights:    { ...DEFAULT_SCORING_CONFIG.weights,    ...(overrides?.weights    ?? {}) },
+        thresholds: { ...DEFAULT_SCORING_CONFIG.thresholds, ...(overrides?.thresholds ?? {}) },
+        hardGates:  { ...DEFAULT_SCORING_CONFIG.hardGates,  ...(overrides?.hardGates  ?? {}) },
+        version:    overrides?.version ?? DEFAULT_SCORING_CONFIG.version,
+    }
+
+    // Always sync job-level fields → hardGates
+    base.hardGates.requiredSkills = requiredSkills
+    if (experienceRangeMin != null) {
+        base.hardGates.minimumExperienceYears = experienceRangeMin
+    }
+
+    return base
+}
+
+/**
+ * Detect whether a job update contains field changes that would
+ * materially affect ATS scoring results — requiring a re-score.
+ */
+function detectImpactfulChanges(
+    existing: IJob,
+    input: UpdateJobInput,
+): { impactful: boolean; reasons: string[] } {
+    const reasons: string[] = []
+
+    // Check required skills changed
+    const existingSkills = (existing.requiredSkills ?? []).map(s => s.toLowerCase()).sort()
+    const newSkills = (input.requiredSkills ?? existing.requiredSkills ?? []).map(s => s.toLowerCase()).sort()
+    if (JSON.stringify(existingSkills) !== JSON.stringify(newSkills)) {
+        reasons.push('SKILLS_CHANGED')
+    }
+
+    // Check experience range changed
+    const existingMin = existing.experienceRange?.min ?? 0
+    const newMin = input.experienceRange?.min ?? existing.experienceRange?.min ?? 0
+    if (existingMin !== newMin) {
+        reasons.push('EXPERIENCE_CHANGED')
+    }
+
+    // Check scoring config weights changed
+    if (input.scoringConfig?.weights) {
+        reasons.push('WEIGHTS_CHANGED')
+    }
+
+    // Check thresholds changed
+    if (input.scoringConfig?.thresholds) {
+        reasons.push('THRESHOLDS_CHANGED')
+    }
+
+    return { impactful: reasons.length > 0, reasons }
+}
 
 class JobsService {
     /**
@@ -45,9 +121,23 @@ class JobsService {
     }
 
     async create(organizationId: string, input: CreateJobInput, userId?: string): Promise<IJob> {
+        // Normalize skills before storing
+        const requiredSkills = normalizeSkills(input.requiredSkills ?? [])
+        const optionalSkills = normalizeSkills(input.optionalSkills ?? [])
+
+        // Build scoringConfig — Job becomes the single source of truth
+        const scoringConfig = buildInitialScoringConfig(
+            requiredSkills,
+            input.experienceRange?.min,
+            input.scoringConfig as Partial<IScoringConfig> | undefined,
+        )
+
         const job = await Job.create({
             organizationId,
             ...input,
+            requiredSkills,
+            optionalSkills,
+            scoringConfig,
             status: 'DRAFT',
             createdBy: userId,
         })
@@ -75,7 +165,7 @@ class JobsService {
         const { page = 1, limit = 20, status, search } = query
         const skip = (page - 1) * limit
 
-        const filter: any = { organizationId }
+        const filter: Record<string, unknown> = { organizationId }
 
         if (status) {
             filter.status = status
@@ -127,9 +217,43 @@ class JobsService {
 
         const previousValue = { title: existing.title, status: existing.status }
 
+        // Detect impactful changes BEFORE normalization (compare against existing)
+        const { impactful, reasons } = detectImpactfulChanges(existing, input)
+
+        // Normalize incoming skills
+        if (input.requiredSkills) {
+            input.requiredSkills = normalizeSkills(input.requiredSkills)
+        }
+        if (input.optionalSkills) {
+            input.optionalSkills = normalizeSkills(input.optionalSkills)
+        }
+
+        // Merge & re-sync scoringConfig.hardGates
+        const currentConfig = existing.scoringConfig ?? { ...DEFAULT_SCORING_CONFIG }
+        const updatedRequiredSkills = input.requiredSkills ?? existing.requiredSkills ?? []
+        const updatedExpMin = input.experienceRange?.min ?? existing.experienceRange?.min
+
+        const mergedScoringConfig: IScoringConfig = {
+            version:    input.scoringConfig?.version    ?? currentConfig.version    ?? 'v2',
+            weights:    { ...currentConfig.weights,    ...(input.scoringConfig?.weights    ?? {}) },
+            thresholds: { ...currentConfig.thresholds, ...(input.scoringConfig?.thresholds ?? {}) },
+            hardGates: {
+                ...currentConfig.hardGates,
+                ...(input.scoringConfig?.hardGates ?? {}),
+                // Always sync from Job-level fields
+                requiredSkills:         updatedRequiredSkills,
+                minimumExperienceYears: updatedExpMin ?? currentConfig.hardGates?.minimumExperienceYears ?? 0,
+            },
+        }
+
+        const updatePayload: Record<string, unknown> = {
+            ...input,
+            scoringConfig: mergedScoringConfig,
+        }
+
         const job = await Job.findOneAndUpdate(
             { _id: id, organizationId },
-            { $set: input },
+            { $set: updatePayload },
             { new: true }
         )
         if (!job) {
@@ -145,6 +269,37 @@ class JobsService {
             newValue: { title: job.title, status: job.status },
             performedBy: userId,
         })
+
+        // Emit domain events for impactful changes
+        if (impactful) {
+            fluxEvents.emitDomainEvent(DomainEvent.JOB_UPDATED as any, {
+                organizationId,
+                jobId: id,
+                reasons,
+            })
+
+            if (reasons.includes('SKILLS_CHANGED') || reasons.includes('WEIGHTS_CHANGED') || reasons.includes('THRESHOLDS_CHANGED')) {
+                fluxEvents.emitDomainEvent(DomainEvent.SCORING_CONFIG_CHANGED as any, {
+                    organizationId,
+                    jobId: id,
+                    reasons,
+                })
+            }
+
+            // Trigger re-scoring for all existing candidates
+            try {
+                await enqueueRescoringJob({
+                    type: 'RESCORE_JOB_CANDIDATES',
+                    jobId: id,
+                    organizationId,
+                    reason: reasons.join(','),
+                })
+                console.log(`[JobsService] Re-scoring enqueued for job=${id} reasons=${reasons.join(',')}`)
+            } catch (err) {
+                // Non-critical: re-scoring failure doesn't fail the update
+                console.error('[JobsService] Failed to enqueue re-scoring job:', err)
+            }
+        }
 
         return job
     }
@@ -173,9 +328,6 @@ class JobsService {
         const missing: string[] = []
         if (!job.title) missing.push('title')
         if (!job.description) missing.push('description')
-        if (!job.applicationSchema || Object.keys(job.applicationSchema).length === 0) {
-            missing.push('applicationSchema')
-        }
 
         if (missing.length > 0) {
             const error = new Error(`Cannot publish: missing required fields: ${missing.join(', ')}`) as Error & { statusCode: number; code: string; details: string[] }

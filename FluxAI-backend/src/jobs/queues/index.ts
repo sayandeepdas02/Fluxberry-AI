@@ -140,6 +140,28 @@ export const atsScreeningQueue = new Queue<AtsScreeningJobData>('ats-screening',
     }
 })
 
+// ============================================
+// ATS RE-SCORING QUEUE (triggered on job config changes)
+// ============================================
+export interface AtsRescoringJobData {
+    type: 'RESCORE_JOB_CANDIDATES'
+    jobId: string
+    organizationId: string
+    /** Reasons that triggered re-scoring, e.g. 'SKILLS_CHANGED,WEIGHTS_CHANGED' */
+    reason: string
+}
+
+export const atsRescoringQueue = new Queue<AtsRescoringJobData>('ats-rescoring', {
+    ...queueOptions,
+    defaultJobOptions: {
+        ...queueOptions.defaultJobOptions,
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 5000 },
+        removeOnComplete: 100,
+        removeOnFail: 200,
+    }
+})
+
 
 // ============================================
 // JOB PRODUCERS
@@ -212,3 +234,13 @@ export async function enqueueAtsScreeningJob(data: AtsScreeningJobData): Promise
     return job.id || ''
 }
 
+export async function enqueueRescoringJob(data: AtsRescoringJobData): Promise<string> {
+    // Deduplicate: only one re-scoring job per job at a time
+    const job = await atsRescoringQueue.add(data.type, data, {
+        jobId: `${data.type}-${data.jobId}`,
+        // If a job with the same ID already exists, update it (replace)
+        removeOnComplete: true,
+    })
+    console.log(`📤 Enqueued ${data.type} job for jobId=${data.jobId}: ${job.id}`)
+    return job.id || ''
+}

@@ -1,5 +1,19 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
 
+/**
+ * @deprecated
+ * JobScreeningProfile is deprecated as of the P0 foundational refactor.
+ * All scoring configuration now lives in Job.scoringConfig.
+ *
+ * This model is kept for:
+ * 1. Backward compatibility with existing documents
+ * 2. The migration script (migrate-scoring-config.ts) reads from here
+ * 3. Legacy runtime fallback in ats-screening.processor.ts
+ *
+ * DO NOT add new fields here. DO NOT read from this in new code.
+ * Use Job.scoringConfig instead.
+ */
+
 export interface IJobScreeningProfile extends Document {
     _id: Types.ObjectId;
     jobId: Types.ObjectId;
@@ -75,4 +89,5 @@ const JobScreeningProfileSchema = new Schema<IJobScreeningProfile>({
 
 JobScreeningProfileSchema.index({ jobId: 1, organizationId: 1 }, { unique: true });
 
+/** @deprecated Use Job.scoringConfig instead. */
 export const JobScreeningProfile = mongoose.model<IJobScreeningProfile>('JobScreeningProfile', JobScreeningProfileSchema);

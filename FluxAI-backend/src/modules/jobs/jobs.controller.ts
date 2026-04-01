@@ -1,8 +1,10 @@
 import { Response, NextFunction } from 'express'
 import { jobsService } from './jobs.service.js'
-import { createJobSchema, updateJobSchema, listJobsQuerySchema } from './jobs.types.js'
+import { createJobSchema, updateJobSchema, listJobsQuerySchema, parseDescriptionSchema } from './jobs.types.js'
 import { successResponse } from '../../common/utils/api-response.js'
 import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
+import { jobParserService } from './job-parser.service.js'
+import { skillSuggestionsService } from './skill-suggestions.service.js'
 
 export class JobsController {
     /**
@@ -138,6 +140,35 @@ export class JobsController {
             const { id } = req.params
             const job = await jobsService.softDelete(id, organizationId, req.user!.id)
             res.json(successResponse(job))
+        } catch (error) {
+            next(error)
+        }
+    }
+    /**
+     * POST /api/jobs/parse-description
+     * AI-powered JD parser — extracts structured fields from free text.
+     * Returns a best-effort result; frontend always allows manual override.
+     */
+    async parseDescription(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { description } = parseDescriptionSchema.parse(req.body)
+            const result = await jobParserService.parseJobDescription(description)
+            res.json(successResponse(result))
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    /**
+     * GET /api/jobs/skill-suggestions?q=react&role=Frontend
+     * Returns skill name suggestions for autocomplete.
+     */
+    async skillSuggestions(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const q    = typeof req.query.q    === 'string' ? req.query.q    : ''
+            const role = typeof req.query.role === 'string' ? req.query.role : undefined
+            const suggestions = skillSuggestionsService.suggestSkills(q, role)
+            res.json(successResponse(suggestions))
         } catch (error) {
             next(error)
         }

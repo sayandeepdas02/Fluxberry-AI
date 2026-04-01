@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import { atsScreeningService } from './ats-screening.service.js'
 import { ScreeningResult, ScreeningStatus, deriveStatusPriority } from './models/screening-result.model.js'
 import { enqueueAtsScreeningJob } from '../../jobs/queues/index.js'
+import { Candidate } from '../../database/models/index.js'
 
 interface AuthRequest extends Request {
     user?: {
@@ -62,6 +63,103 @@ export class AtsScreeningController {
         } catch (error: any) {
             console.error('[AtsScreening] getCandidateBreakdown error:', error)
             res.status(error.code === 'NOT_FOUND' ? 404 : 500).json({ success: false, error: error.message || 'Failed to fetch breakdown' })
+        }
+    }
+
+    async compareCandidates(req: AuthRequest, res: Response) {
+        try {
+            const orgId = req.user!.organizationId
+            const { jobId } = req.params
+            const { c1, c2 } = req.query
+
+            if (!c1 || !c2 || typeof c1 !== 'string' || typeof c2 !== 'string') {
+                return res.status(400).json({ success: false, error: 'Both c1 and c2 query parameters are required' })
+            }
+
+            const results = await ScreeningResult.find({
+                jobId,
+                organizationId: orgId,
+                candidateId: { $in: [c1, c2] }
+            }).lean()
+
+            if (results.length !== 2) {
+                return res.status(404).json({ success: false, error: 'One or both candidates not found or unauthorized' })
+            }
+
+            const candidates = await Candidate.find({ _id: { $in: [c1, c2] } }).lean()
+            const candMap = new Map(candidates.map(c => [c._id.toString(), c]))
+
+            const top10Results = await ScreeningResult.find({
+                jobId,
+                organizationId: orgId,
+                status: { $in: [ScreeningStatus.PASSED, ScreeningStatus.SCORED, 'SCORED'] },
+            }).sort({ finalScore: -1, confidenceScore: -1 }).limit(10).lean()
+            const top10Set = new Set(top10Results.map(r => r.candidateId.toString()))
+
+            const formattedCandidates = results.map(r => {
+                const c = candMap.get(r.candidateId.toString())
+                return {
+                    id: r.candidateId.toString(),
+                    name: c ? `${(c as any).firstName || ''} ${(c as any).lastName || ''}`.trim() || (c as any).email : 'Unknown',
+                    status: r.status,
+                    score: Math.round(r.finalScore ?? 0),
+                    confidence: Math.round(r.confidenceScore ?? 0),
+                    decision: (r as any).decisionStatus || 'PENDING',
+                    isTop10: top10Set.has(r.candidateId.toString()),
+                    isOverridden: (r as any).isOverridden || false,
+                    overrideReason: (r as any).overrideReason,
+                    overrideAt: (r as any).overrideAt ? new Date((r as any).overrideAt).toISOString() : undefined,
+                    errorReason: r.errorReason,
+                }
+            })
+
+            const [breakdown1, breakdown2] = await Promise.all([
+                atsScreeningService.getCandidateBreakdown(jobId, c1, orgId),
+                atsScreeningService.getCandidateBreakdown(jobId, c2, orgId)
+            ])
+
+            const breakdowns = {
+                [c1]: breakdown1,
+                [c2]: breakdown2
+            }
+
+            let winnerId = null
+            let reason = 'Candidates are closely matched.'
+
+            const r1 = results.find(r => r.candidateId.toString() === c1)!
+            const r2 = results.find(r => r.candidateId.toString() === c2)!
+            const s1 = r1.finalScore ?? 0
+            const s2 = r2.finalScore ?? 0
+
+            if (s1 > s2 + 2) {
+                winnerId = c1
+                reason = `Higher overall score (+${Math.round(s1 - s2)} points), matching rubric more closely.`
+            } else if (s2 > s1 + 2) {
+                winnerId = c2
+                reason = `Higher overall score (+${Math.round(s2 - s1)} points), matching rubric more closely.`
+            } else {
+                const sk1 = (r1.scoreBreakdown as any)?.skillScore ?? 0
+                const sk2 = (r2.scoreBreakdown as any)?.skillScore ?? 0
+                if (sk1 > sk2 + 2) {
+                    winnerId = c1
+                    reason = `Similar overall scores, but has a stronger primary skill match (+${Math.round(sk1 - sk2)}% skills).`
+                } else if (sk2 > sk1 + 2) {
+                    winnerId = c2
+                    reason = `Similar overall scores, but has a stronger primary skill match (+${Math.round(sk2 - sk1)}% skills).`
+                }
+            }
+
+            res.json({
+                success: true,
+                data: {
+                    candidates: formattedCandidates,
+                    breakdowns,
+                    recommendation: { winnerId, reason }
+                }
+            })
+        } catch (error: any) {
+            console.error('[AtsScreening] compareCandidates error:', error)
+            res.status(500).json({ success: false, error: 'Failed to compare candidates' })
         }
     }
 
