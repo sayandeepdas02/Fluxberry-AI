@@ -4,7 +4,7 @@ import { PricingHero } from "@/features/pricing/components/pricing-hero";
 import { PricingTiers } from "@/features/pricing/components/pricing-tiers";
 import { PricingFeatureTable } from "@/features/pricing/components/pricing-feature-table";
 import { PricingAiCredits } from "@/features/pricing/components/pricing-ai-credits";
-import { FinalCTA } from "@/features/landing/components/final-cta";
+import { FinalCTASection } from "@/features/landing/components/final-cta-section";
 
 export default function PricingPage() {
     return (
@@ -16,7 +16,7 @@ export default function PricingPage() {
                 <PricingTiers />
                 <PricingFeatureTable />
                 <PricingAiCredits />
-                <FinalCTA />
+                <FinalCTASection />
 
                 <Footer />
             </div>

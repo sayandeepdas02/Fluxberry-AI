@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/shared/Navbar";
 import { SignInForm } from "@/features/auth/components/signin-form";
 import { Footer } from "@/components/shared/Footer";
-import { FinalCTA } from "@/features/landing/components/final-cta";
+import { FinalCTASection } from "@/features/landing/components/final-cta-section";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 
@@ -17,7 +17,7 @@ export default function SignInPage() {
             </section>
 
             <Separator />
-            <FinalCTA />
+            <FinalCTASection />
             <Separator />
             <Footer />
         </main>

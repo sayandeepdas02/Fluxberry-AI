@@ -1,6 +1,6 @@
 import { Navbar } from "@/components/shared/Navbar";
 import { DemoHero } from "@/features/demo/components/demo-hero";
-import { FinalCTA } from "@/features/landing/components/final-cta";
+import { FinalCTASection } from "@/features/landing/components/final-cta-section";
 import { Footer } from "@/components/shared/Footer";
 import { Separator } from "@/components/ui/separator";
 
@@ -11,7 +11,7 @@ export default function DemoPage() {
             <DemoHero />
                 <Separator />
 
-            <FinalCTA />
+            <FinalCTASection />
                 <Separator />
 
             <Footer />
