@@ -4,8 +4,43 @@ import { publicService } from './public.service.js'
 import { offersService } from '../offers/offers.service.js'
 import { successResponse } from '../../common/utils/api-response.js'
 import redis from '../../jobs/redis.js'
+import crypto from 'crypto'
 
 class PublicController {
+    /**
+     * GET /api/public/jobs
+     * Global public job board listing — search, filter, paginate.
+     * Cached in Redis for 60 seconds keyed by query params.
+     */
+    async listJobs(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { search, location, employmentType, remote, expMin, page, limit } = req.query
+            const query = {
+                search:         typeof search         === 'string' ? search         : undefined,
+                location:       typeof location       === 'string' ? location       : undefined,
+                employmentType: typeof employmentType === 'string' ? employmentType : undefined,
+                remote:         remote === 'true' ? true : undefined,
+                expMin:         expMin ? parseInt(expMin as string, 10) : undefined,
+                page:           page   ? parseInt(page  as string, 10) : 1,
+                limit:          limit  ? parseInt(limit as string, 10) : 20,
+            }
+
+            // Cache key is a hash of the query so all permutations are cached
+            const cacheKey = `public:jobs:${crypto.createHash('md5').update(JSON.stringify(query)).digest('hex')}`
+            const cached = await redis.get(cacheKey)
+            if (cached) {
+                return res.json(JSON.parse(cached))
+            }
+
+            const data = await publicService.listPublicJobs(query)
+            const response = successResponse(data)
+            await redis.set(cacheKey, JSON.stringify(response), 'EX', 60) // 60s cache
+            res.json(response)
+        } catch (error) {
+            next(error)
+        }
+    }
+
     async getCompany(req: Request, res: Response, next: NextFunction) {
         try {
             const { slug } = req.params

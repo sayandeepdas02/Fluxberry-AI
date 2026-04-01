@@ -11,6 +11,10 @@ export const WorkflowTrigger = {
     SCREENING_SCORE_BELOW: 'SCREENING_SCORE_BELOW',
     AI_SCREENING_COMPLETED: 'AI_SCREENING_COMPLETED',
     RESUME_PARSE_FAILED: 'RESUME_PARSE_FAILED',
+    // P0 Refactor: Job update events
+    JOB_UPDATED: 'JOB_UPDATED',
+    SCORING_CONFIG_CHANGED: 'SCORING_CONFIG_CHANGED',
+    RESCORING_COMPLETED: 'RESCORING_COMPLETED',
 } as const
 export type WorkflowTriggerType = typeof WorkflowTrigger[keyof typeof WorkflowTrigger]
 

@@ -174,6 +174,8 @@ const ScreeningResultSchema = new Schema<IScreeningResult>({
 ScreeningResultSchema.index({ jobId: 1, statusPriority: 1, finalScore: -1 });
 // Legacy index kept for any existing queries that sort by finalScore only
 ScreeningResultSchema.index({ jobId: 1, finalScore: -1 });
+// P0 Refactor: Status-based filtering (decision service, stats aggregation)
+ScreeningResultSchema.index({ jobId: 1, status: 1 });
 // Strict tenant isolation
 ScreeningResultSchema.index({ organizationId: 1, candidateId: 1, jobId: 1 }, { unique: true });
 

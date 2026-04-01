@@ -19,8 +19,21 @@ import { V2JobContext, V2ScoreBreakdown, DEFAULT_V2_WEIGHTS } from './scoring-v2
 // Shared Config
 // ──────────────────────────────────────────────────────────────
 
+/**
+ * Canonical weight format accepted by all scoring engine strategies.
+ * Supports both V1 (bonusWeight) and V2 (signalBoostWeight) formats.
+ */
+export interface ScoreConfigWeights {
+    skillWeight: number;
+    experienceWeight: number;
+    projectWeight: number;
+    educationWeight: number;
+    bonusWeight?: number;       // V1
+    signalBoostWeight?: number; // V2
+}
+
 export interface ScoreConfig {
-    weights: IJobScreeningProfile['weights'];
+    weights: ScoreConfigWeights;
     hardGates: IJobScreeningProfile['hardGates'];
 }
 
@@ -51,6 +64,27 @@ export interface IScoringStrategy {
 }
 
 // ──────────────────────────────────────────────────────────────
+// Weight Normalization Helper
+// ──────────────────────────────────────────────────────────────
+
+/**
+ * Normalize ScoreConfigWeights to the strict V1 engine format.
+ * Always ensures bonusWeight is a number (falls back to signalBoostWeight or 0).
+ */
+function toV1Weights(w: ScoreConfigWeights): {
+    skillWeight: number; experienceWeight: number; projectWeight: number;
+    educationWeight: number; bonusWeight: number;
+} {
+    return {
+        skillWeight:      w.skillWeight,
+        experienceWeight: w.experienceWeight,
+        projectWeight:    w.projectWeight,
+        educationWeight:  w.educationWeight,
+        bonusWeight:      w.bonusWeight ?? w.signalBoostWeight ?? 0.05,
+    };
+}
+
+// ──────────────────────────────────────────────────────────────
 // V1 Strategy (Rule-Based — sync wrapped in Promise)
 // ──────────────────────────────────────────────────────────────
 
@@ -63,11 +97,11 @@ class ScoringStrategyV1 implements IScoringStrategy {
     }
 
     async generateBreakdown(parsedData: IResumeParsedData | undefined, config: ScoreConfig) {
-        return ScoringV1.generateScoreBreakdown(parsedData, config);
+        return ScoringV1.generateScoreBreakdown(parsedData, { ...config, weights: toV1Weights(config.weights) });
     }
 
     async calculateFinalScore(breakdown: IScoreBreakdown, weights: ScoreConfig['weights']) {
-        return ScoringV1.FinalWeightedScore(breakdown, weights);
+        return ScoringV1.FinalWeightedScore(breakdown, toV1Weights(weights));
     }
 
     async calculateConfidence(parsedData: IResumeParsedData | undefined) {
@@ -150,12 +184,11 @@ class ScoringStrategyV2 implements IScoringStrategy {
     }
 
     async calculateFinalScore(breakdown: IScoreBreakdown, _weights: ScoreConfig['weights']) {
-        // Final score is already computed by the orchestrator during generateBreakdown.
         if (this._cachedResult) {
             return this._cachedResult.finalScore;
         }
-        // Fallback: use V1 calculation
-        return ScoringV1.FinalWeightedScore(breakdown, _weights);
+        // Fallback: use V1 calculation with normalized weights
+        return ScoringV1.FinalWeightedScore(breakdown, toV1Weights(_weights));
     }
 
     async calculateConfidence(parsedData: IResumeParsedData | undefined) {

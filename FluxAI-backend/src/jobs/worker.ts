@@ -9,6 +9,7 @@ import { processEmailJob } from './processors/email.processor.js'
 import { processAnalyticsAggregationJob } from './processors/analytics-aggregation.processor.js'
 import { processWorkflowJob } from './processors/workflow.processor.js'
 import { processAtsScreeningJob } from './processors/ats-screening.processor.js'
+import { processAtsRescoringJob } from './processors/ats-rescoring.processor.js'
 import { validateWorkerEnv } from '../config/env.js'
 
 console.log('🚀 Starting Fluxberry AI Worker...')
@@ -251,6 +252,29 @@ atsScreeningWorker.on('failed', (job, err) => {
 })
 
 // ============================================
+// ATS RE-SCORING WORKER (triggered by job config changes)
+// ============================================
+
+const atsRescoringWorker = new Worker(
+    'ats-rescoring',
+    async (job) => {
+        await processAtsRescoringJob(job)
+    },
+    {
+        connection: redisConnection,
+        concurrency: 2, // Lower than screening to avoid overloading the cluster
+    }
+)
+
+atsRescoringWorker.on('completed', (job) => {
+    console.log(`✅ ATS Re-scoring job ${job.id} completed`)
+})
+
+atsRescoringWorker.on('failed', (job, err) => {
+    console.error(`❌ ATS Re-scoring job ${job?.id} failed:`, err.message)
+})
+
+// ============================================
 // GRACEFUL SHUTDOWN
 // ============================================
 
@@ -265,6 +289,7 @@ async function shutdown() {
     await analyticsWorker.close()
     await workflowWorker.close()
     await atsScreeningWorker.close()
+    await atsRescoringWorker.close()
     await redisConnection.quit()
     console.log('Workers shut down gracefully')
     process.exit(0)
@@ -283,4 +308,5 @@ console.log('   - email (concurrency: 5)')
 console.log('   - analytics-aggregation (concurrency: 1)')
 console.log('   - workflow (concurrency: 5)')
 console.log('   - ats-screening (concurrency: 5)')
+console.log('   - ats-rescoring (concurrency: 2)')
 

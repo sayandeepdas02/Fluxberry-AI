@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document, Types } from 'mongoose'
+import type { IScoringConfig } from '../../modules/ats-screening/scoring-config.types.js'
 
 // Enums
 export const MemberRole = {
@@ -298,6 +299,9 @@ export interface IJob extends Document {
     status: JobStatusType
     requirements?: string[]
     requiredSkills?: string[]
+    optionalSkills?: string[]
+    experienceRange?: { min: number; max: number }
+    scoringConfig?: IScoringConfig
     salaryRange?: { min: number; max: number; currency: string }
     applicationSchema?: Record<string, unknown>
     publicSlug?: string
@@ -319,6 +323,31 @@ const JobSchema = new Schema<IJob>({
     status: { type: String, enum: Object.values(JobStatus), default: JobStatus.DRAFT, index: true },
     requirements: [{ type: String }],
     requiredSkills: [{ type: String }],
+    optionalSkills: [{ type: String }],
+    experienceRange: {
+        min: { type: Number },
+        max: { type: Number },
+    },
+    scoringConfig: {
+        version: { type: String, enum: ['v1', 'v2'], default: 'v2' },
+        weights: {
+            skills:      { type: Number, default: 0.35 },
+            experience:  { type: Number, default: 0.30 },
+            projects:    { type: Number, default: 0.20 },
+            education:   { type: Number, default: 0.10 },
+            signalBoost: { type: Number, default: 0.05 },
+        },
+        thresholds: {
+            shortlist:  { type: Number, default: 80 },
+            review:     { type: Number, default: 60 },
+            autoReject: { type: Number, default: 0 },
+        },
+        hardGates: {
+            requiredSkills:         [{ type: String }],
+            minimumExperienceYears: { type: Number, default: 0 },
+            requiredEducationLevel: { type: String },
+        },
+    },
     salaryRange: {
         min: { type: Number },
         max: { type: Number },
@@ -335,6 +364,9 @@ const JobSchema = new Schema<IJob>({
 // Compound indexes for common query patterns
 JobSchema.index({ organizationId: 1, status: 1, deletedAt: 1 })
 JobSchema.index({ organizationId: 1, department: 1 })
+// Public listing indexes
+JobSchema.index({ status: 1, createdAt: -1 })          // sorted listing
+JobSchema.index({ status: 1, title: 'text', department: 'text' }) // search
 
 export const Job = mongoose.model<IJob>('Job', JobSchema)
 

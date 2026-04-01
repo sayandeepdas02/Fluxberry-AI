@@ -19,10 +19,16 @@ router.get('/companies/:slug/jobs/:jobId', (req, res, next) =>
     publicController.getJob(req, res, next)
 )
 
+// Global public job listing — MUST come before /jobs/:slug
+router.get('/jobs', (req, res, next) =>
+    publicController.listJobs(req, res, next)
+)
+
 // Public job routes (new — by job publicSlug)
 router.get('/jobs/:slug', (req, res, next) =>
     publicController.getJobBySlug(req, res, next)
 )
+
 
 router.post('/jobs/:slug/apply', (req, res, next) =>
     publicController.applyToJob(req, res, next)

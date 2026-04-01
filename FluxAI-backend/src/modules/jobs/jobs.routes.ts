@@ -12,6 +12,11 @@ router.use(authGuard)
 // CRUD routes (any authenticated org member)
 router.post('/', (req, res, next) => jobsController.create(req, res, next))
 router.get('/', (req, res, next) => jobsController.list(req, res, next))
+
+// AI tooling routes — must come BEFORE /:id to avoid param conflicts
+router.post('/parse-description', (req, res, next) => jobsController.parseDescription(req, res, next))
+router.get('/skill-suggestions', (req, res, next) => jobsController.skillSuggestions(req, res, next))
+
 router.get('/:id', (req, res, next) => jobsController.getById(req, res, next))
 router.patch('/:id', (req, res, next) => jobsController.update(req, res, next))
 

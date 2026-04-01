@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { atsScreeningController } from './ats-screening.controller.js'
+import { copilotController } from './copilot.controller.js'
 import { authGuard } from '../../common/guards/auth.guard.js'
 
 const router = Router()
@@ -21,6 +22,11 @@ router.get(
 router.get(
     '/:jobId/candidates/:candidateId/breakdown',
     atsScreeningController.getCandidateBreakdown
+)
+
+router.get(
+    '/:jobId/compare',
+    atsScreeningController.compareCandidates
 )
 
 // ── Overrides ────────────────────────────────────────────────
@@ -65,6 +71,24 @@ router.put(
 router.get(
     '/:jobId/feedback-summary',
     atsScreeningController.getFeedbackSummary
+)
+
+// ── AI Hiring Copilot ────────────────────────────────────────
+// Note: /copilot/candidate/:candidateId must come before /copilot
+// to avoid ambiguous param matching.
+router.get(
+    '/:jobId/copilot/candidate/:candidateId',
+    (req, res) => copilotController.getCandidateSummary(req as any, res)
+)
+
+router.get(
+    '/:jobId/copilot',
+    (req, res) => copilotController.getInsights(req as any, res)
+)
+
+router.post(
+    '/:jobId/copilot/questions',
+    (req, res) => copilotController.generateQuestions(req as any, res)
 )
 
 export const atsScreeningRoutes = router
