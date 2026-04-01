@@ -147,7 +147,7 @@ export function CandidatePoolView() {
                                 <TableRow key={candidate._id} className="hover:bg-muted/30 border-b border-line group transition-colors">
                                     <TableCell>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-9 h-9 rounded-none bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xs font-bold shrink-0">
+                                            <div className="w-9 h-9 rounded-none bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xs shrink-0">
                                                 {candidate.firstName ? candidate.firstName[0] : 'U'}
                                             </div>
                                             <p className="font-semibold text-foreground">

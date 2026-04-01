@@ -61,7 +61,7 @@ export default function PricingDashboardPage() {
                 {/* Dashboard Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 border-b border-line pb-8">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight mb-2">Billing & Limits</h1>
+                        <h1 className="text-3xl tracking-tight mb-2">Billing & Limits</h1>
                         <p className="text-muted-foreground whitespace-pre-line">
                             Manage your workspace plan, active trials, and modular billing usage.
                         </p>
@@ -75,7 +75,7 @@ export default function PricingDashboardPage() {
                             </div>
                             <div>
                                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Current Plan</p>
-                                <p className="text-lg font-bold capitalize">{config.plan === 'free' && config.trialActive ? '14-Day Trial' : config.plan}</p>
+                                <p className="text-lg capitalize">{config.plan === 'free' && config.trialActive ? '14-Day Trial' : config.plan}</p>
                             </div>
                         </div>
                         {/* Summary Pill 2 */}
@@ -85,7 +85,7 @@ export default function PricingDashboardPage() {
                             </div>
                             <div>
                                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Time Remaining</p>
-                                <p className={`text-lg font-bold ${config.trialActive ? 'text-emerald-600' : ''}`}>
+                                <p className={`text-lg ${config.trialActive ? 'text-emerald-600' : ''}`}>
                                     {config.trialActive ? `${getTrialDaysRemaining()} days` : 'Permanent'}
                                 </p>
                             </div>
@@ -106,7 +106,7 @@ export default function PricingDashboardPage() {
                                  <p className="text-sm text-muted-foreground mt-1">Used to unlock restricted AI candidate profiles natively.</p>
                              </div>
                              {talentProspectData?.installed ? (
-                                <span className="px-2 py-1 bg-emerald-500/10 text-emerald-600 text-xs font-bold border border-emerald-500/20">Active</span>
+                                <span className="px-2 py-1 bg-emerald-500/10 text-emerald-600 text-xs border border-emerald-500/20">Active</span>
                              ) : (
                                 <span className="px-2 py-1 bg-muted text-muted-foreground text-xs font-medium border border-line">Not Installed</span>
                              )}
@@ -133,7 +133,7 @@ export default function PricingDashboardPage() {
 
                 {/* Pricing Plans List */}
                 <div className="text-center mb-10">
-                    <h2 className="text-2xl font-bold mb-4">Upgrade Your Stack</h2>
+                    <h2 className="text-2xl mb-4">Upgrade Your Stack</h2>
                     
                     {/* Annually/Monthly toggle */}
                     <div className="inline-flex bg-muted/20 p-1 border border-line">
@@ -157,36 +157,30 @@ export default function PricingDashboardPage() {
                     {MOCK_PLANS.map((plan) => (
                         <div 
                             key={plan.id} 
-                            className={`bg-card border p-8 flex flex-col transition-all relative
-                                ${plan.popular ? 'border-primary/50 shadow-md ring-1 ring-primary/20 scale-105 z-10' : 'border-line'}
-                            `}
+                            className={`bg-card border p-8 flex flex-col transition-all relative ${plan.popular ? 'border-primary/50 shadow-md ring-1 ring-primary/20 scale-105 z-10' : 'border-line'}`}
                         >
                             {plan.popular && (
-                                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1.5 uppercase tracking-wider">
+                                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground text-xs px-4 py-1.5 uppercase tracking-wider">
                                     Most Popular
                                 </div>
                             )}
                             {config.plan === plan.tier && !config.trialActive && (
-                                <div className="absolute top-4 right-4 text-emerald-500 font-bold text-xs flex items-center gap-1">
+                                <div className="absolute top-4 right-4 text-emerald-500 text-xs flex items-center gap-1">
                                     <CheckCircle2 className="w-4 h-4" />
                                     Active Plan
                                 </div>
                             )}
                             
-                            <h3 className="text-xl font-bold">{plan.name}</h3>
+                            <h3 className="text-xl">{plan.name}</h3>
                             <div className="mt-4 mb-6 flex items-baseline">
-                                <span className="text-4xl font-extrabold tracking-tight">${plan.price}</span>
+                                <span className="text-4xl tracking-tight">${plan.price}</span>
                                 <span className="text-muted-foreground ml-2">/mo</span>
                             </div>
                             
                             <Button 
                                 onClick={() => handleUpgrade(plan.tier)}
                                 disabled={config.plan === plan.tier && !config.trialActive}
-                                className={`w-full mb-8 rounded-none transition-all h-10 ${
-                                    plan.popular 
-                                        ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
-                                        : 'bg-foreground text-background hover:bg-foreground/90'
-                                }`}
+                                className={`w-full mb-8 rounded-none transition-all h-10 ${ plan.popular ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-foreground text-background hover:bg-foreground/90' }`}
                             >
                                 {config.plan === plan.tier && !config.trialActive ? 'Current Plan' : `Upgrade to ${plan.name}`}
                             </Button>
@@ -210,7 +204,7 @@ export default function PricingDashboardPage() {
                             <Building2 className="w-6 h-6 text-muted-foreground" />
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold">Enterprise Deployment</h3>
+                            <h3 className="text-lg">Enterprise Deployment</h3>
                             <p className="text-muted-foreground max-w-lg mt-1">Need SAML SSO, dedicated infrastructure, or unlimited candidate API throughput? We can scale the entire platform to your needs.</p>
                         </div>
                     </div>

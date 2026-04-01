@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { publicApi, PublicCompany, PublicJob } from '@/lib/api/public'
+import { publicApi, PublicCompany, PublicJob, PublicJobCard } from '@/lib/api/public'
 
 interface UsePublicCompanyResult {
     company: PublicCompany | null
-    jobs: PublicJob[]
+    jobs: PublicJobCard[]
     isLoading: boolean
     error: string | null
     refetch: () => Promise<void>
@@ -13,7 +13,7 @@ interface UsePublicCompanyResult {
 
 export function usePublicCompany(slug: string): UsePublicCompanyResult {
     const [company, setCompany] = useState<PublicCompany | null>(null)
-    const [jobs, setJobs] = useState<PublicJob[]>([])
+    const [jobs, setJobs] = useState<PublicJobCard[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 

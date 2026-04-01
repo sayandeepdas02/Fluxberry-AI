@@ -17,7 +17,7 @@ export function PricingPage() {
         <div className="py-8 px-10">
             {/* Page header */}
             <div className="mb-8">
-                <h1 className="text-[22px] font-bold tracking-tight">Plans & Pricing</h1>
+                <h1 className="text-[22px] tracking-tight">Plans & Pricing</h1>
                 <p className="text-sm text-muted-foreground mt-1">
                     Choose the plan that fits your team's hiring needs.
                 </p>
@@ -76,7 +76,7 @@ export function PricingPage() {
                         >
                             {plan.highlighted && (
                                 <div className="absolute -top-px left-1/2 -translate-x-1/2 -translate-y-1/2">
-                                    <span className="inline-block bg-foreground text-background text-[10px] font-bold uppercase tracking-widest px-3 py-[3px] rounded-full">
+                                    <span className="inline-block bg-foreground text-background text-[10px] uppercase tracking-widest px-3 py-[3px] rounded-full">
                                         Most Popular
                                     </span>
                                 </div>
@@ -85,7 +85,7 @@ export function PricingPage() {
                             {/* Plan name + description */}
                             <div className="mb-5">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <h3 className="text-base font-bold">{plan.name}</h3>
+                                    <h3 className="text-base">{plan.name}</h3>
                                     {isCurrent && (
                                         <span className="text-[10px] font-semibold bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
                                             Current
@@ -100,11 +100,11 @@ export function PricingPage() {
                             {/* Price */}
                             <div className="mb-5 min-h-[52px]">
                                 {plan.monthlyPrice === null ? (
-                                    <p className="text-xl font-bold text-foreground">Custom pricing</p>
+                                    <p className="text-xl text-foreground">Custom pricing</p>
                                 ) : (
                                     <>
                                         <div className="flex items-baseline gap-1">
-                                            <span className="text-[28px] font-extrabold tracking-tight">
+                                            <span className="text-[28px] tracking-tight">
                                                 {formatPrice(plan, isYearly)}
                                             </span>
                                             {plan.monthlyPrice > 0 && (

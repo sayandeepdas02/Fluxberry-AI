@@ -111,10 +111,7 @@ export function FiltersPanel({ filters, setFilters, totalResults }: FiltersPanel
                                 <button
                                     key={skill}
                                     onClick={() => toggleSkill(skill)}
-                                    className={`
-                                        px-2.5 py-1 text-xs border transition-colors 
-                                        ${active ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/30 text-muted-foreground border-line hover:border-foreground/30'}
-                                    `}
+                                    className={`px-2.5 py-1 text-xs border transition-colors ${active ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted/30 text-muted-foreground border-line hover:border-foreground/30'}`}
                                 >
                                     {skill}
                                     {active && <X className="w-3 h-3 inline ml-1 opacity-70" />}

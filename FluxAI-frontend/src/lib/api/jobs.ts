@@ -11,6 +11,28 @@ export interface Job {
     status: 'DRAFT' | 'PUBLISHED' | 'CLOSED'
     requirements?: string[]
     requiredSkills?: string[]
+    optionalSkills?: string[]
+    experienceRange?: { min: number; max: number }
+    scoringConfig?: {
+        version?: 'v1' | 'v2'
+        weights?: {
+            skills: number
+            experience: number
+            projects: number
+            education: number
+            signalBoost: number
+        }
+        thresholds?: {
+            shortlist: number
+            review: number
+            autoReject: number
+        }
+        hardGates?: {
+            requiredSkills?: string[]
+            minimumExperienceYears?: number
+            requiredEducationLevel?: string
+        }
+    }
     salaryRange?: { min: number; max: number; currency: string }
     applicationSchema?: ApplicationSchema
     publicSlug?: string
@@ -42,8 +64,23 @@ export interface CreateJobInput {
     employmentType?: string
     requirements?: string[]
     requiredSkills?: string[]
+    optionalSkills?: string[]
+    experienceRange?: { min: number; max: number }
     salaryRange?: { min: number; max: number; currency: string }
     applicationSchema?: ApplicationSchema
+    scoringConfig?: {
+        version?: 'v1' | 'v2'
+        weights?: {
+            skills: number; experience: number; projects: number
+            education: number; signalBoost: number
+        }
+        thresholds?: { shortlist: number; review: number; autoReject: number }
+        hardGates?: {
+            requiredSkills?: string[]
+            minimumExperienceYears?: number
+            requiredEducationLevel?: string
+        }
+    }
 }
 
 export type UpdateJobInput = Partial<CreateJobInput>
@@ -60,6 +97,19 @@ export interface ListJobsResponse {
     total: number
     page: number
     totalPages: number
+}
+
+export interface ParsedJobData {
+    requiredSkills:  string[]
+    optionalSkills:  string[]
+    roleType:        string
+    seniorityLevel:  'Junior' | 'Mid' | 'Senior' | 'Lead' | 'Unknown'
+    experienceRange: { min: number; max: number }
+    educationLevel?: string
+    suggestedWeights?: {
+        skills: number; experience: number; projects: number
+        education: number; signalBoost: number
+    }
 }
 
 export const jobsApi = {
@@ -83,4 +133,13 @@ export const jobsApi = {
 
     delete: (id: string) =>
         apiClient.delete<Job>(`/jobs/${id}`),
+
+    /** AI-powered JD parser */
+    parseDescription: (description: string) =>
+        apiClient.post<ParsedJobData>('/jobs/parse-description', { description }),
+
+    /** Skill autocomplete suggestions */
+    skillSuggestions: (q: string, role?: string) =>
+        apiClient.get<string[]>('/jobs/skill-suggestions', { q, ...(role ? { role } : {}) }),
 }
+

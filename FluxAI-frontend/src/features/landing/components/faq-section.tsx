@@ -49,7 +49,7 @@ export function FAQSection() {
           }
         });
       },
-      { threshold: 0.1 }
+      { rootMargin: "100px 0px" }
     );
 
     if (sectionRef.current) observer.observe(sectionRef.current);

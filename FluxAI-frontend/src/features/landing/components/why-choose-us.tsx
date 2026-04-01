@@ -23,9 +23,9 @@ export function WhyChooseUs() {
           <div className="flex flex-col items-start max-w-[420px] mt-2">
              <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full mb-6">
                <div className="w-2.5 h-2.5 rounded-full bg-[#f64124]" />
-               <span className="text-[10px] font-mono tracking-wider font-bold text-[#f64124]">WHY FLUXBERRY AI</span>
+               <span className="text-[10px] tracking-wider text-[#f64124]">WHY FLUXBERRY AI</span>
              </div>
-             <p className="text-white/95 text-[15px] font-sans font-normal leading-relaxed">
+             <p className="text-white/95 text-[15px] font-normal leading-relaxed">
                From Talent Acquisition to Engineering Teams, Fluxberry AI improves productivity across the
                organisation, finding the best talent faster, reducing cost per hire and removing dependency on
                engineering bandwidth to hire tech talent
@@ -41,7 +41,7 @@ export function WhyChooseUs() {
             <div className="text-[48px] md:text-[64px] font-heading font-medium tracking-tight text-[#222] leading-none">
               85%
             </div>
-            <p className="text-[#555] text-[14px] font-sans font-normal leading-[1.6]">
+            <p className="text-[#555] text-[14px] font-normal leading-[1.6]">
               Fewer repetitive tasks for each team, freeing time for strategic work.
             </p>
           </div>
@@ -50,7 +50,7 @@ export function WhyChooseUs() {
             <div className="text-[48px] md:text-[64px] font-heading font-medium tracking-tight text-[#222] leading-none">
               10x
             </div>
-            <p className="text-[#555] text-[14px] font-sans font-normal leading-[1.6]">
+            <p className="text-[#555] text-[14px] font-normal leading-[1.6]">
               Faster approval times across workflows, keeping projects moving smoothly.
             </p>
           </div>
@@ -59,7 +59,7 @@ export function WhyChooseUs() {
             <div className="text-[48px] md:text-[64px] font-heading font-medium tracking-tight text-[#222] leading-none">
               $120K+
             </div>
-            <p className="text-[#555] text-[14px] font-sans font-normal leading-[1.6]">
+            <p className="text-[#555] text-[14px] font-normal leading-[1.6]">
               Saved annually by automating internal processes.
             </p>
 
@@ -76,7 +76,7 @@ export function WhyChooseUs() {
             <div className="text-[48px] md:text-[64px] font-heading font-medium tracking-tight text-[#222] leading-none">
               25%
             </div>
-            <p className="text-[#555] text-[14px] font-sans font-normal leading-[1.6]">
+            <p className="text-[#555] text-[14px] font-normal leading-[1.6]">
               More time spent on high-impact work instead of manual busywork.
             </p>
           </div>
@@ -84,10 +84,10 @@ export function WhyChooseUs() {
           {/* ROW 2 */}
           <div className="lg:col-span-2 flex flex-col justify-center lg:justify-end p-4 md:p-8 h-auto lg:h-[320px]">
              <div className="max-w-[280px] lg:mb-8">
-               <p className="text-white text-[18px] md:text-[20px] font-sans font-normal leading-[1.4] mb-6">
+               <p className="text-white text-[18px] md:text-[20px] font-normal leading-[1.4] mb-6">
                  See how your team can get the same results with Fluxberry AI
                </p>
-               <button className="bg-[#222] text-white font-mono text-[12px] md:text-[13px] tracking-wider px-8 py-4 rounded-full hover:bg-black transition-colors flex items-center gap-3">
+               <button className="bg-[#222] text-white text-[12px] md:text-[13px] tracking-wider px-8 py-4 rounded-full hover:bg-black transition-colors flex items-center gap-3">
                  BOOK A DEMO <ArrowRight size={16} />
                </button>
              </div>
@@ -97,7 +97,7 @@ export function WhyChooseUs() {
             <div className="text-[48px] md:text-[64px] font-heading font-medium tracking-tight text-[#222] leading-none">
               15x
             </div>
-            <p className="text-[#555] text-[14px] font-sans font-normal leading-[1.6]">
+            <p className="text-[#555] text-[14px] font-normal leading-[1.6]">
               Reduction in manual data entry errors, improving accuracy and reliability.
             </p>
           </div>
@@ -106,7 +106,7 @@ export function WhyChooseUs() {
             <div className="text-[48px] md:text-[64px] font-heading font-medium tracking-tight text-[#222] leading-none">
               3x
             </div>
-            <p className="text-[#555] text-[14px] font-sans font-normal leading-[1.6]">
+            <p className="text-[#555] text-[14px] font-normal leading-[1.6]">
               Increase in cross-team collaboration efficiency across departments.
             </p>
           </div>

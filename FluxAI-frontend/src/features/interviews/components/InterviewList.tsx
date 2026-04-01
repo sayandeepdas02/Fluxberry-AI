@@ -43,7 +43,7 @@ export function InterviewList() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Interviews</h2>
+                    <h2 className="text-3xl tracking-tight">Interviews</h2>
                     <p className="text-muted-foreground">
                         Schedule and manage candidate interviews.
                     </p>

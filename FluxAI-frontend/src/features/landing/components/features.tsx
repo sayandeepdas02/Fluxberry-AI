@@ -17,7 +17,7 @@ export function Features() {
           <div className="flex flex-col items-start pt-2 md:max-w-[400px] text-left md:ml-auto">
              <div className="flex items-center gap-2 bg-[#F2F2F2] px-3 py-1.5 rounded-full border border-black/5 mb-6 md:self-start shadow-sm">
                <div className="w-2.5 h-2.5 rounded-full bg-[#111]" />
-               <span className="text-[11px] font-mono tracking-wider font-semibold text-[#111]">FEATURES</span>
+               <span className="text-[11px] tracking-wider font-semibold text-[#111]">FEATURES</span>
              </div>
              <p className="text-[#555] text-[15px] leading-relaxed">
                Fluxberry AI is designed as a hiring operating system — not just another ATS.
@@ -41,18 +41,18 @@ export function Features() {
                       
                       {/* Left Block */}
                       <div className="bg-white border border-black/5 shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-[14px] p-3 w-[150px] relative z-20">
-                         <div className="text-[10px] font-bold mb-3 flex items-center justify-between text-[#111]">Upcoming tasks <span className="bg-gray-100 text-gray-400 px-1 rounded">...</span></div>
+                         <div className="text-[10px] mb-3 flex items-center justify-between text-[#111]">Upcoming tasks <span className="bg-gray-100 text-gray-400 px-1 rounded">...</span></div>
                          <div className="flex items-start gap-2 mb-2.5 relative">
                             <div className="absolute left-0 top-[2px] bottom-[2px] w-[2px] bg-[#111] rounded-full" />
                             <div className="pl-2">
-                              <div className="text-[9.5px] font-bold leading-tight text-[#111]">Approve expense request</div>
+                              <div className="text-[9.5px] leading-tight text-[#111]">Approve expense request</div>
                               <div className="text-[7.5px] text-gray-400 mt-[2px] font-medium">09:00 AM</div>
                             </div>
                          </div>
                          <div className="flex items-start gap-2 mb-2.5 relative">
                             <div className="absolute left-0 top-[2px] bottom-[2px] w-[2px] bg-[#111] rounded-full" />
                             <div className="pl-2">
-                              <div className="text-[9.5px] font-bold leading-tight text-[#111]">Update project status</div>
+                              <div className="text-[9.5px] leading-tight text-[#111]">Update project status</div>
                               <div className="text-[7.5px] text-gray-400 mt-[2px] font-medium">10:45 AM</div>
                             </div>
                          </div>
@@ -60,14 +60,14 @@ export function Features() {
                             <div className="pl-2 relative">
                               <div className="absolute left-0 top-[2px] bottom-[2px] w-[2px] bg-[#111] rounded-full" />
                               <div className="pl-2">
-                                <div className="text-[9.5px] font-bold leading-tight text-[#111]">Sync customer data to <br/> spreadsheet</div>
+                                <div className="text-[9.5px] leading-tight text-[#111]">Sync customer data to <br/> spreadsheet</div>
                                 <div className="text-[7.5px] text-gray-400 mt-[2px] font-medium">01:30 PM - 02:00 PM</div>
                               </div>
                             </div>
                          </div>
                          <div className="flex flex-col gap-2 relative opacity-20 mt-2">
                             <div className="pl-2 relative">
-                              <div className="text-[9.5px] font-bold leading-tight text-[#111]">Send weekly ops report</div>
+                              <div className="text-[9.5px] leading-tight text-[#111]">Send weekly ops report</div>
                             </div>
                          </div>
                       </div>
@@ -176,7 +176,7 @@ export function Features() {
                             </svg>
                          </div>
                          <div className="flex-1">
-                           <div className="text-[12px] font-bold text-[#111] leading-tight">Quarterly budget review</div>
+                           <div className="text-[12px] text-[#111] leading-tight">Quarterly budget review</div>
                            <div className="text-[9px] text-gray-400 mt-0.5">Finance review in progress</div>
                          </div>
                          {/* Tiny Profile Face */}
@@ -190,7 +190,7 @@ export function Features() {
                             </svg>
                          </div>
                          <div className="flex-1">
-                           <div className="text-[12px] font-bold text-[#111] leading-tight">Hiring approval</div>
+                           <div className="text-[12px] text-[#111] leading-tight">Hiring approval</div>
                            <div className="text-[9px] text-gray-400 mt-0.5">Waiting for final sign off</div>
                          </div>
                          {/* Tiny Profile Face */}
@@ -204,7 +204,7 @@ export function Features() {
                             </svg>
                          </div>
                          <div className="flex-1">
-                           <div className="text-[12px] font-bold text-[#111] leading-tight">Website launch</div>
+                           <div className="text-[12px] text-[#111] leading-tight">Website launch</div>
                            <div className="text-[9px] text-gray-400 mt-0.5">Final tasks 90% complete</div>
                          </div>
                          <div className="w-5 h-5 shrink-0 rounded-full bg-slate-400 border border-white overflow-hidden shadow-sm flex items-center justify-center text-[8px]">👱</div>
@@ -235,23 +235,23 @@ export function Features() {
                    {/* Absolute/relative logos scatter */}
                    <div className="absolute inset-0 opacity-90 pointer-events-none">
                       {/* Slack Style */}
-                      <div className="absolute right-[12%] top-[25%] w-[42px] h-[42px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-red-500 font-bold text-xl">#</div>
+                      <div className="absolute right-[12%] top-[25%] w-[42px] h-[42px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-red-500 text-xl">#</div>
                       {/* Drive Style */}
-                      <div className="absolute right-[32%] top-[10%] w-[38px] h-[38px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-green-500 font-bold text-lg">▲</div>
+                      <div className="absolute right-[32%] top-[10%] w-[38px] h-[38px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-green-500 text-lg">▲</div>
                       {/* Google */}
-                      <div className="absolute left-[38%] top-[50%] w-[38px] h-[38px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-orange-500 font-bold text-xl font-heading">G</div>
+                      <div className="absolute left-[38%] top-[50%] w-[38px] h-[38px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-orange-500 text-xl font-heading">G</div>
                       {/* Kit */}
-                      <div className="absolute right-[35%] top-[52%] w-[42px] h-[42px] bg-black text-white border-2 border-white rounded-[10px] flex items-center justify-center text-[13px] font-bold shadow-[0_4px_12px_rgba(0,0,0,0.06)]">Kit</div>
+                      <div className="absolute right-[35%] top-[52%] w-[42px] h-[42px] bg-black text-white border-2 border-white rounded-[10px] flex items-center justify-center text-[13px] shadow-[0_4px_12px_rgba(0,0,0,0.06)]">Kit</div>
                       {/* Notion */}
-                      <div className="absolute right-[8%] top-[55%] w-[40px] h-[40px] bg-white border-2 border-black/10 rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center font-bold font-serif text-xl">N</div>
+                      <div className="absolute right-[8%] top-[55%] w-[40px] h-[40px] bg-white border-2 border-black/10 rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-xl">N</div>
                       {/* Jira */}
-                      <div className="absolute left-[15%] bottom-[12%] w-[42px] h-[42px] bg-blue-600 text-white rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center font-bold text-lg">J</div>
+                      <div className="absolute left-[15%] bottom-[12%] w-[42px] h-[42px] bg-blue-600 text-white rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-lg">J</div>
                       {/* Dropbox */}
-                      <div className="absolute left-[40%] bottom-[8%] w-[38px] h-[38px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-blue-500 font-bold">D</div>
+                      <div className="absolute left-[40%] bottom-[8%] w-[38px] h-[38px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-blue-500">D</div>
                       {/* Generic Mail/Lines */}
-                      <div className="absolute right-[36%] bottom-[10%] w-[44px] h-[44px] bg-white/80 border border-black/5 backdrop-blur-sm rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center font-bold text-indigo-500">M</div>
+                      <div className="absolute right-[36%] bottom-[10%] w-[44px] h-[44px] bg-white/80 border border-black/5 backdrop-blur-sm rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-indigo-500">M</div>
                       {/* Gmail mock */}
-                      <div className="absolute right-[10%] bottom-[15%] w-[38px] h-[38px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-red-500 font-bold">M</div>
+                      <div className="absolute right-[10%] bottom-[15%] w-[38px] h-[38px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-red-500">M</div>
                    </div>
                 </div>
 
@@ -262,7 +262,7 @@ export function Features() {
                     </div>
                    <div className="text-[#6B6B6B] text-[16px] font-heading leading-[1.3] tracking-[-0.01em]">
                      Designed to <br/>
-                     automate <span className="text-[#111] font-bold">repetitive <br />manual interviews</span>
+                     automate <span className="text-[#111]">repetitive <br />manual interviews</span>
                    </div>
                 </div>
 
@@ -274,7 +274,7 @@ export function Features() {
                     
                     <div className="bg-white border border-black/5 shadow-[0_12px_40px_rgba(0,0,0,0.06)] rounded-[18px] w-[95%] max-w-[280px] p-5 pb-12 relative flex flex-col gap-4">
                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-[13px] font-bold text-[#111]">Team members</span>
+                          <span className="text-[13px] text-[#111]">Team members</span>
                           <div className="w-6 h-3 bg-gray-100 border border-black/5 rounded-full flex gap-0.5 items-center justify-center">
                              <span className="w-[3px] h-[3px] bg-gray-400 rounded-full"/>
                              <span className="w-[3px] h-[3px] bg-gray-400 rounded-full"/>
@@ -287,7 +287,7 @@ export function Features() {
                              <div className="flex items-center gap-3">
                                 <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-[12px] shadow-sm">👩🏻‍💼</div>
                                 <div>
-                                  <div className="text-[12px] font-bold text-[#111]">Emma Collins</div>
+                                  <div className="text-[12px] text-[#111]">Emma Collins</div>
                                   <div className="text-[10px] text-gray-400">@emma.c</div>
                                 </div>
                              </div>
@@ -298,7 +298,7 @@ export function Features() {
                              <div className="flex items-center gap-3">
                                 <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center text-[12px] shadow-sm">👨🏼‍💻</div>
                                 <div>
-                                  <div className="text-[12px] font-bold text-[#111]">Lukas Meyer</div>
+                                  <div className="text-[12px] text-[#111]">Lukas Meyer</div>
                                   <div className="text-[10px] text-gray-400">@lukas.m</div>
                                 </div>
                              </div>
@@ -309,7 +309,7 @@ export function Features() {
                              <div className="flex items-center gap-3">
                                 <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-[12px] shadow-sm">👩🏽‍🎨</div>
                                 <div>
-                                  <div className="text-[12px] font-bold text-[#111]">Sophia...</div>
+                                  <div className="text-[12px] text-[#111]">Sophia...</div>
                                   <div className="text-[10px] text-gray-400">...</div>
                                 </div>
                              </div>

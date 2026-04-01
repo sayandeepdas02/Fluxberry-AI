@@ -26,7 +26,7 @@ export function AgentsSection() {
           }
         });
       },
-      { threshold: 0.1 }
+      { rootMargin: "100px 0px" }
     );
 
     if (sectionRef.current) {
@@ -74,7 +74,7 @@ export function AgentsSection() {
           </div>
 
           <h2
-            className="font-bold tracking-tight text-foreground text-balance"
+            className="tracking-tight text-foreground text-balance"
             style={{
               fontSize: "clamp(2.5rem, 5vw, 4rem)",
               lineHeight: "1.1",
@@ -132,7 +132,7 @@ export function AgentsSection() {
         .agent-card-enter {
           opacity: 0;
           transform: translateY(24px) scale(0.98);
-          transition: opacity 500ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1);
+          transition: opacity 400ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         .agent-card-enter.visible {
           opacity: 1;

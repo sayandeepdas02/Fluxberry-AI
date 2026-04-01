@@ -23,7 +23,7 @@ export function DashboardHeader() {
     return (
         <div className="border-b border-line bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-20 px-8 py-4 flex items-center justify-between">
             {/* Dynamic Breadcrumbs */}
-            <div className="flex items-center gap-2.5 text-sm font-mono tracking-widest uppercase">
+            <div className="flex items-center gap-2.5 text-sm tracking-widest uppercase">
                 <span className="text-muted-foreground/80">{parent}</span>
                 <span className="text-muted-foreground/40">/</span>
                 <span className="text-foreground font-semibold">{page}</span>
@@ -39,7 +39,7 @@ export function DashboardHeader() {
                         className="h-10 w-64 rounded-none border border-line bg-background pl-9 pr-14 text-sm focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary shadow-none transition-all placeholder:text-muted-foreground"
                     />
                     <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                        <kbd className="pointer-events-none inline-flex h-6 items-center gap-1 rounded-none border border-line bg-muted/50 px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+                        <kbd className="pointer-events-none inline-flex h-6 items-center gap-1 rounded-none border border-line bg-muted/50 px-1.5 text-[10px] font-medium text-muted-foreground">
                             <Command className="w-3 h-3" /> K
                         </kbd>
                     </div>

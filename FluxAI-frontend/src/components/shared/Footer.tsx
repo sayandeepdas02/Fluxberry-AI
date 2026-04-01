@@ -46,7 +46,7 @@ export function Footer() {
             </Link>
             
             <p
-              className="font-normal max-w-[320px] font-mono"
+              className="font-normal max-w-[320px]"
               style={{
                 color: "rgba(255, 255, 255, 0.45)",
                 fontSize: "var(--text-body-sm)",
@@ -93,7 +93,7 @@ export function Footer() {
         {/* ═══ BOTTOM BAR ═══ */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-white/10">
           <p
-            className="text-center md:text-left font-mono"
+            className="text-center md:text-left"
             style={{
               color: "rgba(255, 255, 255, 0.35)",
               fontSize: "var(--text-micro)",
@@ -127,7 +127,7 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
     <Link
       href={href}
       className={cn(
-        "transition-colors duration-200 ease-out font-mono",
+        "transition-colors duration-200 ease-out ",
         "focus:outline-none focus:ring-2 focus:ring-primary/50"
       )}
       style={{

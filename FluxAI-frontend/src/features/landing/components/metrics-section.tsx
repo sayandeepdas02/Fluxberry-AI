@@ -22,7 +22,7 @@ export function MetricsSection() {
           observer.disconnect();
         }
       },
-      { threshold: 0.1 }
+      { rootMargin: "100px 0px" }
     );
 
     if (sectionRef.current) {
@@ -134,7 +134,7 @@ export function MetricsSection() {
         .metric-enter {
           opacity: 0;
           transform: translateY(16px);
-          transition: opacity 500ms ease-out, transform 500ms ease-out;
+          transition: opacity 400ms ease-out, transform 400ms ease-out;
         }
         .metric-enter.visible {
           opacity: 1;
@@ -188,7 +188,7 @@ function MetricItem({
         </span>
 
         <div
-          className="font-bold text-foreground tabular-nums tracking-tight"
+          className="text-foreground tabular-nums tracking-tight"
           style={{
             fontSize: "clamp(40px, 5vw, 48px)",
             lineHeight: "1",

@@ -102,7 +102,7 @@ export function AssessmentResults({ assessmentId }: { assessmentId: string }) {
                     </Button>
                     <div>
                         <div className="flex items-center gap-3">
-                            <h1 className="text-2xl font-bold tracking-tight">{data.assessmentTitle}</h1>
+                            <h1 className="text-2xl tracking-tight">{data.assessmentTitle}</h1>
                             <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200">Active</Badge>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
@@ -128,25 +128,25 @@ export function AssessmentResults({ assessmentId }: { assessmentId: string }) {
                 <Card>
                     <CardContent className="p-4 flex flex-col gap-1">
                         <span className="text-xs font-medium text-muted-foreground uppercase">Avg Score</span>
-                        <span className="text-2xl font-bold">{avgScore != null ? `${avgScore}%` : "—"}</span>
+                        <span className="text-2xl">{avgScore != null ? `${avgScore}%` : "—"}</span>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-4 flex flex-col gap-1">
                         <span className="text-xs font-medium text-muted-foreground uppercase">Top Tier (≥80%)</span>
-                        <span className="text-2xl font-bold text-green-600">{topTier}</span>
+                        <span className="text-2xl text-green-600">{topTier}</span>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-4 flex flex-col gap-1">
                         <span className="text-xs font-medium text-muted-foreground uppercase">Pending</span>
-                        <span className="text-2xl font-bold text-orange-600">{pending}</span>
+                        <span className="text-2xl text-orange-600">{pending}</span>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-4 flex flex-col gap-1">
                         <span className="text-xs font-medium text-muted-foreground uppercase">Completed</span>
-                        <span className="text-2xl font-bold">{data.completedCount}</span>
+                        <span className="text-2xl">{data.completedCount}</span>
                     </CardContent>
                 </Card>
             </div>
@@ -201,13 +201,11 @@ export function AssessmentResults({ assessmentId }: { assessmentId: string }) {
                                                     <div className="flex items-center gap-2">
                                                         <div className="w-16 bg-secondary h-1.5 rounded-full overflow-hidden">
                                                             <div
-                                                                className={`h-full rounded-full ${
-                                                                    r.percentage >= 80 ? "bg-green-500" : r.percentage >= 50 ? "bg-yellow-500" : "bg-red-500"
-                                                                }`}
+                                                                className={`h-full rounded-full ${ r.percentage >= 80 ? "bg-green-500" : r.percentage >= 50 ? "bg-yellow-500" : "bg-red-500" }`}
                                                                 style={{ width: `${Math.min(100, r.percentage)}%` }}
                                                             />
                                                         </div>
-                                                        <span className="font-mono text-xs">{r.percentage}%</span>
+                                                        <span className="text-xs">{r.percentage}%</span>
                                                     </div>
                                                 </td>
                                                 <td className="p-4 align-middle">

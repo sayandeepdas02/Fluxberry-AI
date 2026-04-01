@@ -36,7 +36,7 @@ export function SettingsPage() {
     return (
         <div className="max-w-2xl space-y-8">
 
-            <h1 className="text-[22px] font-bold tracking-tight">Settings</h1>
+            <h1 className="text-[22px] tracking-tight">Settings</h1>
 
             {/* ── Profile ─────────────────────────────────────── */}
             <section className="space-y-3">

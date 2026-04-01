@@ -99,12 +99,12 @@ const jobsByDepartment = {
 export default function AllJobsPage({ params }: { params: Promise<{ companySlug: string }> }) {
     const { companySlug } = use(params);
     return (
-        <div className="min-h-screen bg-background text-foreground font-sans selection:bg-foreground/10">
+        <div className="min-h-screen bg-background text-foreground selection:bg-foreground/10">
             {/* 1. Header */}
             <header className="sticky top-0 z-50 w-full border-b border-edge bg-background/80 backdrop-blur-sm">
                 <div className="container mx-auto max-w-5xl px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-foreground text-background flex items-center justify-center font-bold text-lg">
+                        <div className="w-8 h-8 rounded-lg bg-foreground text-background flex items-center justify-center text-lg">
                             {companyData.logo}
                         </div>
                         <span className="font-semibold text-lg tracking-tight">{companyData.name} Careers</span>
@@ -122,7 +122,7 @@ export default function AllJobsPage({ params }: { params: Promise<{ companySlug:
 
                     {/* Header Section */}
                     <div className="text-center space-y-4 max-w-2xl mx-auto">
-                        <h1 className="text-3xl md:text-4xl font-bold tracking-tight">All Open Positions</h1>
+                        <h1 className="text-3xl md:text-4xl tracking-tight">All Open Positions</h1>
                         <p className="text-lg text-muted-foreground">
                             Explore all current opportunities and find the role that fits you best.
                         </p>
@@ -183,7 +183,7 @@ export default function AllJobsPage({ params }: { params: Promise<{ companySlug:
             <footer className="border-t border-edge py-12 bg-muted/10">
                 <div className="container mx-auto max-w-5xl px-6 flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="flex items-center gap-2 opacity-50">
-                        <div className="w-6 h-6 rounded bg-foreground text-background flex items-center justify-center font-bold text-xs">
+                        <div className="w-6 h-6 rounded bg-foreground text-background flex items-center justify-center text-xs">
                             {companyData.logo}
                         </div>
                         <span className="font-semibold text-sm">{companyData.name} Careers</span>

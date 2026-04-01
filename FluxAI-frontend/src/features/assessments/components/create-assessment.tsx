@@ -59,7 +59,7 @@ export function CreateAssessment() {
                         Back to Dashboard
                     </Link>
                 </Button>
-                <h1 className="text-3xl font-bold tracking-tight text-neutral-900">Create New Assessment</h1>
+                <h1 className="text-3xl tracking-tight text-neutral-900">Create New Assessment</h1>
                 <p className="text-neutral-500 mt-2">Setup a new screening pipeline for a role.</p>
             </div>
 

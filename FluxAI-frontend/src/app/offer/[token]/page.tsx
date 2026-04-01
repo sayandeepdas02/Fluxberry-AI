@@ -107,7 +107,7 @@ export default function PublicOfferPage() {
         return (
             <div className="flex h-screen flex-col items-center justify-center p-4 text-center">
                 <AlertCircle className="w-12 h-12 text-destructive mb-4" />
-                <h1 className="text-xl font-bold">Unable to load offer</h1>
+                <h1 className="text-xl">Unable to load offer</h1>
                 <p className="text-muted-foreground mt-2">{error || "This link may be invalid or expired."}</p>
             </div>
         );
@@ -121,7 +121,7 @@ export default function PublicOfferPage() {
         return (
             <div className="flex h-screen flex-col items-center justify-center p-4 text-center">
                 <AlertCircle className="w-12 h-12 text-orange-500 mb-4" />
-                <h1 className="text-xl font-bold">Offer Expired</h1>
+                <h1 className="text-xl">Offer Expired</h1>
                 <p className="text-muted-foreground mt-2">This offer link has expired. Please contact the recruiter.</p>
             </div>
         );
@@ -132,7 +132,7 @@ export default function PublicOfferPage() {
             {/* Header */}
             <header className="bg-white border-b px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center sticky top-0 z-10">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-black rounded flex items-center justify-center text-white font-bold">F</div>
+                    <div className="w-8 h-8 bg-black rounded flex items-center justify-center text-white">F</div>
                     <span className="font-semibold text-lg">Fluxberry AI</span>
                 </div>
                 <div>

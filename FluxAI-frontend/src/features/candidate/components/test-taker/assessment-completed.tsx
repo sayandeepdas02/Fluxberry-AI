@@ -6,7 +6,7 @@ import Link from "next/link"
 
 export function AssessmentCompleted() {
     return (
-        <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6 font-sans">
+        <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6">
             <div className="w-full max-w-md text-center space-y-8">
 
                 <div className="flex justify-center">
@@ -16,7 +16,7 @@ export function AssessmentCompleted() {
                 </div>
 
                 <div className="space-y-4">
-                    <h1 className="text-3xl font-bold tracking-tight text-neutral-900">
+                    <h1 className="text-3xl tracking-tight text-neutral-900">
                         INTERVIEW OVER, THANKS!
                     </h1>
                     <p className="text-lg font-medium text-neutral-700">

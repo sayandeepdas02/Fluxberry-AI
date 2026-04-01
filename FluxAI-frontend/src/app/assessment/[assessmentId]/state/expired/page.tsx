@@ -6,7 +6,7 @@ import Link from "next/link"
 
 export default function AssessmentExpiredPage() {
     return (
-        <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6 font-sans">
+        <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6">
             <div className="w-full max-w-md bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
                 <div className="p-8 text-center space-y-6">
                     <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto text-red-600">
@@ -14,7 +14,7 @@ export default function AssessmentExpiredPage() {
                     </div>
 
                     <div>
-                        <h1 className="text-xl font-bold text-neutral-900 mb-2">Assessment Expired</h1>
+                        <h1 className="text-xl text-neutral-900 mb-2">Assessment Expired</h1>
                         <p className="text-neutral-500 text-sm leading-relaxed">
                             The time window for this assessment has passed. Unfortunately, you can no longer submit responses.
                         </p>

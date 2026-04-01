@@ -42,7 +42,7 @@ export function AssessmentReview({ assessmentId }: { assessmentId: string }) {
                     </Link>
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Review & Publish</h1>
+                    <h1 className="text-2xl tracking-tight">Review & Publish</h1>
                     <p className="text-sm text-neutral-500">Final check before activating this assessment.</p>
                 </div>
             </div>
@@ -51,7 +51,7 @@ export function AssessmentReview({ assessmentId }: { assessmentId: string }) {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3 text-sm text-blue-800">
                 <AlertCircle className="w-5 h-5 flex-shrink-0" />
                 <p>
-                    Once published, the assessment configuration will be <span className="font-bold">locked</span> and cannot be edited.
+                    Once published, the assessment configuration will be <span className="">locked</span> and cannot be edited.
                     This ensures consistency for all candidates.
                 </p>
             </div>

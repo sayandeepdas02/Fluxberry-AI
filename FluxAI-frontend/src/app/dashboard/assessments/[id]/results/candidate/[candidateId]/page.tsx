@@ -105,7 +105,7 @@ export default function CandidateResultPage({ params }: { params: Promise<{ id: 
                         </Link>
                     </Button>
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight">{candidateName}</h1>
+                        <h1 className="text-2xl tracking-tight">{candidateName}</h1>
                         <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
                             <span>{result.candidateEmail}</span>
                             <span>•</span>
@@ -149,8 +149,7 @@ export default function CandidateResultPage({ params }: { params: Promise<{ id: 
                                 return (
                                     <div key={round.roundType} className="flex flex-col items-center gap-2 bg-background p-2 flex-1">
                                         <div
-                                            className={`w-10 h-10 rounded-full flex items-center justify-center border-4 border-white shadow-sm ${isDone ? "bg-green-100 text-green-600" : "bg-muted text-muted-foreground"
-                                                }`}
+                                            className={`w-10 h-10 rounded-full flex items-center justify-center border-4 border-white shadow-sm ${isDone ? "bg-green-100 text-green-600" : "bg-muted text-muted-foreground" }`}
                                         >
                                             {ROUND_ICONS[round.roundType] ?? <FileText className="w-5 h-5" />}
                                         </div>
@@ -170,7 +169,7 @@ export default function CandidateResultPage({ params }: { params: Promise<{ id: 
                 <Card>
                     <CardContent className="p-6 flex flex-col items-center justify-center h-full text-center space-y-2">
                         <div className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Overall Score</div>
-                        <div className="text-6xl font-bold tracking-tighter text-foreground">{result.percentage}</div>
+                        <div className="text-6xl tracking-tighter text-foreground">{result.percentage}</div>
                         <span className="text-muted-foreground text-sm">%</span>
                         {result.status === "COMPLETED" && (
                             <Badge variant="outline" className={`mt-2 ${statusBadgeClass}`}>
@@ -207,7 +206,7 @@ export default function CandidateResultPage({ params }: { params: Promise<{ id: 
                                         {displayStatus(round.status)}
                                     </Badge>
                                     {round.percentage != null && (
-                                        <div className="text-xl font-bold">
+                                        <div className="text-xl">
                                             {round.percentage}%
                                             {round.maxScore != null && (
                                                 <span className="text-sm font-normal text-muted-foreground ml-1">

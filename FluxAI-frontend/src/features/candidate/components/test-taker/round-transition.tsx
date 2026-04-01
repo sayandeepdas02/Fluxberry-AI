@@ -46,7 +46,7 @@ export function RoundTransition({
     const NextIcon = nextInfo.icon
 
     return (
-        <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6 font-sans">
+        <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6">
             <div className="w-full max-w-lg bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden relative">
 
                 {/* Progress Bar Top */}
@@ -64,7 +64,7 @@ export function RoundTransition({
                         <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto text-green-600 animate-in zoom-in-75 duration-300">
                             <CheckCircle2 className="w-8 h-8" />
                         </div>
-                        <h1 className="text-2xl font-bold text-neutral-900">
+                        <h1 className="text-2xl text-neutral-900">
                             Round {completedRoundIndex + 1} Complete
                         </h1>
                         <p className="text-neutral-500 text-base">
@@ -77,10 +77,7 @@ export function RoundTransition({
                         {Array.from({ length: totalRounds }).map((_, idx) => (
                             <div
                                 key={idx}
-                                className={`w-2.5 h-2.5 rounded-full transition-colors ${idx <= completedRoundIndex
-                                        ? 'bg-green-500'
-                                        : 'bg-neutral-200'
-                                    }`}
+                                className={`w-2.5 h-2.5 rounded-full transition-colors ${idx <= completedRoundIndex ? 'bg-green-500' : 'bg-neutral-200' }`}
                             />
                         ))}
                     </div>
@@ -90,7 +87,7 @@ export function RoundTransition({
                         <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Up Next</p>
                         <div className="flex items-center justify-between">
                             <div className="text-left">
-                                <h3 className="font-bold text-lg text-neutral-900">{nextInfo.title}</h3>
+                                <h3 className="text-lg text-neutral-900">{nextInfo.title}</h3>
                                 <p className="text-sm text-neutral-500">{nextInfo.defaultDuration}</p>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-neutral-200 flex items-center justify-center text-neutral-600">

@@ -45,7 +45,7 @@ export function FAQ() {
                </h2>
 
                <div className="hidden lg:block mt-auto pt-32">
-                 <button className="bg-[#f64124] hover:bg-[#e2361a] text-white font-mono text-[11px] font-medium tracking-widest px-8 py-3.5 rounded-full flex items-center gap-2 transition-colors uppercase">
+                 <button className="bg-[#f64124] hover:bg-[#e2361a] text-white text-[11px] font-medium tracking-widest px-8 py-3.5 rounded-full flex items-center gap-2 transition-colors uppercase">
                    ASK A QUESTION <ArrowUpRight size={15} />
                  </button>
                </div>
@@ -62,14 +62,12 @@ export function FAQ() {
               return (
                 <div 
                   key={index}
-                  className={`bg-[#F2F2F2] transition-all duration-300 ease-in-out cursor-pointer overflow-hidden ${
-                    isOpen ? 'rounded-[24px]' : 'rounded-full'
-                  }`}
+                  className={`bg-[#F2F2F2] transition-all duration-300 ease-in-out cursor-pointer overflow-hidden ${ isOpen ? 'rounded-[24px]' : 'rounded-full' }`}
                   onClick={() => setOpenIndex(isOpen ? null : index)}
                 >
                   {/* QUESTION ROW */}
                   <div className={`px-6 md:px-8 flex items-center justify-between ${isOpen ? 'pt-8 pb-4' : 'py-5'}`}>
-                    <span className="font-mono text-[11px] md:text-[12px] tracking-widest uppercase text-[#333] font-medium leading-relaxed max-w-[85%]">
+                    <span className="text-[11px] md:text-[12px] tracking-widest uppercase text-[#333] font-medium leading-relaxed max-w-[85%]">
                       {faq.question}
                     </span>
                     
@@ -86,9 +84,7 @@ export function FAQ() {
 
                   {/* ANSWER BODY (Animated Dropdown) */}
                   <div 
-                    className={`px-6 md:px-8 transition-all duration-300 ease-in-out ${
-                      isOpen ? 'max-h-[300px] opacity-100 pb-8' : 'max-h-0 opacity-0 pb-0'
-                    }`}
+                    className={`px-6 md:px-8 transition-all duration-300 ease-in-out ${ isOpen ? 'max-h-[300px] opacity-100 pb-8' : 'max-h-0 opacity-0 pb-0' }`}
                   >
                     <p className="text-[#666] text-[14px] leading-[1.6]">
                       {faq.answer}
@@ -100,7 +96,7 @@ export function FAQ() {
             
             {/* MOBILE CTA */}
             <div className="block lg:hidden mt-8">
-                <button className="bg-[#f64124] hover:bg-[#e2361a] text-white font-mono text-[11px] font-medium tracking-widest px-8 py-3.5 rounded-full flex items-center justify-center gap-2 transition-colors uppercase w-full">
+                <button className="bg-[#f64124] hover:bg-[#e2361a] text-white text-[11px] font-medium tracking-widest px-8 py-3.5 rounded-full flex items-center justify-center gap-2 transition-colors uppercase w-full">
                   ASK A QUESTION <ArrowUpRight size={15} />
                 </button>
             </div>

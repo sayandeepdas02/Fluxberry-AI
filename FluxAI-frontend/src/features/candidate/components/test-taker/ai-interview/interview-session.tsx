@@ -243,14 +243,7 @@ export function InterviewSession({
                         {questions.map((_, i) => (
                             <div
                                 key={i}
-                                className={`w-2.5 h-2.5 rounded-full transition-colors ${questionStates[i]?.phase === 'uploaded'
-                                        ? 'bg-green-500'
-                                        : questionStates[i]?.phase === 'failed'
-                                            ? 'bg-red-500'
-                                            : i === currentIndex
-                                                ? 'bg-orange-500'
-                                                : 'bg-neutral-700'
-                                    }`}
+                                className={`w-2.5 h-2.5 rounded-full transition-colors ${questionStates[i]?.phase === 'uploaded' ? 'bg-green-500' : questionStates[i]?.phase === 'failed' ? 'bg-red-500' : i === currentIndex ? 'bg-orange-500' : 'bg-neutral-700' }`}
                             />
                         ))}
                     </div>
@@ -281,7 +274,7 @@ export function InterviewSession({
                         {currentState?.phase === 'preparing' && (
                             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                                 <div className="text-center">
-                                    <div className="text-6xl font-bold text-orange-500 mb-2">{prepTimeLeft}</div>
+                                    <div className="text-6xl text-orange-500 mb-2">{prepTimeLeft}</div>
                                     <p className="text-neutral-300 text-lg">Prepare your answer</p>
                                     <button
                                         onClick={handleSkipPrep}
@@ -309,7 +302,7 @@ export function InterviewSession({
                             <div className="flex items-center gap-2 text-neutral-400">
                                 <Clock className="w-4 h-4" />
                                 <span className="text-sm">
-                                    Time remaining: <span className="text-white font-mono">{formatTime(recordTimeLeft)}</span>
+                                    Time remaining: <span className="text-white">{formatTime(recordTimeLeft)}</span>
                                 </span>
                             </div>
                             <button
@@ -434,19 +427,9 @@ export function InterviewSession({
                                 return (
                                     <div
                                         key={q.id}
-                                        className={`flex items-center gap-3 p-2.5 rounded-lg text-sm ${i === currentIndex
-                                                ? 'bg-neutral-800 text-white'
-                                                : 'text-neutral-500'
-                                            }`}
+                                        className={`flex items-center gap-3 p-2.5 rounded-lg text-sm ${i === currentIndex ? 'bg-neutral-800 text-white' : 'text-neutral-500' }`}
                                     >
-                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium shrink-0 ${state?.phase === 'uploaded'
-                                                ? 'bg-green-500/20 text-green-400'
-                                                : state?.phase === 'failed'
-                                                    ? 'bg-red-500/20 text-red-400'
-                                                    : i === currentIndex
-                                                        ? 'bg-orange-500/20 text-orange-400'
-                                                        : 'bg-neutral-800 text-neutral-600'
-                                            }`}>
+                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium shrink-0 ${state?.phase === 'uploaded' ? 'bg-green-500/20 text-green-400' : state?.phase === 'failed' ? 'bg-red-500/20 text-red-400' : i === currentIndex ? 'bg-orange-500/20 text-orange-400' : 'bg-neutral-800 text-neutral-600' }`}>
                                             {state?.phase === 'uploaded' ? '✓' : state?.phase === 'failed' ? '!' : i + 1}
                                         </div>
                                         <span className="truncate">{q.text}</span>

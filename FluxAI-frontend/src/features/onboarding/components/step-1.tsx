@@ -123,7 +123,7 @@ export function OnboardingStep1() {
 
                 {/* Footer */}
                 <div className="mt-12 pt-8 border-t border-line flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground font-mono uppercase tracking-widest">Step 1 of 3</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-widest">Step 1 of 3</p>
                     <Button
                         onClick={handleContinue}
                         disabled={!isValid}

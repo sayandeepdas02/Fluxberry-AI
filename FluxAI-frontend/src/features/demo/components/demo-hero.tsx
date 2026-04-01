@@ -102,14 +102,14 @@ export function DemoHero() {
              {/* Badge */}
              <div className="inline-flex items-center gap-2 border border-line bg-muted/20 px-3 py-1 mb-8 rounded-none">
               <span className="w-1.5 h-1.5 bg-brand rounded-full shrink-0" />
-               <span className="font-mono text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+               <span className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
                  Book a Demo
                </span>
              </div>
 
              {/* Heading */}
              <h1 
-               className="font-bold tracking-tight text-foreground text-balance"
+               className="tracking-tight text-foreground text-balance"
                style={{
                  fontSize: "clamp(2.5rem, 5vw, 3.5rem)",
                  lineHeight: "1.05",
@@ -126,7 +126,7 @@ export function DemoHero() {
 
              {/* ── Benefits grid ── */}
              <div className="mt-12 pt-12 border-t border-line">
-               <span className="block font-mono text-[11px] uppercase tracking-widest text-muted-foreground mb-6">
+               <span className="block text-[11px] uppercase tracking-widest text-muted-foreground mb-6">
                  What to expect
                </span>
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6">

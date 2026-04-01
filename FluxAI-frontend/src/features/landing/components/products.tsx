@@ -100,7 +100,7 @@ export function Products() {
         {/* ── SECTION HEADER ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 pt-24 mb-16">
           {/* Left — Heading */}
-          <h2 className="text-[42px] md:text-[54px] lg:text-[60px] font-sans font-medium leading-[1.05] tracking-[-0.03em]">
+          <h2 className="text-[42px] md:text-[54px] lg:text-[60px] font-medium leading-[1.05] tracking-[-0.03em]">
             <span className="text-[#111]">All in one Hiring</span>
             <br />
             <span className="text-[#111]">Platform </span>
@@ -113,7 +113,7 @@ export function Products() {
           <div className="flex flex-col items-start lg:pt-2">
             <div className="inline-flex items-center gap-2 bg-[#F0F0F0] px-3 py-1.5 rounded-full mb-5 border border-black/[0.04]">
               <div className="w-2 h-2 rounded-full bg-[#f64124]" />
-              <span className="text-[10px] font-mono tracking-[0.1em] font-semibold text-black/50 uppercase">
+              <span className="text-[10px] tracking-[0.1em] font-semibold text-black/50 uppercase">
                 Products
               </span>
             </div>
@@ -216,19 +216,13 @@ function StickyCard({
         className="w-full rounded-[20px] border border-black/[0.06] bg-white overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.05)] origin-top will-change-transform"
       >
         <div
-          className={`flex flex-col ${
-            isImageLeft ? "md:flex-row" : "md:flex-row-reverse"
-          } min-h-[480px]`}
+          className={`flex flex-col ${ isImageLeft ? "md:flex-row" : "md:flex-row-reverse" } min-h-[480px]`}
         >
           {/* ── IMAGE PANE ── */}
           <div className="w-full md:w-[50%] bg-[#f64124] relative overflow-hidden min-h-[300px] md:min-h-0">
             <div className="absolute inset-0 bg-gradient-to-br from-[#f64124] via-[#e8503a] to-[#d13a1f]" />
             <div
-              className={`absolute ${
-                isImageLeft
-                  ? "top-8 left-8 right-[-20px] bottom-[-20px]"
-                  : "top-8 right-8 left-[-20px] bottom-[-20px]"
-              }`}
+              className={`absolute ${ isImageLeft ? "top-8 left-8 right-[-20px] bottom-[-20px]" : "top-8 right-8 left-[-20px] bottom-[-20px]" }`}
             >
               <MockDashboard />
             </div>
@@ -318,18 +312,14 @@ function MockDashboard() {
         </div>
 
         {/* MAIN section */}
-        <div className="text-[9px] font-bold text-[#B0A8A6] tracking-[0.12em] uppercase mb-2.5 px-1">
+        <div className="text-[9px] text-[#B0A8A6] tracking-[0.12em] uppercase mb-2.5 px-1">
           Main
         </div>
         <div className="space-y-0.5 mb-6">
           {sidebarNav.map((item, i) => (
             <div
               key={i}
-              className={`flex items-center gap-2.5 px-3 py-[6px] rounded-lg text-[12px] relative ${
-                item.active
-                  ? "bg-[#FCEAE6] text-[#f64124] font-medium"
-                  : "text-[#888] hover:text-[#555]"
-              }`}
+              className={`flex items-center gap-2.5 px-3 py-[6px] rounded-lg text-[12px] relative ${ item.active ? "bg-[#FCEAE6] text-[#f64124] font-medium" : "text-[#888] hover:text-[#555]" }`}
             >
               {item.active && (
                 <div className="absolute -left-4 top-0 bottom-0 w-[3px] bg-[#f64124] rounded-r-full" />
@@ -341,7 +331,7 @@ function MockDashboard() {
         </div>
 
         {/* FAVS section */}
-        <div className="text-[9px] font-bold text-[#B0A8A6] tracking-[0.12em] uppercase mb-2.5 px-1">
+        <div className="text-[9px] text-[#B0A8A6] tracking-[0.12em] uppercase mb-2.5 px-1">
           Favs
         </div>
         <div className="space-y-0.5 mb-6">
@@ -354,7 +344,7 @@ function MockDashboard() {
                 <div className="w-1.5 h-1.5 rounded-full bg-[#f64124]" />
                 {item.name}
               </div>
-              <span className="text-[9px] text-[#bbb] font-mono">
+              <span className="text-[9px] text-[#bbb]">
                 {item.shortcut}
               </span>
             </div>
@@ -414,19 +404,13 @@ function MockDashboard() {
             {users.map((user, i) => (
               <div
                 key={i}
-                className={`flex items-center px-3 py-2 rounded-lg ${
-                  i === 0
-                    ? "bg-[#FEF2F0] border border-[#FCDEDA]"
-                    : "hover:bg-[#FAFAFA]"
-                }`}
+                className={`flex items-center px-3 py-2 rounded-lg ${ i === 0 ? "bg-[#FEF2F0] border border-[#FCDEDA]" : "hover:bg-[#FAFAFA]" }`}
               >
                 <div
-                  className={`w-3.5 h-3.5 rounded border mr-3 shrink-0 ${
-                    i === 0 ? "border-[#f64124]" : "border-[#DDD]"
-                  }`}
+                  className={`w-3.5 h-3.5 rounded border mr-3 shrink-0 ${ i === 0 ? "border-[#f64124]" : "border-[#DDD]" }`}
                 />
                 <div
-                  className={`w-7 h-7 rounded-full text-white flex items-center justify-center text-[10px] font-bold mr-3 shrink-0 ${user.color}`}
+                  className={`w-7 h-7 rounded-full text-white flex items-center justify-center text-[10px] mr-3 shrink-0 ${user.color}`}
                 >
                   {user.name.charAt(0)}
                 </div>

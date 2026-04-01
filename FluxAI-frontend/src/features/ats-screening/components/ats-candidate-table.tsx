@@ -29,6 +29,7 @@ import {
     ChevronRight,
     Loader2,
     Crown,
+    BarChart4,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useState, useCallback } from "react"
@@ -53,6 +54,7 @@ interface AtsCandidateTableProps {
     onNextPage?: () => void
     onPrevPage?: () => void
     onRetry?: (candidateId: string) => void
+    onCompare?: (ids: [string, string]) => void
 }
 
 // ─────────────────────────────────────────────
@@ -204,6 +206,7 @@ export function AtsCandidateTable({
     onNextPage,
     onPrevPage,
     onRetry,
+    onCompare,
 }: AtsCandidateTableProps) {
     const [overridingId, setOverridingId] = useState<string | null>(null)
     const [retryingId, setRetryingId]   = useState<string | null>(null)
@@ -323,6 +326,20 @@ export function AtsCandidateTable({
                             <XCircle className="h-3.5 w-3.5" />
                             {bulkProcessing ? 'Processing...' : 'Bulk Reject'}
                         </Button>
+                        {selectedIds.size === 2 && (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-blue-600 border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/30 gap-1 ml-2"
+                                onClick={() => {
+                                    const ids = Array.from(selectedIds)
+                                    if (onCompare) onCompare([ids[0], ids[1]])
+                                }}
+                            >
+                                <BarChart4 className="h-3.5 w-3.5" />
+                                Compare Candidates
+                            </Button>
+                        )}
                         <Button
                             size="sm"
                             variant="ghost"
@@ -374,14 +391,14 @@ export function AtsCandidateTable({
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-none border border-primary/20 bg-primary/10 flex items-center justify-center text-primary text-xs font-bold shrink-0">
+                                        <div className="w-8 h-8 rounded-none border border-primary/20 bg-primary/10 flex items-center justify-center text-primary text-xs shrink-0">
                                             {candidate.name ? candidate.name[0].toUpperCase() : 'U'}
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="font-semibold text-foreground">{candidate.name}</span>
                                             {/* Top 10 Badge */}
                                             {candidate.isTop10 && (
-                                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25" title="Top 10 candidate">
+                                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25" title="Top 10 candidate">
                                                     <Crown className="h-3 w-3" />
                                                     TOP
                                                 </span>

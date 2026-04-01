@@ -80,10 +80,7 @@ export function RoundOneQuestionBank() {
                         <button
                             key={segment.id}
                             onClick={() => setActiveSegment(segment.id)}
-                            className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${activeSegment === segment.id
-                                ? "bg-white text-neutral-900 shadow-sm"
-                                : "text-neutral-500 hover:text-neutral-700 hover:bg-neutral-200/50"
-                                }`}
+                            className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${activeSegment === segment.id ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-700 hover:bg-neutral-200/50" }`}
                         >
                             {segment.label}
                         </button>

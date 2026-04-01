@@ -86,7 +86,7 @@ export function PreInterviewScreen({
                 <div className="max-w-2xl w-full space-y-8">
                     {/* Interview Info */}
                     <div className="text-center space-y-3 mb-8">
-                        <h2 className="text-2xl md:text-3xl font-bold">Prepare for Your AI Interview</h2>
+                        <h2 className="text-2xl md:text-3xl">Prepare for Your AI Interview</h2>
                         <p className="text-neutral-400 text-sm md:text-base">
                             You will be interviewed by an AI {agentTypeLabels[agentType] || agentType} interviewer.
                         </p>
@@ -208,16 +208,8 @@ function PermissionCard({
     status: 'pending' | 'granted' | 'denied'
 }) {
     return (
-        <div className={`
-            flex items-center gap-3 p-4 rounded-lg border
-            ${status === 'granted' ? 'bg-green-500/10 border-green-500/20' :
-                status === 'denied' ? 'bg-red-500/10 border-red-500/20' :
-                    'bg-neutral-900 border-neutral-800'}
-        `}>
-            <Icon className={`w-5 h-5 ${status === 'granted' ? 'text-green-500' :
-                status === 'denied' ? 'text-red-500' :
-                    'text-neutral-400'
-                }`} />
+        <div className={`flex items-center gap-3 p-4 rounded-lg border ${status === 'granted' ? 'bg-green-500/10 border-green-500/20' : status === 'denied' ? 'bg-red-500/10 border-red-500/20' : 'bg-neutral-900 border-neutral-800'}`}>
+            <Icon className={`w-5 h-5 ${status === 'granted' ? 'text-green-500' : status === 'denied' ? 'text-red-500' : 'text-neutral-400' }`} />
             <span className="text-sm font-medium">{label}</span>
             {status === 'granted' && (
                 <CheckCircle2 className="w-4 h-4 text-green-500 ml-auto" />

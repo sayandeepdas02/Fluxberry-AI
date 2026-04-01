@@ -80,7 +80,7 @@ export function useJobs(initialQuery?: ListJobsQuery) {
                 setJobs(prev => prev.map(j => j._id === id ? res.data! : j))
                 return res.data
             }
-            return null
+            throw new Error(res.error?.message || 'Failed to publish job')
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Failed to publish job')
             return null
@@ -94,7 +94,7 @@ export function useJobs(initialQuery?: ListJobsQuery) {
                 setJobs(prev => prev.map(j => j._id === id ? res.data! : j))
                 return res.data
             }
-            return null
+            throw new Error(res.error?.message || 'Failed to close job')
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Failed to close job')
             return null
@@ -108,7 +108,7 @@ export function useJobs(initialQuery?: ListJobsQuery) {
                 setJobs(prev => prev.filter(j => j._id !== id))
                 return true
             }
-            return false
+            throw new Error(res.error?.message || 'Failed to delete job')
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Failed to delete job')
             return false

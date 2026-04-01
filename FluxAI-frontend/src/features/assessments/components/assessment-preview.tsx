@@ -16,7 +16,7 @@ export function AssessmentPreview({ assessmentId }: { assessmentId: string }) {
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-semibold uppercase tracking-wider">
                         <Monitor className="w-3 h-3" /> Preview Mode
                     </div>
-                    <h1 className="text-3xl font-bold tracking-tight text-neutral-900">Senior Frontend Engineer Assessment</h1>
+                    <h1 className="text-3xl tracking-tight text-neutral-900">Senior Frontend Engineer Assessment</h1>
                     <p className="text-neutral-500 max-w-lg mx-auto">
                         Welcome, Candidate. This assessment evaluates your technical skills through a series of timed challenges.
                     </p>

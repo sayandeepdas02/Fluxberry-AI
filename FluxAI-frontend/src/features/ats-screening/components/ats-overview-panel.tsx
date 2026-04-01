@@ -31,7 +31,7 @@ export function AtsOverviewPanel({ overview, avgScore }: OverviewStatsProps) {
                         <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">
+                        <div className="text-2xl">
                             <AnimatedCounter value={overview.totalApplicants} />
                         </div>
                     </CardContent>
@@ -43,7 +43,7 @@ export function AtsOverviewPanel({ overview, avgScore }: OverviewStatsProps) {
                         <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-green-700 dark:text-green-400">
+                        <div className="text-2xl text-green-700 dark:text-green-400">
                             <AnimatedCounter value={overview.autoShortlisted} />
                         </div>
                         <CardDescription className="text-xs text-green-600/80 mt-1">&ge; 80 Score</CardDescription>
@@ -56,7 +56,7 @@ export function AtsOverviewPanel({ overview, avgScore }: OverviewStatsProps) {
                         <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">
+                        <div className="text-2xl text-yellow-700 dark:text-yellow-400">
                             <AnimatedCounter value={overview.needsReview} />
                         </div>
                         <CardDescription className="text-xs text-yellow-600/80 mt-1">60 - 79 Score</CardDescription>
@@ -69,7 +69,7 @@ export function AtsOverviewPanel({ overview, avgScore }: OverviewStatsProps) {
                         <XCircle className="h-4 w-4 text-red-600 dark:text-red-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-red-700 dark:text-red-400">
+                        <div className="text-2xl text-red-700 dark:text-red-400">
                             <AnimatedCounter value={overview.rejected} />
                         </div>
                         <CardDescription className="text-xs text-red-600/80 mt-1">&lt; 60 Score or Hard Gate</CardDescription>
@@ -82,7 +82,7 @@ export function AtsOverviewPanel({ overview, avgScore }: OverviewStatsProps) {
                         <Clock className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">
+                        <div className="text-2xl">
                             <AnimatedCounter value={overview.screeningInProgress} />
                         </div>
                         <CardDescription className="text-xs mt-1">Pending AI parsing</CardDescription>
@@ -95,7 +95,7 @@ export function AtsOverviewPanel({ overview, avgScore }: OverviewStatsProps) {
                         <FileWarning className="h-4 w-4 text-orange-600 dark:text-orange-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-orange-700 dark:text-orange-400">
+                        <div className="text-2xl text-orange-700 dark:text-orange-400">
                             <AnimatedCounter value={overview.parseFailed} />
                         </div>
                         <CardDescription className="text-xs text-orange-600/80 mt-1">Retry from candidate table</CardDescription>
@@ -111,7 +111,7 @@ export function AtsOverviewPanel({ overview, avgScore }: OverviewStatsProps) {
                         <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+                        <div className="text-2xl text-blue-700 dark:text-blue-400">
                             {shortlistRate}%
                         </div>
                         <CardDescription className="text-xs text-blue-600/80 mt-1">
@@ -126,7 +126,7 @@ export function AtsOverviewPanel({ overview, avgScore }: OverviewStatsProps) {
                         <BarChart3 className="h-4 w-4 text-indigo-600 dark:text-indigo-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-400">
+                        <div className="text-2xl text-indigo-700 dark:text-indigo-400">
                             {avgScore ?? '—'}
                         </div>
                         <CardDescription className="text-xs text-indigo-600/80 mt-1">

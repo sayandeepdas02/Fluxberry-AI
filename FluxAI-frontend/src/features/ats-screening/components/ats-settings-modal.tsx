@@ -242,11 +242,7 @@ export function AtsSettingsModal({ isOpen, onOpenChange, jobId }: AtsSettingsMod
                 {/* Tab Switcher */}
                 <div className="flex border-b border-border">
                     <button
-                        className={`px-4 py-2 text-sm font-medium transition-colors relative ${
-                            activeTab === "thresholds"
-                                ? "text-primary"
-                                : "text-muted-foreground hover:text-foreground"
-                        }`}
+                        className={`px-4 py-2 text-sm font-medium transition-colors relative ${ activeTab === "thresholds" ? "text-primary" : "text-muted-foreground hover:text-foreground" }`}
                         onClick={() => setActiveTab("thresholds")}
                     >
                         Thresholds
@@ -255,11 +251,7 @@ export function AtsSettingsModal({ isOpen, onOpenChange, jobId }: AtsSettingsMod
                         )}
                     </button>
                     <button
-                        className={`px-4 py-2 text-sm font-medium transition-colors relative ${
-                            activeTab === "weights"
-                                ? "text-primary"
-                                : "text-muted-foreground hover:text-foreground"
-                        }`}
+                        className={`px-4 py-2 text-sm font-medium transition-colors relative ${ activeTab === "weights" ? "text-primary" : "text-muted-foreground hover:text-foreground" }`}
                         onClick={() => setActiveTab("weights")}
                     >
                         Scoring Weights
@@ -268,11 +260,7 @@ export function AtsSettingsModal({ isOpen, onOpenChange, jobId }: AtsSettingsMod
                         )}
                     </button>
                     <button
-                        className={`px-4 py-2 text-sm font-medium transition-colors relative ${
-                            activeTab === "feedback"
-                                ? "text-primary"
-                                : "text-muted-foreground hover:text-foreground"
-                        }`}
+                        className={`px-4 py-2 text-sm font-medium transition-colors relative ${ activeTab === "feedback" ? "text-primary" : "text-muted-foreground hover:text-foreground" }`}
                         onClick={() => setActiveTab("feedback")}
                     >
                         Feedback Insights
@@ -399,7 +387,7 @@ export function AtsSettingsModal({ isOpen, onOpenChange, jobId }: AtsSettingsMod
                                         <div key={key} className="space-y-1.5">
                                             <div className="flex justify-between items-center">
                                                 <label className="text-sm font-medium text-foreground">{label}</label>
-                                                <span className="text-sm font-mono font-semibold tabular-nums" style={{ color }}>
+                                                <span className="text-sm font-semibold tabular-nums" style={{ color }}>
                                                     {Math.round(weights[key] * 100)}%
                                                 </span>
                                             </div>
@@ -420,15 +408,9 @@ export function AtsSettingsModal({ isOpen, onOpenChange, jobId }: AtsSettingsMod
                                 </div>
 
                                 {/* Total indicator */}
-                                <div className={`flex items-center justify-between p-3 rounded-md border ${
-                                    isWeightValid
-                                        ? "bg-green-500/10 border-green-500/20"
-                                        : "bg-red-500/10 border-red-500/20"
-                                }`}>
+                                <div className={`flex items-center justify-between p-3 rounded-md border ${ isWeightValid ? "bg-green-500/10 border-green-500/20" : "bg-red-500/10 border-red-500/20" }`}>
                                     <span className="text-sm font-medium">Total</span>
-                                    <span className={`text-sm font-mono font-bold ${
-                                        isWeightValid ? "text-green-600" : "text-red-600"
-                                    }`}>
+                                    <span className={`text-sm ${ isWeightValid ? "text-green-600" : "text-red-600" }`}>
                                         {Math.round(totalWeight * 100)}%
                                         {isWeightValid ? " ✓" : " — must equal 100%"}
                                     </span>
@@ -453,14 +435,14 @@ export function AtsSettingsModal({ isOpen, onOpenChange, jobId }: AtsSettingsMod
                                             <div className="flex items-center gap-2 px-3 py-2 rounded-md border border-green-500/20 bg-green-500/5 flex-1">
                                                 <ThumbsUp className="h-4 w-4 text-green-600" />
                                                 <div>
-                                                    <div className="text-lg font-bold text-green-700 dark:text-green-400">{feedbackData.totalPositive}</div>
+                                                    <div className="text-lg text-green-700 dark:text-green-400">{feedbackData.totalPositive}</div>
                                                     <div className="text-xs text-green-600/80">Shortlisted</div>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2 px-3 py-2 rounded-md border border-red-500/20 bg-red-500/5 flex-1">
                                                 <ThumbsDown className="h-4 w-4 text-red-600" />
                                                 <div>
-                                                    <div className="text-lg font-bold text-red-700 dark:text-red-400">{feedbackData.totalNegative}</div>
+                                                    <div className="text-lg text-red-700 dark:text-red-400">{feedbackData.totalNegative}</div>
                                                     <div className="text-xs text-red-600/80">Rejected</div>
                                                 </div>
                                             </div>

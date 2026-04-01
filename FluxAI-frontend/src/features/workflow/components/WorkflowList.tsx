@@ -69,7 +69,7 @@ export function WorkflowList() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Workflows</h2>
+                    <h2 className="text-3xl tracking-tight">Workflows</h2>
                     <p className="text-muted-foreground">
                         Automate your hiring process with custom rules.
                     </p>

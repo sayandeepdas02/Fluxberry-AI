@@ -183,7 +183,7 @@ function FlowStep({
             {step.icon}
           </div>
           <div>
-            <div className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-1">
+            <div className="text-sm uppercase tracking-widest text-muted-foreground mb-1">
               Step 0{index + 1}
             </div>
           </div>
@@ -193,7 +193,7 @@ function FlowStep({
           {step.caption}
         </h3>
         
-        <p className="text-muted-foreground text-[17px] leading-relaxed font-normal">
+        <p className="text-muted-foreground text-[17px] leading-[1.8] font-normal">
           {step.description}
         </p>
       </div>
@@ -273,7 +273,7 @@ function AIScreeningMockup() {
             </div>
           </div>
           <div className="w-12 h-12 border-[3px] border-[#8b93e0] border-t-muted flex items-center justify-center">
-            <span className="text-xs font-bold text-[#5561c8]">98%</span>
+            <span className="text-xs text-[#5561c8]">98%</span>
           </div>
         </div>
 

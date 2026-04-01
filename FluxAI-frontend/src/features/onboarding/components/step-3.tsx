@@ -98,7 +98,7 @@ export function OnboardingStep3() {
                             >
                                 {workspaceName ? getInitials(workspaceName) : "?"}
                             </div>
-                            <p className="text-[10px] text-muted-foreground mt-2 text-center uppercase tracking-widest font-mono">
+                            <p className="text-[10px] text-muted-foreground mt-2 text-center uppercase tracking-widest">
                                 System
                             </p>
                         </div>
@@ -128,7 +128,7 @@ export function OnboardingStep3() {
                     </Button>
                     
                     <div className="flex items-center gap-6">
-                        <p className="text-xs text-muted-foreground font-mono uppercase tracking-widest">Step 3 of 3</p>
+                        <p className="text-xs text-muted-foreground uppercase tracking-widest">Step 3 of 3</p>
                         <Button
                             onClick={handleCreateWorkspace}
                             disabled={!workspaceName.trim() || isLoading}

@@ -50,7 +50,7 @@ export function TestimonialsSection() {
           }
         });
       },
-      { threshold: 0.1 }
+      { rootMargin: "100px 0px" }
     );
 
     if (sectionRef.current) observer.observe(sectionRef.current);
@@ -145,7 +145,7 @@ export function TestimonialsSection() {
                <div className="w-32 h-32 md:w-48 md:h-48 shrink-0 relative overflow-hidden border border-line flex items-center justify-center bg-muted">
                   <span 
                     className={cn(
-                      "font-bold text-muted-foreground transition-all duration-500",
+                      " text-muted-foreground transition-all duration-500",
                       isAnimating ? "opacity-0 scale-90" : "opacity-100 scale-100"
                     )}
                     style={{ fontSize: "clamp(2rem, 4vw, 3rem)" }}
@@ -157,7 +157,7 @@ export function TestimonialsSection() {
                {/* ── QUOTE SIDE ── */}
                <div className="flex-1 flex flex-col justify-between w-full relative">
                  {/* Decorative Quote Mark */}
-                 <div className="absolute -top-6 -left-4 text-primary/5 select-none font-serif text-8xl leading-none">
+                 <div className="absolute -top-6 -left-4 text-primary/5 select-none text-8xl leading-none">
                     &ldquo;
                  </div>
 

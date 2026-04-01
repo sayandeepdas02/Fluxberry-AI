@@ -134,7 +134,7 @@ export default function AnalyticsDashboard() {
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+                    <h1 className="text-3xl tracking-tight">Analytics</h1>
                     <p className="text-muted-foreground">
                         Overview of your hiring pipeline and performance.
                     </p>
@@ -404,21 +404,21 @@ export default function AnalyticsDashboard() {
                                     <p className="text-sm font-medium leading-none">Application to Interview</p>
                                     <p className="text-sm text-muted-foreground">Candidates who make it to the interview stage.</p>
                                 </div>
-                                <div className="font-bold text-2xl">{funnel?.conversionRates.appliedToInterview}%</div>
+                                <div className="text-2xl">{funnel?.conversionRates.appliedToInterview}%</div>
                             </div>
                             <div className="flex items-center">
                                 <div className="flex-1 space-y-1">
                                     <p className="text-sm font-medium leading-none">Interview to Offer</p>
                                     <p className="text-sm text-muted-foreground">Interviewed candidates who receive an offer.</p>
                                 </div>
-                                <div className="font-bold text-2xl">{funnel?.conversionRates.interviewToOffer}%</div>
+                                <div className="text-2xl">{funnel?.conversionRates.interviewToOffer}%</div>
                             </div>
                             <div className="flex items-center">
                                 <div className="flex-1 space-y-1">
                                     <p className="text-sm font-medium leading-none">Offer Acceptance Rate</p>
                                     <p className="text-sm text-muted-foreground">Candidates who accept the offer.</p>
                                 </div>
-                                <div className="font-bold text-2xl">{funnel?.conversionRates.offerToHired}%</div>
+                                <div className="text-2xl">{funnel?.conversionRates.offerToHired}%</div>
                             </div>
                         </div>
                     </CardContent>
@@ -432,7 +432,7 @@ function KPICard({ title, value, icon: Icon, description }: { title: string, val
     return (
         <Card className="relative overflow-hidden bg-background border border-line shadow-none rounded-none hover:border-foreground/30 transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-                <CardTitle className="text-sm font-medium text-muted-foreground font-mono uppercase tracking-widest">
+                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest">
                     {title}
                 </CardTitle>
                 <div className="border border-line bg-muted/30 p-2 rounded-none">

@@ -42,12 +42,12 @@ export default function CareersPage({ params }: { params: Promise<{ companySlug:
     }
 
     return (
-        <div className="min-h-screen bg-background text-foreground font-sans selection:bg-foreground/10">
+        <div className="min-h-screen bg-background text-foreground selection:bg-foreground/10">
             {/* 1. Navigation / Header */}
             <header className="sticky top-0 z-50 w-full border-b border-edge bg-background/80 backdrop-blur-sm">
                 <div className="container mx-auto max-w-5xl px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-foreground text-background flex items-center justify-center font-bold text-lg overflow-hidden">
+                        <div className="w-8 h-8 rounded-lg bg-foreground text-background flex items-center justify-center text-lg overflow-hidden">
                             {company.logoUrl ? <img src={company.logoUrl} alt={company.name} className="w-full h-full object-cover" /> : company.name[0]}
                         </div>
                         <span className="font-semibold text-lg tracking-tight">{company.name}</span>
@@ -67,7 +67,7 @@ export default function CareersPage({ params }: { params: Promise<{ companySlug:
                         <Badge variant="secondary" className="px-3 py-1 text-sm font-medium rounded-full mb-4">
                             We are hiring
                         </Badge>
-                        <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground">
+                        <h1 className="text-4xl md:text-6xl tracking-tight text-foreground">
                             Join {company.name}
                         </h1>
                         <p className="text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
@@ -98,7 +98,7 @@ export default function CareersPage({ params }: { params: Promise<{ companySlug:
                                             "{t.quote}"
                                         </p>
                                         <div className="flex items-center gap-3 pt-2">
-                                            <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-sm font-bold text-zinc-500">
+                                            <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-sm text-zinc-500">
                                                 {t.name[0]}
                                             </div>
                                             <div>
@@ -118,7 +118,7 @@ export default function CareersPage({ params }: { params: Promise<{ companySlug:
                     <div className="container mx-auto max-w-5xl space-y-12">
                         <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4">
                             <div>
-                                <h2 className="text-3xl font-bold tracking-tight mb-2">Open Positions</h2>
+                                <h2 className="text-3xl tracking-tight mb-2">Open Positions</h2>
                                 <p className="text-muted-foreground">Join us in building the future.</p>
                             </div>
 
@@ -179,7 +179,7 @@ export default function CareersPage({ params }: { params: Promise<{ companySlug:
                         <div className="rounded-2xl bg-zinc-950 text-white p-8 md:p-12 text-center space-y-6 relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-zinc-800 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-20 pointer-events-none" />
 
-                            <h2 className="text-3xl font-bold tracking-tight">Experience better hiring.</h2>
+                            <h2 className="text-3xl tracking-tight">Experience better hiring.</h2>
                             <p className="text-zinc-400 max-w-lg mx-auto text-lg">
                                 We use Fluxberry AI to ensure a fair, fast, and transparent interview process for every candidate.
                             </p>
@@ -198,7 +198,7 @@ export default function CareersPage({ params }: { params: Promise<{ companySlug:
                             </Button>
 
                             <div className="pt-8 text-xs text-zinc-600">
-                                Powered by <span className="font-bold text-zinc-500">Fluxberry AI</span>
+                                Powered by <span className="text-zinc-500">Fluxberry AI</span>
                             </div>
                         </div>
                     </div>
@@ -209,7 +209,7 @@ export default function CareersPage({ params }: { params: Promise<{ companySlug:
             <footer className="border-t border-edge py-12 bg-muted/10">
                 <div className="container mx-auto max-w-5xl px-6 flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="flex items-center gap-2 opacity-50">
-                        <div className="w-6 h-6 rounded bg-foreground text-background flex items-center justify-center font-bold text-xs overflow-hidden">
+                        <div className="w-6 h-6 rounded bg-foreground text-background flex items-center justify-center text-xs overflow-hidden">
                             {company.logoUrl ? <img src={company.logoUrl} alt={company.name} className="w-full h-full object-cover" /> : company.name[0]}
                         </div>
                         <span className="font-semibold text-sm">{company.name} Careers</span>

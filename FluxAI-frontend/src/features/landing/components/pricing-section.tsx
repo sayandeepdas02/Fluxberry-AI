@@ -26,7 +26,7 @@ export function PricingSection() {
           }
         });
       },
-      { threshold: 0.1 }
+      { rootMargin: "100px 0px" }
     );
 
     if (sectionRef.current) observer.observe(sectionRef.current);
@@ -123,7 +123,7 @@ export function PricingSection() {
               )}
             >
               Yearly
-              <span className="text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary px-1.5 py-0.5">
+              <span className="text-[10px] uppercase tracking-wider bg-primary/10 text-primary px-1.5 py-0.5">
                 Save 20%
               </span>
             </span>
@@ -190,7 +190,7 @@ export function PricingSection() {
         .pricing-card-enter {
           opacity: 0;
           transform: translateY(24px);
-          transition: opacity 500ms ease-out, transform 500ms ease-out;
+          transition: opacity 400ms ease-out, transform 400ms ease-out;
         }
         .pricing-card-enter.visible {
           opacity: 1;
@@ -256,12 +256,12 @@ function PricingCard({
       <div className="mb-8">
         <div className="flex items-baseline gap-1 transition-all duration-300">
           {price === "Custom" ? (
-            <span className="text-4xl font-bold tracking-tight text-foreground">
+            <span className="text-4xl tracking-tight text-foreground">
               Custom
             </span>
           ) : (
             <>
-              <span className="text-4xl font-bold tracking-tight text-foreground">
+              <span className="text-4xl tracking-tight text-foreground">
                 ${price}
               </span>
               <span className="text-muted-foreground text-sm font-medium">/month</span>

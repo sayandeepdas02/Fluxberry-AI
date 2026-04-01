@@ -183,10 +183,7 @@ export function QuestionFormModal({ open, question, onClose, onSave }: QuestionF
                                             key={String(multi)}
                                             type="button"
                                             onClick={() => handleTypeToggle(multi)}
-                                            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium border transition-all ${isMultiCorrect === multi
-                                                    ? 'bg-orange-500/20 border-orange-500/40 text-orange-400'
-                                                    : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-500'
-                                                }`}
+                                            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium border transition-all ${isMultiCorrect === multi ? 'bg-orange-500/20 border-orange-500/40 text-orange-400' : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-500' }`}
                                         >
                                             {multi ? 'Multi-Select' : 'Single-Select'}
                                         </button>
@@ -203,10 +200,7 @@ export function QuestionFormModal({ open, question, onClose, onSave }: QuestionF
                                             key={d}
                                             type="button"
                                             onClick={() => setDifficulty(d)}
-                                            className={`flex-1 py-2 px-2 rounded-lg text-xs font-medium border transition-all ${difficulty === d
-                                                    ? DIFFICULTY_COLORS[d]
-                                                    : 'bg-neutral-800 border-neutral-700 text-neutral-500 hover:border-neutral-500'
-                                                }`}
+                                            className={`flex-1 py-2 px-2 rounded-lg text-xs font-medium border transition-all ${difficulty === d ? DIFFICULTY_COLORS[d] : 'bg-neutral-800 border-neutral-700 text-neutral-500 hover:border-neutral-500' }`}
                                         >
                                             {DIFFICULTY_LABELS[d]}
                                         </button>
@@ -256,8 +250,7 @@ export function QuestionFormModal({ open, question, onClose, onSave }: QuestionF
                                 {options.map((opt, i) => {
                                     const isCorrect = correctOptions.includes(i)
                                     return (
-                                        <div key={i} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isCorrect ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-neutral-700 bg-neutral-800'
-                                            }`}>
+                                        <div key={i} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${isCorrect ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-neutral-700 bg-neutral-800' }`}>
                                             {/* Correct toggle */}
                                             <button
                                                 type="button"
@@ -276,7 +269,7 @@ export function QuestionFormModal({ open, question, onClose, onSave }: QuestionF
                                             </button>
 
                                             {/* Option label */}
-                                            <span className="text-xs font-mono text-neutral-500 shrink-0 w-5">
+                                            <span className="text-xs text-neutral-500 shrink-0 w-5">
                                                 {String.fromCharCode(65 + i)}
                                             </span>
 

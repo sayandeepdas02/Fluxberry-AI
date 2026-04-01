@@ -59,7 +59,7 @@ export function PricingTiers() {
                     >
                         {plan.highlighted && (
                             <div className="absolute -top-px left-1/2 -translate-x-1/2 -translate-y-1/2">
-                                <span className="inline-block bg-foreground text-background text-[10px] font-bold uppercase tracking-widest px-3 py-[3px] rounded-full">
+                                <span className="inline-block bg-foreground text-background text-[10px] uppercase tracking-widest px-3 py-[3px] rounded-full">
                                     Most Popular
                                 </span>
                             </div>
@@ -67,7 +67,7 @@ export function PricingTiers() {
 
                         {/* Name + description */}
                         <div className="mb-5">
-                            <h3 className="text-lg font-bold mb-1">{plan.name}</h3>
+                            <h3 className="text-lg mb-1">{plan.name}</h3>
                             <p className="text-sm text-muted-foreground leading-relaxed min-h-[2.5rem]">
                                 {plan.description}
                             </p>
@@ -76,11 +76,11 @@ export function PricingTiers() {
                         {/* Price */}
                         <div className="mb-6 min-h-[56px]">
                             {plan.monthlyPrice === null ? (
-                                <p className="text-2xl font-bold">Custom pricing</p>
+                                <p className="text-2xl">Custom pricing</p>
                             ) : (
                                 <>
                                     <div className="flex items-baseline gap-1">
-                                        <span className="text-4xl font-extrabold tracking-tight">
+                                        <span className="text-4xl tracking-tight">
                                             {formatPrice(plan, isYearly)}
                                         </span>
                                         {plan.monthlyPrice > 0 && (

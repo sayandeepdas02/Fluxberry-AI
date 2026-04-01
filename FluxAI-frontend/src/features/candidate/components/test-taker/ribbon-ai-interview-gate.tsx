@@ -51,7 +51,7 @@ export function RibbonAIInterviewGate({
                     <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mx-auto">
                         <Video className="w-8 h-8 text-orange-500" />
                     </div>
-                    <h1 className="text-2xl font-bold">AI Voice Interview</h1>
+                    <h1 className="text-2xl">AI Voice Interview</h1>
                     <p className="text-neutral-400 leading-relaxed">
                         You&apos;ll have a live voice conversation with our AI interviewer.
                         You can speak naturally and ask for clarification. The interview will

@@ -25,7 +25,7 @@ export default function QuestionBankPage() {
                                 <ArrowLeft className="w-4 h-4" />
                             </Button>
                             <div>
-                                <h1 className="text-3xl font-bold tracking-tight mb-2">
+                                <h1 className="text-3xl tracking-tight mb-2">
                                     {activeRound === 1 ? "Round 1: MCQ Fundamentals" : "Round 2: Data Structures & Algorithms"}
                                 </h1>
                                 <p className="text-muted-foreground whitespace-pre-line text-sm">
@@ -35,7 +35,7 @@ export default function QuestionBankPage() {
                         </div>
                     ) : (
                         <div>
-                            <h1 className="text-3xl font-bold tracking-tight mb-2">Question Bank</h1>
+                            <h1 className="text-3xl tracking-tight mb-2">Question Bank</h1>
                             <p className="text-muted-foreground whitespace-pre-line text-sm max-w-xl">
                                 Manage your assessment question repository. Choose a round below to view or edit granular questions.
                             </p>
@@ -53,7 +53,7 @@ export default function QuestionBankPage() {
                             <div className="w-12 h-12 rounded-none bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
                                 <LibraryBig className="w-6 h-6 text-primary group-hover:text-primary-foreground transition-colors" />
                             </div>
-                            <h2 className="text-xl font-bold tracking-tight mb-2">Round 1: Foundation</h2>
+                            <h2 className="text-xl tracking-tight mb-2">Round 1: Foundation</h2>
                             <h3 className="text-sm font-semibold text-foreground mb-4">MCQ / MSQ Evaluation</h3>
                             <p className="text-sm text-muted-foreground leading-relaxed flex-1">
                                 Access the Multiple Choice and Multiple Select question pools. Includes segments for System Design, Machine Learning, Data Science, Backend Engineer, Frontend Engineer, and DevOps.
@@ -68,7 +68,7 @@ export default function QuestionBankPage() {
                             <div className="w-12 h-12 rounded-none bg-foreground flex items-center justify-center mb-6 group-hover:bg-primary transition-all">
                                 <Code2 className="w-6 h-6 text-background" />
                             </div>
-                            <h2 className="text-xl font-bold tracking-tight mb-2">Round 2: Technical</h2>
+                            <h2 className="text-xl tracking-tight mb-2">Round 2: Technical</h2>
                             <h3 className="text-sm font-semibold text-foreground mb-4">Data Structures & Algorithms</h3>
                             <p className="text-sm text-muted-foreground leading-relaxed flex-1">
                                 Access live coding challenges. View problem statements, example test cases, and difficulty levels for Data Structures and algorithmic problem solving.

@@ -190,7 +190,7 @@ export function WorkflowBuilder() {
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">
+                    <h2 className="text-2xl tracking-tight">
                         {isNew ? 'Create Workflow' : 'Edit Workflow'}
                     </h2>
                 </div>

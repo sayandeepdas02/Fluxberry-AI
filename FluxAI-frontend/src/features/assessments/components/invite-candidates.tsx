@@ -230,7 +230,7 @@ export function InviteCandidates({ assessmentId }: { assessmentId: string }) {
                     </Link>
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Invite Candidates</h1>
+                    <h1 className="text-2xl tracking-tight">Invite Candidates</h1>
                     <p className="text-sm text-muted-foreground">Step 3 of 3: Send test links</p>
                 </div>
             </div>
@@ -283,7 +283,7 @@ export function InviteCandidates({ assessmentId }: { assessmentId: string }) {
                                     <Input
                                         readOnly
                                         value={getTestLink(assessmentId)}
-                                        className="font-mono text-sm bg-muted"
+                                        className="text-sm bg-muted"
                                     />
                                     <Button type="button" variant="outline" size="icon" onClick={handleCopyLink} title="Copy link">
                                         {copied ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
@@ -305,7 +305,7 @@ export function InviteCandidates({ assessmentId }: { assessmentId: string }) {
                                 <Label>Enter Email Addresses (comma or newline separated)</Label>
                                 <Textarea
                                     placeholder="john@example.com, sarah@example.com, ..."
-                                    className="min-h-[120px] font-mono text-sm"
+                                    className="min-h-[120px] text-sm"
                                     value={emailsRaw}
                                     onChange={(e) => setEmailsRaw(e.target.value)}
                                     disabled={loading}
@@ -325,10 +325,7 @@ export function InviteCandidates({ assessmentId }: { assessmentId: string }) {
                                 />
 
                                 <div
-                                    className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${isDragOver
-                                            ? "border-blue-400 bg-blue-50 text-blue-700"
-                                            : "border-muted-foreground/20 text-muted-foreground hover:border-muted-foreground/40 hover:bg-muted/30"
-                                        }`}
+                                    className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${isDragOver ? "border-blue-400 bg-blue-50 text-blue-700" : "border-muted-foreground/20 text-muted-foreground hover:border-muted-foreground/40 hover:bg-muted/30" }`}
                                     onClick={() => fileInputRef.current?.click()}
                                     onDrop={handleDrop}
                                     onDragOver={handleDragOver}

@@ -263,14 +263,14 @@ export function DSAInterface({
                             </div>
                         )}
                     </div>
-                    <h2 className="text-xl font-bold text-neutral-900 mb-4">{problem.title}</h2>
+                    <h2 className="text-xl text-neutral-900 mb-4">{problem.title}</h2>
                     <div className="prose prose-sm prose-neutral max-w-none text-neutral-600 whitespace-pre-wrap">
                         {problem.prompt}
                     </div>
                     {problem.constraints && (
                         <div className="mt-4 p-3 bg-neutral-50 rounded-lg text-sm text-neutral-600">
                             <strong>Constraints:</strong>
-                            <pre className="mt-1 whitespace-pre-wrap font-sans text-xs">{problem.constraints}</pre>
+                            <pre className="mt-1 whitespace-pre-wrap text-xs">{problem.constraints}</pre>
                         </div>
                     )}
                 </div>
@@ -287,10 +287,10 @@ export function DSAInterface({
             <div className="w-3/5 flex flex-col bg-[#1e1e1e]">
                 {/* Editor header with timer */}
                 <div className="h-10 bg-[#252526] flex items-center justify-between px-4 border-b border-[#3e3e42]">
-                    <div className="text-xs text-neutral-400 font-mono">{currentLanguage}</div>
+                    <div className="text-xs text-neutral-400">{currentLanguage}</div>
                     <div className={`flex items-center gap-2 px-3 py-1 rounded ${timerBg}`}>
                         <div className={`w-2 h-2 rounded-full ${timeLeft <= 60 ? 'bg-red-500 animate-pulse' : 'bg-neutral-400'}`} />
-                        <span className={`text-sm font-mono font-medium ${timerColor}`}>
+                        <span className={`text-sm font-medium ${timerColor}`}>
                             {formatTime(timeLeft)}
                         </span>
                     </div>
@@ -298,7 +298,7 @@ export function DSAInterface({
 
                 {/* Code editor */}
                 <Textarea
-                    className="flex-1 bg-transparent border-0 text-white font-mono text-sm resize-none focus-visible:ring-0 p-4 leading-relaxed"
+                    className="flex-1 bg-transparent border-0 text-white text-sm resize-none focus-visible:ring-0 p-4 leading-relaxed"
                     value={currentCode}
                     onChange={(e) => handleCodeChange(e.target.value)}
                     spellCheck={false}
@@ -344,7 +344,7 @@ export function DSAInterface({
                             {outputOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
                         </button>
                         {outputOpen && (
-                            <div className="px-4 pb-4 pt-0 font-mono text-sm max-h-40 overflow-auto">
+                            <div className="px-4 pb-4 pt-0 text-sm max-h-40 overflow-auto">
                                 {runError && (
                                     <pre className="text-red-400 whitespace-pre-wrap">{runError}</pre>
                                 )}

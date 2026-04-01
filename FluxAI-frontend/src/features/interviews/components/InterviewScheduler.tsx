@@ -132,7 +132,7 @@ export function InterviewScheduler() {
                 <Button variant="ghost" size="icon" onClick={() => router.push('/dashboard/interviews')}>
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
-                <h2 className="text-2xl font-bold tracking-tight">
+                <h2 className="text-2xl tracking-tight">
                     {isNew ? 'Schedule Interview' : 'Edit Interview'}
                 </h2>
             </div>

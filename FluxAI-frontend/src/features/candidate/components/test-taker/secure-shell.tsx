@@ -66,13 +66,13 @@ export function SecureShell({
     const isOver = limitSeconds > 0 && remaining === 0
 
     return (
-        <div className="min-h-screen bg-neutral-50 flex flex-col font-sans">
+        <div className="min-h-screen bg-neutral-50 flex flex-col">
             {/* Top Bar */}
             <header className="h-16 bg-white border-b border-neutral-200 flex items-center justify-between px-6 sticky top-0 z-50">
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                         <div className="w-6 h-6 bg-neutral-900 rounded flex items-center justify-center">
-                            <span className="text-[10px] font-bold text-white">F</span>
+                            <span className="text-[10px] text-white">F</span>
                         </div>
                         <span className="font-semibold text-neutral-900 text-sm hidden sm:inline-block">Senior Frontend Engineer</span>
                     </div>
@@ -87,7 +87,7 @@ export function SecureShell({
                     {/* Only show navbar timer for PER_ROUND mode (AI rounds) */}
                     {showNavbarTimer && (
                         <div className={cn(
-                            "flex items-center gap-2 px-3 py-1.5 rounded-full font-mono text-sm font-medium transition-colors",
+                            "flex items-center gap-2 px-3 py-1.5 rounded-full  text-sm font-medium transition-colors",
                             isOver ? "bg-red-100 text-red-600" :
                                 remaining < 300 ? "bg-amber-100 text-amber-600" : "bg-neutral-100 text-neutral-600"
                         )}>
