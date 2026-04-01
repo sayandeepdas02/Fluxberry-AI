@@ -126,7 +126,7 @@ export function AIInterface({
                     <div className="w-16 h-16 mx-auto rounded-full bg-red-500/20 flex items-center justify-center">
                         <span className="text-3xl">!</span>
                     </div>
-                    <h2 className="text-xl font-bold">Unable to Start Interview</h2>
+                    <h2 className="text-xl">Unable to Start Interview</h2>
                     <p className="text-neutral-400">{error}</p>
                     <button
                         onClick={() => setError(null)}

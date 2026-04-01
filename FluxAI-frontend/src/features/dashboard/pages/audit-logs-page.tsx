@@ -66,7 +66,7 @@ export default function AuditLogsPage() {
         <div className="p-6 space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Audit Logs</h1>
+                    <h1 className="text-2xl tracking-tight">Audit Logs</h1>
                     <p className="text-muted-foreground">
                         Track changes and security events within your organization.
                     </p>
@@ -152,7 +152,7 @@ export default function AuditLogsPage() {
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-2">
-                                                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                                                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs text-primary">
                                                         {log.performedBy.firstName[0]}
                                                         {log.performedBy.lastName[0]}
                                                     </div>
@@ -162,14 +162,14 @@ export default function AuditLogsPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant="outline" className="font-mono text-xs">
+                                                <Badge variant="outline" className="text-xs">
                                                     {log.action}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex flex-col">
                                                     <span className="font-medium text-sm">{log.entityType}</span>
-                                                    <span className="text-xs text-muted-foreground font-mono truncate max-w-[100px]">
+                                                    <span className="text-xs text-muted-foreground truncate max-w-[100px]">
                                                         {log.entityId}
                                                     </span>
                                                 </div>

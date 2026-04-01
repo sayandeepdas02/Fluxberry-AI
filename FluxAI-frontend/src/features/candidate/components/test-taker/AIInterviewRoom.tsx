@@ -262,7 +262,7 @@ export function AIInterviewRoom({ attemptId, onComplete }: AIInterviewRoomProps)
                         <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mx-auto">
                             <Mic className="w-8 h-8 text-orange-500" />
                         </div>
-                        <h1 className="text-2xl font-bold">AI Voice Interview</h1>
+                        <h1 className="text-2xl">AI Voice Interview</h1>
                         <p className="text-neutral-400 leading-relaxed text-sm">
                             You'll have a live voice conversation with an AI interviewer. Speak naturally —
                             a 5-second pause will be taken as your answer complete signal.
@@ -316,9 +316,7 @@ export function AIInterviewRoom({ attemptId, onComplete }: AIInterviewRoomProps)
                         const isCurrent = i === currentIdx
                         return (
                             <div key={phase} className="flex items-center gap-1">
-                                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all
-                                    ${isCurrent ? "bg-orange-500/20 text-orange-400 border border-orange-500/30" :
-                                        isDone ? "text-neutral-500" : "text-neutral-700"}`}>
+                                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${isCurrent ? "bg-orange-500/20 text-orange-400 border border-orange-500/30" : isDone ? "text-neutral-500" : "text-neutral-700"}`}>
                                     {isDone && <CheckCircle className="w-3 h-3" />}
                                     {PHASE_LABELS[phase]}
                                 </div>
@@ -354,13 +352,7 @@ export function AIInterviewRoom({ attemptId, onComplete }: AIInterviewRoomProps)
                 {/* Mic status */}
                 {!isComplete && (
                     <div className="flex items-center justify-center gap-3">
-                        <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
-                            ${isAISpeaking
-                                ? "bg-neutral-800 text-neutral-500"
-                                : sttFailed
-                                    ? "bg-red-500/10 text-red-400 border border-red-500/20"
-                                    : "bg-green-500/10 text-green-400 border border-green-500/20"
-                            }`}>
+                        <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${isAISpeaking ? "bg-neutral-800 text-neutral-500" : sttFailed ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-green-500/10 text-green-400 border border-green-500/20" }`}>
                             {isAISpeaking ? (
                                 <><MicOff className="w-4 h-4" /> Listening paused</>
                             ) : sttFailed ? (
@@ -393,10 +385,7 @@ export function AIInterviewRoom({ attemptId, onComplete }: AIInterviewRoomProps)
                         )}
                         {transcript.map((entry, i) => (
                             <div key={i} className={`flex gap-2 ${entry.speaker === "AI" ? "justify-start" : "justify-end"}`}>
-                                <div className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed
-                                    ${entry.speaker === "AI"
-                                        ? "bg-neutral-800 text-neutral-200 rounded-tl-sm"
-                                        : "bg-orange-600/90 text-white rounded-tr-sm"}`}>
+                                <div className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${entry.speaker === "AI" ? "bg-neutral-800 text-neutral-200 rounded-tl-sm" : "bg-orange-600/90 text-white rounded-tr-sm"}`}>
                                     {entry.text}
                                 </div>
                             </div>

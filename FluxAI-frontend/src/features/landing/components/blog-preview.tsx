@@ -58,7 +58,7 @@ export function BlogPreview() {
                             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                                 {story.category}
                             </span>
-                            <h3 className="text-lg font-bold text-foreground/90 group-hover:text-muted-foreground transition-colors line-clamp-2">
+                            <h3 className="text-lg text-foreground/90 group-hover:text-muted-foreground transition-colors line-clamp-2">
                                 {story.title}
                             </h3>
                         </div>

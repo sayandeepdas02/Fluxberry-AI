@@ -44,7 +44,7 @@ export default function AppMarketplacePage() {
                     <div className="w-16 h-16 rounded-2xl bg-background/10 border border-background/20 flex items-center justify-center mb-6 backdrop-blur-sm">
                         <LayoutGrid className="w-8 h-8 text-background" />
                     </div>
-                    <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4">
+                    <h1 className="text-4xl sm:text-5xl tracking-tight mb-4">
                         Fluxberry OS Marketplace
                     </h1>
                     <p className="text-lg text-background/70 max-w-2xl font-medium">
@@ -65,7 +65,7 @@ export default function AppMarketplacePage() {
                 
                 {/* Core Modals Row */}
                 <div className="mb-12">
-                    <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                    <h2 className="text-xl mb-6 flex items-center gap-2">
                         <span className="w-2 h-6 bg-primary" />
                         Core Modules
                     </h2>
@@ -85,7 +85,7 @@ export default function AppMarketplacePage() {
                                     </p>
                                     
                                     <div className="pt-4 border-t border-line flex items-center justify-between">
-                                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                        <span className="text-xs text-muted-foreground uppercase tracking-wider">
                                             Included in Plan
                                         </span>
                                         <span className="flex items-center gap-1.5 text-sm font-semibold text-primary">
@@ -101,7 +101,7 @@ export default function AppMarketplacePage() {
 
                 {/* Premium Add-ons Row */}
                 <div>
-                    <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                    <h2 className="text-xl mb-6 flex items-center gap-2">
                         <span className="w-2 h-6 bg-emerald-500" />
                         Premium Add-ons
                     </h2>
@@ -114,7 +114,7 @@ export default function AppMarketplacePage() {
                             return (
                                 <div key={app.id} className={`border p-5 flex flex-col h-full transition-all relative ${isInstalled ? 'border-primary/50 shadow-sm bg-primary/5' : 'border-line bg-background hover:border-foreground/30'}`}>
                                     {config.trialActive && (
-                                        <span className="absolute -top-3 right-4 px-2 py-0.5 bg-emerald-500 text-background text-[10px] font-bold uppercase tracking-wider">
+                                        <span className="absolute -top-3 right-4 px-2 py-0.5 bg-emerald-500 text-background text-[10px] uppercase tracking-wider">
                                             Trial Access
                                         </span>
                                     )}

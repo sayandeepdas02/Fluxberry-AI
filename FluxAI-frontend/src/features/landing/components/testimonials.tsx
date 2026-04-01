@@ -17,7 +17,7 @@ export function Testimonials() {
           <div className="flex flex-col items-start lg:items-end max-w-[320px] lg:text-right lg:pt-4">
              <div className="flex items-center gap-2 bg-[#EBEBEB] px-3 py-1.5 rounded-full mb-4">
                <div className="w-2.5 h-2.5 rounded-full bg-[#f64124]" />
-               <span className="text-[10px] font-mono tracking-wider font-bold text-black/60 uppercase">TESTIMONIALS</span>
+               <span className="text-[10px] tracking-wider text-black/60 uppercase">TESTIMONIALS</span>
              </div>
              <p className="text-[#666] text-[15px] leading-relaxed">
                Trusted by startups and growing teams, Fluxberry AI helps companies design and implement AI solutions that integrate with real workflows and deliver dependable results.
@@ -45,7 +45,7 @@ export function Testimonials() {
           <div className="relative rounded-[24px] overflow-hidden bg-[#CBD5E1] lg:col-span-1 group">
             <div className="absolute inset-0 bg-gradient-to-t from-[#D04029] via-[#5F3B66] to-[#1E2530]" />
             <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
-            <div className="absolute bottom-6 left-6 right-6 flex items-center justify-center gap-2 text-white font-bold text-lg">
+            <div className="absolute bottom-6 left-6 right-6 flex items-center justify-center gap-2 text-white text-lg">
                <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2L9 9H2L7.5 13.5L5 21L12 16.5L19 21L16.5 13.5L22 9H15L12 2Z"/></svg>
                <span>Elasticware</span>
             </div>
@@ -64,9 +64,9 @@ export function Testimonials() {
             <div className="flex justify-between items-start relative z-10 w-full mb-12">
                <div>
                  <div className="font-semibold text-[#111] text-[15px]">Daniel Foster</div>
-                 <div className="font-mono text-[10px] text-[#888] tracking-widest mt-1 uppercase">VP OF GROWTH, BOLTSHIFT</div>
+                 <div className="text-[10px] text-[#888] tracking-widest mt-1 uppercase">VP OF GROWTH, BOLTSHIFT</div>
                </div>
-               <div className="flex items-center gap-2 font-bold text-xl text-black">
+               <div className="flex items-center gap-2 text-xl text-black">
                  <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white p-1.5"><ScanFace size={18}/></div>
                  Boltshift
                </div>
@@ -91,9 +91,9 @@ export function Testimonials() {
             <div className="flex justify-between items-start relative z-10 w-full mb-12">
                <div>
                  <div className="font-semibold text-[#111] text-[15px]">Sophie Nguyen</div>
-                 <div className="font-mono text-[10px] text-[#888] tracking-widest mt-1 uppercase">PRODUCT LEAD, ENNLABS</div>
+                 <div className="text-[10px] text-[#888] tracking-widest mt-1 uppercase">PRODUCT LEAD, ENNLABS</div>
                </div>
-               <div className="flex items-center gap-2 font-bold text-xl text-black">
+               <div className="flex items-center gap-2 text-xl text-black">
                  <div className="grid grid-cols-3 gap-1 w-6 h-6">
                     {[...Array(9)].map((_, i) => <div key={i} className="bg-black rounded-full w-full h-full" />)}
                  </div>
@@ -110,7 +110,7 @@ export function Testimonials() {
           <div className="relative rounded-[24px] overflow-hidden bg-[#94A3B8] lg:col-span-1 group">
             <div className="absolute inset-0 bg-gradient-to-t from-[#B02F1A] via-[#5D322B] to-[#7B8B9B]" />
             <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
-            <div className="absolute bottom-6 left-6 right-6 flex items-center justify-center gap-2 text-white font-bold text-lg">
+            <div className="absolute bottom-6 left-6 right-6 flex items-center justify-center gap-2 text-white text-lg">
                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93L19.07 19.07M2 12H22M12 2V22"/></svg>
                <span>Chromatools</span>
             </div>
@@ -120,7 +120,7 @@ export function Testimonials() {
           <div className="relative rounded-[24px] overflow-hidden bg-[#F87171] lg:col-span-1 group">
             <div className="absolute inset-0 bg-gradient-to-t from-[#F64124] via-[#DE9F9F] to-[#737C88]" />
             <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
-            <div className="absolute bottom-6 left-6 right-6 flex items-center justify-center gap-2 text-white font-bold text-lg">
+            <div className="absolute bottom-6 left-6 right-6 flex items-center justify-center gap-2 text-white text-lg">
                <div className="grid grid-cols-2 gap-1 w-5 h-5">
                     {[...Array(4)].map((_, i) => <div key={i} className="bg-white rounded-full w-full h-full" />)}
                  </div>

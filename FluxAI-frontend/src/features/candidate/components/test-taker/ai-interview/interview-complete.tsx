@@ -70,14 +70,14 @@ export function InterviewComplete({
 
                 {/* Title & Description */}
                 <div className="space-y-2">
-                    <h1 className="text-2xl font-bold">{config.title}</h1>
+                    <h1 className="text-2xl">{config.title}</h1>
                     <p className="text-neutral-400">{config.description}</p>
                 </div>
 
                 {/* Duration */}
                 <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4">
                     <div className="text-sm text-neutral-500 mb-1">Interview Duration</div>
-                    <div className="text-xl font-mono text-white">{formatDuration(duration)}</div>
+                    <div className="text-xl text-white">{formatDuration(duration)}</div>
                 </div>
 
                 {/* Next Steps */}

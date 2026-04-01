@@ -60,7 +60,7 @@ export function EmailTemplateList() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Email Templates</h2>
+                    <h2 className="text-3xl tracking-tight">Email Templates</h2>
                     <p className="text-muted-foreground">
                         Manage your email templates for automated workflows and messaging.
                     </p>

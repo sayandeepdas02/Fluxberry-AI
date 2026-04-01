@@ -51,7 +51,7 @@ export function ManageJobsView() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-xl font-semibold text-foreground font-mono uppercase tracking-widest">Manage Jobs</h1>
+                    <h1 className="text-xl font-semibold text-foreground uppercase tracking-widest">Manage Jobs</h1>
                     <p className="text-sm text-muted-foreground mt-1">
                         Create and manage job postings for your organization
                     </p>
@@ -72,10 +72,7 @@ export function ManageJobsView() {
                         <button
                             key={filter.value}
                             onClick={() => setActiveFilter(filter.value)}
-                            className={`pb-3 text-sm font-medium transition-colors border-b-2 ${activeFilter === filter.value
-                                    ? 'border-foreground text-foreground'
-                                    : 'border-transparent text-muted-foreground hover:text-foreground/70'
-                                }`}
+                            className={`pb-3 text-sm font-medium transition-colors border-b-2 ${activeFilter === filter.value ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground/70' }`}
                         >
                             {filter.label}
                             {filter.count !== undefined && filter.count > 0 && (

@@ -38,7 +38,7 @@ function Pricing() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col gap-8 justify-start">
-                  <p className="flex flex-row  items-center gap-2 text-xl">
+                  <p className="flex flex-row items-center gap-2 text-xl">
                     <span className="text-4xl">$40</span>
                     <span className="text-sm text-muted-foreground">
                       {" "}
@@ -94,7 +94,7 @@ function Pricing() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col gap-8 justify-start">
-                  <p className="flex flex-row  items-center gap-2 text-xl">
+                  <p className="flex flex-row items-center gap-2 text-xl">
                     <span className="text-4xl">$40</span>
                     <span className="text-sm text-muted-foreground">
                       {" "}
@@ -150,7 +150,7 @@ function Pricing() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col gap-8 justify-start">
-                  <p className="flex flex-row  items-center gap-2 text-xl">
+                  <p className="flex flex-row items-center gap-2 text-xl">
                     <span className="text-4xl">$40</span>
                     <span className="text-sm text-muted-foreground">
                       {" "}

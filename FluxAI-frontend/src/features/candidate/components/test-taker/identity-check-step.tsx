@@ -83,7 +83,7 @@ export function IdentityCheckStep({ assessmentId }: { assessmentId: string }) {
     if (!mounted || !attemptId) return null
 
     return (
-        <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6 font-sans">
+        <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6">
             <div className="w-full max-w-4xl bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden flex flex-col md:flex-row">
 
                 {/* Left Panel: Camera Preview */}
@@ -100,7 +100,7 @@ export function IdentityCheckStep({ assessmentId }: { assessmentId: string }) {
                         ) : (
                             <div className="text-neutral-500 text-sm flex flex-col items-center gap-2">
                                 <div className="w-12 h-12 rounded-full bg-neutral-700 flex items-center justify-center">
-                                    <span className="text-xl font-bold text-white">{candidateName.charAt(0)}</span>
+                                    <span className="text-xl text-white">{candidateName.charAt(0)}</span>
                                 </div>
                                 <span>Camera Loading...</span>
                             </div>
@@ -118,7 +118,7 @@ export function IdentityCheckStep({ assessmentId }: { assessmentId: string }) {
                 {/* Right Panel: Verification */}
                 <div className="w-full md:w-1/2 p-8 flex flex-col">
                     <div className="mb-6">
-                        <h2 className="text-xl font-bold text-neutral-900">Identity Verification</h2>
+                        <h2 className="text-xl text-neutral-900">Identity Verification</h2>
                         <p className="text-neutral-500 text-sm mt-1">Confirm your details before starting.</p>
                     </div>
 
@@ -126,7 +126,7 @@ export function IdentityCheckStep({ assessmentId }: { assessmentId: string }) {
 
                         {/* Name Info */}
                         <div className="flex items-start gap-4 p-4 rounded-lg bg-neutral-50 border border-neutral-100">
-                            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm shrink-0">
                                 {candidateName.charAt(0)}
                             </div>
                             <div>

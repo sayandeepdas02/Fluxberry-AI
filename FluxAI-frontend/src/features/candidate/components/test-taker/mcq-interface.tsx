@@ -215,7 +215,7 @@ export function MCQInterface({
                     </span>
                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${timerBg}`}>
                         <div className={`w-2 h-2 rounded-full ${timeLeft <= 5 ? 'bg-red-500 animate-pulse' : 'bg-neutral-400'}`} />
-                        <span className={`text-sm font-mono font-medium ${timerColor}`}>
+                        <span className={`text-sm font-medium ${timerColor}`}>
                             {timeExpired ? '0s' : `${timeLeft}s`}
                         </span>
                     </div>
@@ -239,15 +239,11 @@ export function MCQInterface({
                             type="button"
                             onClick={() => toggleOption(i)}
                             disabled={locked}
-                            className={`w-full flex items-center gap-3 p-4 border rounded-lg text-left transition-colors group ${selectedOptions.includes(i)
-                                ? "border-neutral-900 bg-neutral-100"
-                                : "border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50"
-                                } ${locked ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
+                            className={`w-full flex items-center gap-3 p-4 border rounded-lg text-left transition-colors group ${selectedOptions.includes(i) ? "border-neutral-900 bg-neutral-100" : "border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50" } ${locked ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
                         >
                             {currentQuestion.isMultiCorrect ? (
                                 <div
-                                    className={`w-4 h-4 rounded border flex items-center justify-center ${selectedOptions.includes(i) ? "border-neutral-900 bg-neutral-900" : "border-neutral-300"
-                                        }`}
+                                    className={`w-4 h-4 rounded border flex items-center justify-center ${selectedOptions.includes(i) ? "border-neutral-900 bg-neutral-900" : "border-neutral-300" }`}
                                 >
                                     {selectedOptions.includes(i) && (
                                         <span className="text-white text-[10px]">✓</span>
@@ -255,8 +251,7 @@ export function MCQInterface({
                                 </div>
                             ) : (
                                 <div
-                                    className={`w-4 h-4 rounded-full border flex items-center justify-center ${selectedOptions.includes(i) ? "border-neutral-900 bg-neutral-900" : "border-neutral-300"
-                                        }`}
+                                    className={`w-4 h-4 rounded-full border flex items-center justify-center ${selectedOptions.includes(i) ? "border-neutral-900 bg-neutral-900" : "border-neutral-300" }`}
                                 >
                                     {selectedOptions.includes(i) && (
                                         <span className="w-2 h-2 rounded-full bg-white" />

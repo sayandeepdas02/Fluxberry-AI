@@ -20,7 +20,7 @@ export function AtsJobListPage() {
     return (
         <div className="p-8 space-y-6 max-w-7xl mx-auto pb-24">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">ATS Screening</h1>
+                <h1 className="text-3xl tracking-tight">ATS Screening</h1>
                 <p className="text-muted-foreground mt-1">
                     AI-driven candidate intelligence and ranking. Select a job to view match analytics.
                 </p>

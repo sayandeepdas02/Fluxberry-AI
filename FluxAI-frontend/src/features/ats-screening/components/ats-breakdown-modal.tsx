@@ -9,14 +9,19 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts'
-import { AtsScoreBreakdownData, SkillMatchDetail } from "@/lib/api/ats-screening"
-import { CheckCircle, AlertTriangle, Brain, Shield, Info } from "lucide-react"
+import { AtsScoreBreakdownData, SkillMatchDetail, copilotApi, CandidateCopilotSummary } from "@/lib/api/ats-screening"
+import { CheckCircle, AlertTriangle, Brain, Shield, Info, Sparkles, MessageSquare, Loader2 } from "lucide-react"
+import * as React from "react"
 
 interface AtsBreakdownModalProps {
-    isOpen: boolean
-    onOpenChange: (open: boolean) => void
-    data: AtsScoreBreakdownData | null
-    isLoading: boolean
+    isOpen:              boolean
+    onOpenChange:        (open: boolean) => void
+    data:                AtsScoreBreakdownData | null
+    isLoading:           boolean
+    // New: Copilot summary props (optional — gracefully degraded if missing)
+    jobId?:              string
+    candidateId?:        string | null
+    onGenerateQuestions?:(candidateId: string, name: string) => void
 }
 
 // ─────────────────────────────────────────────
@@ -59,7 +64,7 @@ function ConfidenceBar({ value }: { value: number }) {
                 <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
                         <span className="text-xs font-medium text-muted-foreground">Confidence</span>
-                        <span className="text-xs font-mono font-semibold">{value}%</span>
+                        <span className="text-xs font-semibold">{value}%</span>
                     </div>
                     <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                         <div
@@ -78,10 +83,110 @@ function ConfidenceBar({ value }: { value: number }) {
 }
 
 // ─────────────────────────────────────────────
+// Copilot Summary (lazy-loaded)
+// ─────────────────────────────────────────────
+
+const CLASSIFICATION_STYLE = {
+    strong:         'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+    high_potential: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+    borderline:     'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+    at_risk:        'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',
+} as const
+
+const CLASSIFICATION_LABEL = {
+    strong: 'Strong Match', high_potential: 'High Potential',
+    borderline: 'Borderline', at_risk: 'At Risk',
+} as const
+
+function CopilotSummarySection({
+    jobId,
+    candidateId,
+    onGenerateQuestions,
+}: {
+    jobId: string
+    candidateId: string
+    onGenerateQuestions?: (id: string, name: string) => void
+}) {
+    const [summary,  setSummary]  = React.useState<CandidateCopilotSummary | null>(null)
+    const [loading,  setLoading]  = React.useState(true)
+    const [error,    setError]    = React.useState(false)
+
+    React.useEffect(() => {
+        setLoading(true)
+        setError(false)
+        setSummary(null)
+        copilotApi.getCandidateSummary(jobId, candidateId)
+            .then(res => {
+                if (res.success && res.data) {
+                    const s = (res.data as any).data ?? res.data
+                    setSummary(s as CandidateCopilotSummary)
+                } else {
+                    setError(true)
+                }
+            })
+            .catch(() => setError(true))
+            .finally(() => setLoading(false))
+    }, [jobId, candidateId])
+
+    if (loading) {
+        return (
+            <div className="flex items-center gap-2 p-3 border border-primary/15 bg-primary/5 text-xs text-muted-foreground animate-pulse">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                Copilot analysing...
+            </div>
+        )
+    }
+
+    if (error || !summary) return null
+
+    const classStyle = CLASSIFICATION_STYLE[summary.classification]
+    const classLabel = CLASSIFICATION_LABEL[summary.classification]
+
+    return (
+        <div className="border border-primary/20 bg-gradient-to-b from-primary/[0.04] to-transparent p-4 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-xs font-semibold text-primary uppercase tracking-wider">Copilot Analysis</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-sm border font-medium ${classStyle}`}>
+                        {classLabel}
+                    </span>
+                    {onGenerateQuestions && (
+                        <button
+                            type="button"
+                            onClick={() => onGenerateQuestions(candidateId, '')}
+                            className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            <MessageSquare className="w-3 h-3" />
+                            Questions
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground leading-relaxed">{summary.summary}</p>
+
+            {summary.riskFlags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                    {summary.riskFlags.slice(0, 2).map((flag, i) => (
+                        <span key={i} className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 rounded-sm">
+                            <AlertTriangle className="w-2.5 h-2.5" />
+                            {flag}
+                        </span>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
+// ─────────────────────────────────────────────
 // Main Component
 // ─────────────────────────────────────────────
 
-export function AtsBreakdownModal({ isOpen, onOpenChange, data, isLoading }: AtsBreakdownModalProps) {
+export function AtsBreakdownModal({ isOpen, onOpenChange, data, isLoading, jobId, candidateId, onGenerateQuestions }: AtsBreakdownModalProps) {
     if (!data && !isLoading) return null
 
     return (
@@ -91,7 +196,7 @@ export function AtsBreakdownModal({ isOpen, onOpenChange, data, isLoading }: Ats
                     <DialogTitle className="flex items-center gap-2">
                         Scoring Breakdown
                         {data && (
-                            <Badge variant="outline" className="ml-auto font-mono text-xs">
+                            <Badge variant="outline" className="ml-auto text-xs">
                                 v{data.scoringVersion}
                             </Badge>
                         )}
@@ -100,6 +205,15 @@ export function AtsBreakdownModal({ isOpen, onOpenChange, data, isLoading }: Ats
                         Detailed AI analysis of candidate compatibility.
                     </DialogDescription>
                 </DialogHeader>
+
+                {/* Copilot Summary — lazy loaded, shown before breakdown */}
+                {jobId && candidateId && (
+                    <CopilotSummarySection
+                        jobId={jobId}
+                        candidateId={candidateId}
+                        onGenerateQuestions={onGenerateQuestions}
+                    />
+                )}
 
                 {isLoading ? (
                     <div className="py-24 text-center text-muted-foreground animate-pulse">Loading breakdown...</div>
@@ -137,8 +251,11 @@ export function AtsBreakdownModal({ isOpen, onOpenChange, data, isLoading }: Ats
                             {/* Score + Confidence + Metrics */}
                             <div className="space-y-5">
                                 <div>
-                                    <h4 className="text-sm font-semibold mb-2 text-foreground">Final Score</h4>
-                                    <div className="text-4xl font-bold tracking-tight mb-1">
+                                    <h4 className="text-sm font-semibold text-foreground mb-1 flex items-center justify-between">
+                                        Final Score
+                                        <span className="text-[10px] font-normal text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full border border-border">AI-Assessed</span>
+                                    </h4>
+                                    <div className="text-4xl tracking-tight mb-1">
                                         <span className={data.finalScore >= 80 ? "text-green-600" : data.finalScore >= 60 ? "text-yellow-600" : "text-red-600"}>
                                             {data.finalScore}
                                         </span>
@@ -175,14 +292,31 @@ export function AtsBreakdownModal({ isOpen, onOpenChange, data, isLoading }: Ats
 
                                 {/* Metrics Summary */}
                                 <div>
-                                    <h4 className="text-sm font-semibold mb-2">Score Breakdown</h4>
-                                    <ul className="text-sm space-y-1.5 text-muted-foreground">
-                                        {data.radarData.map(item => (
-                                            <li key={item.subject} className="flex justify-between">
-                                                <span>{item.subject}</span>
-                                                <span className="font-medium text-foreground">{item.A}%</span>
-                                            </li>
-                                        ))}
+                                    <h4 className="text-sm font-semibold mb-2 flex items-center gap-1.5 text-foreground">
+                                        Score Breakdown
+                                    </h4>
+                                    <ul className="text-sm space-y-2">
+                                        {data.radarData.map(item => {
+                                            const hints: Record<string, string> = {
+                                                'Skills': 'Technical and domain skill alignment',
+                                                'Experience': 'Relevance of past roles and tenure',
+                                                'Projects': 'Portfolio and project complexity',
+                                                'Education': 'Academic background match',
+                                                'Signal Boost': 'Elite companies or achievements',
+                                                'Bonus': 'Extra qualifications'
+                                            }
+                                            return (
+                                                <li key={item.subject} className="flex justify-between border-b border-border/40 pb-1.5 last:border-0">
+                                                    <div>
+                                                        <span className="text-foreground cursor-help underline decoration-muted-foreground/30 decoration-dotted underline-offset-2" title={hints[item.subject]}>
+                                                            {item.subject}
+                                                        </span>
+                                                        <p className="text-[10px] text-muted-foreground mt-0.5">{hints[item.subject]}</p>
+                                                    </div>
+                                                    <span className="font-semibold text-foreground">{item.A}%</span>
+                                                </li>
+                                            )
+                                        })}
                                     </ul>
                                 </div>
                             </div>

@@ -61,7 +61,7 @@ export function PricingFeatureTable({ className }: { className?: string } = {}) 
 
     return (
         <section className={className ?? "mb-24 px-4 overflow-x-auto"}>
-            <h2 className="text-2xl font-bold mb-8 text-center">Compare All Features</h2>
+            <h2 className="text-2xl mb-8 text-center">Compare All Features</h2>
             <div className="min-w-[700px] border border-border rounded-xl bg-background overflow-hidden">
                 {/* Header */}
                 <div className="grid grid-cols-5 bg-muted/50 border-b border-border px-4 py-3 sticky top-0">
@@ -72,7 +72,7 @@ export function PricingFeatureTable({ className }: { className?: string } = {}) 
                         <div
                             key={name}
                             className={cn(
-                                "text-center text-sm font-bold",
+                                "text-center text-sm ",
                                 name === "Growth" ? "text-foreground" : "text-muted-foreground"
                             )}
                         >
@@ -83,7 +83,7 @@ export function PricingFeatureTable({ className }: { className?: string } = {}) 
 
                 {features.map((section, idx) => (
                     <div key={idx}>
-                        <div className="bg-muted px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-b border-border text-foreground/70">
+                        <div className="bg-muted px-4 py-2.5 text-xs uppercase tracking-wider border-b border-border text-foreground/70">
                             {section.category}
                         </div>
                         {section.items.map((item, i) => (

@@ -41,13 +41,7 @@ export function CandidateCard({
             {...attributes}
             {...listeners}
             onClick={onClick}
-            className={`
-                group
-                bg-card border border-line p-4
-                hover:border-primary/40 hover:shadow-sm
-                transition-all cursor-grab active:cursor-grabbing
-                ${isDragging ? "opacity-50 ring-2 ring-primary ring-offset-2 scale-[1.02] shadow-md z-50" : ""}
-            `}
+            className={`group bg-card border border-line p-4 hover:border-primary/40 hover:shadow-sm transition-all cursor-grab active:cursor-grabbing ${isDragging ? "opacity-50 ring-2 ring-primary ring-offset-2 scale-[1.02] shadow-md z-50" : ""}`}
         >
             <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">

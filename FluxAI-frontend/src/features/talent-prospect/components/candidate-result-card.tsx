@@ -54,12 +54,7 @@ export function CandidateResultCard({
                     </Avatar>
                     
                     <div className="flex flex-col items-center">
-                        <div className={`
-                            flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold border
-                            ${candidate.matchScore >= 80 ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' 
-                            : candidate.matchScore >= 60 ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' 
-                            : 'bg-primary/10 text-primary border-primary/20'}
-                        `}>
+                        <div className={`flex items-center gap-1.5 px-2.5 py-1 text-xs border ${candidate.matchScore >= 80 ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : candidate.matchScore >= 60 ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' : 'bg-primary/10 text-primary border-primary/20'}`}>
                             <Sparkles className="w-3 h-3" />
                             {candidate.matchScore}% 
                         </div>

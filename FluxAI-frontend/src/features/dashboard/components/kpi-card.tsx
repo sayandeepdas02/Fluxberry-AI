@@ -15,7 +15,7 @@ export function KPICard({ title, value, trend }: KPICardProps) {
     return (
         <Card className="p-6 flex flex-col justify-between h-32 relative overflow-hidden bg-background border border-line rounded-none shadow-none hover:border-foreground/30 transition-all duration-300">
             {/* Title */}
-            <p className="text-sm font-medium text-muted-foreground z-10 font-mono uppercase tracking-widest">
+            <p className="text-sm font-medium text-muted-foreground z-10 uppercase tracking-widest">
                 {title}
             </p>
 

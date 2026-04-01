@@ -112,7 +112,7 @@ export function ConfigureAssessment({ assessmentId }: { assessmentId: string }) 
                 </Button>
                 <div>
                     <div className="flex items-center gap-3">
-                        <h1 className="text-2xl font-bold tracking-tight">Configure Rounds</h1>
+                        <h1 className="text-2xl tracking-tight">Configure Rounds</h1>
                         <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Draft</Badge>
                     </div>
                     <p className="text-sm text-neutral-500">Step 2 of 3: Select interview stages and curate content.</p>

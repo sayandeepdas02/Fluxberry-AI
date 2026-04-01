@@ -67,7 +67,7 @@ export function Pricing() {
              {/* PRICING BADGE */}
              <div className="flex items-center gap-2 bg-[#EBEBEB] w-fit px-3 py-1.5 rounded-full mb-8">
                <div className="w-2.5 h-2.5 rounded-full bg-[#f64124]" />
-               <span className="text-[10px] font-mono tracking-wider font-bold text-black/60 uppercase">PRICING</span>
+               <span className="text-[10px] tracking-wider text-black/60 uppercase">PRICING</span>
              </div>
              
              {/* MAIN HEADLINE */}
@@ -82,13 +82,13 @@ export function Pricing() {
           <div className="bg-[#EBEBEB] rounded-full p-1.5 flex items-center mb-4 md:mb-6 shadow-inner relative">
              <button 
                onClick={() => setIsAnnual(false)}
-               className={`font-mono text-[11px] font-medium tracking-wider px-8 py-3 rounded-full transition-all duration-300 z-10 ${!isAnnual ? 'bg-white text-black shadow-sm' : 'text-[#888] hover:text-black'}`}
+               className={`text-[11px] font-medium tracking-wider px-8 py-3 rounded-full transition-all duration-300 z-10 ${!isAnnual ? 'bg-white text-black shadow-sm' : 'text-[#888] hover:text-black'}`}
              >
                MONTHLY
              </button>
              <button 
                onClick={() => setIsAnnual(true)}
-               className={`font-mono text-[11px] font-medium tracking-wider px-8 py-3 rounded-full transition-all duration-300 z-10 ${isAnnual ? 'bg-white text-black shadow-sm' : 'text-[#888] hover:text-black'}`}
+               className={`text-[11px] font-medium tracking-wider px-8 py-3 rounded-full transition-all duration-300 z-10 ${isAnnual ? 'bg-white text-black shadow-sm' : 'text-[#888] hover:text-black'}`}
              >
                ANNUAL
              </button>
@@ -106,7 +106,7 @@ export function Pricing() {
               
               {/* POPULAR BADGE */}
               {card.popular && (
-                <div className="absolute top-0 right-8 bg-[#f64124] text-white text-[10px] font-mono font-bold tracking-wider px-4 py-2 rounded-b-lg uppercase z-10 shadow-sm">
+                <div className="absolute top-0 right-8 bg-[#f64124] text-white text-[10px] tracking-wider px-4 py-2 rounded-b-lg uppercase z-10 shadow-sm">
                   POPULAR
                 </div>
               )}
@@ -114,7 +114,7 @@ export function Pricing() {
               {/* TIER TAG */}
               <div className="flex items-center gap-2 bg-white w-fit px-3 py-1 rounded-full mb-6">
                  <div className="w-1.5 h-1.5 rounded-full bg-[#f64124]" />
-                 <span className="text-[9px] font-mono tracking-wider font-bold text-[#666] uppercase">{card.tag}</span>
+                 <span className="text-[9px] tracking-wider text-[#666] uppercase">{card.tag}</span>
               </div>
 
               {/* TIER DESCRIPTION */}
@@ -128,14 +128,14 @@ export function Pricing() {
                    {card.price}
                  </span>
                  {card.period && (
-                   <span className="text-[#888] font-mono text-[10px] font-bold tracking-widest pl-2">
+                   <span className="text-[#888] text-[10px] tracking-widest pl-2">
                      {card.period}
                    </span>
                  )}
               </div>
 
               {/* CTA BUTTON */}
-              <button className={`w-full ${card.buttonColor} font-mono text-[12px] font-medium tracking-widest py-4 rounded-full flex items-center justify-center gap-2 transition-colors mb-12 uppercase`}>
+              <button className={`w-full ${card.buttonColor} text-[12px] font-medium tracking-widest py-4 rounded-full flex items-center justify-center gap-2 transition-colors mb-12 uppercase`}>
                 {card.buttonText} 
                 <ArrowUpRight size={16} />
               </button>

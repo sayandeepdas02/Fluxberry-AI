@@ -104,7 +104,7 @@ export function Sidebar() {
                     className="flex items-center gap-3 mb-1 cursor-pointer hover:bg-muted/50 p-2 rounded-md transition-colors"
                 >
                     {/* Workspace avatar */}
-                    <div className="w-8 h-8 rounded-none border border-line bg-primary shadow-none flex items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
+                    <div className="w-8 h-8 rounded-none border border-line bg-primary shadow-none flex items-center justify-center text-primary-foreground text-xs shrink-0">
                         {getInitials(workspaceName)}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -124,7 +124,7 @@ export function Sidebar() {
                     <div className="absolute left-2 right-2 top-[calc(100%-4px)] mt-1 bg-background border border-border rounded-xl shadow-xl z-50 overflow-hidden">
                         {/* Profile header */}
                         <div className="p-3 flex items-center gap-3 border-b border-border">
-                            <div className="w-10 h-10 rounded-none border border-line bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold shrink-0">
+                            <div className="w-10 h-10 rounded-none border border-line bg-primary flex items-center justify-center text-primary-foreground text-sm shrink-0">
                                 {getInitials(userName)}
                             </div>
                             <div className="min-w-0">
@@ -164,7 +164,7 @@ export function Sidebar() {
                                     className="w-full flex items-center gap-2.5 px-2 py-2 text-sm rounded-lg hover:bg-muted transition-colors"
                                     onClick={() => setIsDropdownOpen(false)}
                                 >
-                                    <div className="w-6 h-6 rounded-none border border-line bg-primary flex items-center justify-center text-primary-foreground text-[10px] font-bold shrink-0">
+                                    <div className="w-6 h-6 rounded-none border border-line bg-primary flex items-center justify-center text-primary-foreground text-[10px] shrink-0">
                                         {ws.initials}
                                     </div>
                                     <span className="flex-1 text-left truncate font-medium text-sm">{ws.name}</span>
@@ -220,7 +220,7 @@ export function Sidebar() {
             <div className="flex-1 overflow-auto py-6 px-3 space-y-6">
                 {/* Products Section */}
                 <div>
-                    <h3 className="px-2 text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider font-mono">
+                    <h3 className="px-2 text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">
                         Products
                     </h3>
 
@@ -288,7 +288,7 @@ export function Sidebar() {
                             <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-foreground hover:text-foreground transition-colors group">
                                 <Search className="w-4 h-4 text-primary" />
                                 <span>Talent Prospect</span>
-                                <span className="ml-auto px-1.5 py-0.5 rounded border border-primary/30 bg-primary/10 text-[10px] text-primary uppercase font-bold tracking-wider">
+                                <span className="ml-auto px-1.5 py-0.5 rounded border border-primary/30 bg-primary/10 text-[10px] text-primary uppercase tracking-wider">
                                     AI
                                 </span>
                             </button>

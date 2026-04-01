@@ -28,7 +28,7 @@ export default function JobApplicationPage({ params }: { params: Promise<{ compa
     const descriptionHtml = job.description || '<p>No description provided.</p>'
 
     return (
-        <div className="min-h-screen bg-zinc-50/50 text-zinc-900 font-sans selection:bg-orange-100 selection:text-orange-900">
+        <div className="min-h-screen bg-zinc-50/50 text-zinc-900 selection:bg-orange-100 selection:text-orange-900">
             {/* 1. Header Section */}
             <div className="bg-background border-b border-zinc-100">
                 <div className="container mx-auto max-w-3xl px-6 pt-12 pb-8">
@@ -37,11 +37,11 @@ export default function JobApplicationPage({ params }: { params: Promise<{ compa
                     </button>
 
                     <div className="text-center space-y-6">
-                        <div className="w-12 h-12 rounded-xl bg-zinc-900 text-white mx-auto flex items-center justify-center font-bold text-xl shadow-sm overflow-hidden">
+                        <div className="w-12 h-12 rounded-xl bg-zinc-900 text-white mx-auto flex items-center justify-center text-xl shadow-sm overflow-hidden">
                             {company.logoUrl ? <img src={company.logoUrl} alt={company.name} className="w-full h-full object-cover" /> : company.name[0]}
                         </div>
 
-                        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-zinc-900">
+                        <h1 className="text-3xl md:text-4xl tracking-tight text-zinc-900">
                             {job.title}
                         </h1>
 
@@ -119,7 +119,7 @@ export default function JobApplicationPage({ params }: { params: Promise<{ compa
 
                         <div className="pt-12 flex justify-center pb-8">
                             <div className="flex items-center gap-2 text-sm font-medium text-zinc-900">
-                                Made with <span className="font-bold flex items-center gap-1"><div className="w-4 h-4 bg-zinc-900 rounded-[2px] flex items-center justify-center text-[8px] text-white">F</div> Fluxberry AI</span>
+                                Made with <span className="flex items-center gap-1"><div className="w-4 h-4 bg-zinc-900 rounded-[2px] flex items-center justify-center text-[8px] text-white">F</div> Fluxberry AI</span>
                             </div>
                         </div>
                     </div>
@@ -205,7 +205,7 @@ export default function JobApplicationPage({ params }: { params: Promise<{ compa
 
                         <div className="pt-12 flex justify-center pb-8 border-t border-zinc-100 mt-12">
                             <div className="flex items-center gap-2 text-sm font-medium text-zinc-900">
-                                Made with <span className="font-bold flex items-center gap-1"><div className="w-4 h-4 bg-zinc-900 rounded-[2px] flex items-center justify-center text-[8px] text-white">F</div> Fluxberry AI</span>
+                                Made with <span className="flex items-center gap-1"><div className="w-4 h-4 bg-zinc-900 rounded-[2px] flex items-center justify-center text-[8px] text-white">F</div> Fluxberry AI</span>
                             </div>
                         </div>
 

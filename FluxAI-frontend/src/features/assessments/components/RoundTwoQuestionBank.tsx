@@ -135,7 +135,7 @@ export function RoundTwoQuestionBank() {
                                                         <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Example Cases</p>
                                                         <div className="grid gap-2">
                                                             {details.testCases.slice(0, 2).map((tc: any, i: number) => (
-                                                                <div key={i} className="bg-neutral-800 text-neutral-200 font-mono text-xs p-3 rounded-md">
+                                                                <div key={i} className="bg-neutral-800 text-neutral-200 text-xs p-3 rounded-md">
                                                                     <div><span className="text-orange-400">Input:</span> {tc.input}</div>
                                                                     <div><span className="text-emerald-400">Output:</span> {tc.expectedOutput}</div>
                                                                 </div>
@@ -147,7 +147,7 @@ export function RoundTwoQuestionBank() {
                                                 {details.solution && (
                                                     <div className="mt-4">
                                                         <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Reference Solution</p>
-                                                        <pre className="bg-neutral-800 text-neutral-200 font-mono text-xs p-3 rounded-md overflow-x-auto">
+                                                        <pre className="bg-neutral-800 text-neutral-200 text-xs p-3 rounded-md overflow-x-auto">
                                                             <code>{details.solution}</code>
                                                         </pre>
                                                     </div>

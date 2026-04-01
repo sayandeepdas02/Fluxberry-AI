@@ -49,7 +49,7 @@ export function ProspectDrawer({
                                 </AvatarFallback>
                             </Avatar>
                             <div>
-                                <SheetTitle className="text-2xl font-bold tracking-tight">
+                                <SheetTitle className="text-2xl tracking-tight">
                                     {candidate.name}
                                 </SheetTitle>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
@@ -104,7 +104,7 @@ export function ProspectDrawer({
                         
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <h5 className="text-xs font-bold text-emerald-600 uppercase tracking-wide mb-2">Strengths</h5>
+                                <h5 className="text-xs text-emerald-600 uppercase tracking-wide mb-2">Strengths</h5>
                                 <ul className="text-sm space-y-1">
                                     {candidate.aiSummary.strengths.map(s => (
                                         <li key={s} className="flex items-start gap-2 text-muted-foreground">

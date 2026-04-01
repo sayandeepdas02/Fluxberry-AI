@@ -29,7 +29,7 @@ export function withAppGuard<P extends object>(
                      <div className="w-16 h-16 rounded-2xl bg-muted/20 border border-line flex items-center justify-center mb-6">
                          <Lock className="w-8 h-8 text-muted-foreground" />
                      </div>
-                     <h2 className="text-2xl font-bold tracking-tight mb-2">Upgrade Required</h2>
+                     <h2 className="text-2xl tracking-tight mb-2">Upgrade Required</h2>
                      <p className="text-muted-foreground max-w-sm mb-8">
                          This module is an add-on that requires an active Growth Plan or higher. Your {config.trialActive ? 'trial has expired' : 'free plan does not include this feature'}.
                      </p>

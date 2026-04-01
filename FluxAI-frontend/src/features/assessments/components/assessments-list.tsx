@@ -234,11 +234,7 @@ export function AssessmentsList() {
                     {assessments.map((assessment) => (
                         <Card key={assessment.id} className="group relative flex flex-col overflow-hidden border border-line bg-background shadow-none rounded-none hover:border-foreground/30 transition-all duration-300">
                             {/* Status Stripe */}
-                            <div className={`absolute top-0 left-0 w-1 h-full transition-colors duration-300
-                                ${assessment.status === 'ACTIVE' ? 'bg-emerald-500' :
-                                    assessment.status === 'DRAFT' ? 'bg-amber-400' :
-                                        assessment.status === 'ARCHIVED' ? 'bg-slate-300' : 'bg-primary'
-                                }`}
+                            <div className={`absolute top-0 left-0 w-1 h-full transition-colors duration-300 ${assessment.status === 'ACTIVE' ? 'bg-emerald-500' : assessment.status === 'DRAFT' ? 'bg-amber-400' : assessment.status === 'ARCHIVED' ? 'bg-slate-300' : 'bg-primary' }`}
                             />
 
                             <CardHeader className="p-5 pb-3">

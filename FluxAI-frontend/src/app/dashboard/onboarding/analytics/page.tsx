@@ -81,7 +81,7 @@ export default function OnboardingAnalyticsPage() {
     return (
         <div className="p-8 space-y-8">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Onboarding Analytics</h1>
+                <h1 className="text-3xl tracking-tight">Onboarding Analytics</h1>
                 <p className="text-muted-foreground mt-2">
                     Review candidate conversion and onboarding speed metrics.
                 </p>
@@ -94,7 +94,7 @@ export default function OnboardingAnalyticsPage() {
                         <TrendingUp className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{metrics.acceptanceRate}%</div>
+                        <div className="text-2xl">{metrics.acceptanceRate}%</div>
                         <p className="text-xs text-muted-foreground mt-1">Out of {metrics.totalOffers} total offers</p>
                     </CardContent>
                 </Card>
@@ -105,7 +105,7 @@ export default function OnboardingAnalyticsPage() {
                         <Clock className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{metrics.avgTimeToSignDays} Days</div>
+                        <div className="text-2xl">{metrics.avgTimeToSignDays} Days</div>
                         <p className="text-xs text-muted-foreground mt-1">From send to signature</p>
                     </CardContent>
                 </Card>
@@ -116,7 +116,7 @@ export default function OnboardingAnalyticsPage() {
                         <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{metrics.completionRate}%</div>
+                        <div className="text-2xl">{metrics.completionRate}%</div>
                         <p className="text-xs text-muted-foreground mt-1">Out of {metrics.totalOnboardings} candidates</p>
                     </CardContent>
                 </Card>
@@ -127,7 +127,7 @@ export default function OnboardingAnalyticsPage() {
                         <Clock className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{metrics.avgTimeToCompleteDays} Days</div>
+                        <div className="text-2xl">{metrics.avgTimeToCompleteDays} Days</div>
                         <p className="text-xs text-muted-foreground mt-1">From start to completion</p>
                     </CardContent>
                 </Card>

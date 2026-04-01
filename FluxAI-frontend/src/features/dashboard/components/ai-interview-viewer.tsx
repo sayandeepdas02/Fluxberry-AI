@@ -204,7 +204,7 @@ export function AIInterviewViewer({ attemptId }: AIInterviewViewerProps) {
                             {overallScore !== undefined && (
                                 <div className="text-center mb-2">
                                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Overall AI Score</p>
-                                    <p className="text-4xl font-bold text-purple-700 mt-1">
+                                    <p className="text-4xl text-purple-700 mt-1">
                                         {overallScore}
                                         <span className="text-lg text-muted-foreground">/100</span>
                                     </p>
@@ -216,7 +216,7 @@ export function AIInterviewViewer({ attemptId }: AIInterviewViewerProps) {
                                     <div key={d.key} className="space-y-1">
                                         <div className="flex justify-between text-xs">
                                             <span className="font-medium text-neutral-700">{d.label}</span>
-                                            <span className="text-muted-foreground font-mono">{score}/100</span>
+                                            <span className="text-muted-foreground">{score}/100</span>
                                         </div>
                                         <div className="h-1.5 bg-neutral-100 rounded-full overflow-hidden">
                                             <div

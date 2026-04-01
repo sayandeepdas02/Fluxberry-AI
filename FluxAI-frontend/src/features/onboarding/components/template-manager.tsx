@@ -239,7 +239,7 @@ export function TemplateManager() {
                                     placeholder={`Dear {{candidateName}},\n\nWe are pleased to offer you the position of {{position}} at {{companyName}}...\n\nSalary: {{salary}}\nStart Date: {{startDate}}\n\nBest regards,\n{{signerName}}`}
                                     value={formContent}
                                     onChange={(e) => setFormContent(e.target.value)}
-                                    className="min-h-[300px] font-mono text-sm"
+                                    className="min-h-[300px] text-sm"
                                 />
                             </div>
 
@@ -255,7 +255,7 @@ export function TemplateManager() {
                                         </p>
                                         <div className="flex flex-wrap gap-1.5">
                                             {vars.map(v => (
-                                                <Badge key={v} variant="secondary" className="text-xs font-mono">
+                                                <Badge key={v} variant="secondary" className="text-xs">
                                                     {v}
                                                 </Badge>
                                             ))}
@@ -342,7 +342,7 @@ export function TemplateManager() {
                                         <div className="mb-3">
                                             <div className="flex flex-wrap gap-1">
                                                 {variables.slice(0, 4).map(v => (
-                                                    <Badge key={v} variant="secondary" className="text-[10px] font-mono px-1.5 py-0">
+                                                    <Badge key={v} variant="secondary" className="text-[10px] px-1.5 py-0">
                                                         {v}
                                                     </Badge>
                                                 ))}
@@ -403,7 +403,7 @@ export function TemplateManager() {
                     </DialogHeader>
                     <div className="py-4">
                         <div className="p-6 bg-white dark:bg-muted/20 border rounded-lg">
-                            <pre className="whitespace-pre-wrap text-sm leading-relaxed font-sans">
+                            <pre className="whitespace-pre-wrap text-sm leading-relaxed">
                                 {previewTemplate?.htmlContent}
                             </pre>
                         </div>
@@ -414,7 +414,7 @@ export function TemplateManager() {
                                 </p>
                                 <div className="flex flex-wrap gap-1.5">
                                     {(previewTemplate.variables || []).map(v => (
-                                        <Badge key={v} variant="secondary" className="text-xs font-mono">
+                                        <Badge key={v} variant="secondary" className="text-xs">
                                             {'{{' + v + '}}'}
                                         </Badge>
                                     ))}

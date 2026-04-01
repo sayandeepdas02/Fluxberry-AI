@@ -10,6 +10,9 @@ import { AtsCandidateTable } from "../components/ats-candidate-table"
 import { AtsBreakdownModal } from "../components/ats-breakdown-modal"
 import { AtsSettingsModal } from "../components/ats-settings-modal"
 import { FilterToolbar } from "../components/filter-toolbar"
+import { CopilotPanel } from "../components/copilot-panel"
+import { CopilotQuestionsModal } from "../components/copilot-questions-modal"
+import { CandidateComparisonModal } from "../components/candidate-comparison-modal"
 import { getCookie } from "cookies-next"
 import { Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -27,6 +30,14 @@ export function AtsDashboardPage({ jobId }: AtsDashboardPageProps) {
     const [isModalOpen, setIsModalOpen]         = useState(false)
     const [isSettingsOpen, setIsSettingsOpen]   = useState(false)
     const [filters, setFilters]                 = useState<AtsFilterParams>({})
+
+    // Copilot questions modal state
+    const [questionsOpen,          setQuestionsOpen]          = useState(false)
+    const [questionsCandidateId,   setQuestionsCandidateId]   = useState<string | null>(null)
+    const [questionsCandidateName, setQuestionsCandidateName] = useState<string | null>(null)
+
+    // Compare modal state
+    const [comparisonCandidates,   setComparisonCandidates]   = useState<[string, string] | null>(null)
 
     // ── Data Fetching ─────────────────────────────────────────────────────
 
@@ -92,6 +103,12 @@ export function AtsDashboardPage({ jobId }: AtsDashboardPageProps) {
         setPage(1) // Reset to page 1 when filters change
     }, [])
 
+    const handleGenerateQuestions = useCallback((candidateId: string, name: string) => {
+        setQuestionsCandidateId(candidateId)
+        setQuestionsCandidateName(name)
+        setQuestionsOpen(true)
+    }, [])
+
     // ── Loading State ─────────────────────────────────────────────────────
 
     if (isJobLoading || isStatsLoading) {
@@ -108,7 +125,7 @@ export function AtsDashboardPage({ jobId }: AtsDashboardPageProps) {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">ATS Screening</h1>
+                    <h1 className="text-3xl tracking-tight">ATS Screening</h1>
                     <p className="text-muted-foreground mt-1">
                         AI-driven candidate intelligence and ranking for{" "}
                         {jobInfo?.data?.title || 'Job'}
@@ -119,6 +136,13 @@ export function AtsDashboardPage({ jobId }: AtsDashboardPageProps) {
                     Settings
                 </Button>
             </div>
+
+            {/* AI Hiring Copilot — own fetch cycle, won't block candidate table */}
+            <CopilotPanel
+                jobId={jobId}
+                onViewCandidate={handleOpenBreakdown}
+                onGenerateQuestions={handleGenerateQuestions}
+            />
 
             {/* Overview Panel */}
             {stats?.data && (
@@ -158,15 +182,19 @@ export function AtsDashboardPage({ jobId }: AtsDashboardPageProps) {
                     onNextPage={handleNextPage}
                     onPrevPage={handlePrevPage}
                     onRetry={handleRetry}
+                    onCompare={(ids) => setComparisonCandidates(ids)}
                 />
             </div>
 
-            {/* Score Breakdown Modal */}
+            {/* Score Breakdown Modal — now receives jobId for Copilot summary */}
             <AtsBreakdownModal
                 isOpen={isModalOpen}
                 onOpenChange={handleModalClose}
                 data={breakdownRaw || null}
                 isLoading={isBreakdownLoading}
+                jobId={jobId}
+                candidateId={selectedCandidateId}
+                onGenerateQuestions={handleGenerateQuestions}
             />
 
             {/* Settings Modal */}
@@ -175,7 +203,22 @@ export function AtsDashboardPage({ jobId }: AtsDashboardPageProps) {
                 onOpenChange={setIsSettingsOpen}
                 jobId={jobId}
             />
+
+            {/* Copilot Interview Questions Modal */}
+            <CopilotQuestionsModal
+                isOpen={questionsOpen}
+                onOpenChange={setQuestionsOpen}
+                jobId={jobId}
+                candidateId={questionsCandidateId}
+                candidateName={questionsCandidateName}
+            />
+
+            {/* Candidate Comparison Modal */}
+            <CandidateComparisonModal
+                jobId={jobId}
+                candidateIds={comparisonCandidates}
+                onClose={() => setComparisonCandidates(null)}
+            />
         </div>
     )
 }
-

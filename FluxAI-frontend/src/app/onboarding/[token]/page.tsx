@@ -91,7 +91,7 @@ export default function PublicOnboardingPage() {
     if (error || !onboarding) return (
         <div className="flex h-screen flex-col items-center justify-center p-4 text-center">
             <AlertCircle className="w-12 h-12 text-destructive mb-4" />
-            <h1 className="text-xl font-bold">Access Denied</h1>
+            <h1 className="text-xl">Access Denied</h1>
             <p className="text-muted-foreground mt-2">{error || "Invalid onboarding link."}</p>
         </div>
     );
@@ -105,7 +105,7 @@ export default function PublicOnboardingPage() {
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <header className="bg-white border-b px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center sticky top-0 z-10">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-black rounded flex items-center justify-center text-white font-bold">F</div>
+                    <div className="w-8 h-8 bg-black rounded flex items-center justify-center text-white">F</div>
                     <span className="font-semibold text-lg">Fluxberry Onboarding</span>
                 </div>
                 <div className="text-sm text-muted-foreground hidden sm:block">
@@ -117,14 +117,14 @@ export default function PublicOnboardingPage() {
                 {/* Hero / Progress */}
                 <div className="bg-white rounded-lg shadow-sm border p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold">Onboarding Checklist</h1>
+                        <h1 className="text-2xl">Onboarding Checklist</h1>
                         <p className="text-muted-foreground mt-1">
                             Please complete the following tasks to get ready for your start date.
                         </p>
                     </div>
                     <div className="flex items-center gap-4 bg-secondary/50 rounded-lg p-3">
                         <div className="text-right">
-                            <span className="text-2xl font-bold">{progress}%</span>
+                            <span className="text-2xl">{progress}%</span>
                             <p className="text-xs text-muted-foreground">Completed</p>
                         </div>
                         <div className="w-12 h-12 relative flex items-center justify-center">
@@ -203,7 +203,7 @@ export default function PublicOnboardingPage() {
                 {progress === 100 && (
                     <div className="bg-green-600 text-white rounded-lg p-8 text-center shadow-lg">
                         <CheckCircle className="w-16 h-16 mx-auto mb-4 text-white/90" />
-                        <h2 className="text-2xl font-bold">All Set!</h2>
+                        <h2 className="text-2xl">All Set!</h2>
                         <p className="text-green-100 mt-2 text-lg">
                             You have completed all onboarding tasks. We look forward to seeing you on {format(new Date(onboarding.startDate), 'MMMM d')}!
                         </p>

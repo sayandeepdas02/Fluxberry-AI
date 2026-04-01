@@ -184,7 +184,7 @@ export function OnboardingFormWizard({ onboardingId, token, onComplete }: FormWi
     return (
         <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
             <div className="mb-6">
-                <h2 className="text-xl font-bold">{template.name}</h2>
+                <h2 className="text-xl">{template.name}</h2>
                 <p className="text-sm text-muted-foreground mt-1">
                     Please provide the requested information to proceed with onboarding.
                 </p>

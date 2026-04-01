@@ -63,7 +63,7 @@ export function OnboardingSettingsManager() {
     return (
         <div className="max-w-3xl space-y-6">
             <div className="space-y-1">
-                <h1 className="text-2xl font-bold tracking-tight">Onboarding Settings</h1>
+                <h1 className="text-2xl tracking-tight">Onboarding Settings</h1>
                 <p className="text-muted-foreground">Manage organizational defaults for cron tasks and expirations.</p>
             </div>
 

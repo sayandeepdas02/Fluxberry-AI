@@ -81,11 +81,11 @@ export function SystemCheckStep({ assessmentId }: { assessmentId: string }) {
     const allPassed = checks.camera && checks.mic && checks.screen && checks.network
 
     return (
-        <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6 font-sans">
+        <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6">
             <div className="w-full max-w-lg bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
 
                 <div className="p-8 border-b border-neutral-100 text-center">
-                    <h1 className="text-xl font-bold tracking-tight text-neutral-900">System Capability Check</h1>
+                    <h1 className="text-xl tracking-tight text-neutral-900">System Capability Check</h1>
                     <p className="text-neutral-500 text-sm mt-1">
                         We need to verify your environment before proceeding.
                     </p>

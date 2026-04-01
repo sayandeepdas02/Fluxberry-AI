@@ -125,7 +125,7 @@ export function SignUpForm() {
 
             <div className="flex items-center gap-4 mb-6">
                 <div className="flex-1 border-t border-line"></div>
-                <span className="text-xs text-muted-foreground font-medium uppercase font-mono tracking-widest">Or sign up with email</span>
+                <span className="text-xs text-muted-foreground font-medium uppercase tracking-widest">Or sign up with email</span>
                 <div className="flex-1 border-t border-line"></div>
             </div>
 

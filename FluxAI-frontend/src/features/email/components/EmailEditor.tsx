@@ -111,7 +111,7 @@ export function EmailEditor() {
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">
+                    <h2 className="text-2xl tracking-tight">
                         {isNew ? 'Create Template' : 'Edit Template'}
                     </h2>
                 </div>
@@ -155,7 +155,7 @@ export function EmailEditor() {
                         <CardContent className="flex-1">
                             <Textarea
                                 id="content-editor"
-                                className="min-h-[400px] font-mono text-sm leading-relaxed"
+                                className="min-h-[400px] text-sm leading-relaxed"
                                 value={template.content}
                                 onChange={(e) => setTemplate({ ...template, content: e.target.value })}
                                 placeholder="<html>...</html>"

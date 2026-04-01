@@ -65,7 +65,7 @@ export function ValueProposition() {
                             key={solution.number}
                             className="border border-border rounded-lg p-6 bg-muted/30 hover:bg-muted/50 transition-colors duration-200"
                         >
-                            <div className="text-sm font-mono text-muted-foreground mb-3">
+                            <div className="text-sm text-muted-foreground mb-3">
                                 {solution.number}
                             </div>
                             <h3 className="text-xl font-semibold mb-2">{solution.title}</h3>

@@ -120,12 +120,12 @@ export function OnboardingStep2() {
                                     <div className="flex items-center gap-3">
                                         <h3 className="font-semibold text-foreground">{app.title}</h3>
                                         {app.locked && (
-                                            <span className="text-[10px] uppercase font-bold text-muted-foreground bg-muted px-2 py-0.5 tracking-wider">
+                                            <span className="text-[10px] uppercase text-muted-foreground bg-muted px-2 py-0.5 tracking-wider">
                                                 Core Required
                                             </span>
                                         )}
                                         {app.badge && (
-                                            <span className="text-[10px] uppercase font-bold text-amber-600 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 tracking-wider flex items-center gap-1">
+                                            <span className="text-[10px] uppercase text-amber-600 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 tracking-wider flex items-center gap-1">
                                                 <Zap className="w-3 h-3" />
                                                 {app.badge}
                                             </span>
@@ -153,7 +153,7 @@ export function OnboardingStep2() {
                     </Button>
                     
                     <div className="flex items-center gap-6">
-                        <p className="text-xs text-muted-foreground font-mono uppercase tracking-widest">Step 2 of 3</p>
+                        <p className="text-xs text-muted-foreground uppercase tracking-widest">Step 2 of 3</p>
                         <Button
                             onClick={handleContinue}
                             disabled={selectedApps.length === 0}

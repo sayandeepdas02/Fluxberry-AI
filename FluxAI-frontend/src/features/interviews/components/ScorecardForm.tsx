@@ -61,7 +61,7 @@ export function ScorecardForm({ interviewId, candidateId, existingScorecard }: S
 
     return (
         <div className="space-y-6 max-w-3xl mx-auto pb-20">
-            <h2 className="text-2xl font-bold tracking-tight">Interview Feedback</h2>
+            <h2 className="text-2xl tracking-tight">Interview Feedback</h2>
 
             {scorecard.sections?.map((section, index) => (
                 <Card key={index}>
@@ -106,7 +106,7 @@ export function ScorecardForm({ interviewId, candidateId, existingScorecard }: S
                     >
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="STRONG_HIRE" id="r1" />
-                            <Label htmlFor="r1" className="text-green-600 font-bold">Strong Hire</Label>
+                            <Label htmlFor="r1" className="text-green-600">Strong Hire</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="HIRE" id="r2" />
@@ -118,7 +118,7 @@ export function ScorecardForm({ interviewId, candidateId, existingScorecard }: S
                         </div>
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="STRONG_NO_HIRE" id="r4" />
-                            <Label htmlFor="r4" className="text-red-600 font-bold">Strong No Hire</Label>
+                            <Label htmlFor="r4" className="text-red-600">Strong No Hire</Label>
                         </div>
                     </RadioGroup>
 

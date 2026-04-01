@@ -72,19 +72,19 @@ export function StartStep({ assessmentId }: { assessmentId: string }) {
     }
 
     return (
-        <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6 font-sans">
+        <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6">
             <div className="w-full max-w-2xl bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
 
                 <div className="border-b border-neutral-100 p-8 text-center bg-white">
                     <div className="flex justify-center mb-6">
                         <div className="flex items-center gap-2">
                             <div className="w-6 h-6 bg-neutral-900 rounded flex items-center justify-center">
-                                <span className="text-[10px] font-bold text-white">F</span>
+                                <span className="text-[10px] text-white">F</span>
                             </div>
                             <span className="font-semibold text-neutral-900">Fluxberry AI</span>
                         </div>
                     </div>
-                    <h1 className="text-2xl font-bold tracking-tight text-neutral-900 mb-2">
+                    <h1 className="text-2xl tracking-tight text-neutral-900 mb-2">
                         Assessment
                     </h1>
                     <p className="text-neutral-500 text-sm">
@@ -115,7 +115,7 @@ export function StartStep({ assessmentId }: { assessmentId: string }) {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 disabled={loading}
-                                className="font-mono"
+                                className=""
                             />
                         </div>
                     </div>
@@ -130,7 +130,7 @@ export function StartStep({ assessmentId }: { assessmentId: string }) {
                     <div className="space-y-3">
                         <div className="text-xs font-semibold text-neutral-400 uppercase tracking-wider text-center">Rounds</div>
                         <div className="flex gap-4 p-4 rounded-lg bg-neutral-50 border border-neutral-100 items-center">
-                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold font-mono">1</div>
+                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs">1</div>
                             <div className="flex-1">
                                 <h4 className="font-medium text-neutral-900 text-sm">Technical MCQ</h4>
                                 <p className="text-xs text-neutral-500 mt-0.5">Multiple choice</p>
@@ -138,7 +138,7 @@ export function StartStep({ assessmentId }: { assessmentId: string }) {
                             <Badge variant="outline" className="bg-white">Technical</Badge>
                         </div>
                         <div className="flex gap-4 p-4 rounded-lg bg-neutral-50 border border-neutral-100 items-center">
-                            <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold font-mono">2</div>
+                            <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs">2</div>
                             <div className="flex-1">
                                 <h4 className="font-medium text-neutral-900 text-sm">Hands-on Coding</h4>
                                 <p className="text-xs text-neutral-500 mt-0.5">DSA</p>
@@ -146,7 +146,7 @@ export function StartStep({ assessmentId }: { assessmentId: string }) {
                             <Badge variant="outline" className="bg-white">Practical</Badge>
                         </div>
                         <div className="flex gap-4 p-4 rounded-lg bg-neutral-50 border border-neutral-100 items-center">
-                            <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-xs font-bold font-mono">3</div>
+                            <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-xs">3</div>
                             <div className="flex-1">
                                 <h4 className="font-medium text-neutral-900 text-sm">AI Video Interview</h4>
                                 <p className="text-xs text-neutral-500 mt-0.5">Behavioral</p>

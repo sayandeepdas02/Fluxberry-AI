@@ -32,7 +32,7 @@ export function Hero() {
           }
         });
       },
-      { threshold: 0.1 }
+      { rootMargin: "100px 0px" }
     );
 
     const elements = sectionRef.current?.querySelectorAll(".section-enter");
@@ -59,7 +59,7 @@ export function Hero() {
         <div className="flex flex-col items-center text-center">
           {/* Headline */}
           <h1
-            className="font-bold tracking-tight text-foreground text-balance"
+            className="tracking-tight text-foreground text-balance"
             style={{
               fontSize: "clamp(2.25rem, 5vw, var(--text-hero))",
               lineHeight: "1.08",

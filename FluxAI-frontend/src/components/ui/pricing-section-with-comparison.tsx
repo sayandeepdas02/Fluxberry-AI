@@ -18,7 +18,7 @@ function Pricing() {
           </div>
           <div className="grid text-left w-full grid-cols-3 lg:grid-cols-4 divide-x pt-20">
             <div className="col-span-3 lg:col-span-1"></div>
-            <div className="px-3 py-1 md:px-6 md:py-4  gap-2 flex flex-col">
+            <div className="px-3 py-1 md:px-6 md:py-4 gap-2 flex flex-col">
               <p className="text-2xl">Startup</p>
               <p className="text-sm text-muted-foreground">
                 Our goal is to streamline SMB trade, making it easier and faster
@@ -60,7 +60,7 @@ function Pricing() {
                 Contact us <PhoneCall className="w-4 h-4" />
               </Button>
             </div>
-            <div className="px-3 lg:px-6 col-span-3 lg:col-span-1  py-4">
+            <div className="px-3 lg:px-6 col-span-3 lg:col-span-1 py-4">
               <b>Features</b>
             </div>
             <div></div>

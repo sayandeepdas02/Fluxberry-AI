@@ -35,10 +35,7 @@ export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
                                     {[20, 40, 60, 80, 100].map((threshold) => (
                                         <div
                                             key={threshold}
-                                            className={`h-full flex-1 rounded-sm ${source.value >= (threshold - 10) // Approx logic
-                                                    ? "bg-foreground"
-                                                    : "bg-muted"
-                                                }`}
+                                            className={`h-full flex-1 rounded-sm ${source.value >= (threshold - 10) /* Approx logic */ ? "bg-foreground" : "bg-muted" }`}
                                         />
                                     ))}
                                 </div>

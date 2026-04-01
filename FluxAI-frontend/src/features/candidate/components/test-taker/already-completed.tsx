@@ -6,7 +6,7 @@ import Link from "next/link"
 
 export function AlreadyCompleted() {
     return (
-        <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6 font-sans">
+        <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-6">
             <div className="w-full max-w-md bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
                 <div className="p-8 text-center space-y-6">
                     <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto text-green-600">
@@ -14,7 +14,7 @@ export function AlreadyCompleted() {
                     </div>
 
                     <div>
-                        <h1 className="text-xl font-bold text-neutral-900 mb-2">Already Submitted</h1>
+                        <h1 className="text-xl text-neutral-900 mb-2">Already Submitted</h1>
                         <p className="text-neutral-500 text-sm leading-relaxed">
                             Our records show that you have already completed and submitted this assessment.
                         </p>
