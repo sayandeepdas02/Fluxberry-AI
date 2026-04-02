@@ -6,10 +6,6 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { SectionWrapper } from "@/components/shared/layout-primitives";
 
-/* ─────────────────────────────────────────────────
-   PREMIUM FEATURE SECTION (WHY FLUXBERRY AI)
-   3-Column Modern SaaS Structure
-   ───────────────────────────────────────────────── */
 export function AgentsSection() {
   const sectionRef = useRef<HTMLElement>(null);
 
@@ -21,7 +17,7 @@ export function AgentsSection() {
             entry.target.classList.add("visible");
             const cards = entry.target.querySelectorAll(".agent-card-enter");
             cards.forEach((card, index) => {
-              (card as HTMLElement).style.transitionDelay = `${index * 150}ms`;
+              (card as HTMLElement).style.transitionDelay = `${index * 120}ms`;
               card.classList.add("visible");
             });
           }
@@ -41,95 +37,71 @@ export function AgentsSection() {
     <SectionWrapper
       ref={sectionRef}
       id="expertise"
-      className="section-enter bg-background/50"
+      className="section-enter bg-background py-16 md:py-24 relative"
     >
-      {/* Subtle Background Pattern */}
-      <div className="absolute inset-0 -z-10 pointer-events-none" 
-           style={{ 
-             backgroundImage: "radial-gradient(var(--line) 1px, transparent 1px)", 
-             backgroundSize: "24px 24px",
-             opacity: 0.5,
-             maskImage: "linear-gradient(to bottom, transparent, white 20%, white 80%, transparent)"
-           }} 
+      {/* Background pattern */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            "radial-gradient(var(--line) 1px, transparent 1px)",
+          backgroundSize: "24px 24px",
+          opacity: 0.4,
+          maskImage:
+            "linear-gradient(to bottom, transparent, white 20%, white 90%, transparent)",
+        }}
       />
 
       <div className="flex flex-col items-center relative z-10 w-full">
-        {/* ═══ HEADER ═══ */}
-        <div className="flex flex-col items-center justify-center text-center mb-16 md:mb-20">
-          <div
-            className="inline-flex items-center font-medium bg-background border border-line rounded-none"
-            style={{
-              padding: "6px 16px",
-              gap: "8px",
-              fontSize: "13px",
-              color: "var(--foreground)",
-              marginBottom: "24px",
-            }}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-primary" />
-            <span>Our Expertise</span>
+        {/* HEADER */}
+        <div className="flex flex-col items-center text-center mb-16">
+          <div className="inline-flex items-center gap-2 px-3 py-1 text-sm border border-line bg-background font-medium mb-6 rounded-none">
+            <Sparkles className="w-3.5 h-3.5 text-[#5D5FEF]" />
+            <span className="text-foreground text-[13px]">Our Expertise</span>
           </div>
 
-          <h2
-            className="tracking-tight text-foreground text-balance"
-            style={{
-              fontSize: "clamp(2.5rem, 5vw, 4rem)",
-              lineHeight: "1.1",
-              maxWidth: "800px",
-              letterSpacing: "-0.02em",
-            }}
-          >
-            Why <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/70">Fluxberry AI</span>?
+          <h2 className="text-balance text-foreground tracking-[-0.02em] text-[clamp(2.5rem,5vw,3.5rem)] leading-[1.1] font-semibold">
+            Why{" "}
+            <span className="text-[#5D5FEF]">
+              Fluxberry AI
+            </span>
+            ?
           </h2>
 
-          <p
-            className="text-muted-foreground font-normal"
-            style={{
-              fontSize: "clamp(1.125rem, 2vw, 1.25rem)",
-              lineHeight: "1.6",
-              maxWidth: "600px",
-              marginTop: "24px",
-            }}
-          >
-            Effortlessly set up, integrate, and optimize your hiring workflow with intelligent automation.
+          <p className="mt-6 text-muted-foreground text-[1.125rem] max-w-[600px] leading-[1.6]">
+            Effortlessly set up, integrate, and optimize your hiring workflow
+            with intelligent automation.
           </p>
         </div>
 
-        {/* ═══ PREMIUM 3-COLUMN GRID ═══ */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-8 lg:gap-10 mx-auto max-w-[1100px]">
-          
-          {/* Card 1: Evaluation (Sign up gear style) -> Maps to Smart Screening per prompt specs */}
+        {/* GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-[1100px] w-full mx-auto px-4">
           <FeatureCard
-            title="Smart Screening"
-            description="Analyze and shortlist top candidates instantly using AI."
-            illustration={<Image src="/illustrations/img2.png" alt="Screening" width={180} height={180} className="object-contain drop-shadow-sm transition-transform duration-500 hover:scale-105" />}
+            title="Intelligent Talent Acquisition"
+            description="Find and attract top candidates with AI-driven sourcing. Never miss the right talent."
+            imageSrc="/Intelligent Talent Acquisition.png"
             delay={0}
           />
-          
-          {/* Card 2: Scheduling / Integration (Blocks) */}
           <FeatureCard
-            title="Seamless Scheduling"
-            description="Automatically schedule interviews across calendars without manual effort."
-            illustration={<Image src="/illustrations/img1.png" alt="Scheduling" width={180} height={180} className="object-contain drop-shadow-sm transition-transform duration-500 hover:scale-105" />}
+            title="AI-Powered Assessments"
+            description="Assess candidates with AI-powered tests and screenings. Make faster, smarter hiring decisions."
+            imageSrc="/AI-Powered Assessments.png"
             delay={1}
           />
-          
-          {/* Card 3: Evaluation (Gear) */}
           <FeatureCard
-            title="Intelligent Evaluation"
-            description="Score candidates based on role fit, skills, and performance."
-            illustration={<Image src="/illustrations/img3.png" alt="Evaluation" width={180} height={180} className="object-contain drop-shadow-sm transition-transform duration-500 hover:scale-105" />}
+            title="Seamless Hiring & Onboarding"
+            description="Automate hiring from selection to onboarding. Deliver a smooth, consistent experience."
+            imageSrc="/Seamless Hiring & Onboarding.png"
             delay={2}
           />
-
         </div>
       </div>
 
       <style jsx global>{`
         .agent-card-enter {
           opacity: 0;
-          transform: translateY(24px);
-          transition: opacity 400ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1);
+          transform: translateY(20px);
+          transition: opacity 400ms ease, transform 400ms ease;
         }
         .agent-card-enter.visible {
           opacity: 1;
@@ -146,44 +118,47 @@ export function AgentsSection() {
 function FeatureCard({
   title,
   description,
-  illustration,
+  imageSrc,
   delay
 }: {
   title: string;
   description: string;
-  illustration: React.ReactNode;
+  imageSrc: string;
   delay: number;
 }) {
   return (
     <div
       className={cn(
         "agent-card-enter group relative flex flex-col overflow-hidden",
-        "bg-background",
-        "border border-line rounded-none",
-        "hover:bg-muted",
-        "transition-colors duration-200 ease-out cursor-pointer"
+        "bg-white",
+        "border border-[#E5E7EB] rounded-[4px]",
+        "transition-all duration-300 ease-out cursor-pointer",
+        "hover:-translate-y-1 hover:shadow-lg"
       )}
-      style={{ padding: "40px 32px" }}
     >
-      {/* Large Illustration Area */}
-      <div className="w-full flex items-center justify-center mb-10 overflow-visible relative h-[180px]">
-        <div className="relative z-10 w-full h-full flex items-center justify-center">
-          {illustration}
+      {/* 🖼 Top Section: Solid Primary Background with Padded Image */}
+      <div className="w-full bg-[#5D5FEF] p-[16px]">
+        {/* The actual image with white border and rounding */}
+        <div className="relative w-full aspect-[1.6] rounded-[6px] overflow-hidden border-[1.5px] border-white ring-1 ring-black/5">
+          <Image
+            src={imageSrc}
+            alt={title}
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-cover"
+          />
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex flex-col mt-auto pb-2">
-        <h3 className="font-semibold text-neutral-900 text-xl mb-3 tracking-tight">
+      <div className="flex flex-col flex-1 p-6 pt-[22px]">
+        <h3 className="font-bold text-[#111827] text-[18px] leading-[1.3] mb-2 tracking-[-0.01em]">
           {title}
         </h3>
-        <p className="text-neutral-500 font-normal leading-relaxed text-[15px]">
+        <p className="text-[#6B7280] font-normal leading-[1.6] text-[15px]">
           {description}
         </p>
       </div>
     </div>
   );
 }
-
-
-

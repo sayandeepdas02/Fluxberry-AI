@@ -69,14 +69,14 @@ export function Navbar() {
           <Image
             src="/favicon.png"
             alt="Fluxberry AI"
-            width={48}
-            height={48}
-            className="h-[32px] w-[32px]"
+            width={56}
+            height={56}
+            className="h-[40px] w-[40px]"
             priority
           />
           <span
             className="font-semibold tracking-tight text-foreground"
-            style={{ fontSize: "var(--text-body)" }}
+            style={{ fontSize: "20px" }}
           >
             FLUXBERRY AI
           </span>
