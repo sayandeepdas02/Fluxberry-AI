@@ -47,18 +47,16 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-colors",
+        "sticky top-0 z-50 w-full transition-colors",
         "duration-200 ease-out",
-        "bg-background screen-line-bottom",
-        isScrolled ? "border-b border-line" : ""
+        "bg-background border-b border-line"
       )}
-      style={{ height: "48px" }}
+      style={{ height: "64px" }}
     >
-      {/* Container: max-width 1200px, centered */}
+      {/* Container fits to parent main naturally since it's sticky and w-full */}
       <div
-        className="mx-auto flex h-full items-center justify-between"
+        className="flex h-full items-center justify-between"
         style={{
-          maxWidth: "var(--container-max)",
           paddingInline: "clamp(1rem, 3vw, 2rem)",
         }}
       >
@@ -71,14 +69,14 @@ export function Navbar() {
           <Image
             src="/favicon.png"
             alt="Fluxberry AI"
-            width={32}
-            height={32}
-            className="h-[24px] w-[24px]"
+            width={48}
+            height={48}
+            className="h-[32px] w-[32px]"
             priority
           />
           <span
             className="font-semibold tracking-tight text-foreground"
-            style={{ fontSize: "var(--text-body-sm)" }}
+            style={{ fontSize: "var(--text-body)" }}
           >
             FLUXBERRY AI
           </span>
@@ -95,7 +93,7 @@ export function Navbar() {
                 "hover:text-foreground",
                 "transition-colors duration-150 ease-out"
               )}
-              style={{ fontSize: "var(--text-body-sm)" }}
+              style={{ fontSize: "var(--text-body)" }}
             >
               {item.label}
             </Link>
@@ -111,21 +109,22 @@ export function Navbar() {
               "hover:text-foreground active:scale-[0.98]",
               "transition-all duration-200 ease-out"
             )}
-            style={{ fontSize: "var(--text-body-sm)" }}
+            style={{ fontSize: "var(--text-body)" }}
+
           >
             Log in
           </Link>
           <Link href="/signup">
             <button
               className={cn(
-                "cursor-pointer font-medium text-foreground",
-                "border border-line bg-background",
-                "hover:bg-muted active:scale-[0.98]",
+                "cursor-pointer font-medium text-white",
+                "border border-[#5561c8] bg-[#5561c8]",
+                "hover:opacity-90 active:scale-[0.98]",
                 "transition-all duration-200 ease-out rounded-none"
               )}
               style={{
                 padding: "4px 12px",
-                fontSize: "var(--text-body-sm)",
+                fontSize: "var(--text-body)",
               }}
             >
               Get Started
@@ -157,7 +156,7 @@ export function Navbar() {
           {/* Backdrop */}
           <div
             className="md:hidden fixed inset-0 bg-black/20 z-40"
-            style={{ top: "48px" }}
+            style={{ top: "80px" }}
             onClick={() => setIsMobileOpen(false)}
           />
 
@@ -167,9 +166,9 @@ export function Navbar() {
               "md:hidden fixed left-0 right-0 z-50",
               "bg-background",
               "border-b border-line",
-              "p-5 space-y-1"
+              "p-5 space-y-1 mx-auto max-w-[var(--container-max)] border-x"
             )}
-            style={{ top: "48px" }}
+            style={{ top: "80px" }}
           >
             {navItems.map((item) => (
               <Link
@@ -203,8 +202,9 @@ export function Navbar() {
                 onClick={() => setIsMobileOpen(false)}
               >
                 <button
-                  className="w-full border border-line bg-background text-foreground font-medium cursor-pointer hover:bg-muted transition-colors duration-200 rounded-none"
+                  className="w-full text-white font-medium cursor-pointer hover:opacity-90 transition-opacity duration-200 rounded-none"
                   style={{
+                    backgroundColor: "#5561c8",
                     height: "40px",
                     fontSize: "var(--text-body-sm)",
                   }}

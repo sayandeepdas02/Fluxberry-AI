@@ -15,6 +15,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SectionWrapper, SharpButton } from "@/components/shared/layout-primitives";
 
 /* ─────────────────────────────────────────────────
    HERO SECTION — Chanhdai-style Editorial
@@ -42,19 +43,9 @@ export function Hero() {
   }, []);
 
   return (
-    <section
-      ref={sectionRef}
-      id="hero"
-      className="relative w-full screen-line-bottom"
-      style={{
-        paddingTop: "calc(48px + var(--space-20))",
-        paddingBottom: "var(--space-16)",
-      }}
-    >
-      {/* ── Content Container (Grid Synced) ── */}
-      <div
-        className="mx-auto w-full px-6 sm:px-8 max-w-[1200px] border-x border-line relative z-10"
-      >
+    <SectionWrapper ref={sectionRef} id="hero">
+      {/* ── Content Container ── */}
+      <div className="mx-auto w-full relative z-10 flex flex-col items-center">
         {/* ═══ TEXT CONTENT — Centered ═══ */}
         <div className="flex flex-col items-center text-center">
           {/* Headline */}
@@ -96,44 +87,17 @@ export function Hero() {
           >
             {/* Secondary: Book a Demo */}
             <Link href="/demo">
-              <button
-                className={cn(
-                  "cursor-pointer font-medium",
-                  "border border-border bg-transparent text-foreground",
-                  "flex items-center",
-                  "hover:bg-muted hover:border-foreground/20",
-                  "active:bg-border",
-                  "transition-all duration-200 ease-out"
-                )}
-                style={{
-                  padding: "10px 24px",
-                  fontSize: "15px",
-                  gap: "var(--space-2)",
-                }}
-              >
+              <SharpButton variant="outline">
                 Book a Demo
-              </button>
+              </SharpButton>
             </Link>
 
             {/* Primary: Start free trial */}
             <Link href="/signup">
-              <button
-                className={cn(
-                  "cursor-pointer font-medium text-white",
-                  "flex items-center",
-                  "hover:opacity-90",
-                  "transition-all duration-200 ease-out"
-                )}
-                style={{
-                  padding: "10px 24px",
-                  fontSize: "15px",
-                  backgroundColor: "#5561c8",
-                  gap: "var(--space-2)",
-                }}
-              >
+              <SharpButton variant="primary">
                 Start free trial
-                <ArrowRight className="w-4 h-4" />
-              </button>
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </SharpButton>
             </Link>
           </div>
         </div>
@@ -143,13 +107,14 @@ export function Hero() {
           className="section-enter relative mx-auto"
           style={{
             marginTop: "var(--space-12)",
+            width: "100%",
             maxWidth: "960px",
           }}
         >
           <DashboardMockup />
         </div>
       </div>
-    </section>
+    </SectionWrapper>
   );
 }
 
@@ -167,9 +132,9 @@ function DashboardMockup() {
       >
         <div className="flex items-center" style={{ gap: "var(--space-3)" }}>
           <div className="flex items-center" style={{ gap: "var(--space-2)" }}>
-            <div className="w-3 h-3 rounded-full bg-red-400/70" />
-            <div className="w-3 h-3 rounded-full bg-amber-400/70" />
-            <div className="w-3 h-3 rounded-full bg-green-400/70" />
+            <div className="w-3 h-3 rounded-none bg-red-400" />
+            <div className="w-3 h-3 rounded-none bg-amber-400" />
+            <div className="w-3 h-3 rounded-none bg-green-400" />
           </div>
           <div className="flex items-center" style={{ gap: "var(--space-2)" }}>
             <BrainCircuit className="w-4 h-4" style={{ color: "#5561c8" }} />

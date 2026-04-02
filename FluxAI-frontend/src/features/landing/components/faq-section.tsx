@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Plus } from "lucide-react";
+import { SectionWrapper } from "@/components/shared/layout-primitives";
 
 /* ─────────────────────────────────────────────────
    FAQ SECTION — Chanhdai-style Editorial
@@ -57,21 +58,8 @@ export function FAQSection() {
   }, []);
 
   return (
-    <section
-      ref={sectionRef}
-      id="faq"
-      className="section-enter relative w-full bg-background screen-line-top screen-line-bottom"
-      style={{
-        paddingTop: "clamp(64px, 8vw, var(--space-24))",
-        paddingBottom: "clamp(64px, 8vw, var(--space-24))",
-      }}
-    >
-      <div
-        className="mx-auto"
-        style={{
-          paddingInline: "clamp(1rem, 3vw, 2rem)",
-        }}
-      >
+    <SectionWrapper ref={sectionRef} id="faq" className="section-enter">
+      <div className="w-full relative">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8">
           
           {/* ═══ LEFT SIDE ═══ */}
@@ -138,7 +126,7 @@ export function FAQSection() {
           transform: translateY(0);
         }
       `}</style>
-    </section>
+    </SectionWrapper>
   );
 }
 

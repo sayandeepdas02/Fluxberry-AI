@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Activity } from "lucide-react";
+import { SectionWrapper } from "@/components/shared/layout-primitives";
 
 /* ─────────────────────────────────────────────────
-   METRICS SECTION — Chanhdai-style Editorial
-   Flat divider-based stat blocks, no cards
+   METRICS SECTION — Flat divider-based stat blocks
    ───────────────────────────────────────────────── */
 export function MetricsSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -33,21 +33,8 @@ export function MetricsSection() {
   }, []);
 
   return (
-    <section
-      ref={sectionRef}
-      id="metrics"
-      className="section-enter relative w-full bg-background screen-line-top screen-line-bottom"
-      style={{
-        paddingTop: "clamp(64px, 8vw, var(--space-20))",
-        paddingBottom: "clamp(64px, 8vw, var(--space-20))",
-      }}
-    >
-      <div
-        className="mx-auto"
-        style={{
-          paddingInline: "clamp(1rem, 3vw, 2rem)",
-        }}
-      >
+    <SectionWrapper ref={sectionRef} id="metrics" className="section-enter">
+      <div className="w-full relative">
         {/* ═══ HEADER ═══ */}
         <div className="flex flex-col items-center justify-center text-center">
           <div
@@ -93,12 +80,11 @@ export function MetricsSection() {
           </p>
         </div>
 
-        {/* ═══ METRICS ROW — flat grid cells with shared borders ═══ */}
+        {/* ═══ METRICS ROW — flat grid cells with border dividers ═══ */}
         <div
-          className="grid grid-cols-1 md:grid-cols-3 mx-auto border border-line"
+          className="grid grid-cols-1 md:grid-cols-3 w-full border border-line"
           style={{
             marginTop: "clamp(48px, 6vw, var(--space-16))",
-            maxWidth: "1024px",
           }}
         >
           <MetricItem
@@ -141,7 +127,7 @@ export function MetricsSection() {
           transform: translateY(0);
         }
       `}</style>
-    </section>
+    </SectionWrapper>
   );
 }
 

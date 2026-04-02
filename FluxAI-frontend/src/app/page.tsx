@@ -12,29 +12,24 @@ import { Separator } from "@/components/shared/separator";
 
 export default function Page() {
     return (
-        <main className="flex min-h-screen flex-col bg-background">
+        <main className="flex min-h-screen flex-col bg-background mx-auto w-full border-x border-line max-w-[var(--container-max)]">
             <Navbar />
-            {/* Chanhdai-style panel container with border-x */}
-            <div
-                className="mx-auto w-full border-x border-line"
-                style={{ maxWidth: "var(--container-max)" }}
-            >
-                <Hero />
-                <Separator />
-                <AgentsSection />
-                <Separator />
-                <ProductShowcase />
-                <Separator />
-                <MetricsSection />
-                <Separator />
-                <TestimonialsSection />
-                <Separator />
-                <PricingSection />
-                <Separator />
-                <FAQSection />
-                <Separator />
-                <FinalCTASection />
-            </div>
+            
+            <Hero />
+            <Separator />
+            <AgentsSection />
+            <Separator />
+            <ProductShowcase />
+            <Separator />
+            <MetricsSection />
+            <Separator />
+            <TestimonialsSection />
+            <Separator />
+            <PricingSection />
+            <Separator />
+            <FAQSection />
+            <FinalCTASection />
+            
             <Footer />
         </main>
     );

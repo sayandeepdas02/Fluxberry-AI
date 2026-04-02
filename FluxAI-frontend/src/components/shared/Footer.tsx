@@ -13,18 +13,14 @@ export function Footer() {
   return (
     <footer
       id="footer"
-      className="w-full relative overflow-hidden screen-line-top"
+      className="w-full relative border-t border-line px-6 sm:px-8"
       style={{
         backgroundColor: "#0f172a",
+        paddingTop: "96px",
+        paddingBottom: "32px",
       }}
     >
-      <div
-        className="mx-auto flex flex-col w-full px-6 sm:px-8 max-w-[1200px] border-x border-white/10"
-        style={{
-          paddingTop: "clamp(64px, 8vw, var(--space-20))",
-          paddingBottom: "var(--space-8)",
-        }}
-      >
+      <div className="flex flex-col w-full">
         {/* ═══ TOP GRIDS ═══ */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-8 mb-16">
           

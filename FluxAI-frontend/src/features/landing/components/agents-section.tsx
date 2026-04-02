@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { Sparkles } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { SectionWrapper } from "@/components/shared/layout-primitives";
 
 /* ─────────────────────────────────────────────────
    PREMIUM FEATURE SECTION (WHY FLUXBERRY AI)
@@ -37,14 +38,10 @@ export function AgentsSection() {
   }, []);
 
   return (
-    <section
+    <SectionWrapper
       ref={sectionRef}
       id="expertise"
-      className="section-enter relative w-full bg-background/50"
-      style={{
-        paddingTop: "clamp(80px, 12vw, 120px)",
-        paddingBottom: "clamp(80px, 12vw, 120px)",
-      }}
+      className="section-enter bg-background/50"
     >
       {/* Subtle Background Pattern */}
       <div className="absolute inset-0 -z-10 pointer-events-none" 
@@ -56,11 +53,11 @@ export function AgentsSection() {
            }} 
       />
 
-      <div className="mx-auto flex flex-col items-center relative z-10 w-full px-6 sm:px-8 max-w-[1200px] border-x border-line">
+      <div className="flex flex-col items-center relative z-10 w-full">
         {/* ═══ HEADER ═══ */}
         <div className="flex flex-col items-center justify-center text-center mb-16 md:mb-20">
           <div
-            className="inline-flex items-center font-medium bg-background border border-line rounded-full shadow-sm"
+            className="inline-flex items-center font-medium bg-background border border-line rounded-none"
             style={{
               padding: "6px 16px",
               gap: "8px",
@@ -131,15 +128,15 @@ export function AgentsSection() {
       <style jsx global>{`
         .agent-card-enter {
           opacity: 0;
-          transform: translateY(24px) scale(0.98);
+          transform: translateY(24px);
           transition: opacity 400ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         .agent-card-enter.visible {
           opacity: 1;
-          transform: translateY(0) scale(1);
+          transform: translateY(0);
         }
       `}</style>
-    </section>
+    </SectionWrapper>
   );
 }
 
@@ -161,18 +158,15 @@ function FeatureCard({
     <div
       className={cn(
         "agent-card-enter group relative flex flex-col overflow-hidden",
-        "bg-white backdrop-blur-sm",
-        "border border-line/60 rounded-2xl",
-        "hover:border-primary/30",
-        "transition-all duration-300 ease-out cursor-pointer",
-        "hover:shadow-[0_12px_40px_-12px_rgba(85,97,200,0.12)] hover:-translate-y-1"
+        "bg-background",
+        "border border-line rounded-none",
+        "hover:bg-muted",
+        "transition-colors duration-200 ease-out cursor-pointer"
       )}
       style={{ padding: "40px 32px" }}
     >
       {/* Large Illustration Area */}
       <div className="w-full flex items-center justify-center mb-10 overflow-visible relative h-[180px]">
-        {/* Subtle glow behind illustration */}
-        <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full scale-[1.5] transition-opacity opacity-0 group-hover:opacity-100" />
         <div className="relative z-10 w-full h-full flex items-center justify-center">
           {illustration}
         </div>

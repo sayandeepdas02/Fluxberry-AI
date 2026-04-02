@@ -1,15 +1,14 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { SectionWrapper } from "@/components/shared/layout-primitives";
 import { 
   FileText, 
   BrainCircuit, 
   Calendar, 
   CheckCircle2, 
   User, 
-  Clock, 
-  ChevronRight,
-  Star
+  ChevronRight
 } from "lucide-react";
 
 /* ─────────────────────────────────────────────────
@@ -53,18 +52,9 @@ export function ProductShowcase() {
   ];
 
   return (
-    <section
-      id="product-tour"
-      className="relative w-full bg-background"
-      style={{
-        paddingTop: "clamp(64px, 8vw, var(--space-24))",
-        paddingBottom: "clamp(64px, 8vw, var(--space-24))",
-      }}
-    >
-      {/* ── Content Container (Grid Synced) ── */}
-      <div
-        className="mx-auto w-full px-6 sm:px-8 max-w-[1200px] border-x border-line relative z-10"
-      >
+    <SectionWrapper id="product-tour">
+      {/* ── Content Container ── */}
+      <div className="w-full relative z-10">
         {/* ═══ HEADER ═══ */}
         <div className="flex flex-col items-center justify-center text-center">
           <div
@@ -112,10 +102,9 @@ export function ProductShowcase() {
 
         {/* ═══ STACKED CARDS SYSTEM ═══ */}
         <div
-          className="relative mx-auto w-full"
+          className="relative w-full"
           style={{
             marginTop: "clamp(48px, 6vw, var(--space-16))",
-            maxWidth: "1080px",
           }}
         >
           <div className="flex flex-col">
@@ -130,7 +119,7 @@ export function ProductShowcase() {
           </div>
         </div>
       </div>
-    </section>
+    </SectionWrapper>
   );
 }
 
@@ -150,19 +139,15 @@ function FlowStep({
     <div
       className={cn(
         "group relative flex flex-col md:flex-row w-full bg-background overflow-hidden",
-        "border border-line rounded-2xl md:rounded-[2rem]",
+        "border border-line rounded-none",
         "mb-12 md:mb-0 md:sticky"
       )}
       style={{
-        // STICKY LOGIC
         top: "clamp(80px, 10vh, 120px)",
         height: "max(560px, calc(100vh - 140px))",
-        // Z-INDEX ESCALATION
         zIndex: index + 1,
-        // SOLID BACKGROUND, NO OPACITY FADES
         opacity: 1,
-        // ELEVATION HIERARCHY SHADOW
-        boxShadow: index === 0 ? "none" : `0 -${12 + index * 4}px ${32 + index * 8}px -12px rgba(85, 97, 200, ${0.03 + index * 0.01})`,
+        boxShadow: "none",
       }}
     >
       {/* ── Content Side ── */}
@@ -174,7 +159,7 @@ function FlowStep({
       >
         <div className="flex items-center gap-4 mb-8">
           <div
-            className="flex items-center justify-center shrink-0 w-12 h-12 rounded-xl"
+            className="flex items-center justify-center shrink-0 w-12 h-12 rounded-none"
             style={{
               background: `rgba(${hexToRgb(step.color)}, 0.1)`,
               color: step.color,
@@ -219,11 +204,11 @@ function FlowStep({
    ───────────────────────────────────────────────── */
 
 const MockupContainer = ({ children }: { children: React.ReactNode }) => (
-  <div className="relative overflow-hidden bg-background border border-line z-10">
+  <div className="relative overflow-hidden bg-background border border-line z-10 rounded-none">
     <div className="flex items-center gap-1.5 px-4 py-3 border-b border-line bg-muted/30">
-      <div className="w-2.5 h-2.5 rounded-full bg-red-400/50" />
-      <div className="w-2.5 h-2.5 rounded-full bg-amber-400/50" />
-      <div className="w-2.5 h-2.5 rounded-full bg-green-400/50" />
+      <div className="w-2.5 h-2.5 rounded-none bg-red-400" />
+      <div className="w-2.5 h-2.5 rounded-none bg-amber-400" />
+      <div className="w-2.5 h-2.5 rounded-none bg-green-400" />
     </div>
     <div className="p-4 bg-background min-h-[180px]">
       {children}

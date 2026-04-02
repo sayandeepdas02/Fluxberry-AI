@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
+import { SectionWrapper, SharpButton } from "@/components/shared/layout-primitives";
 
 /* ─────────────────────────────────────────────────
    FINAL CTA SECTION — Chanhdai-style Editorial
@@ -30,23 +31,13 @@ export function FinalCTASection() {
   }, []);
 
   return (
-    <section
+    <SectionWrapper 
       ref={sectionRef}
-      id="cta"
-      className="section-enter relative w-full overflow-hidden screen-line-top"
-      style={{
-        paddingTop: "clamp(64px, 8vw, var(--space-24))",
-        paddingBottom: "clamp(64px, 8vw, var(--space-24))",
-        backgroundColor: "#0f172a",
-      }}
+      id="cta" 
+      className="section-enter"
+      style={{ backgroundColor: "#0f172a" }}
     >
-      {/* ── Content Container ── */}
-      <div
-        className="mx-auto relative z-10 flex flex-col items-center text-center"
-        style={{
-          paddingInline: "clamp(1rem, 3vw, 2rem)",
-        }}
-      >
+      <div className="w-full relative z-10 flex flex-col items-center text-center">
         <h2
           className="font-semibold tracking-tight text-white text-balance"
           style={{
@@ -83,47 +74,30 @@ export function FinalCTASection() {
         >
           {/* Primary CTA */}
           <Link href="/signup">
-            <button
-              className={cn(
-                "cursor-pointer font-medium text-white",
-                "flex items-center",
-                "hover:opacity-90",
-                "transition-all duration-200 ease-out"
-              )}
-              style={{
-                padding: "10px 28px",
-                fontSize: "15px",
-                backgroundColor: "var(--primary)",
-                gap: "var(--space-2)",
-              }}
-            >
+            <SharpButton variant="primary" style={{ backgroundColor: "var(--primary)" }}>
               Start free trial
-              <ArrowRight className="w-4 h-4" />
-            </button>
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </SharpButton>
           </Link>
 
           {/* Secondary CTA */}
           <Link href="/demo">
-            <button
+             <button
               className={cn(
                 "cursor-pointer font-medium",
                 "border border-white/20 bg-white/5 text-white",
                 "flex items-center",
                 "hover:bg-white/10 hover:border-white/30",
                 "active:bg-white/5",
-                "transition-all duration-200 ease-out"
+                "transition-all duration-200 ease-out rounded-none text-sm"
               )}
-              style={{
-                padding: "10px 24px",
-                fontSize: "15px",
-                gap: "var(--space-2)",
-              }}
+              style={{ padding: "12px 24px" }}
             >
               Book a demo
             </button>
           </Link>
         </div>
       </div>
-    </section>
+    </SectionWrapper>
   );
 }

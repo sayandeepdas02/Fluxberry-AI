@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Check, CreditCard } from "lucide-react";
+import { SectionWrapper, SharpButton } from "@/components/shared/layout-primitives";
 
 /* ─────────────────────────────────────────────────
    PRICING SECTION — Chanhdai-style Editorial
@@ -34,21 +35,8 @@ export function PricingSection() {
   }, []);
 
   return (
-    <section
-      ref={sectionRef}
-      id="pricing"
-      className="section-enter relative w-full bg-background screen-line-top screen-line-bottom"
-      style={{
-        paddingTop: "clamp(64px, 8vw, var(--space-20))",
-        paddingBottom: "clamp(64px, 8vw, var(--space-20))",
-      }}
-    >
-      <div
-        className="mx-auto"
-        style={{
-          paddingInline: "clamp(1rem, 3vw, 2rem)",
-        }}
-      >
+    <SectionWrapper ref={sectionRef} id="pricing" className="section-enter">
+      <div className="w-full relative">
         {/* ═══ HEADER ═══ */}
         <div className="flex flex-col items-center justify-center text-center">
           <div
@@ -106,7 +94,7 @@ export function PricingSection() {
               onClick={() => setIsYearly(!isYearly)}
               className={cn(
                 "relative w-12 h-6 transition-colors border outline-none focus:ring-2 focus:ring-primary/20",
-                isYearly ? "bg-primary border-primary" : "bg-muted border-border"
+                isYearly ? "bg-primary border-primary" : "bg-muted border-line"
               )}
             >
               <div
@@ -197,7 +185,7 @@ export function PricingSection() {
           transform: translateY(0);
         }
       `}</style>
-    </section>
+    </SectionWrapper>
   );
 }
 
@@ -271,20 +259,12 @@ function PricingCard({
       </div>
 
       {/* CTA Button — sharp rectangular */}
-      <button
-        className={cn(
-          "w-full font-medium transition-all duration-200 mb-8",
-          ctaType === "primary"
-            ? "bg-primary text-white hover:opacity-90"
-            : "bg-transparent text-foreground border border-border hover:bg-muted"
-        )}
-        style={{
-          padding: "10px 24px",
-          fontSize: "15px",
-        }}
+      <SharpButton
+        variant={ctaType === "primary" ? "primary" : "outline"}
+        className="w-full mb-8"
       >
         {ctaText}
-      </button>
+      </SharpButton>
 
       {/* Features List */}
       <div className="flex flex-col flex-1" style={{ gap: "var(--space-4)" }}>

@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
  */
 export function MainContainer({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("max-w-[1280px] mx-auto px-0 sm:px-8 w-full border-x border-border bg-background min-h-screen flex flex-col", className)}>
+    <div className={cn("max-w-[var(--container-max)] mx-auto w-full border-x border-line bg-background min-h-screen flex flex-col", className)}>
       {children}
     </div>
   );
@@ -22,40 +22,43 @@ export function MainContainer({ children, className }: { children: React.ReactNo
  * SectionWrapper (RigidSection)
  * Wraps entire sections with top/bottom borders (double-line effect when adjacent) and strict internal padding.
  */
-export function SectionWrapper({
-  id,
-  children,
-  className,
-  style,
-  noTopBorder = false,
-  noBottomBorder = false,
-}: {
+export const SectionWrapper = React.forwardRef<HTMLElement, {
   id?: string;
   children: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
   noTopBorder?: boolean;
   noBottomBorder?: boolean;
-}) {
+}>(({
+  id,
+  children,
+  className,
+  style,
+  noTopBorder = false,
+  noBottomBorder = false,
+}, ref) => {
   return (
     <section
+      ref={ref}
       id={id}
       className={cn(
-        "relative w-full bg-background",
-        !noTopBorder && "border-t border-border",
-        !noBottomBorder && "border-b border-border",
+        "relative w-full bg-background px-6 sm:px-8",
+        !noTopBorder && "border-t border-line",
+        !noBottomBorder && "border-b border-line",
         className
       )}
       style={{
-        paddingTop: "var(--space-20)",
-        paddingBottom: "var(--space-20)",
+        paddingTop: "96px",
+        paddingBottom: "96px",
         ...style,
       }}
     >
       {children}
     </section>
   );
-}
+});
+
+SectionWrapper.displayName = "SectionWrapper";
 
 /**
  * BoxedContainer
@@ -71,7 +74,7 @@ export function BoxedContainer({
   return (
     <div
       className={cn(
-        "border border-border bg-background p-6 lg:p-10",
+        "border border-line bg-background p-8 rounded-none",
         className
       )}
     >
@@ -96,8 +99,8 @@ export function BoxedCard({
   return (
     <div
       className={cn(
-        "border border-border bg-card p-6 md:p-8",
-        hoverEffect && "transition-colors duration-200 hover:bg-muted/50",
+        "border border-line bg-background p-8 rounded-none",
+        hoverEffect && "transition-colors duration-200 hover:bg-muted",
         className
       )}
     >
@@ -119,12 +122,12 @@ export function SharpButton({
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "secondary" | "outline" | "ghost";
 }) {
-  const baseStyles = "inline-flex items-center justify-center font-medium transition-colors duration-200 cursor-pointer text-sm px-5 py-2.5 shadow-sm";
+  const baseStyles = "inline-flex items-center justify-center font-medium transition-colors duration-200 cursor-pointer text-sm px-6 py-3 rounded-none";
   
   const variants = {
     primary: "bg-primary text-primary-foreground hover:bg-primary/90 border border-primary",
-    secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border",
-    outline: "border border-border bg-transparent hover:bg-muted text-foreground",
+    secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-secondary",
+    outline: "border border-line bg-transparent hover:bg-muted text-foreground",
     ghost: "bg-transparent hover:bg-muted text-foreground",
   };
 
