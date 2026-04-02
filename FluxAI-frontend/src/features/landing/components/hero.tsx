@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SectionWrapper, SharpButton } from "@/components/shared/layout-primitives";
+import { FallingPattern } from "@/components/ui/falling-pattern";
 
 /* ─────────────────────────────────────────────────
    HERO SECTION — Chanhdai-style Editorial
@@ -43,9 +44,14 @@ export function Hero() {
   }, []);
 
   return (
-    <SectionWrapper ref={sectionRef} id="hero">
+    <SectionWrapper ref={sectionRef} id="hero" className="relative overflow-hidden py-[80px] md:py-[100px]">
+      {/* ── Falling Pattern Background ── */}
+      <div className="absolute inset-0 z-0">
+        <FallingPattern className="h-full w-full [mask-image:radial-gradient(ellipse_at_center,transparent,var(--background))]" />
+      </div>
+
       {/* ── Content Container ── */}
-      <div className="mx-auto w-full relative z-10 flex flex-col items-center">
+      <div className="mx-auto w-full relative z-10 flex flex-col items-center gap-12 md:gap-16">
         {/* ═══ TEXT CONTENT — Centered ═══ */}
         <div className="flex flex-col items-center text-center">
           {/* Headline */}
@@ -104,15 +110,15 @@ export function Hero() {
 
         {/* ═══ DASHBOARD VISUAL ═══ */}
         <div
-          className="section-enter relative mx-auto"
-          style={{
-            marginTop: "var(--space-12)",
-            width: "100%",
-            maxWidth: "960px",
-          }}
-        >
-          <DashboardMockup />
-        </div>
+  className="section-enter relative mx-auto pb-[40px] md:pb-[60px]"
+  style={{
+    marginTop: "var(--space-8)",
+    width: "100%",
+    maxWidth: "960px",
+  }}
+>
+  <DashboardMockup />
+</div>
       </div>
     </SectionWrapper>
   );
