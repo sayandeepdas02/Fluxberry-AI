@@ -1,342 +1,119 @@
 "use client";
 
-import { Mic, Check, Plus } from "lucide-react";
+import { Command, MonitorSmartphone, Blocks, Layers } from "lucide-react";
 
 export function Features() {
   return (
-    <section id="features" className="w-full bg-[#FAFAFA] pb-24 border-none">
-      <div className="max-w-[1280px] mx-auto px-6 lg:px-8">
-        {/* HEADER */}
-        <div className="flex flex-col md:flex-row md:items-start justify-between mb-12 gap-8">
-          <h2 className="text-[40px] md:text-[56px] font-heading font-medium tracking-[-0.03em] leading-[1.05] text-[#111]">
-            The platform <br />
-            behind <span className="text-[#6B6B6B]">efficient</span> <br />
-            <span className="text-[#6B6B6B]">hiring workflows</span>
+    <section className="w-full border-y border-border py-24 bg-background overflow-hidden relative z-10">
+      <div className="mx-auto w-full max-w-[var(--container-max,1280px)] border-x border-border">
+        
+        {/* SECTION HEADER */}
+        <div className="flex flex-col items-center text-center gap-4 mb-16 pt-16">
+          <div className="text-xs border border-border px-3 py-1 bg-background uppercase tracking-widest text-foreground font-medium">
+            Features
+          </div>
+
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
+            Built for modern hiring teams
           </h2>
 
-          <div className="flex flex-col items-start pt-2 md:max-w-[400px] text-left md:ml-auto">
-             <div className="flex items-center gap-2 bg-[#F2F2F2] px-3 py-1.5 rounded-full border border-black/5 mb-6 md:self-start shadow-sm">
-               <div className="w-2.5 h-2.5 rounded-full bg-[#111]" />
-               <span className="text-[11px] tracking-wider font-semibold text-[#111]">FEATURES</span>
-             </div>
-             <p className="text-[#555] text-[15px] leading-relaxed">
-               Fluxberry AI is designed as a hiring operating system — not just another ATS.
-               <br /><br />
-               It connects sourcing, screening, evaluation, and onboarding into one continuous pipeline powered by AI.
-             </p>
-          </div>
+          <p className="text-muted-foreground max-w-[600px] text-lg">
+            Everything you need to automate and optimize your hiring workflow.
+          </p>
         </div>
 
-        {/* BENTO GRID CONTEXT */}
-        <div className="flex flex-col gap-6 w-full mx-auto">
-          
-          {/* TOP ROW: 2 CARDS */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-auto lg:h-[420px]">
-             
-             {/* Card 1: Workflow Automation */}
-             <div className="flex flex-col bg-white border border-black/5 rounded-[24px] shadow-sm overflow-hidden h-full transform transition hover:shadow-md">
-                <div className="relative flex-1 w-full flex items-center justify-center p-6 bg-[#FAFAFA] overflow-hidden min-h-[260px]">
-                   {/* Centered Graphic Container */}
-                   <div className="flex items-center w-full max-w-[420px] justify-between relative z-10 mx-auto">
-                      
-                      {/* Left Block */}
-                      <div className="bg-white border border-black/5 shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-[14px] p-3 w-[150px] relative z-20">
-                         <div className="text-[10px] mb-3 flex items-center justify-between text-[#111]">Upcoming tasks <span className="bg-gray-100 text-gray-400 px-1 rounded">...</span></div>
-                         <div className="flex items-start gap-2 mb-2.5 relative">
-                            <div className="absolute left-0 top-[2px] bottom-[2px] w-[2px] bg-[#111] rounded-full" />
-                            <div className="pl-2">
-                              <div className="text-[9.5px] leading-tight text-[#111]">Approve expense request</div>
-                              <div className="text-[7.5px] text-gray-400 mt-[2px] font-medium">09:00 AM</div>
-                            </div>
-                         </div>
-                         <div className="flex items-start gap-2 mb-2.5 relative">
-                            <div className="absolute left-0 top-[2px] bottom-[2px] w-[2px] bg-[#111] rounded-full" />
-                            <div className="pl-2">
-                              <div className="text-[9.5px] leading-tight text-[#111]">Update project status</div>
-                              <div className="text-[7.5px] text-gray-400 mt-[2px] font-medium">10:45 AM</div>
-                            </div>
-                         </div>
-                         <div className="flex flex-col gap-2 relative opacity-50">
-                            <div className="pl-2 relative">
-                              <div className="absolute left-0 top-[2px] bottom-[2px] w-[2px] bg-[#111] rounded-full" />
-                              <div className="pl-2">
-                                <div className="text-[9.5px] leading-tight text-[#111]">Sync customer data to <br/> spreadsheet</div>
-                                <div className="text-[7.5px] text-gray-400 mt-[2px] font-medium">01:30 PM - 02:00 PM</div>
-                              </div>
-                            </div>
-                         </div>
-                         <div className="flex flex-col gap-2 relative opacity-20 mt-2">
-                            <div className="pl-2 relative">
-                              <div className="text-[9.5px] leading-tight text-[#111]">Send weekly ops report</div>
-                            </div>
-                         </div>
-                      </div>
-                      
-                      {/* Center Node */}
-                       <div className="w-[52px] h-[52px] bg-[#6366B8] border-[4px] border-white shadow-[0_4px_16px_rgba(99,102,184,0.3)] rounded-none flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30">
-                         <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><path d="M 22 8 L 14 8 A 6 6 0 0 0 8 14 L 8 18 A 6 6 0 0 0 14 24 L 22 24" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+        {/* FEATURE GRID */}
+        <div className="mt-12 px-8 md:px-12 w-full">
+          <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-0 border border-border bg-background">
+            
+            {/* TOP LEFT */}
+            <div className="col-span-1 md:col-span-1 md:border-r border-b border-border p-10 flex flex-col justify-between">
+              <div className="flex flex-col gap-3 mb-10">
+                <h3 className="text-2xl font-semibold tracking-tight text-foreground">ATS Dashboard & Tracking</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Centralized candidate tracking with real-time analytics. Your entire hiring pipeline mapped in a single, rigid view.
+                </p>
+              </div>
+              
+              <div className="border border-border w-full h-[300px] flex items-center justify-center p-6 lg:p-8 relative bg-background">
+                 {/* Internal structural mockup */}
+                 <div className="w-full h-full border border-border bg-muted/5 flex flex-col p-4 gap-4">
+                    <div className="h-4 w-24 bg-muted border border-border" />
+                    <div className="grid grid-cols-3 gap-3">
+                       <div className="h-16 border border-border bg-background flex flex-col items-center justify-center">
+                         <span className="text-sm font-semibold text-foreground">1.2k</span>
                        </div>
-
-                      {/* Right Output Blocks */}
-                      <div className="flex flex-col gap-3 w-[150px] relative z-20">
-                         <div className="bg-white border border-black/5 shadow-sm rounded-full py-1.5 px-2 flex items-center gap-2">
-                            <div className="w-4 h-4 rounded-full bg-[#111] text-white flex items-center justify-center shrink-0"><Check size={10} strokeWidth={4}/></div>
-                            <span className="text-[8.5px] font-semibold text-[#111]">Approve expense request</span>
-                         </div>
-                         <div className="bg-white border border-black/5 shadow-sm rounded-full py-1.5 px-2 flex items-center gap-2">
-                            <div className="w-4 h-4 rounded-full bg-[#111] text-white flex items-center justify-center shrink-0"><Check size={10} strokeWidth={4}/></div>
-                            <span className="text-[8.5px] font-semibold text-[#111]">Update project status</span>
-                         </div>
-                         <div className="bg-white border border-black/5 shadow-sm rounded-full py-1.5 px-2 flex items-center gap-2">
-                            <div className="w-4 h-4 rounded-full bg-[#111] text-white flex items-center justify-center shrink-0"><Check size={10} strokeWidth={4}/></div>
-                            <span className="text-[8.5px] font-semibold text-[#111]">Sync customer data to spreadsheet</span>
-                         </div>
-                         <div className="bg-white border border-black/5 shadow-sm rounded-full py-1.5 px-2 flex items-center gap-2 opacity-50">
-                            <div className="w-4 h-4 rounded-full bg-[#444] text-white flex items-center justify-center shrink-0"><Check size={10} strokeWidth={4}/></div>
-                            <span className="text-[8.5px] font-semibold text-[#111]">Send weekly ops report</span>
-                         </div>
-                      </div>
-
-                      {/* Simulated Connecting Lines */}
-                      <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
-                         {/* Left to Mid */}
-                         <path d="M150 130 C180 130, 190 130, 210 130" fill="none" stroke="#111" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
-                         <path d="M150 130 C180 130, 190 130, 210 130" fill="none" stroke="#111" strokeWidth="1" opacity="0.8" />
-                         
-                         {/* Mid to Right 1 */}
-                         <path d="M250 130 C270 130, 250 82, 270 82" fill="none" stroke="#111" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
-                         {/* Mid to Right 2 */}
-                         <path d="M250 130 C270 130, 250 115, 270 115" fill="none" stroke="#111" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
-                         {/* Mid to Right 3 */}
-                         <path d="M250 130 C270 130, 250 148, 270 148" fill="none" stroke="#111" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
-                         {/* Mid to Right 4 */}
-                         <path d="M250 130 C270 130, 250 180, 270 180" fill="none" stroke="#444" strokeWidth="1" strokeDasharray="3 3" opacity="0.2" />
-                      </svg>
-
-                   </div>
-                </div>
-                {/* Bottom Text */}
-                <div className="p-8 flex items-end bg-white border-t border-black/5 shrink-0 h-[38%]">
-                   <div>
-                       <h3 className="text-[22px] font-semibold mb-2.5 text-[#111] font-heading tracking-tight">Workflow Automation</h3>
-                       <p className="text-[#555] text-[15px] leading-[1.6]">
-                         Automate repetitive hiring tasks across tools — from outreach and screening to scheduling and follow-ups — so your team spends less time coordinating and more time making decisions.
-                       </p>
-                   </div>
-                </div>
-             </div>
-
-             {/* Card 2: Speak your workflows */}
-             <div className="flex flex-col bg-white border border-black/5 rounded-[24px] shadow-sm overflow-hidden h-full transform transition hover:shadow-md">
-                <div className="relative flex-1 w-full flex items-center justify-center p-6 bg-[#FAFAFA] overflow-hidden min-h-[260px]">
-                   {/* Decorative background glow & dots */}
-                   <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-[300px] h-[160px] bg-[#111]/15 blur-[50px] rounded-[100%]" />
-                      <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at center, #111 1px, transparent 1px)', backgroundSize: '16px 16px', opacity: 0.15, maskImage: 'radial-gradient(ellipse at center, black 10%, transparent 50%)', WebkitMaskImage: 'radial-gradient(ellipse at center, black 10%, transparent 50%)' }} />
-                   </div>
-                   
-                   {/* Input Pill */}
-                   <div className="relative z-10 flex items-center justify-between bg-white border border-[#111]/15 shadow-[0_8px_32px_rgba(17,17,17,0.08)] rounded-full px-2 py-2 w-[280px]">
-                      <span className="text-[14px] font-medium text-[#222] ml-4 font-heading">Ask me to automate anything...</span>
-                      <div className="w-9 h-9 rounded-full bg-[#111] flex items-center justify-center text-white shadow-md">
-                         <Mic strokeWidth={2.5} className="w-[16px] h-[16px]" />
-                      </div>
-                   </div>
-                </div>
-                <div className="p-8 flex items-end bg-white border-t border-black/5 shrink-0 h-[38%]">
-                   <div>
-                       <h3 className="text-[22px] font-semibold mb-2.5 text-[#111] font-heading tracking-tight">Speak your workflows</h3>
-                       <p className="text-[#555] text-[15px] leading-[1.6]">
-                         Describe what needs to happen, and Fluxberry AI turns it into structured workflows — tasks, updates, approvals, and follow-ups — automatically executed across your hiring pipeline.
-                       </p>
-                   </div>
-                </div>
-             </div>
-
-          </div>
-
-          {/* BOTTOM ROW: 3 COLS */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[480px]">
-             
-             {/* Card 3 (Col 1): Live workflow status */}
-             <div className="flex flex-col bg-white border border-black/5 rounded-[24px] shadow-sm overflow-hidden h-full transform transition hover:shadow-md lg:col-span-1">
-                <div className="relative flex-1 w-full flex flex-col items-center justify-center p-6 bg-[#FAFAFA] overflow-hidden min-h-[260px]">
-                   <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-[200px] h-[200px] bg-[#111]/10 blur-[50px] rounded-[100%]" />
-                      <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at center, #111 1px, transparent 1px)', backgroundSize: '12px 12px', opacity: 0.1, maskImage: 'radial-gradient(ellipse at center, black 20%, transparent 60%)', WebkitMaskImage: 'radial-gradient(ellipse at center, black 20%, transparent 60%)' }} />
-                   </div>
-                   
-                   {/* Stacked Pills */}
-                   <div className="relative z-10 flex flex-col gap-3 w-[90%] max-w-[280px]">
-                      
-                      <div className="bg-white/80 backdrop-blur-md border border-white shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-[14px] p-2.5 flex items-center gap-3 w-full transform -rotate-1 relative left-2">
-                         <div className="w-8 h-8 shrink-0 rounded-full border-[3px] border-gray-100 relative items-center justify-center flex">
-                            <svg className="absolute inset-0 w-full h-full -rotate-90">
-                               <circle cx="16" cy="16" r="14" fill="none" stroke="#111" strokeWidth="4" strokeDasharray="87.96" strokeDashoffset="15" strokeLinecap="round" />
-                            </svg>
-                         </div>
-                         <div className="flex-1">
-                           <div className="text-[12px] text-[#111] leading-tight">Quarterly budget review</div>
-                           <div className="text-[9px] text-gray-400 mt-0.5">Finance review in progress</div>
-                         </div>
-                         {/* Tiny Profile Face */}
-                         <div className="w-5 h-5 shrink-0 rounded-full bg-slate-200 border border-white overflow-hidden shadow-sm flex items-center justify-center text-[8px]">👩</div>
-                      </div>
-
-                      <div className="bg-white/80 backdrop-blur-md border border-white shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-[14px] p-2.5 flex items-center gap-3 w-[96%] opacity-90 relative -left-1">
-                         <div className="w-8 h-8 shrink-0 rounded-full border-[3px] border-gray-100 relative items-center justify-center flex">
-                            <svg className="absolute inset-0 w-full h-full -rotate-90">
-                               <circle cx="16" cy="16" r="14" fill="none" stroke="#111" strokeWidth="4" strokeDasharray="87.96" strokeDashoffset="50" strokeLinecap="round" />
-                            </svg>
-                         </div>
-                         <div className="flex-1">
-                           <div className="text-[12px] text-[#111] leading-tight">Hiring approval</div>
-                           <div className="text-[9px] text-gray-400 mt-0.5">Waiting for final sign off</div>
-                         </div>
-                         {/* Tiny Profile Face */}
-                         <div className="w-5 h-5 shrink-0 rounded-full bg-slate-300 border border-white overflow-hidden shadow-sm flex items-center justify-center text-[8px]">👨</div>
-                      </div>
-
-                      <div className="bg-white/80 backdrop-blur-md border border-white shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-[14px] p-2.5 flex items-center gap-3 w-[100%] opacity-80 relative left-3 transform rotate-1">
-                         <div className="w-8 h-8 shrink-0 rounded-full border-[3px] border-gray-100 relative items-center justify-center flex">
-                            <svg className="absolute inset-0 w-full h-full -rotate-90">
-                               <circle cx="16" cy="16" r="14" fill="none" stroke="#111" strokeWidth="4" strokeDasharray="87.96" strokeDashoffset="8" strokeLinecap="round"/>
-                            </svg>
-                         </div>
-                         <div className="flex-1">
-                           <div className="text-[12px] text-[#111] leading-tight">Website launch</div>
-                           <div className="text-[9px] text-gray-400 mt-0.5">Final tasks 90% complete</div>
-                         </div>
-                         <div className="w-5 h-5 shrink-0 rounded-full bg-slate-400 border border-white overflow-hidden shadow-sm flex items-center justify-center text-[8px]">👱</div>
-                      </div>
-
-                   </div>
-                </div>
-                <div className="p-8 flex items-end bg-white border-t border-black/5 shrink-0 h-[36%]">
-                   <div>
-                       <h3 className="text-[22px] font-semibold mb-2.5 text-[#111] font-heading tracking-tight">Live workflow status</h3>
-                       <p className="text-[#555] text-[14px] leading-relaxed">
-                         Track candidate progress, ownership, and stage updates in real time — without switching between tools or chasing updates across teams.
-                       </p>
-                   </div>
-                </div>
-             </div>
-             
-             {/* Center Stack (Col 2): Tools & Automate Badge */}
-             <div className="flex flex-col gap-6 h-full lg:col-span-1">
-                
-                {/* Fits naturally into the tools you trust */}
-                <div className="flex-1 w-full bg-[#FAFAFA] border border-black/5 rounded-[24px] shadow-sm flex flex-col p-6 overflow-hidden transform transition hover:shadow-md relative">
-                   <div className="text-[#6B6B6B] text-[20px] md:text-[24px] font-heading leading-tight tracking-[-0.03em] mb-4 w-[85%] relative z-20">
-                     Fits naturally <br/>
-                     into <span className="text-[#111] font-semibold">the tools<br/>you trust</span>
-                   </div>
-                   
-                   {/* Absolute/relative logos scatter */}
-                   <div className="absolute inset-0 opacity-90 pointer-events-none">
-                      {/* Slack Style */}
-                      <div className="absolute right-[12%] top-[25%] w-[42px] h-[42px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-red-500 text-xl">#</div>
-                      {/* Drive Style */}
-                      <div className="absolute right-[32%] top-[10%] w-[38px] h-[38px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-green-500 text-lg">▲</div>
-                      {/* Google */}
-                      <div className="absolute left-[38%] top-[50%] w-[38px] h-[38px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-orange-500 text-xl font-heading">G</div>
-                      {/* Kit */}
-                      <div className="absolute right-[35%] top-[52%] w-[42px] h-[42px] bg-black text-white border-2 border-white rounded-[10px] flex items-center justify-center text-[13px] shadow-[0_4px_12px_rgba(0,0,0,0.06)]">Kit</div>
-                      {/* Notion */}
-                      <div className="absolute right-[8%] top-[55%] w-[40px] h-[40px] bg-white border-2 border-black/10 rounded-md shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-xl">N</div>
-                      {/* Jira */}
-                      <div className="absolute left-[15%] bottom-[12%] w-[42px] h-[42px] bg-blue-600 text-white rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-lg">J</div>
-                      {/* Dropbox */}
-                      <div className="absolute left-[40%] bottom-[8%] w-[38px] h-[38px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-blue-500">D</div>
-                      {/* Generic Mail/Lines */}
-                      <div className="absolute right-[36%] bottom-[10%] w-[44px] h-[44px] bg-white/80 border border-black/5 backdrop-blur-sm rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-indigo-500">M</div>
-                      {/* Gmail mock */}
-                      <div className="absolute right-[10%] bottom-[15%] w-[38px] h-[38px] bg-white border border-black/5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.06)] flex items-center justify-center text-red-500">M</div>
-                   </div>
-                </div>
-
-                {/* Designed to automate repetitive manual interviews */}
-                <div className="h-[120px] shrink-0 w-full bg-[#FAFAFA] border border-black/5 rounded-[24px] shadow-sm flex items-center p-6 gap-5 transform transition hover:shadow-md">
-                    <div className="w-[48px] h-[48px] shrink-0 bg-[#6366B8] rounded-none flex items-center justify-center">
-                       <svg width="24" height="24" viewBox="0 0 32 32" fill="none"><path d="M 22 8 L 14 8 A 6 6 0 0 0 8 14 L 8 18 A 6 6 0 0 0 14 24 L 22 24" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
-                    </div>
-                   <div className="text-[#6B6B6B] text-[16px] font-heading leading-[1.3] tracking-[-0.01em]">
-                     Designed to <br/>
-                     automate <span className="text-[#111]">repetitive <br />manual interviews</span>
-                   </div>
-                </div>
-
-             </div>
-
-             {/* Card 6 (Col 3): Shared work without chaos */}
-             <div className="flex flex-col bg-white border border-black/5 rounded-[24px] shadow-sm overflow-hidden h-full transform transition hover:shadow-md lg:col-span-1">
-                <div className="relative flex-1 w-full flex items-center justify-center p-6 bg-[#FAFAFA] min-h-[260px]">
-                    
-                    <div className="bg-white border border-black/5 shadow-[0_12px_40px_rgba(0,0,0,0.06)] rounded-[18px] w-[95%] max-w-[280px] p-5 pb-12 relative flex flex-col gap-4">
-                       <div className="flex justify-between items-center mb-1">
-                          <span className="text-[13px] text-[#111]">Team members</span>
-                          <div className="w-6 h-3 bg-gray-100 border border-black/5 rounded-full flex gap-0.5 items-center justify-center">
-                             <span className="w-[3px] h-[3px] bg-gray-400 rounded-full"/>
-                             <span className="w-[3px] h-[3px] bg-gray-400 rounded-full"/>
-                             <span className="w-[3px] h-[3px] bg-gray-400 rounded-full"/>
-                          </div>
+                       <div className="h-16 border border-border bg-background flex flex-col items-center justify-center">
+                         <span className="text-sm font-semibold text-foreground">342</span>
                        </div>
-                       
-                       <div className="flex flex-col gap-3.5">
-                          <div className="flex items-center justify-between">
-                             <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-[12px] shadow-sm">👩🏻‍💼</div>
-                                <div>
-                                  <div className="text-[12px] text-[#111]">Emma Collins</div>
-                                  <div className="text-[10px] text-gray-400">@emma.c</div>
-                                </div>
-                             </div>
-                             <span className="text-[10px] font-medium text-gray-500">Admin</span>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                             <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center text-[12px] shadow-sm">👨🏼‍💻</div>
-                                <div>
-                                  <div className="text-[12px] text-[#111]">Lukas Meyer</div>
-                                  <div className="text-[10px] text-gray-400">@lukas.m</div>
-                                </div>
-                             </div>
-                             <span className="text-[10px] font-medium text-gray-500">Member</span>
-                          </div>
-
-                          <div className="flex items-center justify-between opacity-[0.35] blur-[1px]">
-                             <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-[12px] shadow-sm">👩🏽‍🎨</div>
-                                <div>
-                                  <div className="text-[12px] text-[#111]">Sophia...</div>
-                                  <div className="text-[10px] text-gray-400">...</div>
-                                </div>
-                             </div>
-                             <span className="text-[10px] font-medium text-gray-500">Member</span>
-                          </div>
-                       </div>
-
-                       {/* Floating add button */}
-                       <div className="absolute bottom-6 left-[60%] shrink-0 -translate-x-1/2 bg-white shadow-[0_8px_24px_rgba(0,0,0,0.12)] border border-black/5 rounded-full pr-4 pl-[5px] py-[5px] flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform">
-                           <div className="w-7 h-7 rounded-full bg-[#111] text-white flex items-center justify-center"><Plus size={16} /></div>
-                           <span className="text-[11px] font-semibold text-[#111]">Add members</span>
+                       <div className="h-16 border border-border bg-background flex items-center justify-center text-muted-foreground">
+                         <Layers className="w-5 h-5" />
                        </div>
                     </div>
+                    <div className="flex-1 border border-border bg-background" />
+                 </div>
+              </div>
+            </div>
 
+            {/* TOP RIGHT */}
+            <div className="col-span-1 md:col-span-1 border-b border-border p-10 flex flex-col justify-between">
+              <div className="flex flex-col gap-3 mb-10">
+                <h3 className="text-3xl font-semibold tracking-tight leading-tight text-foreground">
+                  Instant value.<br/>Zero setup time.
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Start screening and scheduling instantly without complex implementation cycles.
+                </p>
+              </div>
+              
+              <div className="border border-border w-full h-[300px] flex flex-col items-center justify-center p-6 lg:p-8 bg-background">
+                 <div className="w-full h-full border border-border bg-muted/5 flex items-center justify-center p-6">
+                    <div className="w-full max-w-[200px] aspect-square border border-border bg-background flex flex-col items-center justify-center gap-4">
+                       <div className="w-12 h-12 border border-border flex items-center justify-center bg-primary/5 text-primary">
+                          <MonitorSmartphone className="w-6 h-6" />
+                       </div>
+                       <div className="w-1/2 h-1.5 bg-muted/50 border border-border/50" />
+                       <div className="w-1/3 h-1.5 bg-muted/50 border border-border/50" />
+                    </div>
+                 </div>
+              </div>
+            </div>
+
+            {/* BOTTOM LEFT */}
+            <div className="col-span-1 md:col-span-1 border-b md:border-b-0 md:border-r border-border p-10 flex flex-col items-center justify-center text-center gap-8 min-h-[400px]">
+              <div className="flex flex-col gap-2 relative z-10 items-center mt-auto mb-4">
+                 <h3 className="text-xl font-semibold text-foreground">Global AI Command</h3>
+                 <p className="text-muted-foreground text-sm max-w-[220px]">
+                   Trigger your AI hiring assistant from anywhere in the OS.
+                 </p>
+              </div>
+              <div className="flex items-center gap-3 mb-auto">
+                <div className="border border-border w-16 h-16 flex items-center justify-center bg-background text-lg font-medium text-foreground">
+                  <Command className="w-6 h-6 text-muted-foreground" />
                 </div>
-                <div className="p-8 flex items-end bg-white border-t border-black/5 shrink-0 h-[36%]">
-                   <div>
-                       <h3 className="text-[22px] font-semibold mb-2.5 text-[#111] font-heading tracking-tight">Shared work without chaos</h3>
-                       <p className="text-[#555] text-[14px] leading-relaxed">
-                         Keep recruiters, hiring managers, and interviewers aligned with clear ownership, automated handoffs, and centralised communication — all in one place.
-                       </p>
+                <div className="border border-border w-16 h-16 flex items-center justify-center bg-background text-lg font-medium text-foreground">
+                  K
+                </div>
+              </div>
+            </div>
+
+            {/* BOTTOM RIGHT */}
+            <div className="col-span-1 md:col-span-1 p-10 flex flex-col gap-8 min-h-[400px] justify-between">
+              <div className="flex flex-col gap-2">
+                 <h3 className="text-xl font-semibold text-foreground">Native Ecosystem</h3>
+                 <p className="text-muted-foreground text-sm">Syncs directly with your existing stack.</p>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-0">
+                 {[1, 2, 3, 4, 5, 6].map((i) => (
+                   <div key={i} className="aspect-square border border-border flex items-center justify-center bg-muted/5 transition-colors">
+                      <Blocks className="w-5 h-5 text-muted-foreground/30" />
                    </div>
-                </div>
-             </div>
+                 ))}
+              </div>
+            </div>
 
           </div>
-
         </div>
       </div>
     </section>

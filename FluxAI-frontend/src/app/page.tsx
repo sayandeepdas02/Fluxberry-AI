@@ -2,6 +2,7 @@ import { Navbar } from "@/components/shared/Navbar";
 import { Hero } from "@/features/landing/components/hero";
 import { AgentsSection } from "@/features/landing/components/agents-section";
 import { ProductShowcase } from "@/features/landing/components/product-showcase";
+import { Features } from "@/features/landing/components/features";
 import { MetricsSection } from "@/features/landing/components/metrics-section";
 import { PricingSection } from "@/features/landing/components/pricing-section";
 import { TestimonialsSection } from "@/features/landing/components/testimonials-section";
@@ -20,6 +21,8 @@ export default function Page() {
             <AgentsSection />
             <Separator />
             <ProductShowcase />
+            <Separator />
+            <Features />
             <Separator />
             <MetricsSection />
             <Separator />
