@@ -7,11 +7,11 @@ import Image from "next/image";
 
 export default function SignInPage() {
     return (
-        <main className="flex min-h-screen flex-col bg-background">
+        <main className="flex min-h-screen flex-col bg-background mx-auto w-full border-x border-line max-w-[var(--container-max)]">
             <Navbar />
 
             <section className="w-full pt-12 md:pt-20 pb-20 flex-1 flex flex-col justify-center">
-                <div className="max-w-[1280px] mx-auto px-6 lg:px-8 w-full">
+                <div className="mx-auto px-6 sm:px-8 w-full">
                     <SignInForm />
                 </div>
             </section>

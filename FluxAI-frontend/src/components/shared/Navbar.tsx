@@ -102,17 +102,21 @@ export function Navbar() {
 
         {/* ── RIGHT: Minimal Auth / Action ── */}
         <div className="hidden md:flex items-center gap-[16px]">
-          <Link
-            href="/signin"
-            className={cn(
-              "font-medium text-muted-foreground cursor-pointer",
-              "hover:text-foreground active:scale-[0.98]",
-              "transition-all duration-200 ease-out"
-            )}
-            style={{ fontSize: "var(--text-body)" }}
-
-          >
-            Log in
+          <Link href="/demo">
+            <button
+              className={cn(
+                "cursor-pointer font-medium text-white",
+                "border border-black bg-black",
+                "hover:bg-black/90 active:scale-[0.98]",
+                "transition-all duration-200 ease-out rounded-none"
+              )}
+              style={{
+                padding: "4px 12px",
+                fontSize: "var(--text-body)",
+              }}
+            >
+              Book a Demo
+            </button>
           </Link>
           <Link href="/signup">
             <button
@@ -189,12 +193,19 @@ export function Navbar() {
 
             <div className="pt-3 mt-2 border-t border-line space-y-2">
               <Link
-                href="/signin"
-                className="block py-2 px-4 text-center text-muted-foreground font-medium hover:bg-muted"
+                href="/demo"
+                className="block"
                 onClick={() => setIsMobileOpen(false)}
-                style={{ fontSize: "var(--text-body-sm)" }}
               >
-                Log in
+                <button
+                  className="w-full text-white font-medium cursor-pointer hover:bg-black/90 transition-colors duration-200 rounded-none bg-black"
+                  style={{
+                    height: "40px",
+                    fontSize: "var(--text-body-sm)",
+                  }}
+                >
+                  Book a Demo
+                </button>
               </Link>
               <Link
                 href="/signup"

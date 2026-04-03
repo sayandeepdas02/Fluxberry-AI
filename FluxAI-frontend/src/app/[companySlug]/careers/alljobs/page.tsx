@@ -66,7 +66,7 @@ export default function AllJobsPage({ params }: { params: Promise<{ companySlug:
     }
 
     return (
-        <div className="min-h-screen bg-background text-foreground selection:bg-foreground/10">
+        <div className="flex min-h-screen flex-col bg-background mx-auto w-full border-x border-line max-w-[var(--container-max)] text-foreground selection:bg-foreground/10">
             {/* 1. Header */}
             <header className="sticky top-0 z-50 w-full border-b border-edge bg-background/80 backdrop-blur-sm">
                 <div className="container mx-auto max-w-5xl px-6 h-16 flex items-center justify-between">
