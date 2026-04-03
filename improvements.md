@@ -95,34 +95,39 @@ Resolved issues:
 - Structured error UI added (AlertTriangle icon + message) replacing raw text error states.
 - `Toaster` upgraded to `richColors + position='bottom-right'` globally in root layout.
 
-🔴 13. No Loading States for Real APIs
+✅ 13. No Loading States for Real APIs
 Problem:
 Will break UX once API latency exists
 Fix:
-Add skeleton loaders everywhere
+Added layout-matched skeleton loaders to dashboard-overview, analytics-view, candidate-pool-view, and EmailTemplateList using shadcn/ui <Skeleton>
 
-🔴 14. Resume Upload Flow Not Fully Connected
+✅ 14. Resume Upload Flow Not Fully Connected
 Problem:
 Backend parsing exists
 Frontend not fully wired
 Fix:
-Upload → API → parse → store → link to candidate
+Added 3-step upload flow: POST /api/files/upload-url → PUT to S3/local → POST /api/candidates/:id/resume
+New ResumeUploadDialog component with drag-and-drop, PDF validation (max 5MB), progress bar
+Resume column added to Candidate Pool table (View link if exists, Upload button if not)
 
-🔴 15. Email System Not Triggered from UI
+✅ 15. Email System Not Triggered from UI
 Problem:
 Backend queue exists
 UI not calling it
 Fix:
-Trigger:
-POST /email/send
+Added POST /api/email-templates/:id/send backend endpoint with nodemailer (falls back to console.log in dev)
+{{variable}} substitution, EmailLog persistence
+EmailEditor "Send Test Email" button now opens a dialog and fires the send API
 
-🔴 16. RBAC Not Enforced
+✅ 16. RBAC Not Enforced
 Problem:
 Roles exist
 No real permission control
 Fix:
-Backend permission checks
-Hide UI actions conditionally
+Created useRBAC() hook with 5-tier role hierarchy (OWNER > ADMIN > HIRING_MANAGER > RECRUITER > INTERVIEWER)
+manage-jobs-view: "New Job Post" gated behind can('create_jobs')
+job-card: Edit, Publish, Close, Delete gated behind respective permission checks
+
 
 ⚠️ THINGS THAT STILL NEED TO BE BUILT (NOT JUST FIXED)
 
