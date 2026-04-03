@@ -274,6 +274,10 @@ export const copilotApi = {
     /** Generate 5 tailored interview questions (not cached — fresh per request) */
     generateQuestions: (jobId: string, candidateId: string) =>
         apiClient.post<{ data: string[] }>(`/ats-screening/${jobId}/copilot/questions`, { candidateId }),
+
+    /** Interactive chat with AI Copilot (RAG) */
+    chat: (jobId: string, messages: { role: string; content: string }[]) =>
+        apiClient.post<{ data: string }>(`/ats-screening/${jobId}/copilot/chat`, { messages }),
 }
 
 // ─────────────────────────────────────────────
