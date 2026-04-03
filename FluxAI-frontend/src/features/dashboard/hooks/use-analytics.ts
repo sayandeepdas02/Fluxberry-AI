@@ -1,61 +1,67 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { analyticsApi, AnalyticsKPIResponse, AnalyticsTrendData, DemographicsData } from '@/lib/api/analytics'
 
-interface UseAnalyticsResult {
-    kpis: AnalyticsKPIResponse | null
-    trends: AnalyticsTrendData[]
-    demographics: { device: DemographicsData[], location: DemographicsData[] } | null
-    isLoading: boolean
-    error: string | null
-    refetch: () => Promise<void>
+export const analyticsKeys = {
+    all: ['analytics'] as const,
+    kpis: () => [...analyticsKeys.all, 'kpis'] as const,
+    trends: () => [...analyticsKeys.all, 'trends'] as const,
+    demographics: () => [...analyticsKeys.all, 'demographics'] as const,
 }
 
-export function useAnalytics(): UseAnalyticsResult {
-    const [kpis, setKpis] = useState<AnalyticsKPIResponse | null>(null)
-    const [trends, setTrends] = useState<AnalyticsTrendData[]>([])
-    const [demographics, setDemographics] = useState<{ device: DemographicsData[], location: DemographicsData[] } | null>(null)
-    const [isLoading, setIsLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
+export function useAnalytics() {
+    const kpisQuery = useQuery({
+        queryKey: analyticsKeys.kpis(),
+        queryFn: async () => {
+            const res = await analyticsApi.getKPIs()
+            if (!res.success) throw new Error(res.error?.message ?? 'Failed to load KPIs')
+            return res.data!
+        },
+        staleTime: 2 * 60 * 1000,
+    })
 
-    const fetchAnalytics = useCallback(async () => {
-        setIsLoading(true)
-        setError(null)
+    const trendsQuery = useQuery({
+        queryKey: analyticsKeys.trends(),
+        queryFn: async () => {
+            const res = await analyticsApi.getTrends()
+            if (!res.success) throw new Error(res.error?.message ?? 'Failed to load trends')
+            return res.data!
+        },
+        staleTime: 5 * 60 * 1000, // Trends change slowly — 5 min cache
+    })
 
-        try {
-            const [kpiRes, trendRes, demoRes] = await Promise.all([
-                analyticsApi.getKPIs(),
-                analyticsApi.getTrends(),
-                analyticsApi.getDemographics()
-            ])
+    const demographicsQuery = useQuery({
+        queryKey: analyticsKeys.demographics(),
+        queryFn: async () => {
+            const res = await analyticsApi.getDemographics()
+            if (!res.success) throw new Error(res.error?.message ?? 'Failed to load demographics')
+            return res.data!
+        },
+        staleTime: 5 * 60 * 1000,
+    })
 
-            if (kpiRes.success && kpiRes.data) {
-                setKpis(kpiRes.data)
-            }
-            if (trendRes.success && trendRes.data) {
-                setTrends(trendRes.data)
-            }
-            if (demoRes.success && demoRes.data) {
-                setDemographics(demoRes.data)
-            }
-        } catch (err) {
-            setError('Failed to load analytics data')
-        } finally {
-            setIsLoading(false)
-        }
-    }, [])
+    const error = kpisQuery.error
+        ? (kpisQuery.error as Error).message
+        : trendsQuery.error
+            ? (trendsQuery.error as Error).message
+            : demographicsQuery.error
+                ? (demographicsQuery.error as Error).message
+                : null
 
-    useEffect(() => {
-        fetchAnalytics()
-    }, [fetchAnalytics])
-
+    // ── Backward-compatible surface ──────────────────────────────────────────
     return {
-        kpis,
-        trends,
-        demographics,
-        isLoading,
+        kpis: kpisQuery.data ?? null,
+        trends: trendsQuery.data ?? [],
+        demographics: demographicsQuery.data ?? null,
+        isLoading: kpisQuery.isLoading || trendsQuery.isLoading || demographicsQuery.isLoading,
         error,
-        refetch: fetchAnalytics
+        refetch: async () => {
+            await Promise.all([
+                kpisQuery.refetch(),
+                trendsQuery.refetch(),
+                demographicsQuery.refetch(),
+            ])
+        },
     }
 }
