@@ -48,11 +48,15 @@ export function createApp() {
     app.use(helmet())
     app.use(compression())
 
-    // CORS configuration - flexible for development
+    // CORS configuration - flexible for development and production
     const corsOrigins = process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000', 'http://localhost:3001']
     app.use(cors({
         origin: corsOrigins,
         credentials: true,
+        // Explicitly allow the Authorization header for JWT Bearer tokens (Issue 11)
+        allowedHeaders: ['Content-Type', 'Authorization', 'x-request-id'],
+        exposedHeaders: ['x-request-id'],
+        methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     }))
 
     // Rate limiting
