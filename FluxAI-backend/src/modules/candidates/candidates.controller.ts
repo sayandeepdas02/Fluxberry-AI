@@ -103,6 +103,31 @@ export class CandidatesController {
             next(error)
         }
     }
+
+    /**
+     * POST /api/candidates/:id/resume
+     */
+    async attachResume(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const organizationId = req.user?.organizationId
+            if (!organizationId) {
+                res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
+                return
+            }
+
+            const { id } = req.params
+            const { fileId } = req.body
+            if (!fileId) {
+                res.status(400).json({ success: false, error: { code: 'MISSING_FILE_ID', message: 'fileId is required' } })
+                return
+            }
+
+            const candidate = await candidatesService.attachResume(id, organizationId, fileId)
+            res.json(successResponse(candidate))
+        } catch (error) {
+            next(error)
+        }
+    }
 }
 
 export const candidatesController = new CandidatesController()

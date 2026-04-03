@@ -13,5 +13,6 @@ router.get('/', emailTemplateController.list)
 router.get('/:id', emailTemplateController.getById)
 router.patch('/:id', emailTemplateController.update)
 router.delete('/:id', emailTemplateController.delete)
+router.post('/:id/send', (req, res) => emailTemplateController.send(req, res))
 
 export const emailTemplateRoutes = router

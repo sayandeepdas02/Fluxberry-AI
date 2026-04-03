@@ -27,4 +27,7 @@ export const emailTemplatesApi = {
 
     delete: (id: string) =>
         apiClient.delete(`/email-templates/${id}`),
+
+    send: (id: string, payload: { to: string; variables?: Record<string, string> }) =>
+        apiClient.post<{ sent: boolean; preview?: string }>(`/email-templates/${id}/send`, payload),
 }

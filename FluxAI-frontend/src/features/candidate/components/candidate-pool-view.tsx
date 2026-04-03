@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, FileText, Filter, X } from "lucide-react"
+import { Search, FileText, Filter, X, Upload, Eye } from "lucide-react"
 import {
     Table,
     TableBody,
@@ -24,11 +24,14 @@ import { useCandidates } from "@/features/candidate/hooks/use-candidates"
 import { format } from "date-fns"
 import { useState, useEffect } from "react"
 import { useDebounce } from "@/hooks/use-debounce"
+import { Skeleton } from "@/components/ui/skeleton"
+import { ResumeUploadDialog } from "./resume-upload-dialog"
 
 export function CandidatePoolView() {
     const [search, setSearch] = useState("")
     const [source, setSource] = useState<string>("all")
     const [tags, setTags] = useState("")
+    const [resumeDialogCandidate, setResumeDialogCandidate] = useState<{ id: string; name: string; resumeUrl?: string } | null>(null)
 
     const debouncedSearch = useDebounce(search, 500)
     const debouncedTags = useDebounce(tags, 500)
@@ -50,7 +53,34 @@ export function CandidatePoolView() {
     }
 
     if (isLoading) {
-        return <div className="p-8 text-center text-muted-foreground">Loading candidates...</div>
+        return (
+            <div className="flex flex-col space-y-6">
+                <div className="space-y-2">
+                    <Skeleton className="h-7 w-48" />
+                    <Skeleton className="h-4 w-72" />
+                </div>
+                <div className="flex gap-4">
+                    <Skeleton className="h-10 flex-1" />
+                    <Skeleton className="h-10 w-[180px]" />
+                    <Skeleton className="h-10 w-[200px]" />
+                </div>
+                <div className="border border-line overflow-hidden">
+                    <div className="p-4 border-b border-line">
+                        <Skeleton className="h-4 w-32" />
+                    </div>
+                    {[1,2,3,4,5].map(i => (
+                        <div key={i} className="flex items-center gap-4 px-4 py-3 border-b border-line last:border-0">
+                            <Skeleton className="h-9 w-9 shrink-0" />
+                            <Skeleton className="h-4 w-36" />
+                            <Skeleton className="h-4 w-48 ml-auto" />
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-6 w-20" />
+                            <Skeleton className="h-4 w-24" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )
     }
 
     if (error) {
@@ -127,6 +157,7 @@ export function CandidatePoolView() {
                             <TableHead className="text-muted-foreground font-medium">Email</TableHead>
                             <TableHead className="text-muted-foreground font-medium">Phone</TableHead>
                             <TableHead className="text-muted-foreground font-medium">Source</TableHead>
+                            <TableHead className="text-muted-foreground font-medium">Resume</TableHead>
                             <TableHead className="text-right text-muted-foreground font-medium">Joined</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -164,6 +195,33 @@ export function CandidatePoolView() {
                                             {candidate.source || 'Direct'}
                                         </Badge>
                                     </TableCell>
+                                    <TableCell>
+                                        {candidate.resumeUrl ? (
+                                            <a
+                                                href={candidate.resumeUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+                                            >
+                                                <Eye className="h-3.5 w-3.5" />
+                                                View
+                                            </a>
+                                        ) : (
+                                            <button
+                                                onClick={() => setResumeDialogCandidate({
+                                                    id: candidate._id,
+                                                    name: candidate.firstName && candidate.lastName
+                                                        ? `${candidate.firstName} ${candidate.lastName}`
+                                                        : candidate.email,
+                                                    resumeUrl: candidate.resumeUrl,
+                                                })}
+                                                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                                            >
+                                                <Upload className="h-3.5 w-3.5" />
+                                                Upload
+                                            </button>
+                                        )}
+                                    </TableCell>
                                     <TableCell className="text-right text-muted-foreground">
                                         {format(new Date(candidate.createdAt), 'MMM d, yyyy')}
                                     </TableCell>
@@ -173,6 +231,19 @@ export function CandidatePoolView() {
                     </TableBody>
                 </Table>
             </div>
+
+            {/* Resume Upload Dialog */}
+            {resumeDialogCandidate && (
+                <ResumeUploadDialog
+                    candidateId={resumeDialogCandidate.id}
+                    candidateName={resumeDialogCandidate.name}
+                    onClose={() => setResumeDialogCandidate(null)}
+                    onSuccess={() => {
+                        setResumeDialogCandidate(null)
+                        refetch({ search: search || undefined, source: source === 'all' ? undefined : source })
+                    }}
+                />
+            )}
         </div>
     )
 }
