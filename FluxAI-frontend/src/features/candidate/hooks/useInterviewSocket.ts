@@ -13,8 +13,10 @@
 
 import { useEffect, useRef, useCallback, useState } from "react"
 import { io, Socket } from "socket.io-client"
+import { getStoredToken } from "@/lib/api/client"
 
-const BACKEND_WS = process.env.NEXT_PUBLIC_BACKEND_WS || "http://localhost:5001"
+const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+const BACKEND_WS = process.env.NEXT_PUBLIC_BACKEND_WS || NEXT_PUBLIC_API_URL.replace('/api', '')
 
 export type InterviewPhase =
     | "INTRO"
@@ -88,19 +90,10 @@ export function useInterviewSocket({
     useEffect(() => {
         if (!sessionId || !enabled) return
 
-
-        // Read the JWT token from the cookie (the backend sets it as 'token' cookie on login)
-        // document.cookie is accessible here because the auth cookie is NOT httpOnly on the frontend-readable copy
-        function getAuthToken(): string {
-            if (typeof document === 'undefined') return ''
-            const match = document.cookie.match(/(?:^|;\s*)token=([^;]*)/)
-            return match ? decodeURIComponent(match[1]) : ''
-        }
-
         const socket = io(`${BACKEND_WS}/ai-interview`, {
             transports: ["websocket", "polling"],
             withCredentials: true,
-            auth: { token: getAuthToken() },
+            auth: { token: getStoredToken() || '' },
         })
 
         socketRef.current = socket
@@ -111,7 +104,28 @@ export function useInterviewSocket({
             socket.emit("join_session", { sessionId, attemptId })
         })
 
-        socket.on("disconnect", () => setConnected(false))
+        socket.on("disconnect", (reason) => {
+            setConnected(false)
+            // Transport close is expected on cleanup — don't surface as error
+            if (reason !== "io client disconnect") {
+                console.warn("[Socket] Disconnected:", reason)
+            }
+        })
+
+        // Issue 11 fix: surface auth failures and network errors
+        socket.on("connect_error", (err) => {
+            console.error("[Socket] Connection error:", err.message)
+            const isAuthError = err.message?.includes("UNAUTHORIZED")
+            onErrorRef.current(
+                isAuthError
+                    ? "Authentication failed. Please sign in again."
+                    : `Connection failed: ${err.message}`
+            )
+        })
+
+        socket.io.on("reconnect_failed", () => {
+            onErrorRef.current("Unable to reconnect to interview server. Please refresh the page.")
+        })
 
         socket.on("session_state", (state) => {
             onSessionStateRef.current({

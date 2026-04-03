@@ -1,54 +1,57 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { dashboardApi, DashboardSummary, ATSAnalytics } from '@/lib/api/dashboard'
+import { toast } from 'sonner'
 
-interface UseDashboardResult {
-    summary: DashboardSummary | null
-    analytics: ATSAnalytics | null
-    isLoading: boolean
-    error: string | null
-    refetch: () => Promise<void>
+export const dashboardKeys = {
+    all: ['dashboard'] as const,
+    summary: () => [...dashboardKeys.all, 'summary'] as const,
+    analytics: () => [...dashboardKeys.all, 'analytics'] as const,
 }
 
-export function useDashboard(): UseDashboardResult {
-    const [summary, setSummary] = useState<DashboardSummary | null>(null)
-    const [analytics, setAnalytics] = useState<ATSAnalytics | null>(null)
-    const [isLoading, setIsLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
+export function useDashboard() {
+    const summaryQuery = useQuery({
+        queryKey: dashboardKeys.summary(),
+        queryFn: async () => {
+            const res = await dashboardApi.summary()
+            if (!res.success) throw new Error(res.error?.message ?? 'Failed to load dashboard summary')
+            return res.data!
+        },
+        // Dashboard summary is polled every 60s while the tab is visible
+        refetchInterval: 60 * 1000,
+    })
 
-    const fetchData = useCallback(async () => {
-        setIsLoading(true)
-        setError(null)
+    const analyticsQuery = useQuery({
+        queryKey: dashboardKeys.analytics(),
+        queryFn: async () => {
+            const res = await dashboardApi.analytics()
+            if (!res.success) throw new Error(res.error?.message ?? 'Failed to load analytics')
+            return res.data!
+        },
+        staleTime: 2 * 60 * 1000, // Analytics can be 2 min stale
+    })
 
-        const [summaryRes, analyticsRes] = await Promise.all([
-            dashboardApi.summary(),
-            dashboardApi.analytics(),
-        ])
+    // Surface toast on first error per session
+    const combinedError = summaryQuery.error
+        ? (summaryQuery.error as Error).message
+        : analyticsQuery.error
+            ? (analyticsQuery.error as Error).message
+            : null
 
-        if (summaryRes.success && summaryRes.data) {
-            setSummary(summaryRes.data)
-        } else {
-            setError(summaryRes.error?.message || 'Failed to load dashboard summary')
-        }
+    if (combinedError && !summaryQuery.isStale) {
+        // Only log — callers access error prop for display
+        console.error('[useDashboard]', combinedError)
+    }
 
-        if (analyticsRes.success && analyticsRes.data) {
-            setAnalytics(analyticsRes.data)
-        }
-
-        setIsLoading(false)
-    }, [])
-
-    useEffect(() => {
-        fetchData()
-    }, [fetchData])
-
+    // ── Backward-compatible surface ──────────────────────────────────────────
     return {
-        summary,
-        analytics,
-        isLoading,
-        error,
-        refetch: fetchData
+        summary: summaryQuery.data ?? null,
+        analytics: analyticsQuery.data ?? null,
+        isLoading: summaryQuery.isLoading || analyticsQuery.isLoading,
+        error: combinedError,
+        refetch: async () => {
+            await Promise.all([summaryQuery.refetch(), analyticsQuery.refetch()])
+        },
     }
 }
-

@@ -7,8 +7,10 @@ import { VerticalBarChart } from "@/features/dashboard/components/vertical-bar-c
 import { DonutChart } from "@/features/dashboard/components/donut-chart"
 import { useAnalytics } from "@/features/dashboard/hooks/use-analytics"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AlertTriangle } from "lucide-react"
 
-// Keep this mock for now as we don't have Campaign entity
+
+// Static campaign data — no backend entity for campaigns yet (tracked in roadmap)
 const campaignPerformanceData = [
     { name: 'Senior Dev Outreach', value: 45 },
     { name: 'Q1 Hiring Drive', value: 30 },
@@ -29,22 +31,28 @@ export function AnalyticsView() {
                     <Skeleton className="h-4 w-20" />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {[1,2,3,4].map(i => <Skeleton key={i} className="h-[100px] w-full" />)}
+                    {[1,2,3,4].map(i => <Skeleton key={i} className="h-[100px] w-full rounded-lg" />)}
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <Skeleton className="lg:col-span-2 h-[280px] w-full" />
-                    <Skeleton className="h-[280px] w-full" />
+                    <Skeleton className="lg:col-span-2 h-[280px] w-full rounded-lg" />
+                    <Skeleton className="h-[280px] w-full rounded-lg" />
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <Skeleton className="lg:col-span-2 h-[280px] w-full" />
-                    <Skeleton className="h-[280px] w-full" />
+                    <Skeleton className="lg:col-span-2 h-[280px] w-full rounded-lg" />
+                    <Skeleton className="h-[280px] w-full rounded-lg" />
                 </div>
             </div>
         )
     }
 
     if (error) {
-        return <div className="p-8 text-center text-destructive">Error: {error}</div>
+        return (
+            <div className="flex flex-col items-center justify-center p-12 text-center border border-dashed border-destructive/30 rounded-lg bg-destructive/5 min-h-[300px]">
+                <AlertTriangle className="w-10 h-10 text-destructive mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Analytics failed to load</h3>
+                <p className="text-sm text-muted-foreground max-w-sm">{error}</p>
+            </div>
+        )
     }
 
     // Transform trends for LineChart
