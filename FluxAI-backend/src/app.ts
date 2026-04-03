@@ -40,6 +40,7 @@ import { emailTemplateRoutes } from './modules/email/email-templates.routes.js'
 import { interviewRoutes } from './modules/interviews/interviews.routes.js'
 import auditRoutes from './modules/audit/audit.routes.js'
 import { handleRibbonWebhook } from './modules/webhooks/ribbon.webhook.js'
+import { billingRoutes } from './modules/billing/billing.routes.js'
 
 export function createApp() {
     const app = express()
@@ -174,6 +175,9 @@ export function createApp() {
 
     // Audit Logs
     app.use('/api/audit-logs', auditRoutes)
+
+    // Billing & Subscription
+    app.use('/api/billing', billingRoutes)
 
     // ============================================
 

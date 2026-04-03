@@ -12,9 +12,10 @@ export const MemberRole = {
 export type MemberRoleType = typeof MemberRole[keyof typeof MemberRole]
 
 export const Plan = {
-    FREE: 'FREE',
-    PRO: 'PRO',
-    ENTERPRISE: 'ENTERPRISE',
+    FREE: 'free',
+    GROWTH: 'growth',
+    SCALE: 'scale',
+    ENTERPRISE: 'enterprise',
 } as const
 export type PlanType = typeof Plan[keyof typeof Plan]
 
@@ -271,9 +272,13 @@ export interface IOrganization extends Document {
     logoUrl?: string
     website?: string
     plan: PlanType
+    trialActive: boolean
+    trialEndsAt: Date | null
+    installedApps: Record<string, { enabled: boolean; installed: boolean; limits?: Record<string, number> }>
     createdAt: Date
     updatedAt: Date
 }
+
 
 const OrganizationSchema = new Schema<IOrganization>({
     name: { type: String, required: true },
@@ -281,7 +286,31 @@ const OrganizationSchema = new Schema<IOrganization>({
     logoUrl: { type: String },
     website: { type: String },
     plan: { type: String, enum: Object.values(Plan), default: Plan.FREE },
+    trialActive: { type: Boolean, default: false },
+    trialEndsAt: { type: Date, default: null },
+    installedApps: { type: Schema.Types.Mixed, default: {} },
 }, { timestamps: true })
+
+// Auto-stamp 14-day trial for brand-new organizations
+// Mongoose v9: PreSaveMiddlewareFunction takes (opts: SaveOptions) — no next() callback
+OrganizationSchema.pre('save', async function () {
+    if (this.isNew) {
+        const trialEnd = new Date()
+        trialEnd.setDate(trialEnd.getDate() + 14)
+        ;(this as any).trialActive = true
+        ;(this as any).trialEndsAt = trialEnd
+
+        // Enable all core + add-on apps during trial
+        ;(this as any).installedApps = {
+            job_board: { enabled: true, installed: true },
+            ats_screening: { enabled: true, installed: true, limits: { resumes: 1000 } },
+            onboarding: { enabled: true, installed: true },
+            interview_agent: { enabled: true, installed: true },
+            talent_prospect: { enabled: true, installed: true, limits: { credits: 50 } },
+            analytics: { enabled: true, installed: true },
+        }
+    }
+})
 
 export const Organization = mongoose.model<IOrganization>('Organization', OrganizationSchema)
 

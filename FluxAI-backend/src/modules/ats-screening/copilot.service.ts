@@ -478,6 +478,77 @@ class CopilotService {
         }
     }
 
+    /**
+     * Interactive Chat with Copilot using Job and Candidate context
+     */
+    async chatWithCopilot(jobId: string, orgId: string, messages: { role: string; content: string }[]): Promise<string> {
+        const job = await JobModel.findOne({ _id: jobId, organizationId: orgId })
+            .select('title requiredSkills department').lean()
+        if (!job) throw { code: 'NOT_FOUND', message: 'Job not found' }
+
+        const top10 = await ScreeningResult.find({
+            jobId,
+            organizationId: orgId,
+            status: { $in: [ScreeningStatus.PASSED, ScreeningStatus.SCORED, 'SCORED'] },
+        })
+            .sort({ finalScore: -1 })
+            .limit(10)
+            .lean()
+
+        const candidateIds = top10.map(r => r.candidateId)
+        const candidates = await Candidate.find({ _id: { $in: candidateIds } })
+            .select('firstName lastName email').lean()
+        const candidateMap = new Map(candidates.map(c => [c._id.toString(), c]))
+
+        const candidateContext = top10.map((r: any) => {
+            const c = candidateMap.get(r.candidateId.toString())
+            const name = c ? `${(c as any).firstName || ''} ${(c as any).lastName || ''}`.trim() || (c as any).email : 'Unknown'
+            const skillScore = Math.round(r.scoreBreakdown?.skillScore || 0)
+            const expScore = Math.round(r.scoreBreakdown?.experienceScore || 0)
+            const projScore = Math.round(r.scoreBreakdown?.projectScore || 0)
+            return `- ${name}: Score ${Math.round(r.finalScore || 0)}, Skills ${skillScore}/100, Exp ${expScore}/100, Proj ${projScore}/100`
+        }).join('\n')
+
+        const jobTitle = (job as any).title || 'the role'
+        const reqSkills = ((job as any).requiredSkills || []).join(', ')
+
+        const systemPrompt = `You are Fluxberry AI Copilot, a senior hiring assistant.
+You are helping the recruiter evaluate candidates for the "${jobTitle}" position.
+Required Skills: ${reqSkills || 'None specified'}
+
+Current Top Candidates in ATS:
+${candidateContext || 'No candidates scored yet.'}
+
+Instructions:
+1. Answer the recruiter's questions concisely.
+2. Use the provided candidate context to answer questions about the candidate pool.
+3. Be professional and objective.`
+
+        const client = this.getOpenAIClient()
+        if (!client) throw { code: 'INTERNAL_ERROR', message: 'OpenAI not configured' }
+
+        const apiMessages = [
+            { role: 'system', content: systemPrompt },
+            ...messages.map(m => ({
+                role: m.role === 'user' ? 'user' : 'assistant',
+                content: m.content
+            }))
+        ]
+
+        try {
+            const resp = await client.chat.completions.create({
+                model: 'gpt-4o-mini',
+                messages: apiMessages as any,
+                temperature: 0.3,
+                max_tokens: 500
+            })
+            return resp.choices[0]?.message?.content?.trim() || "I couldn't generate a response."
+        } catch (error) {
+            console.error('[Copilot Service] Chat error:', error)
+            throw { code: 'INTERNAL_ERROR', message: 'Failed to communicate with AI model' }
+        }
+    }
+
     /** Invalidate cached copilot output when scoring changes */
     async invalidateCache(jobId: string, candidateId?: string) {
         await redis.del(`copilot:insights:${jobId}`)

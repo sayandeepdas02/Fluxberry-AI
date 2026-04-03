@@ -146,7 +146,8 @@ export function JobWizard() {
                 description:    step2.description,
                 department:     step1.department    || undefined,
                 location:       step1.location      || undefined,
-                employmentType: step1.employmentType,
+                employmentType: step1.employmentType as any,
+                requirements:   step3.requiredSkills, // Mapping UI required skills to ATS generic requirements array
                 requiredSkills: step3.requiredSkills,
                 optionalSkills: step3.optionalSkills.length > 0 ? step3.optionalSkills : undefined,
                 experienceRange: step3.expMin ? {
@@ -175,7 +176,7 @@ export function JobWizard() {
                 },
             }
 
-            const res = await jobsApi.create(input as any)
+            const res = await jobsApi.create(input)
             if (res.success && res.data) {
                 router.push('/dashboard/manage-jobs')
             } else {

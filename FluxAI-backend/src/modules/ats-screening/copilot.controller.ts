@@ -71,6 +71,31 @@ export class CopilotController {
             })
         }
     }
+    /**
+     * POST /ats/:jobId/copilot/chat
+     * Body: { messages: { role: string; content: string }[] }
+     * Interactive AI recruiter chat with RAG.
+     */
+    async chat(req: AuthRequest, res: Response) {
+        try {
+            const orgId = req.user!.organizationId
+            const { jobId } = req.params
+            const { messages } = req.body
+
+            if (!messages || !Array.isArray(messages)) {
+                return res.status(400).json({ success: false, error: 'messages array is required' })
+            }
+
+            const responseText = await copilotService.chatWithCopilot(jobId, orgId, messages)
+            res.json({ success: true, data: responseText })
+        } catch (error: any) {
+            console.error('[Copilot] chat error:', error)
+            res.status(error.code === 'NOT_FOUND' ? 404 : 500).json({
+                success: false,
+                error: error.message || 'Failed to generate chat response',
+            })
+        }
+    }
 }
 
 export const copilotController = new CopilotController()
