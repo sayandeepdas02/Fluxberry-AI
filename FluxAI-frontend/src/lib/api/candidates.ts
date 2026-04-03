@@ -9,6 +9,7 @@ export interface Candidate {
     lastName?: string
     phone?: string
     source?: string
+    resumeUrl?: string
     createdAt: string
     updatedAt: string
 }

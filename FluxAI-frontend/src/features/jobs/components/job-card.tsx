@@ -4,6 +4,7 @@ import * as React from 'react'
 import { Badge } from '@/components/ui/badge'
 import { MoreVertical, Copy, ExternalLink, Pencil, X, Rocket, Trash2 } from 'lucide-react'
 import type { Job } from '@/lib/api/jobs'
+import { useRBAC } from '@/lib/hooks/use-rbac'
 
 interface JobCardProps {
     job: Job
@@ -23,6 +24,7 @@ const STATUS_CONFIG = {
 export function JobCard({ job, onPublish, onClose, onDelete, onEdit, onClick }: JobCardProps) {
     const [menuOpen, setMenuOpen] = React.useState(false)
     const menuRef = React.useRef<HTMLDivElement>(null)
+    const { can } = useRBAC()
 
     const statusConfig = STATUS_CONFIG[job.status] || STATUS_CONFIG.DRAFT
 
@@ -113,6 +115,7 @@ export function JobCard({ job, onPublish, onClose, onDelete, onEdit, onClick }: 
 
                     {menuOpen && (
                         <div className="absolute right-0 top-8 z-50 w-48 bg-background border border-line rounded-none shadow-none py-1 animate-in fade-in-0 zoom-in-95">
+                            {can('edit_jobs') && (
                             <button
                                 className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-muted/50 transition-colors"
                                 onClick={(e) => {
@@ -124,8 +127,10 @@ export function JobCard({ job, onPublish, onClose, onDelete, onEdit, onClick }: 
                                 <Pencil className="w-3.5 h-3.5" />
                                 Edit
                             </button>
+                            )}
 
-                            {job.status === 'DRAFT' && (
+                            {job.status === 'DRAFT' && can('publish_jobs') && (
+
                                 <button
                                     className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-emerald-500 hover:bg-muted/50 transition-colors"
                                     onClick={(e) => {
@@ -164,6 +169,7 @@ export function JobCard({ job, onPublish, onClose, onDelete, onEdit, onClick }: 
                                         <ExternalLink className="w-3.5 h-3.5" />
                                         View Public Page
                                     </button>
+                                    {can('manage_jobs') && (
                                     <button
                                         className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-orange-500 hover:bg-muted/50 transition-colors"
                                         onClick={(e) => {
@@ -175,11 +181,13 @@ export function JobCard({ job, onPublish, onClose, onDelete, onEdit, onClick }: 
                                         <X className="w-3.5 h-3.5" />
                                         Close Job
                                     </button>
+                                    )}
                                 </>
                             )}
 
                             <div className="border-t border-line my-1" />
 
+                            {can('delete_jobs') && (
                             <button
                                 className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-500 hover:bg-red-500/5 transition-colors"
                                 onClick={(e) => {
@@ -191,6 +199,7 @@ export function JobCard({ job, onPublish, onClose, onDelete, onEdit, onClick }: 
                                 <Trash2 className="w-3.5 h-3.5" />
                                 Delete
                             </button>
+                            )}
                         </div>
                     )}
                 </div>

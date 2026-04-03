@@ -15,6 +15,7 @@ import {
 import { emailTemplatesApi, IEmailTemplate } from '@/lib/api/email-templates'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export function EmailTemplateList() {
     const [templates, setTemplates] = useState<IEmailTemplate[]>([])
@@ -54,7 +55,33 @@ export function EmailTemplateList() {
         t.subject.toLowerCase().includes(searchTerm.toLowerCase())
     )
 
-    if (loading) return <div>Loading...</div>
+    if (loading) return (
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <div className="space-y-2">
+                    <Skeleton className="h-9 w-56" />
+                    <Skeleton className="h-4 w-96" />
+                </div>
+                <Skeleton className="h-10 w-40" />
+            </div>
+            <div className="border rounded-lg overflow-hidden">
+                <div className="p-4 border-b flex justify-between items-center">
+                    <Skeleton className="h-6 w-28" />
+                    <Skeleton className="h-9 w-52" />
+                </div>
+                <div className="divide-y">
+                    {[1,2,3,4].map(i => (
+                        <div key={i} className="flex items-center gap-4 px-6 py-4">
+                            <Skeleton className="h-4 w-40 flex-1" />
+                            <Skeleton className="h-4 w-64 flex-1" />
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-8 w-16" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    )
 
     return (
         <div className="space-y-6">
