@@ -5,6 +5,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
 import { SectionWrapper, SharpButton } from "@/components/shared/layout-primitives";
+import { InteractiveGridPattern } from "@/components/ui/interactive-grid-pattern";
 
 /* ─────────────────────────────────────────────────
    FINAL CTA SECTION — Chanhdai-style Editorial
@@ -34,10 +35,23 @@ export function FinalCTASection() {
     <SectionWrapper 
       ref={sectionRef}
       id="cta" 
-      className="section-enter"
+      className="section-enter relative overflow-hidden py-[80px] md:py-[100px]"
       style={{ backgroundColor: "#0f172a" }}
     >
-      <div className="w-full relative z-10 flex flex-col items-center text-center">
+      {/* ── Interactive Grid Pattern Background ── */}
+      <div className="absolute inset-0 z-0">
+         <InteractiveGridPattern 
+           className={cn(
+             "[mask-image:radial-gradient(100%_100%_at_top_center,white,transparent)]",
+             "!absolute !inset-0 h-full w-full bg-transparent"
+           )}
+           glowColor="rgba(139, 147, 224, 0.4)" // "#8b93e0" matching branding
+           borderColor="rgba(255, 255, 255, 0.05)"
+         />
+      </div>
+
+      {/* ── Content Container ── */}
+      <div className="mx-auto w-full relative z-10 flex flex-col items-center text-center px-4">
         <h2
           className="font-semibold tracking-tight text-white text-balance"
           style={{
@@ -82,7 +96,7 @@ export function FinalCTASection() {
 
           {/* Secondary CTA */}
           <Link href="/demo">
-             <button
+            <button
               className={cn(
                 "cursor-pointer font-medium",
                 "border border-white/20 bg-white/5 text-white",

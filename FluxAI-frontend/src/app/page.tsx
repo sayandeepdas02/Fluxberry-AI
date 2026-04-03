@@ -31,8 +31,9 @@ export default function Page() {
             <PricingSection />
             <Separator />
             <FAQSection />
-            <FinalCTASection />
+            <Separator />
             
+            <FinalCTASection />
             <Footer />
         </main>
     );
