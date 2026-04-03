@@ -58,6 +58,22 @@ export class EmailTemplateController {
             res.status(500).json({ message: error.message })
         }
     }
+
+    async send(req: Request, res: Response) {
+        try {
+            const { organizationId } = (req as AuthenticatedRequest).user!
+            const { id } = req.params
+            const { to, variables } = req.body as { to: string; variables?: Record<string, string> }
+
+            if (!to) return res.status(400).json({ message: '"to" email address is required' })
+
+            const result = await emailTemplateService.sendEmail(id, organizationId!, to, variables ?? {})
+            res.json({ success: true, ...result })
+        } catch (error: any) {
+            const status = error.statusCode || 500
+            res.status(status).json({ success: false, message: error.message })
+        }
+    }
 }
 
 export const emailTemplateController = new EmailTemplateController()

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Save, ArrowLeft, Info } from 'lucide-react'
+import { Save, ArrowLeft, Info, Send, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,6 +9,14 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { emailTemplatesApi, IEmailTemplate } from '@/lib/api/email-templates'
 import { toast } from 'sonner'
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from '@/components/ui/dialog'
 
 const AVAILABLE_VARIABLES = [
     'candidate.firstName',
@@ -28,6 +36,9 @@ export function EmailEditor() {
     const isNew = !id || id === 'new'
 
     const [loading, setLoading] = useState(false)
+    const [sendDialogOpen, setSendDialogOpen] = useState(false)
+    const [sendTo, setSendTo] = useState('')
+    const [sending, setSending] = useState(false)
     const [template, setTemplate] = useState<Partial<IEmailTemplate>>({
         name: '',
         subject: '',
@@ -82,6 +93,27 @@ export function EmailEditor() {
         }
     }
 
+    const handleSendTest = async () => {
+        if (!id || isNew) return toast.error('Save the template before sending a test')
+        if (!sendTo.trim()) return toast.error('Please enter a recipient email')
+
+        setSending(true)
+        try {
+            const res = await emailTemplatesApi.send(id, { to: sendTo.trim() })
+            if (res.success) {
+                toast.success(res.data?.preview || `Test email sent to ${sendTo}`)
+                setSendDialogOpen(false)
+                setSendTo('')
+            } else {
+                toast.error('Failed to send test email')
+            }
+        } catch {
+            toast.error('Failed to send test email')
+        } finally {
+            setSending(false)
+        }
+    }
+
     const insertVariable = (variable: string) => {
         const textarea = document.getElementById('content-editor') as HTMLTextAreaElement
         if (!textarea) return
@@ -105,7 +137,7 @@ export function EmailEditor() {
     if (loading && !isNew) return <div>Loading...</div>
 
     return (
-        <div className="space-y-6 max-w-5xl mx-auto pb-20">
+        <>
             <div className="flex items-center gap-4">
                 <Button variant="ghost" size="icon" onClick={() => router.push('/dashboard/settings/email-templates')}>
                     <ArrowLeft className="h-5 w-5" />
@@ -195,12 +227,23 @@ export function EmailEditor() {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Preview</CardTitle>
+                            <CardTitle>Preview & Send</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <Button className="w-full" variant="outline" disabled>
-                                Send Test Email (Coming Soon)
+                        <CardContent className="space-y-3">
+                            <Button
+                                className="w-full"
+                                variant="outline"
+                                onClick={() => setSendDialogOpen(true)}
+                                disabled={isNew || loading}
+                            >
+                                <Send className="mr-2 h-4 w-4" />
+                                Send Test Email
                             </Button>
+                            {isNew && (
+                                <p className="text-xs text-muted-foreground text-center">
+                                    Save the template first to enable sending.
+                                </p>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -209,6 +252,39 @@ export function EmailEditor() {
                     </Button>
                 </div>
             </div>
-        </div>
+
+        {/* Send Test Email Dialog */}
+        <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
+            <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                    <DialogTitle>Send Test Email</DialogTitle>
+                    <DialogDescription>
+                        Send a test version of <span className="font-medium text-foreground">{template.name || 'this template'}</span> to verify it looks correct.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-2">
+                    <Label htmlFor="send-to">Recipient email</Label>
+                    <div className="relative mt-1.5">
+                        <Mail className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            id="send-to"
+                            type="email"
+                            placeholder="you@example.com"
+                            className="pl-9"
+                            value={sendTo}
+                            onChange={(e) => setSendTo(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSendTest()}
+                        />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setSendDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleSendTest} disabled={sending || !sendTo.trim()}>
+                        {sending ? 'Sending...' : <><Send className="mr-2 h-4 w-4" />Send</>}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    </>
     )
 }

@@ -8,6 +8,7 @@ import { DonutChart } from "@/features/dashboard/components/donut-chart"
 import { useDashboard } from "@/features/dashboard/hooks/use-dashboard"
 import { useAuth } from "@/lib/context/auth-context"
 import { Briefcase, FileSearch, CheckSquare, Sparkles, ArrowRight } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function DashboardOverview() {
     const { user } = useAuth();
@@ -15,7 +16,39 @@ export function DashboardOverview() {
     const { summary, analytics, isLoading, error } = useDashboard()
 
     if (isLoading) {
-        return <div className="p-8 text-center text-muted-foreground">Loading dashboard...</div>
+        return (
+            <div className="space-y-8">
+                {/* Welcome skeleton */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div className="space-y-2">
+                        <Skeleton className="h-8 w-72" />
+                        <Skeleton className="h-4 w-56" />
+                    </div>
+                    <Skeleton className="h-10 w-80" />
+                </div>
+                {/* Quick action cards skeleton */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {[1,2,3].map(i => (
+                        <Skeleton key={i} className="h-[120px] w-full" />
+                    ))}
+                </div>
+                {/* KPI cards skeleton */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {[1,2,3,4].map(i => (
+                        <Skeleton key={i} className="h-[100px] w-full" />
+                    ))}
+                </div>
+                {/* Charts skeleton */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <Skeleton className="lg:col-span-2 h-[280px] w-full" />
+                    <Skeleton className="h-[280px] w-full" />
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <Skeleton className="lg:col-span-2 h-[280px] w-full" />
+                    <Skeleton className="h-[280px] w-full" />
+                </div>
+            </div>
+        )
     }
 
     if (error) {

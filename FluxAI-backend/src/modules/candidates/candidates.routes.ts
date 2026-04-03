@@ -11,5 +11,6 @@ router.get('/', (req, res, next) => candidatesController.list(req, res, next))
 router.get('/:id', (req, res, next) => candidatesController.getById(req, res, next))
 router.patch('/:id', (req, res, next) => candidatesController.update(req, res, next))
 router.post('/:id/notes', (req, res, next) => candidatesController.addNote(req, res, next))
+router.post('/:id/resume', (req, res, next) => candidatesController.attachResume(req, res, next))
 
 export default router

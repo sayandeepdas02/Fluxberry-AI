@@ -132,7 +132,7 @@ export const offersApi = {
     },
 
     acceptOffer: async (token: string, signatureData: { name: string; data: string }): Promise<ApiResponse<IOffer>> => {
-        return apiClient.post(`/public/offers/${token}/accept`, signatureData)
+        return apiClient.post(`/public/offers/${token}/accept`, { signature: { ...signatureData, type: 'DRAWN' } })
     },
 
     declineOffer: async (token: string, reason: string): Promise<ApiResponse<IOffer>> => {

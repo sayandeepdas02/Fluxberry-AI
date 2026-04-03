@@ -9,6 +9,7 @@ import { useAnalytics } from "@/features/dashboard/hooks/use-analytics"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AlertTriangle } from "lucide-react"
 
+
 // Static campaign data — no backend entity for campaigns yet (tracked in roadmap)
 const campaignPerformanceData = [
     { name: 'Senior Dev Outreach', value: 45 },
@@ -24,20 +25,21 @@ export function AnalyticsView() {
     if (isLoading) {
         return (
             <div className="flex flex-col space-y-6">
-                {/* KPI skeleton row */}
+                <div className="flex items-center space-x-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-4" />
+                    <Skeleton className="h-4 w-20" />
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                        <Skeleton key={i} className="h-28 rounded-lg" />
-                    ))}
-                </div>
-                {/* Charts skeleton */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <Skeleton className="lg:col-span-2 h-64 rounded-lg" />
-                    <Skeleton className="h-64 rounded-lg" />
+                    {[1,2,3,4].map(i => <Skeleton key={i} className="h-[100px] w-full rounded-lg" />)}
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <Skeleton className="lg:col-span-2 h-64 rounded-lg" />
-                    <Skeleton className="h-64 rounded-lg" />
+                    <Skeleton className="lg:col-span-2 h-[280px] w-full rounded-lg" />
+                    <Skeleton className="h-[280px] w-full rounded-lg" />
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <Skeleton className="lg:col-span-2 h-[280px] w-full rounded-lg" />
+                    <Skeleton className="h-[280px] w-full rounded-lg" />
                 </div>
             </div>
         )

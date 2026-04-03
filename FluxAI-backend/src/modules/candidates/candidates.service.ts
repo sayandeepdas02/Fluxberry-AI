@@ -1,4 +1,4 @@
-import { Candidate, ICandidate, AssessmentAttempt, JobApplication, StageHistory, CandidateNote } from '../../database/models/index.js'
+import { Candidate, ICandidate, AssessmentAttempt, JobApplication, StageHistory, CandidateNote, FileAsset } from '../../database/models/index.js'
 import { CreateCandidateInput, UpdateCandidateInput, ListCandidatesQuery, CreateNoteInput } from './candidates.types.js'
 
 class CandidatesService {
@@ -169,6 +169,35 @@ class CandidatesService {
         return CandidateNote.findById(note._id)
             .populate('authorId', 'firstName lastName email')
             .lean()
+    }
+
+    /**
+     * Attach a resume FileAsset to a candidate profile
+     * Resolves the storage key to a URL and stores on the candidate
+     */
+    async attachResume(candidateId: string, organizationId: string, fileId: string): Promise<ICandidate> {
+        // Verify candidate exists
+        await this.getById(candidateId, organizationId)
+
+        // Verify FileAsset belongs to this candidate
+        const file = await FileAsset.findById(fileId)
+        if (!file || file.ownerType !== 'CANDIDATE' || file.ownerId !== candidateId || file.fileType !== 'RESUME') {
+            throw { statusCode: 400, code: 'INVALID_FILE', message: 'Invalid or mismatched file asset' }
+        }
+
+        // Build the resume URL — use S3 if configured, local fallback otherwise
+        const isS3 = !!process.env.AWS_S3_BUCKET
+        const resumeUrl = isS3
+            ? `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${file.storageKey}`
+            : `/api/uploads/local/${encodeURIComponent(file.storageKey)}`
+
+        const updated = await Candidate.findOneAndUpdate(
+            { _id: candidateId, organizationId },
+            { $set: { resumeUrl } },
+            { new: true }
+        )
+        if (!updated) throw { code: 'NOT_FOUND', message: 'Candidate not found' }
+        return updated
     }
 }
 

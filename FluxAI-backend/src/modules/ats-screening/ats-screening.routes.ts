@@ -91,4 +91,9 @@ router.post(
     (req, res) => copilotController.generateQuestions(req as any, res)
 )
 
+router.post(
+    '/:jobId/copilot/chat',
+    (req, res) => copilotController.chat(req as any, res)
+)
+
 export const atsScreeningRoutes = router

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, Briefcase, Search } from 'lucide-react'
 import { useJobs } from '../hooks/use-jobs'
 import { JobCard } from './job-card'
+import { useRBAC } from '@/lib/hooks/use-rbac'
 
 type StatusFilter = 'ALL' | 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 
@@ -12,6 +13,7 @@ export function ManageJobsView() {
     const router = useRouter()
     const [activeFilter, setActiveFilter] = React.useState<StatusFilter>('ALL')
     const { jobs, loading, error, fetchJobs, publishJob, closeJob, deleteJob } = useJobs()
+    const { can } = useRBAC()
 
     const filteredJobs = activeFilter === 'ALL'
         ? jobs
@@ -56,6 +58,7 @@ export function ManageJobsView() {
                         Create and manage job postings for your organization
                     </p>
                 </div>
+                {can('create_jobs') && (
                 <button
                     className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-none bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-none"
                     onClick={() => router.push('/dashboard/manage-jobs/new')}
@@ -63,6 +66,7 @@ export function ManageJobsView() {
                     <Plus className="w-4 h-4" />
                     New Job Post
                 </button>
+                )}
             </div>
 
             {/* Filter Tabs */}

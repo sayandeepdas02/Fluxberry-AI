@@ -11,6 +11,7 @@ import { AtsBreakdownModal } from "../components/ats-breakdown-modal"
 import { AtsSettingsModal } from "../components/ats-settings-modal"
 import { FilterToolbar } from "../components/filter-toolbar"
 import { CopilotPanel } from "../components/copilot-panel"
+import { CopilotChatPanel } from "../components/copilot-chat-panel"
 import { CopilotQuestionsModal } from "../components/copilot-questions-modal"
 import { CandidateComparisonModal } from "../components/candidate-comparison-modal"
 import { getCookie } from "cookies-next"
@@ -131,10 +132,13 @@ export function AtsDashboardPage({ jobId }: AtsDashboardPageProps) {
                         {jobInfo?.data?.title || 'Job'}
                     </p>
                 </div>
-                <Button variant="outline" onClick={() => setIsSettingsOpen(true)}>
-                    <Settings className="h-4 w-4 mr-2" />
-                    Settings
-                </Button>
+                <div className="flex items-center gap-3">
+                    <CopilotChatPanel jobId={jobId} />
+                    <Button variant="outline" onClick={() => setIsSettingsOpen(true)}>
+                        <Settings className="h-4 w-4 mr-2" />
+                        Settings
+                    </Button>
+                </div>
             </div>
 
             {/* AI Hiring Copilot — own fetch cycle, won't block candidate table */}
