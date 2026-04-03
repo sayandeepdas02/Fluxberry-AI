@@ -87,7 +87,7 @@ export function WhyChooseUs() {
                <p className="text-white text-[18px] md:text-[20px] font-normal leading-[1.4] mb-6">
                  See how your team can get the same results with Fluxberry AI
                </p>
-               <button className="bg-[#222] text-white text-[12px] md:text-[13px] tracking-wider px-8 py-4 rounded-full hover:bg-black transition-colors flex items-center gap-3">
+               <button className="bg-black text-white text-[12px] md:text-[13px] tracking-wider px-8 py-4 rounded-full hover:bg-black/90 transition-colors flex items-center gap-3">
                  BOOK A DEMO <ArrowRight size={16} />
                </button>
              </div>

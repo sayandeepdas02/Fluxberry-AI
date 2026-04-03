@@ -61,7 +61,7 @@ export const Feature72 = ({
           <p className="mb-8 text-muted-foreground lg:text-lg">{description}</p>
           <a
             href={linkUrl}
-            className="group flex items-center text-xs font-medium md:text-base lg:text-lg"
+            className="group flex w-fit items-center text-xs font-medium md:text-base lg:text-lg bg-black text-white px-6 py-3 hover:bg-black/90 transition-colors"
           >
             {linkText}
             <ArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />

@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 
 export default function DemoPage() {
     return (
-        <main className="flex min-h-screen flex-col bg-[#FAFAFA]">
+        <main className="flex min-h-screen flex-col bg-background mx-auto w-full border-x border-line max-w-[var(--container-max)]">
             <Navbar />
             <DemoHero />
                 <Separator />

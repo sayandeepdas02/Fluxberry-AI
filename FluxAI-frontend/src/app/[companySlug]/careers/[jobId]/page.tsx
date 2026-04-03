@@ -28,7 +28,7 @@ export default function JobApplicationPage({ params }: { params: Promise<{ compa
     const descriptionHtml = job.description || '<p>No description provided.</p>'
 
     return (
-        <div className="min-h-screen bg-zinc-50/50 text-zinc-900 selection:bg-orange-100 selection:text-orange-900">
+        <div className="flex min-h-screen flex-col bg-zinc-50/50 mx-auto w-full border-x border-line max-w-[var(--container-max)] text-zinc-900 selection:bg-orange-100 selection:text-orange-900">
             {/* 1. Header Section */}
             <div className="bg-background border-b border-zinc-100">
                 <div className="container mx-auto max-w-3xl px-6 pt-12 pb-8">

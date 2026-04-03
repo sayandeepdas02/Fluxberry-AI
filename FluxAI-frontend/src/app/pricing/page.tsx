@@ -8,18 +8,14 @@ import { FinalCTASection } from "@/features/landing/components/final-cta-section
 
 export default function PricingPage() {
     return (
-        <>
+        <main className="flex min-h-screen flex-col bg-background mx-auto w-full border-x border-line max-w-[var(--container-max)]">
             <Navbar />
-
-            <div className="max-w-[1280px] mx-auto px-6 lg:px-8">
-                <PricingHero />
-                <PricingTiers />
-                <PricingFeatureTable />
-                <PricingAiCredits />
-                <FinalCTASection />
-
-                <Footer />
-            </div>
-        </>
+            <PricingHero />
+            <PricingTiers />
+            <PricingFeatureTable />
+            <PricingAiCredits />
+            <FinalCTASection />
+            <Footer />
+        </main>
     );
 }

@@ -103,10 +103,10 @@ export function FinalCTASection() {
             <button
               className={cn(
                 "cursor-pointer font-semibold",
-                "border-2 border-white/40 bg-white/10 text-white",
+                "border border-black bg-black text-white",
                 "flex items-center",
-                "hover:bg-white/20 hover:border-white/60",
-                "active:bg-white/10",
+                "hover:bg-black/90",
+                "active:bg-black/80",
                 "transition-all duration-200 ease-out rounded-none"
               )}
               style={{ padding: "13px 28px", fontSize: "15px" }}
