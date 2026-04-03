@@ -36,7 +36,7 @@ export function FinalCTASection() {
       ref={sectionRef}
       id="cta" 
       className="section-enter relative overflow-hidden py-[80px] md:py-[100px]"
-      style={{ backgroundColor: "#0f172a" }}
+      style={{ backgroundColor: "#5B63C7" }}
     >
       {/* ── Interactive Grid Pattern Background ── */}
       <div className="absolute inset-0 z-0">
@@ -45,8 +45,8 @@ export function FinalCTASection() {
              "[mask-image:radial-gradient(100%_100%_at_top_center,white,transparent)]",
              "!absolute !inset-0 h-full w-full bg-transparent"
            )}
-           glowColor="rgba(139, 147, 224, 0.4)" // "#8b93e0" matching branding
-           borderColor="rgba(255, 255, 255, 0.05)"
+           glowColor="rgba(255, 255, 255, 0.25)"
+           borderColor="rgba(255, 255, 255, 0.1)"
          />
       </div>
 
@@ -62,13 +62,13 @@ export function FinalCTASection() {
           }}
         >
           Let AI run your hiring{" "}
-          <span style={{ color: "#8b93e0" }}>— while you focus on building your team</span>
+          <span style={{ color: "rgba(255, 255, 255, 0.85)" }}>— while you focus on building your team</span>
         </h2>
 
         <p
           className="font-normal"
           style={{
-            color: "rgba(255, 255, 255, 0.6)",
+            color: "rgba(255, 255, 255, 0.85)",
             fontSize: "clamp(1rem, 2vw, var(--text-body-lg))",
             lineHeight: "1.6",
             maxWidth: "600px",
@@ -88,7 +88,11 @@ export function FinalCTASection() {
         >
           {/* Primary CTA */}
           <Link href="/signup">
-            <SharpButton variant="primary" style={{ backgroundColor: "var(--primary)" }}>
+            <SharpButton
+              variant="primary"
+              className="!bg-white !text-[#3B429F] !border-white hover:!bg-white/90 font-semibold"
+              style={{ padding: "14px 28px", fontSize: "15px" }}
+            >
               Start free trial
               <ArrowRight className="w-4 h-4 ml-2" />
             </SharpButton>
@@ -98,14 +102,14 @@ export function FinalCTASection() {
           <Link href="/demo">
             <button
               className={cn(
-                "cursor-pointer font-medium",
-                "border border-white/20 bg-white/5 text-white",
+                "cursor-pointer font-semibold",
+                "border-2 border-white/40 bg-white/10 text-white",
                 "flex items-center",
-                "hover:bg-white/10 hover:border-white/30",
-                "active:bg-white/5",
-                "transition-all duration-200 ease-out rounded-none text-sm"
+                "hover:bg-white/20 hover:border-white/60",
+                "active:bg-white/10",
+                "transition-all duration-200 ease-out rounded-none"
               )}
-              style={{ padding: "12px 24px" }}
+              style={{ padding: "13px 28px", fontSize: "15px" }}
             >
               Book a demo
             </button>

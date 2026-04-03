@@ -53,7 +53,6 @@ export function Hero() {
               maxWidth: "720px",
             }}
           >
-            Your{" "}
             <span style={{ color: "#5561c8" }}>AI Native</span>
             {" "}Hiring Automation for growing teams
           </h1>
