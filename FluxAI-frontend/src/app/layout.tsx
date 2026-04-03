@@ -3,6 +3,7 @@ import "../styles/globals.css";
 import { AuthProvider } from "@/lib/context/auth-context";
 import { Toaster } from "sonner";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { ReactQueryProvider } from "@/lib/query/query-client-provider";
 
 export const metadata: Metadata = {
     title: "Fluxberry AI - AI Native Hiring Automation",
@@ -26,10 +27,12 @@ export default function RootLayout({
             </head>
             <body>
                 <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
-                    <AuthProvider>
-                        {children}
-                        <Toaster />
-                    </AuthProvider>
+                    <ReactQueryProvider>
+                        <AuthProvider>
+                            {children}
+                            <Toaster richColors position="bottom-right" />
+                        </AuthProvider>
+                    </ReactQueryProvider>
                 </GoogleOAuthProvider>
             </body>
         </html>
