@@ -69,8 +69,8 @@ export function useApplications(jobId: string, initialQuery?: ListApplicationsQu
         const response = await applicationsApi.listByJob(jobId, mergedQuery)
 
         if (response.success && response.data) {
-            setApplications(response.data.applications)
-            setTotal(response.data.total)
+            setApplications(response.data || [])
+            setTotal(response.meta?.total || 0)
         } else {
             const msg = response.error?.message || 'Failed to load applications'
             setError(msg)

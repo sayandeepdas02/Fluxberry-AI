@@ -64,7 +64,7 @@ export function CreateOfferModal() {
             const { applicationsApi } = await import("@/lib/api/applications");
             const response = await applicationsApi.listByJob(jobId, { stage: 'INTERVIEW' } as any);
             if (response.success && response.data) {
-                setJobApplications(response.data.applications);
+                setJobApplications(response.data || []);
             }
         } catch (e) {
             console.error(e);

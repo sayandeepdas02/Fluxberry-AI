@@ -15,7 +15,7 @@ export function AtsJobListPage() {
         return <div className="p-8 text-center text-muted-foreground animate-pulse">Loading active jobs...</div>
     }
 
-    const jobs = jobsResponse?.data?.jobs || []
+    const jobs = jobsResponse?.data || []
 
     return (
         <div className="p-8 space-y-6 max-w-7xl mx-auto pb-24">
