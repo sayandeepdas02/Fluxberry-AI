@@ -1,25 +1,45 @@
 import { Candidate, ICandidate, AssessmentAttempt, JobApplication, StageHistory, CandidateNote, FileAsset } from '../../database/models/index.js'
 import { CreateCandidateInput, UpdateCandidateInput, ListCandidatesQuery, CreateNoteInput } from './candidates.types.js'
+import { eventBus, DomainEvent } from '../../common/services/event-bus.service.js'
+import { activityService } from '../activity/activity.service.js'
 
 class CandidatesService {
-    async create(organizationId: string, input: CreateCandidateInput): Promise<ICandidate> {
+    async create(organizationId: string, input: CreateCandidateInput, userId: string): Promise<ICandidate> {
         // Check if candidate exists in this org
         const existing = await Candidate.findOne({ organizationId, email: input.email })
         if (existing) {
             throw { code: 'CONFLICT', message: 'Candidate with this email already exists in this organization' }
         }
 
-        return Candidate.create({
+        const candidate = await Candidate.create({
             organizationId,
             ...input
         })
+
+        eventBus.emit(DomainEvent.CANDIDATE_CREATED, {
+            organizationId,
+            entityId: candidate._id.toString(),
+            entityType: 'CANDIDATE'
+        })
+
+        await activityService.log({
+            organizationId,
+            entityType: 'candidate',
+            entityId: candidate._id.toString(),
+            eventType: 'CANDIDATE_CREATED',
+            actorType: 'user',
+            performedBy: userId,
+            metadata: { source: input.source }
+        })
+
+        return candidate
     }
 
     async list(organizationId: string, query: ListCandidatesQuery): Promise<{ candidates: ICandidate[], total: number, page: number, totalPages: number }> {
         const { page = 1, limit = 20, search, source, jobId, stage, dateFrom, dateTo, tags } = query
         const skip = (page - 1) * limit
 
-        const filter: any = { organizationId }
+        const filter: any = { organizationId, isDeleted: false, deletedAt: null }
 
         if (source) {
             filter.source = source
@@ -142,7 +162,7 @@ class CandidatesService {
         return attempts
     }
 
-    async update(id: string, organizationId: string, input: UpdateCandidateInput): Promise<ICandidate> {
+    async update(id: string, organizationId: string, input: UpdateCandidateInput, userId: string): Promise<ICandidate> {
         const candidate = await Candidate.findOneAndUpdate(
             { _id: id, organizationId },
             { $set: input },
@@ -151,6 +171,23 @@ class CandidatesService {
         if (!candidate) {
             throw { code: 'NOT_FOUND', message: 'Candidate not found' }
         }
+
+        eventBus.emit(DomainEvent.CANDIDATE_UPDATED, {
+            organizationId,
+            entityId: candidate._id.toString(),
+            entityType: 'CANDIDATE'
+        })
+
+        await activityService.log({
+            organizationId,
+            entityType: 'candidate',
+            entityId: candidate._id.toString(),
+            eventType: 'CANDIDATE_UPDATED',
+            actorType: 'user',
+            performedBy: userId,
+            metadata: { changes: Object.keys(input) }
+        })
+
         return candidate
     }
 

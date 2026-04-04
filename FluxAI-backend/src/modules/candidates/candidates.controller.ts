@@ -17,8 +17,8 @@ export class CandidatesController {
             }
 
             const input = createCandidateSchema.parse(req.body)
-            const candidate = await candidatesService.create(organizationId, input)
-            res.status(201).json(successResponse(candidate))
+            const candidate = await candidatesService.create(organizationId, input, req.user!.id)
+            res.success(candidate, 201)
         } catch (error) {
             next(error)
         }
@@ -37,7 +37,7 @@ export class CandidatesController {
 
             const query = listCandidatesQuerySchema.parse(req.query)
             const result = await candidatesService.list(organizationId, query)
-            res.json(successResponse(result))
+            res.success(result)
         } catch (error) {
             next(error)
         }
@@ -57,7 +57,7 @@ export class CandidatesController {
 
             const { id } = req.params
             const detail = await candidatesService.getDetail(id, organizationId)
-            res.json(successResponse(detail))
+            res.success(detail)
         } catch (error) {
             next(error)
         }
@@ -76,8 +76,8 @@ export class CandidatesController {
 
             const { id } = req.params
             const input = updateCandidateSchema.parse(req.body)
-            const candidate = await candidatesService.update(id, organizationId, input)
-            res.json(successResponse(candidate))
+            const candidate = await candidatesService.update(id, organizationId, input, req.user!.id)
+            res.success(candidate)
         } catch (error) {
             next(error)
         }
@@ -98,7 +98,7 @@ export class CandidatesController {
             const { id } = req.params
             const input = createNoteSchema.parse(req.body)
             const note = await candidatesService.addNote(id, organizationId, userId, input)
-            res.status(201).json(successResponse(note))
+            res.success(note, 201)
         } catch (error) {
             next(error)
         }
@@ -123,7 +123,7 @@ export class CandidatesController {
             }
 
             const candidate = await candidatesService.attachResume(id, organizationId, fileId)
-            res.json(successResponse(candidate))
+            res.success(candidate)
         } catch (error) {
             next(error)
         }
