@@ -114,7 +114,7 @@ export interface ParsedJobData {
 
 export const jobsApi = {
     list: (query?: ListJobsQuery) =>
-        apiClient.get<ListJobsResponse>('/jobs', query as Record<string, string>),
+        apiClient.get<Job[]>('/jobs', query as Record<string, string>),
 
     getById: (id: string) =>
         apiClient.get<Job>(`/jobs/${id}`),

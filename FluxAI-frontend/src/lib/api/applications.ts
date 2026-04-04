@@ -53,7 +53,7 @@ export interface ListApplicationsQuery {
 }
 
 export interface ListApplicationsResponse {
-    applications: JobApplicationResponse[]
+    applications: JobApplicationResponse[] // Legacy format compatibility, though data will just be an array
     total: number
     page: number
     limit: number
@@ -71,7 +71,7 @@ export interface BulkUpdateResponse {
 }
 
 export const applicationsApi = {
-    listByJob: async (jobId: string, query?: ListApplicationsQuery): Promise<ApiResponse<ListApplicationsResponse>> => {
+    listByJob: async (jobId: string, query?: ListApplicationsQuery): Promise<ApiResponse<JobApplicationResponse[]>> => {
         return apiClient.get(`/jobs/${jobId}/applications`, query as Record<string, string>)
     },
 
