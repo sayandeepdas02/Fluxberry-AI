@@ -113,11 +113,21 @@ export default function InterviewReportsPage() {
     })
     const results = resultsRes?.data || []
 
-    // Fetch AI sessions for this assessment (contains per-question data)
+    // Fetch AI sessions per attempt (one session per attempt)
     const { data: sessionsRes } = useQuery({
-        queryKey: ['ai-sessions', selectedAssessmentId],
-        queryFn: () => apiClient.get<AISessionResult[]>(`/ai-interview/orchestrator/sessions`, { assessmentId: selectedAssessmentId }),
-        enabled: !!selectedAssessmentId,
+        queryKey: ['ai-sessions', selectedAssessmentId, results.map(r => r.attempt.id)],
+        queryFn: async () => {
+            if (results.length === 0) return { data: [] }
+            // Fetch sessions for each attempt — the backend stores sessions by attemptId
+            const sessionPromises = results.map(r =>
+                apiClient.get<AISessionResult[]>(`/ai-interview/orchestrator/sessions`, { attemptId: r.attempt.id })
+                    .then(res => res?.data?.[0] || null)
+                    .catch(() => null)
+            )
+            const sessions = await Promise.all(sessionPromises)
+            return { data: sessions.filter(Boolean) as AISessionResult[] }
+        },
+        enabled: !!selectedAssessmentId && results.length > 0,
     })
     const aiSessions = sessionsRes?.data || []
 
