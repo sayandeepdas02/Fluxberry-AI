@@ -1308,53 +1308,6 @@ const OrganizationOnboardingConfigSchema = new Schema<IOrganizationOnboardingCon
 
 export const OrganizationOnboardingConfig = mongoose.model<IOrganizationOnboardingConfig>('OrganizationOnboardingConfig', OrganizationOnboardingConfigSchema)
 
-// ============================================
-// OFFER TEMPLATE MODEL
-// ============================================
-export interface IOfferTemplate extends Document {
-    _id: Types.ObjectId
-    organizationId: Types.ObjectId
-    name: string
-    content: string // HTML or text content with placeholders
-    variables: string[] // List of variables used in content (Legacy)
-    variableSchema: Record<string, { type: string, label: string }> // JSON schema for variables
-    isActive: boolean
-    createdAt: Date
-    updatedAt: Date
-}
-
-
-
-// ============================================
-// OFFER MODEL
-// ============================================
-export interface IOffer extends Document {
-    _id: Types.ObjectId
-    organizationId: Types.ObjectId
-    applicationId: Types.ObjectId
-    candidateId: Types.ObjectId
-    templateId?: Types.ObjectId
-    templateSnapshot?: string // HTML snapshot at creation
-    variables?: Record<string, any>
-    status: OfferStatusType
-    content: string // Rendered content (or base content)
-    pdfUrl?: string // Unsigned PDF
-    signedPdfUrl?: string // Signed PDF
-    signature?: {
-        name: string
-        data: string // Base64 or SVG
-        ip: string
-        signedAt: Date
-    }
-    expiresAt?: Date
-    token?: string // Secure token for public access
-    openedAt?: Date
-    acceptedAt?: Date
-    declinedAt?: Date
-    declineReason?: string
-    createdAt: Date
-    updatedAt: Date
-}
 
 
 

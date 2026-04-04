@@ -7,7 +7,17 @@ export class CandidateOnboardingController {
     async getStatus(req: Request, res: Response, next: NextFunction) {
         try {
             const { applicationId } = req.params
-            // TODO: Verify organization access for this application
+            const organizationId = (req as AuthenticatedRequest).user?.organizationId
+
+            // Verify organization access for this application
+            if (organizationId) {
+                const { JobApplication } = await import('../../database/models/index.js')
+                const app = await JobApplication.findOne({ _id: applicationId, organizationId })
+                if (!app) {
+                    res.status(404).json({ success: false, message: 'Application not found in your organization' })
+                    return
+                }
+            }
 
             const status = await candidateOnboardingService.getOnboardingStatus(applicationId)
             if (!status) {

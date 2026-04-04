@@ -1,5 +1,6 @@
 import { Job } from 'bullmq'
-import { Candidate } from '../../database/models/index.js'
+import { Candidate, JobApplication } from '../../database/models/index.js'
+import { enqueueAtsScreeningJob } from '../queues/index.js'
 
 export interface ResumeParsingJobData {
     candidateId: string
@@ -29,7 +30,19 @@ export async function processResumeParsingJob(job: Job<ResumeParsingJobData>): P
             parsedResumeData: parsedData,
         })
 
-        console.log(`[ResumeParsing] ✅ Resume parsed for candidate ${candidateId}`)
+        // Trigger screening for all active applications for this candidate
+        const applications = await JobApplication.find({ candidateId, organizationId })
+        for (const app of applications) {
+            await enqueueAtsScreeningJob({
+                type: 'CANDIDATE_APPLIED',
+                applicationId: app._id.toString(),
+                candidateId: candidateId,
+                jobId: app.jobId.toString(),
+                organizationId: organizationId
+            })
+        }
+
+        console.log(`[ResumeParsing] ✅ Resume parsed for candidate ${candidateId} and triggered ATS screening for ${applications.length} applications`)
     } catch (err) {
         console.error(`[ResumeParsing] ❌ Failed for candidate ${candidateId}:`, err)
         throw err // Let BullMQ handle retries

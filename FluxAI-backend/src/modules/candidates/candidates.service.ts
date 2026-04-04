@@ -1,4 +1,5 @@
 import { Candidate, ICandidate, AssessmentAttempt, JobApplication, StageHistory, CandidateNote, FileAsset } from '../../database/models/index.js'
+import { ScreeningResult } from '../ats-screening/models/screening-result.model.js'
 import { CreateCandidateInput, UpdateCandidateInput, ListCandidatesQuery, CreateNoteInput } from './candidates.types.js'
 import { eventBus, DomainEvent } from '../../common/services/event-bus.service.js'
 import { activityService } from '../activity/activity.service.js'
@@ -141,12 +142,25 @@ class CandidatesService {
             .populate('assessmentId', 'title status')
             .sort({ createdAt: -1 })
 
+        // Get best screening result for AI Summary tab
+        const screeningResults = await ScreeningResult.find({
+            candidateId: id,
+            organizationId,
+            status: { $in: ['SCORED', 'PASSED', 'FAILED_GATE'] }
+        })
+            .sort({ finalScore: -1 })
+            .limit(1)
+            .lean()
+
+        const bestScreening = screeningResults[0] || null
+
         return {
             candidate,
             applications,
             notes,
             stageHistory: history,
             assessmentHistory: attempts,
+            screening: bestScreening,
         }
     }
 

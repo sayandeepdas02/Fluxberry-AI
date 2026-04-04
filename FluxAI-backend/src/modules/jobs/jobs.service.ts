@@ -4,6 +4,7 @@ import { pipelineService } from './pipeline.service.js'
 import { normalizeSkills } from '../ats-screening/scoring-v2/skill-normalizer.js'
 import { enqueueRescoringJob } from '../../jobs/queues/index.js'
 import { fluxEvents, DomainEvent } from '../../common/services/events.service.js'
+import { activityService } from '../activity/activity.service.js'
 import {
     DEFAULT_SCORING_CONFIG,
     fromLegacyProfile,
@@ -156,6 +157,17 @@ class JobsService {
             action: 'CREATED',
             newValue: { title: job.title, status: job.status },
             performedBy: userId,
+        })
+
+        // Activity Log for Inbox
+        await activityService.log({
+            organizationId,
+            entityType: 'job',
+            entityId: job._id.toString(),
+            eventType: 'JOB_CREATED',
+            actorType: 'user',
+            performedBy: userId,
+            metadata: { title: job.title }
         })
 
         return job
@@ -362,6 +374,17 @@ class JobsService {
             performedBy: userId,
         })
 
+        // Activity Log for Inbox
+        await activityService.log({
+            organizationId,
+            entityType: 'job',
+            entityId: id,
+            eventType: 'JOB_PUBLISHED',
+            actorType: 'user',
+            performedBy: userId,
+            metadata: { title: job.title, publicSlug: slug }
+        })
+
         return job
     }
 
@@ -392,6 +415,17 @@ class JobsService {
             previousValue: { status: previousStatus },
             newValue: { status: 'CLOSED' },
             performedBy: userId,
+        })
+
+        // Activity Log for Inbox
+        await activityService.log({
+            organizationId,
+            entityType: 'job',
+            entityId: id,
+            eventType: 'JOB_CLOSED',
+            actorType: 'user',
+            performedBy: userId,
+            metadata: { title: job.title }
         })
 
         return job
