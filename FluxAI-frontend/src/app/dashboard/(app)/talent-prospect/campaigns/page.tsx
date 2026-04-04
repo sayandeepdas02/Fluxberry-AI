@@ -61,8 +61,9 @@ export default function CampaignsPage() {
 
     // ── Aggregate metrics ──────────────────────────────────
     const totalSentToday = useMemo(() => {
+        const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
         return campaigns
-            .filter(c => c.status !== 'draft')
+            .filter(c => c.status !== 'draft' && c.createdAt?.slice(0, 10) === today)
             .reduce((acc, c) => acc + (c.stats?.sent || 0), 0)
     }, [campaigns])
 

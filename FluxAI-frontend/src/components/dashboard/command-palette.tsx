@@ -30,12 +30,37 @@ interface CommandItem {
 }
 
 const COMMAND_ITEMS: CommandItem[] = [
+  // Navigation
   { id: "home", label: "Go to Home", icon: <Home className="h-4 w-4" />, href: "/dashboard", group: "Navigation" },
   { id: "candidates", label: "Go to Candidates", icon: <Users className="h-4 w-4" />, href: "/dashboard/candidates", group: "Navigation" },
   { id: "jobs", label: "Manage Jobs", icon: <Briefcase className="h-4 w-4" />, href: "/dashboard/jobs/manage", group: "Navigation" },
   { id: "analytics", label: "View Analytics", icon: <BarChart3 className="h-4 w-4" />, href: "/dashboard/analytics", group: "Navigation" },
   { id: "settings", label: "Open Settings", icon: <Settings className="h-4 w-4" />, href: "/dashboard/settings", group: "Navigation" },
-  { id: "search", label: "Search Candidates", icon: <Search className="h-4 w-4" />, href: "/dashboard/talent-prospect/search", group: "Actions" },
+  { id: "inbox", label: "Open Inbox", icon: <Home className="h-4 w-4" />, href: "/dashboard/inbox", group: "Navigation" },
+
+  // ATS & Pipeline
+  { id: "pipeline", label: "ATS Pipeline (Kanban)", icon: <Briefcase className="h-4 w-4" />, href: "/dashboard/ats/pipeline", group: "ATS" },
+  { id: "ats-candidates", label: "ATS Candidates", icon: <Users className="h-4 w-4" />, href: "/dashboard/ats/candidates", group: "ATS" },
+
+  // Interviews
+  { id: "ai-interview", label: "Run AI Interview", icon: <Search className="h-4 w-4" />, href: "/dashboard/interviews/ai", group: "Interviews" },
+  { id: "assessments", label: "Manage Assessments", icon: <Briefcase className="h-4 w-4" />, href: "/dashboard/interviews/assessments", group: "Interviews" },
+  { id: "question-bank", label: "Question Bank", icon: <Settings className="h-4 w-4" />, href: "/dashboard/interviews/question-bank", group: "Interviews" },
+  { id: "live-interviews", label: "Live Interviews", icon: <Users className="h-4 w-4" />, href: "/dashboard/interviews/live", group: "Interviews" },
+  { id: "reports", label: "Interview Reports", icon: <BarChart3 className="h-4 w-4" />, href: "/dashboard/interviews/reports", group: "Interviews" },
+
+  // Talent Prospect
+  { id: "search", label: "Search Prospects", icon: <Search className="h-4 w-4" />, href: "/dashboard/talent-prospect/search", group: "Talent Prospect" },
+  { id: "lists", label: "Prospect Lists", icon: <Users className="h-4 w-4" />, href: "/dashboard/talent-prospect/lists", group: "Talent Prospect" },
+  { id: "campaigns", label: "Outreach Campaigns", icon: <Briefcase className="h-4 w-4" />, href: "/dashboard/talent-prospect/campaigns", group: "Talent Prospect" },
+  { id: "templates", label: "Email Templates", icon: <Settings className="h-4 w-4" />, href: "/dashboard/talent-prospect/templates", group: "Talent Prospect" },
+
+  // Jobs
+  { id: "create-job", label: "Create New Job", icon: <Briefcase className="h-4 w-4" />, href: "/dashboard/jobs/create", group: "Actions" },
+  { id: "job-insights", label: "Job Insights", icon: <BarChart3 className="h-4 w-4" />, href: "/dashboard/jobs/insights", group: "Actions" },
+  { id: "job-distribution", label: "Job Distribution", icon: <Briefcase className="h-4 w-4" />, href: "/dashboard/jobs/distribution", group: "Actions" },
+  { id: "career-page", label: "Career Page", icon: <Home className="h-4 w-4" />, href: "/dashboard/career-page", group: "Actions" },
+  { id: "referrals", label: "Referrals", icon: <Users className="h-4 w-4" />, href: "/dashboard/referrals", group: "Actions" },
 ];
 
 interface DashboardCommandPaletteProps {
