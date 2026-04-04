@@ -2,7 +2,7 @@
 
 import { useCandidatesStore } from '@/lib/store/candidates-store'
 import { useQuery } from '@tanstack/react-query'
-import { candidatesApi } from '@/lib/api/candidates'
+import { candidatesApi, ScreeningData } from '@/lib/api/candidates'
 import {
     Sheet,
     SheetContent,
@@ -10,27 +10,88 @@ import {
     SheetTitle,
 } from "@/components/ui/sheet"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Loader2, Mail, Phone, ExternalLink, Sparkles, Briefcase, TrendingUp, TrendingDown } from 'lucide-react'
+import { Loader2, Mail, Phone, ExternalLink, Sparkles, Briefcase, TrendingUp, TrendingDown, Brain, Shield, AlertTriangle } from 'lucide-react'
 import { CandidateTimeline } from './candidate-timeline'
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 
-// ── Mock AI Summary (will be replaced by real API later) ─────────
-function generateMockAISummary(name: string) {
-    return {
-        overallFit: 'Strong',
-        fitScore: 82,
-        strengths: [
-            'Relevant technical experience in target stack',
-            'Strong communication skills demonstrated in portfolio',
-            'Previous experience in similar domain',
-        ],
-        concerns: [
-            'Limited leadership experience',
-            'No prior startup environment exposure',
-        ],
-        recommendation: `${name} is a strong candidate for this role. Their technical background aligns well with requirements. Consider probing leadership readiness in the next interview round.`,
+// ── AI Summary from real screening data ─────────
+function deriveAISummary(screening: ScreeningData) {
+    const score = screening.finalScore ?? 0
+    const breakdown = screening.scoreBreakdown
+
+    // Derive fit level
+    let overallFit: string
+    if (score >= 80) overallFit = 'Strong'
+    else if (score >= 60) overallFit = 'Good'
+    else if (score >= 40) overallFit = 'Moderate'
+    else overallFit = 'Weak'
+
+    // Build strengths from high-scoring dimensions
+    const strengths: string[] = []
+    const concerns: string[] = []
+
+    if (breakdown) {
+        const dimensions = [
+            { name: 'Technical Skills', score: breakdown.skillScore, weight: 0.35 },
+            { name: 'Experience', score: breakdown.experienceScore, weight: 0.30 },
+            { name: 'Projects', score: breakdown.projectScore, weight: 0.20 },
+            { name: 'Education', score: breakdown.educationScore, weight: 0.10 },
+        ]
+
+        dimensions.forEach(d => {
+            if (d.score >= 70) strengths.push(`Strong ${d.name.toLowerCase()} match (${Math.round(d.score)}%)`)
+            else if (d.score <= 30) concerns.push(`${d.name} score is below threshold (${Math.round(d.score)}%)`)
+        })
+
+        if (breakdown.signalBoostScore && breakdown.signalBoostScore > 0) {
+            strengths.push(`Signal boost detected (+${Math.round(breakdown.signalBoostScore)}%)`)
+        }
     }
+
+    // Add insights from the screening engine
+    if (screening.insights?.length) {
+        screening.insights.forEach(insight => {
+            if (!strengths.includes(insight) && !concerns.includes(insight)) {
+                strengths.push(insight)
+            }
+        })
+    }
+
+    // Add skill match details
+    if (screening.skillMatchDetails?.length) {
+        const strongMatches = screening.skillMatchDetails.filter(s => s.similarity >= 0.7)
+        const weakMatches = screening.skillMatchDetails.filter(s => s.similarity < 0.4)
+
+        if (strongMatches.length > 0) {
+            strengths.push(`${strongMatches.length} skills with strong match: ${strongMatches.slice(0, 3).map(s => s.skill).join(', ')}`)
+        }
+        if (weakMatches.length > 0) {
+            concerns.push(`${weakMatches.length} skills with weak match: ${weakMatches.slice(0, 3).map(s => s.skill).join(', ')}`)
+        }
+    }
+
+    if (screening.hardGateFailureReason) {
+        concerns.push(`Hard gate failed: ${screening.hardGateFailureReason}`)
+    }
+
+    // Generate recommendation
+    let recommendation: string
+    if (score >= 80) {
+        recommendation = 'Strong candidate — scores indicate an excellent match. Recommend fast-tracking to interview.'
+    } else if (score >= 60) {
+        recommendation = 'Good potential — meets most criteria. Consider additional screening or interview to clarify areas of concern.'
+    } else if (score >= 40) {
+        recommendation = 'Moderate match — gaps in key areas. Review concerns carefully before deciding next steps.'
+    } else {
+        recommendation = 'Below threshold — significant gaps detected. Consider other candidates unless specific strengths stand out.'
+    }
+
+    // Ensure we always have at least one item in each list
+    if (strengths.length === 0) strengths.push('No standout strengths identified from available data')
+    if (concerns.length === 0) concerns.push('No significant concerns identified')
+
+    return { overallFit, fitScore: Math.round(score), strengths, concerns, recommendation }
 }
 
 export function CandidateDrawer() {
@@ -44,8 +105,9 @@ export function CandidateDrawer() {
 
     const data = response?.data
     const candidateName = data ? `${data.candidate.firstName || ''} ${data.candidate.lastName || ''}`.trim() : ''
-    const aiSummary = data ? generateMockAISummary(candidateName) : null
+    const aiSummary = data?.screening ? deriveAISummary(data.screening) : null
     const applicationCount = data?.applications?.length || 0
+    const hasScreening = !!data?.screening
 
     return (
         <Sheet open={isDrawerOpen} onOpenChange={setDrawerOpen}>
@@ -127,7 +189,7 @@ export function CandidateDrawer() {
                                 <div className="flex-1 overflow-y-auto p-6">
                                     {/* ── AI Summary Tab ───────────────────────── */}
                                     <TabsContent value="ai-summary" className="mt-0 space-y-5">
-                                        {aiSummary && (
+                                        {aiSummary ? (
                                             <>
                                                 {/* Fit Score */}
                                                 <div className="flex items-center justify-between p-4 bg-card/60 border border-line rounded-lg">
@@ -145,6 +207,60 @@ export function CandidateDrawer() {
                                                         {aiSummary.overallFit} Fit
                                                     </div>
                                                 </div>
+
+                                                {/* Score Breakdown */}
+                                                {data.screening?.scoreBreakdown && (
+                                                    <div className="p-4 border border-line rounded-lg bg-card/40">
+                                                        <h4 className="text-sm font-semibold flex items-center gap-1.5 text-foreground mb-3">
+                                                            <Brain className="w-4 h-4 text-accent" />
+                                                            Score Breakdown
+                                                        </h4>
+                                                        <div className="space-y-2">
+                                                            {[
+                                                                { label: 'Skills', value: data.screening.scoreBreakdown.skillScore },
+                                                                { label: 'Experience', value: data.screening.scoreBreakdown.experienceScore },
+                                                                { label: 'Projects', value: data.screening.scoreBreakdown.projectScore },
+                                                                { label: 'Education', value: data.screening.scoreBreakdown.educationScore },
+                                                            ].map(dim => (
+                                                                <div key={dim.label} className="flex items-center gap-3">
+                                                                    <span className="text-xs text-muted-foreground w-20">{dim.label}</span>
+                                                                    <div className="flex-1 h-2 bg-muted/30 rounded-full overflow-hidden">
+                                                                        <div
+                                                                            className={`h-full rounded-full transition-all duration-500 ${
+                                                                                dim.value >= 70 ? 'bg-emerald-500' : dim.value >= 40 ? 'bg-amber-500' : 'bg-red-500'
+                                                                            }`}
+                                                                            style={{ width: `${dim.value}%` }}
+                                                                        />
+                                                                    </div>
+                                                                    <span className="text-xs font-medium w-8 text-right">{Math.round(dim.value)}%</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Manual Override badge */}
+                                                {data.screening?.manualOverride && (
+                                                    <div className="flex items-center gap-2 p-3 bg-blue-500/5 border border-blue-500/10 rounded-lg">
+                                                        <Shield className="w-4 h-4 text-blue-400" />
+                                                        <span className="text-xs font-medium text-blue-400">
+                                                            Manual override: {data.screening.manualOverride.decision}
+                                                        </span>
+                                                        {data.screening.manualOverride.reason && (
+                                                            <span className="text-xs text-muted-foreground">— {data.screening.manualOverride.reason}</span>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* Hard Gate Warning */}
+                                                {data.screening?.hardGateFailureReason && (
+                                                    <div className="flex items-center gap-2 p-3 bg-red-500/5 border border-red-500/10 rounded-lg">
+                                                        <AlertTriangle className="w-4 h-4 text-red-400" />
+                                                        <span className="text-xs font-medium text-red-400">
+                                                            Hard gate failed: {data.screening.hardGateFailureReason}
+                                                        </span>
+                                                    </div>
+                                                )}
 
                                                 {/* Strengths */}
                                                 <div>
@@ -190,9 +306,19 @@ export function CandidateDrawer() {
                                                 </div>
 
                                                 <p className="text-[11px] text-muted-foreground/50 text-center italic">
-                                                    AI-generated summary · May not reflect complete information
+                                                    Based on ATS screening analysis (v{data.screening?.confidenceScore ? `${data.screening.confidenceScore}% confidence` : 'standard'})
                                                 </p>
                                             </>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center py-12 text-center">
+                                                <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center mb-4">
+                                                    <Brain className="w-6 h-6 text-muted-foreground/40" />
+                                                </div>
+                                                <h4 className="text-sm font-medium text-foreground mb-1">No AI Analysis Available</h4>
+                                                <p className="text-xs text-muted-foreground max-w-sm">
+                                                    This candidate has not been screened by the AI yet. Submit their application to an active job to generate an AI screening analysis.
+                                                </p>
+                                            </div>
                                         )}
                                     </TabsContent>
 

@@ -40,12 +40,47 @@ export interface CandidateApplication {
     submittedAt: string
 }
 
+export interface ScreeningScoreBreakdown {
+    skillScore: number
+    experienceScore: number
+    projectScore: number
+    educationScore: number
+    bonusScore: number
+    signalBoostScore?: number
+    insights?: string[]
+    skillMatchDetails?: Array<{
+        skill: string
+        bestMatch: string
+        similarity: number
+        strength: 'strong' | 'partial' | 'none'
+    }>
+}
+
+export interface ScreeningData {
+    _id: string
+    candidateId: string
+    jobId: string
+    status: string
+    finalScore?: number
+    confidenceScore?: number
+    scoreBreakdown?: ScreeningScoreBreakdown
+    insights?: string[]
+    skillMatchDetails?: Array<{ skill: string; bestMatch: string; similarity: number }>
+    hardGateFailureReason?: string
+    manualOverride?: {
+        decision: 'SHORTLISTED' | 'REVIEW' | 'REJECTED'
+        reason?: string
+    }
+    createdAt: string
+}
+
 export interface CandidateDetailResponse {
     candidate: Candidate
     applications: CandidateApplication[]
     notes: CandidateNoteEntry[]
     stageHistory: StageHistoryEntry[]
     assessmentHistory: any[]
+    screening: ScreeningData | null
 }
 
 export interface CreateCandidateInput {

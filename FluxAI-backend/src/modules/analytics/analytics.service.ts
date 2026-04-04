@@ -38,6 +38,7 @@ class AnalyticsService {
         const orgFilter = { organizationId: new mongoose.Types.ObjectId(organizationId) }
         const combinedFilter = { ...orgFilter, ...jobFilter }
 
+        // Current period counts
         const [
             activeJobs,
             totalJobs,
@@ -47,13 +48,43 @@ class AnalyticsService {
         ] = await Promise.all([
             Job.countDocuments({ ...orgFilter, status: 'PUBLISHED' }),
             Job.countDocuments(orgFilter),
-            // Candidates are org-wide, but if filtering by job, we count applications unique candidates
             jobId
                 ? JobApplication.distinct('candidateId', combinedFilter).then(ids => ids.length)
                 : Candidate.countDocuments(orgFilter),
             JobApplication.countDocuments(combinedFilter),
             JobApplication.countDocuments({ ...combinedFilter, status: ApplicationStatus.APPLIED }),
         ])
+
+        // Previous 30-day counts for trend calculation
+        const now = new Date()
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+        const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
+
+        const [
+            candidatesLast30,
+            candidatesPrev30,
+            appsLast30,
+            appsPrev30,
+        ] = await Promise.all([
+            Candidate.countDocuments({ ...orgFilter, createdAt: { $gte: thirtyDaysAgo } }),
+            Candidate.countDocuments({ ...orgFilter, createdAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo } }),
+            JobApplication.countDocuments({ ...combinedFilter, submittedAt: { $gte: thirtyDaysAgo } }),
+            JobApplication.countDocuments({ ...combinedFilter, submittedAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo } }),
+        ])
+
+        // Calculate trend percentage and direction
+        function calcTrend(current: number, previous: number): { trend: number; trendDirection: 'up' | 'down' | 'neutral' } {
+            if (previous === 0 && current === 0) return { trend: 0, trendDirection: 'neutral' as const }
+            if (previous === 0) return { trend: 100, trendDirection: 'up' as const }
+            const pct = Math.round(((current - previous) / previous) * 100)
+            return {
+                trend: Math.abs(pct),
+                trendDirection: pct > 0 ? 'up' as const : pct < 0 ? 'down' as const : 'neutral' as const
+            }
+        }
+
+        const candidateTrend = calcTrend(candidatesLast30, candidatesPrev30)
+        const appTrend = calcTrend(appsLast30, appsPrev30)
 
         const result = {
             activeJobs: {
@@ -65,14 +96,12 @@ class AnalyticsService {
             totalCandidates: {
                 label: 'Total Candidates',
                 value: totalCandidates,
-                trend: 0,
-                trendDirection: 'neutral' as const
+                ...candidateTrend
             },
             applications: {
                 label: 'Total Applications',
                 value: totalApplications,
-                trend: 0,
-                trendDirection: 'neutral' as const
+                ...appTrend
             },
             awaitingReview: {
                 label: 'Awaiting Review',

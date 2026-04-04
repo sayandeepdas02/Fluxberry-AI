@@ -1,7 +1,7 @@
 import { Types } from 'mongoose'
 import { Prospect, IProspect, ProspectList, IProspectList, Campaign, ICampaign, Message, IMessage } from '../../database/models/prospect.models.js'
 import { Candidate } from '../../database/models/index.js'
-import { eventBus, DomainEvent } from '../../common/services/event-bus.js'
+import { eventBus, DomainEvent } from '../../common/services/event-bus.service.js'
 import { activityService } from '../activity/activity.service.js'
 import { emailTemplateService } from '../email/email-templates.service.js'
 

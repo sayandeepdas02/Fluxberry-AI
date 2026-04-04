@@ -11,23 +11,18 @@ export class OffersTemplateController {
             const organizationId = req.user?.organizationId
             if (!organizationId) return res.status(403).json({ error: 'Organization context required' })
 
-            const { name, content, variableSchema } = req.body
+            const { name, htmlContent, type = 'FULL_TIME', country } = req.body
 
-            // Extract variables if not provided schema, or just use extractor helper
-            const extractedVars = templateService.extractVariables(content)
-
-            // If schema not provided, build basic one
-            const finalSchema = variableSchema || extractedVars.reduce((acc: any, key: string) => {
-                acc[key] = { type: 'text', label: key }
-                return acc
-            }, {})
+            // Extract variables
+            const extractedVars = templateService.extractVariables(htmlContent)
 
             const template = await OfferTemplate.create({
                 organizationId,
                 name,
-                content,
+                htmlContent,
+                type,
+                country,
                 variables: extractedVars,
-                variableSchema: finalSchema,
                 isActive: true
             })
 
@@ -65,7 +60,7 @@ export class OffersTemplateController {
     // Update Template
     async update(req: AuthenticatedRequest, res: Response) {
         try {
-            const { name, content, variableSchema, isActive } = req.body
+            const { name, htmlContent, type, country, isActive } = req.body
             const template = await OfferTemplate.findOne({
                 _id: req.params.id,
                 organizationId: req.user?.organizationId
@@ -74,11 +69,12 @@ export class OffersTemplateController {
             if (!template) return res.status(404).json({ error: 'Template not found' })
 
             if (name) template.name = name
-            if (content) {
-                template.content = content
-                template.variables = templateService.extractVariables(content)
+            if (htmlContent) {
+                template.htmlContent = htmlContent
+                template.variables = templateService.extractVariables(htmlContent)
             }
-            if (variableSchema) template.variableSchema = variableSchema
+            if (type) template.type = type
+            if (country) template.country = country
             if (isActive !== undefined) template.isActive = isActive
 
             await template.save()

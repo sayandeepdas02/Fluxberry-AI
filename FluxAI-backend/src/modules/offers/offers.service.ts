@@ -4,6 +4,7 @@ import crypto from 'crypto'
 import { templateService } from './template.service.js'
 import { pdfService } from './pdf.service.js'
 import { candidateOnboardingService } from '../onboarding/candidate-onboarding.service.js'
+import { activityService } from '../activity/activity.service.js'
 import { PDFDocument } from 'pdf-lib'
 
 export class OffersService {
@@ -100,11 +101,13 @@ export class OffersService {
         )
 
         // Track globally in ActivityLog
-        await ActivityLog.create({
-            entityType: 'OFFER',
-            entityId: offer._id,
+        await activityService.log({
+            organizationId: offer.organizationId.toString(),
+            entityType: 'offer',
+            entityId: offer._id.toString(),
             eventType: 'OFFER_SENT',
-            timestamp: new Date()
+            actorType: 'user',
+            metadata: { applicationId: offer.applicationId.toString() }
         })
 
         console.log(`[Email] Sending Offer Link to Candidate: /offer/${rawToken}`)
@@ -151,11 +154,13 @@ export class OffersService {
             }
             await offer.save()
 
-            await ActivityLog.create({
-                entityType: 'OFFER',
-                entityId: offer._id,
+            await activityService.log({
+                organizationId: offer.organizationId.toString(),
+                entityType: 'offer',
+                entityId: offer._id.toString(),
                 eventType: 'OFFER_VIEWED',
-                timestamp: new Date()
+                actorType: 'system',
+                metadata: {}
             })
         }
 
@@ -261,11 +266,13 @@ export class OffersService {
             ipAddress
         })
 
-        await ActivityLog.create({
-            entityType: 'OFFER',
-            entityId: offer._id,
+        await activityService.log({
+            organizationId: offer.organizationId.toString(),
+            entityType: 'offer',
+            entityId: offer._id.toString(),
             eventType: 'OFFER_SIGNED',
-            timestamp: signedAt
+            actorType: 'system',
+            metadata: { signedAt: signedAt.toISOString() }
         })
 
         await JobApplication.updateOne(
@@ -296,6 +303,16 @@ export class OffersService {
             { _id: offer.applicationId },
             { status: ApplicationStatus.OFFER_DECLINED }
         )
+
+        // Activity Log for Inbox
+        await activityService.log({
+            organizationId: offer.organizationId.toString(),
+            entityType: 'offer',
+            entityId: offer._id.toString(),
+            eventType: 'OFFER_REJECTED',
+            actorType: 'system',
+            metadata: { reason }
+        })
 
         return offer
     }
