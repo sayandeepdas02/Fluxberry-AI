@@ -55,12 +55,12 @@ export function InterviewScheduler() {
 
     const loadCandidates = async () => {
         const res = await candidatesApi.list({ limit: 100 })
-        if (res.success && res.data) setCandidates(res.data.candidates)
+        if (res.success && res.data) setCandidates(res.data)
     }
 
     const loadJobs = async () => {
         const res = await jobsApi.list()
-        if (res.success && res.data) setJobs(res.data.jobs)
+        if (res.success && res.data) setJobs(res.data)
     }
 
     const loadInterviewers = async () => {

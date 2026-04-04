@@ -72,7 +72,7 @@ export default function AnalyticsDashboard() {
         try {
             const res = await jobsApi.list()
             if (res.success && res.data) {
-                setJobs(res.data.jobs)
+                setJobs(res.data)
             }
         } catch (error) {
             console.error("Failed to fetch jobs", error)

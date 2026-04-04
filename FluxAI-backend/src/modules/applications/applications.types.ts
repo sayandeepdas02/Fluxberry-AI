@@ -26,3 +26,12 @@ export const bulkUpdateSchema = z.object({
 )
 
 export type BulkUpdateInput = z.infer<typeof bulkUpdateSchema>
+
+export const createApplicationSchema = z.object({
+    jobId: z.string(),
+    candidateId: z.string(),
+    resumeUrl: z.string().optional(),
+    applicationData: z.record(z.unknown()).optional(),
+})
+
+export type CreateApplicationInput = z.infer<typeof createApplicationSchema>

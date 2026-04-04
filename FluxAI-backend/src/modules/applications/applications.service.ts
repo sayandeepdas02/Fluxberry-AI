@@ -2,10 +2,55 @@ import {
     JobApplication, IJobApplication, Candidate, StageHistory, AuditLog,
     ApplicationStatus, ApplicationStatusType, PipelineStage
 } from '../../database/models/index.js'
-import { ListApplicationsQuery, UpdateStageInput, BulkUpdateInput } from './applications.types.js'
+import { ListApplicationsQuery, UpdateStageInput, BulkUpdateInput, CreateApplicationInput } from './applications.types.js'
 import { auditService } from '../../common/utils/audit.service.js'
+import { eventBus, DomainEvent } from '../../common/services/event-bus.service.js'
+import { activityService } from '../activity/activity.service.js'
 
 class ApplicationsService {
+    async create(organizationId: string, input: CreateApplicationInput, userId: string): Promise<IJobApplication> {
+        // Check for existing application
+        const existing = await JobApplication.findOne({
+            organizationId,
+            jobId: input.jobId,
+            candidateId: input.candidateId,
+            isDeleted: false,
+        })
+        if (existing) {
+            throw { code: 'CONFLICT', message: 'Candidate has already applied to this job' }
+        }
+
+        const application = await JobApplication.create({
+            organizationId,
+            jobId: input.jobId,
+            candidateId: input.candidateId,
+            resumeUrl: input.resumeUrl,
+            applicationData: input.applicationData,
+            status: ApplicationStatus.APPLIED,
+        })
+
+        // Event Bus
+        eventBus.emit(DomainEvent.APPLICATION_CREATED, {
+            organizationId,
+            entityId: application._id.toString(),
+            jobId: input.jobId,
+            candidateId: input.candidateId
+        })
+
+        // Activity Log
+        await activityService.log({
+            organizationId,
+            entityType: 'application',
+            entityId: application._id.toString(),
+            eventType: 'APPLICATION_CREATED',
+            actorType: 'user',
+            performedBy: userId,
+            metadata: { jobId: input.jobId }
+        })
+
+        return application
+    }
+
     async list(
         jobId: string,
         organizationId: string,
@@ -14,7 +59,7 @@ class ApplicationsService {
         const { page = 1, limit = 20, stage, stageId, search, sort = '-appliedAt' } = query
         const skip = (page - 1) * limit
 
-        const filter: any = { jobId, organizationId, deletedAt: null }
+        const filter: any = { jobId, organizationId, deletedAt: null, isDeleted: false }
 
         if (stageId) {
             filter.currentStageId = stageId
@@ -109,6 +154,26 @@ class ApplicationsService {
             performedBy: userId,
         })
 
+        // Fire domain event
+        eventBus.emit(DomainEvent.STAGE_CHANGED, {
+            organizationId,
+            entityType: 'APPLICATION',
+            entityId: application._id.toString(),
+            previousStage,
+            newStage
+        })
+
+        // Create activity log
+        await activityService.log({
+            organizationId,
+            entityType: 'application',
+            entityId: application._id.toString(),
+            eventType: 'STAGE_CHANGED',
+            actorType: 'user',
+            performedBy: userId,
+            metadata: { fromStage: previousStage, toStage: newStage }
+        })
+
         return application
     }
 
@@ -173,13 +238,23 @@ class ApplicationsService {
         })
 
         // Emit domain event for workflows
-        const { fluxEvents, DomainEvent } = await import('../../common/services/events.service.js')
-        fluxEvents.emitDomainEvent(DomainEvent.STAGE_CHANGED, {
+        eventBus.emit(DomainEvent.STAGE_CHANGED, {
             organizationId,
             entityId: application._id.toString(),
             entityType: 'APPLICATION',
             previousStageId,
             newStageId: targetStage._id,
+        })
+
+        // Create activity log
+        await activityService.log({
+            organizationId,
+            entityType: 'application',
+            entityId: application._id.toString(),
+            eventType: 'STAGE_CHANGED',
+            actorType: 'user',
+            performedBy: userId,
+            metadata: { fromStage: previousStage, toStage: targetStage.name, targetStageId: targetStage._id }
         })
 
         return this.getById(applicationId, organizationId)
@@ -284,6 +359,24 @@ class ApplicationsService {
                     fromStage: previousStage,
                     toStage: targetStage,
                     performedBy: userId,
+                })
+
+                eventBus.emit(DomainEvent.STAGE_CHANGED, {
+                    organizationId,
+                    entityType: 'APPLICATION',
+                    entityId: app._id.toString(),
+                    previousStage,
+                    newStage: targetStage
+                })
+
+                await activityService.log({
+                    organizationId,
+                    entityType: 'application',
+                    entityId: app._id.toString(),
+                    eventType: 'STAGE_CHANGED',
+                    actorType: 'user',
+                    performedBy: userId,
+                    metadata: { fromStage: previousStage, toStage: targetStage }
                 })
 
                 updated++

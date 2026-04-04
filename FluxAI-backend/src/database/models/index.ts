@@ -468,6 +468,7 @@ export interface ICandidate extends Document {
     resumeUrl?: string
     parsedResumeData?: Record<string, unknown>
     tags?: string[]
+    isDeleted: boolean
     deletedAt?: Date
     createdAt: Date
     updatedAt: Date
@@ -483,6 +484,7 @@ const CandidateSchema = new Schema<ICandidate>({
     resumeUrl: { type: String },
     parsedResumeData: { type: Schema.Types.Mixed },
     tags: [{ type: String }],
+    isDeleted: { type: Boolean, default: false },
     deletedAt: { type: Date, default: null },
 }, { timestamps: true })
 
@@ -506,6 +508,11 @@ export interface IJobApplication extends Document {
     applicationData?: Record<string, unknown>
     resumeUrl?: string
     status: ApplicationStatusType
+    score?: number
+    assignedTo?: Types.ObjectId
+    rejectionReason?: string
+    lastActivityAt?: Date
+    isDeleted: boolean
     submittedAt: Date
     deletedAt?: Date
     createdAt: Date
@@ -520,11 +527,17 @@ const JobApplicationSchema = new Schema<IJobApplication>({
     applicationData: { type: Schema.Types.Mixed },
     resumeUrl: { type: String },
     status: { type: String, enum: Object.values(ApplicationStatus), default: ApplicationStatus.APPLIED },
+    score: { type: Number },
+    assignedTo: { type: Schema.Types.ObjectId, ref: 'User' },
+    rejectionReason: { type: String },
+    lastActivityAt: { type: Date, default: Date.now },
+    isDeleted: { type: Boolean, default: false },
     submittedAt: { type: Date, default: Date.now },
     deletedAt: { type: Date, default: null },
 }, { timestamps: true })
 
 JobApplicationSchema.index({ jobId: 1, candidateId: 1 }, { unique: true })
+JobApplicationSchema.index({ jobId: 1, status: 1 })
 JobApplicationSchema.index({ organizationId: 1, status: 1, deletedAt: 1 })
 JobApplicationSchema.index({ candidateId: 1, organizationId: 1 })
 JobApplicationSchema.index({ currentStageId: 1 })
@@ -1631,20 +1644,28 @@ export const OrganizationOnboardingSettings = mongoose.model<IOrganizationOnboar
 // ACTIVITY LOG MODEL
 // ============================================
 export interface IActivityLog extends Document {
+    organizationId: Types.ObjectId
     entityType: string
     entityId: Types.ObjectId
     eventType: string
+    actorType: 'user' | 'system' | 'ai'
+    performedBy?: Types.ObjectId
     metadata?: Record<string, any>
     timestamp: Date
 }
 
 const ActivityLogSchema = new Schema<IActivityLog>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
     entityType: { type: String, required: true, index: true },
     entityId: { type: Schema.Types.ObjectId, required: true, index: true },
     eventType: { type: String, required: true },
+    actorType: { type: String, enum: ['user', 'system', 'ai'], required: true, default: 'user' },
+    performedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     metadata: { type: Schema.Types.Mixed },
     timestamp: { type: Date, default: Date.now, index: true },
 }, { timestamps: false })
+
+ActivityLogSchema.index({ entityId: 1, timestamp: -1 })
 
 export const ActivityLog = mongoose.model<IActivityLog>('ActivityLog', ActivityLogSchema)
 

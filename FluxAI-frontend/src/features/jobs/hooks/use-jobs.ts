@@ -24,14 +24,14 @@ export function useJobs(initialQuery?: ListJobsQuery) {
         queryFn: async () => {
             const res = await jobsApi.list(initialQuery)
             if (!res.success) throw new Error(res.error?.message ?? 'Failed to fetch jobs')
-            return res.data!
+            return res
         },
     })
 
-    const jobs: Job[] = data?.jobs ?? []
-    const total: number = data?.total ?? 0
-    const page: number = data?.page ?? 1
-    const totalPages: number = data?.totalPages ?? 0
+    const jobs: Job[] = data?.data || []
+    const total: number = data?.meta?.total ?? 0
+    const page: number = data?.meta?.page ?? 1
+    const totalPages: number = data?.meta?.totalPages ?? 0
     const error: string | null = rawError ? (rawError as Error).message : null
 
     const createJob = useMutation({
@@ -68,8 +68,8 @@ export function useJobs(initialQuery?: ListJobsQuery) {
         onSuccess: (updated) => {
             // Optimistic cache update — no extra network round-trip
             queryClient.setQueriesData({ queryKey: jobKeys.all }, (old: any) => {
-                if (!old?.jobs) return old
-                return { ...old, jobs: old.jobs.map((j: Job) => j._id === updated._id ? updated : j) }
+                if (!old?.data) return old
+                return { ...old, data: old.data.map((j: Job) => j._id === updated._id ? updated : j) }
             })
             toast.success('Job updated successfully')
         },

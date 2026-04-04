@@ -26,8 +26,8 @@ export function useCandidates(initialQuery?: ListCandidatesQuery): UseCandidates
         const response = await candidatesApi.list(mergedQuery)
 
         if (response.success && response.data) {
-            setCandidates(response.data.candidates)
-            setTotal(response.data.total)
+            setCandidates(response.data || [])
+            setTotal(response.meta?.total || 0)
         } else {
             setError(response.error?.message || 'Failed to load candidates')
         }

@@ -6,6 +6,9 @@ const router = Router()
 
 router.use(authGuard)
 
+// POST /api/applications
+router.post('/', (req, res, next) => applicationsController.create(req, res, next))
+
 // GET /api/applications/:id
 router.get('/:id', (req, res, next) => applicationsController.getById(req, res, next))
 

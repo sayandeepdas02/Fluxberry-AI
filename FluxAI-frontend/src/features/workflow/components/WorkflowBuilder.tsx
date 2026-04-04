@@ -65,7 +65,7 @@ export function WorkflowBuilder() {
         try {
             const response = await jobsApi.list()
             if (response.success && response.data) {
-                setJobs(response.data.jobs)
+                setJobs(response.data)
             }
         } catch (error) {
             toast.error('Failed to load jobs')

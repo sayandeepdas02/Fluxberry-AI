@@ -71,7 +71,7 @@ export interface ListCandidatesQuery {
 }
 
 export const candidatesApi = {
-    list: async (query?: ListCandidatesQuery): Promise<ApiResponse<{ candidates: Candidate[], total: number, page: number, totalPages: number }>> => {
+    list: async (query?: ListCandidatesQuery): Promise<ApiResponse<Candidate[]>> => {
         return apiClient.get('/candidates', query)
     },
 

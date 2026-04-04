@@ -11,6 +11,7 @@ import { successResponse } from './common/utils/api-response.js'
 import { isS3Configured, saveLocalFile } from './modules/storage/s3.client.js'
 import fs from 'fs'
 import path from 'path'
+import { responseWrapper } from './common/middleware/response-wrapper.js'
 
 // Routes
 import authRoutes from './modules/auth/auth.routes.js'
@@ -41,9 +42,14 @@ import { interviewRoutes } from './modules/interviews/interviews.routes.js'
 import auditRoutes from './modules/audit/audit.routes.js'
 import { handleRibbonWebhook } from './modules/webhooks/ribbon.webhook.js'
 import { billingRoutes } from './modules/billing/billing.routes.js'
+import activityRoutes from './modules/activity/activity.routes.js'
+import prospectsRoutes from './modules/prospects/prospects.routes.js'
 
 export function createApp() {
     const app = express()
+
+    // Response Wrapper
+    app.use(responseWrapper)
 
     // Security middleware
     app.use(helmet())
@@ -158,6 +164,7 @@ export function createApp() {
     )
 
     // Phase 5: Files
+    app.use('/api/activity', activityRoutes)
     app.use('/api/files', filesRoutes)
     app.post('/api/attempts/:attemptId/resume', (req, res, next) =>
         filesController.attachResume(req, res, next)
@@ -182,6 +189,9 @@ export function createApp() {
 
     // Billing & Subscription
     app.use('/api/billing', billingRoutes)
+
+    // Talent Prospect (Outbound Hiring)
+    app.use('/api/prospects', prospectsRoutes)
 
     // ============================================
 
