@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { SectionWrapper, SharpButton } from "@/components/shared/layout-primitives";
 import { FallingPattern } from "@/components/ui/falling-pattern";
 
+import { Cover } from "@/components/ui/cover";
+
 /* ─────────────────────────────────────────────────
    HERO SECTION — Chanhdai-style Editorial
    Flat bg, sharp edges, border-driven depth
@@ -54,7 +56,7 @@ export function Hero() {
             }}
           >
             <span style={{ color: "#5561c8" }}>AI Native</span>
-            {" "}Hiring Automation for growing teams
+            {" "}<Cover>Hiring Automation</Cover> for growing teams
           </h1>
 
           {/* Subtext */}
