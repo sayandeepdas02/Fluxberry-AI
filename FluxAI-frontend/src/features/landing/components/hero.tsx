@@ -15,6 +15,34 @@ import { Cover } from "@/components/ui/cover";
    ───────────────────────────────────────────────── */
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (!imgRef.current) return;
+    const img = imgRef.current;
+    const rect = img.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    // Subtle tilt for a large hero image (using 80 as divisor for smaller rotation angles)
+    const x = (mouseX - rect.width / 2) / 80;
+    const y = (mouseY - rect.height / 2) / 80;
+
+    img.style.transform = `scale(1.01) rotateY(${x}deg) rotateX(${-y}deg)`;
+    
+    // Subtle shadow shift
+    const shadowX = -x;
+    const shadowY = -y + 15;
+    img.style.boxShadow = `${shadowX}px ${shadowY}px 40px -10px rgba(0,0,0,0.15)`;
+  };
+
+  const handleMouseLeave = () => {
+    if (!imgRef.current) return;
+    const img = imgRef.current;
+    
+    img.style.transform = `rotateY(0deg) rotateX(0deg) scale(1)`;
+    img.style.boxShadow = `0px 10px 30px -10px rgba(0,0,0,0.08)`;
+  };
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -105,12 +133,22 @@ export function Hero() {
             marginTop: "var(--space-8)",
             width: "100%",
             maxWidth: "1024px",
+            perspective: "2000px",
           }}
         >
           <img 
+            ref={imgRef}
             src="/HeroDashboard.png" 
             alt="Fluxberry AI Dashboard" 
-            className="w-full h-auto"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            className="w-full h-auto cursor-pointer"
+            style={{
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              transformStyle: "preserve-3d",
+              willChange: "transform",
+              boxShadow: "0px 10px 30px -10px rgba(0,0,0,0.08)",
+            }}
           />
         </div>
       </div>
