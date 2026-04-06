@@ -110,17 +110,27 @@ export function BoxedCard({
 }
 
 /**
+ * Shine hover CSS classes — reusable on any button element.
+ * Creates a diagonal light sweep on hover.
+ */
+export const SHINE_CLASSES =
+  "relative overflow-hidden before:absolute before:inset-0 before:rounded-[inherit] before:bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.7)_50%,transparent_75%,transparent_100%)] before:bg-[length:250%_250%,100%_100%] before:bg-[position:200%_0,0_0] before:bg-no-repeat before:transition-[background-position] before:duration-1000 before:ease-in-out hover:before:bg-[position:-100%_0,0_0] dark:before:bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.5)_50%,transparent_75%,transparent_100%)]";
+
+/**
  * SharpButton
  * Replaces circular/rounded buttons with sharp 90-degree rigid buttons.
+ * Pass `shine` to add the diagonal light-sweep hover effect.
  */
 export function SharpButton({
   children,
   className,
   variant = "primary",
+  shine = false,
   style,
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "secondary" | "outline" | "ghost";
+  shine?: boolean;
 }) {
   const baseStyles = "inline-flex items-center justify-center font-medium transition-colors duration-200 cursor-pointer text-sm px-6 py-3 rounded-none";
   
@@ -133,7 +143,7 @@ export function SharpButton({
 
   return (
     <button
-      className={cn(baseStyles, variants[variant], className)}
+      className={cn(baseStyles, variants[variant], shine && SHINE_CLASSES, className)}
       style={{
         ...style,
       }}

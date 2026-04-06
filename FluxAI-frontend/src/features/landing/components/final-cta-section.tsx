@@ -153,7 +153,7 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
-import { SectionWrapper, SharpButton } from "@/components/shared/layout-primitives";
+import { SectionWrapper, SharpButton, SHINE_CLASSES } from "@/components/shared/layout-primitives";
 import { InteractiveGridPattern } from "@/components/ui/interactive-grid-pattern";
 
 /* ─────────────────────────────────────────────────
@@ -243,6 +243,7 @@ export function FinalCTASection() {
               variant="primary"
               className="!bg-white !text-[#3B429F] !border-white hover:!bg-white/90 font-semibold pointer-events-auto"
               style={{ padding: "14px 28px", fontSize: "15px" }}
+              shine
             >
               Start free trial
               <ArrowRight className="w-4 h-4 ml-2" />
@@ -258,7 +259,8 @@ export function FinalCTASection() {
                 "flex items-center",
                 "hover:bg-black/90",
                 "active:bg-black/80",
-                "transition-all duration-200 ease-out rounded-none"
+                "transition-all duration-200 ease-out rounded-none",
+                SHINE_CLASSES
               )}
               style={{ padding: "13px 28px", fontSize: "15px" }}
             >

@@ -111,14 +111,14 @@ export function Hero() {
           >
             {/* Secondary: Book a Demo */}
             <Link href="/demo">
-              <SharpButton className="!bg-black !text-white !border-black hover:!bg-black/90">
+              <SharpButton shine className="!bg-black !text-white !border-black hover:!bg-black/90">
                 Book a Demo
               </SharpButton>
             </Link>
 
             {/* Primary: Start free trial */}
             <Link href="/signup">
-              <SharpButton variant="primary">
+              <SharpButton variant="primary" shine>
                 Start free trial
                 <ArrowRight className="w-4 h-4 ml-2" />
               </SharpButton>

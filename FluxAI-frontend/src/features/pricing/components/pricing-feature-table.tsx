@@ -4,48 +4,29 @@ import { cn } from "@/lib/utils";
 export function PricingFeatureTable({ className }: { className?: string } = {}) {
     const features = [
         {
-            category: "Core Platform (Job Board + ATS)",
+            category: "Features",
             items: [
-                { name: "Active Job Posts", free: "3 posts", starter: "Unlimited", growth: "Unlimited", enterprise: "Unlimited" },
-                { name: "Unlimited Hiring Pipelines", free: false, starter: true, growth: true, enterprise: true },
-                { name: "Full ATS Workflow", free: "Basic", starter: true, growth: true, enterprise: true },
-                { name: "Candidate Database Storage", free: "200", starter: "Up to 5,000", growth: "Up to 25,000", enterprise: "Unlimited" },
-                { name: "Resume Parsing", free: false, starter: "Up to 2,000 / mo", growth: "Up to 10,000 / mo", enterprise: "Unlimited" },
-                { name: "Careers Page", free: true, starter: "Standard", growth: "Standard", enterprise: "Custom-Branded Portal" },
-                { name: "Email Automation", free: "25 / mo", starter: "10,000 / mo", growth: "25,000 / mo", enterprise: "Unlimited" },
-                { name: "Advanced Hiring Workflows", free: false, starter: false, growth: true, enterprise: true },
-                { name: "Slack Integration", free: false, starter: false, growth: true, enterprise: true },
-                { name: "WhatsApp Integration", free: false, starter: false, growth: true, enterprise: true },
-                { name: "Role-Based Access Controls", free: false, starter: "Basic", growth: "Advanced", enterprise: "Advanced" },
-            ],
-        },
-        {
-            category: "Talent Onboarding",
-            items: [
-                { name: "Onboarding Module", free: false, starter: false, growth: true, enterprise: true },
-                { name: "Offer Letter Automation", free: false, starter: false, growth: true, enterprise: true },
-                { name: "Document Collection Automation", free: false, starter: false, growth: true, enterprise: true },
-                { name: "Policy & Compliance Workflows", free: false, starter: false, growth: "Basic", enterprise: "Advanced" },
-            ],
-        },
-        {
-            category: "AI & Interview Automation",
-            items: [
-                { name: "AI Credits Included", free: "200 / mo", starter: "2,000 / mo", growth: "10,000 / mo", enterprise: "Custom bundle" },
-                { name: "MCQ Screening", free: false, starter: "Credit-based", growth: "50 / mo incl.", enterprise: "Custom bundle" },
-                { name: "Coding Assessments", free: false, starter: "Credit-based", growth: "20 / mo incl.", enterprise: "Custom bundle" },
-                { name: "AI Video Interviews", free: false, starter: false, growth: false, enterprise: "Custom bundle" },
-                { name: "Resume AI Ranking", free: false, starter: false, growth: false, enterprise: true },
-                { name: "AI Interview Summaries", free: false, starter: false, growth: false, enterprise: true },
-                { name: "Advanced AI Analytics", free: false, starter: false, growth: false, enterprise: true },
-            ],
-        },
-        {
-            category: "Support & SLAs",
-            items: [
-                { name: "Support Channel", free: "Community", starter: "Email", growth: "Priority Email", enterprise: "Dedicated Manager" },
-                { name: "SLA Guarantee", free: false, starter: false, growth: "99.9% uptime", enterprise: "99.99% uptime" },
+                { name: "Jobs", free: "Unlimited", starter: "Unlimited", growth: "Unlimited", enterprise: "Unlimited" },
+                { name: "Candidates", free: "Unlimited", starter: "Unlimited", growth: "Unlimited", enterprise: "Unlimited" },
+                { name: "Team Members", free: "Unlimited", starter: "Unlimited", growth: "Unlimited", enterprise: "Unlimited" },
+                { name: "Careers Page", free: true, starter: true, growth: true, enterprise: true },
+                { name: "AI Credits", free: "1000 / mo", starter: "1000 / mo", growth: "1000 / mo", enterprise: "1000 / mo" },
+                { name: "Emails", free: "100 / mo", starter: "100 / mo", growth: "100 / mo", enterprise: "100 / mo" },
+                { name: "Analytics", free: false, starter: false, growth: true, enterprise: true },
+                { name: "Interview Scheduler", free: false, starter: false, growth: true, enterprise: true },
                 { name: "Migration & Onboarding Support", free: false, starter: false, growth: false, enterprise: true },
+            ],
+        },
+        {
+            category: "Products",
+            items: [
+                { name: "Job Board", free: true, starter: true, growth: true, enterprise: true },
+                { name: "ATS Screening", free: true, starter: true, growth: true, enterprise: true },
+                { name: "Talent Onboarding", free: true, starter: true, growth: true, enterprise: true },
+                { name: "Assessment (MCQ + DSA)", free: false, starter: true, growth: true, enterprise: true },
+                { name: "Assessment (AI Screening)", free: false, starter: false, growth: true, enterprise: true },
+                { name: "Assessment (System Design Round)", free: false, starter: false, growth: true, enterprise: true },
+                { name: "Talent Prospect", free: false, starter: false, growth: false, enterprise: true },
             ],
         },
     ];

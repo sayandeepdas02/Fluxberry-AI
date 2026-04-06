@@ -2,12 +2,24 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { Check, CreditCard } from "lucide-react";
+import { Check, CreditCard, ArrowUpRight } from "lucide-react";
 import { SectionWrapper, SharpButton } from "@/components/shared/layout-primitives";
+import { PRICING_PLANS, formatPrice } from "@/features/pricing/pricing-plans";
 
 /* ─────────────────────────────────────────────────
-   PRICING SECTION — Chanhdai-style Editorial
-   Sharp cards, no pills, no shadows, border-grid
+   Gradient definitions for each pricing tier header
+   Inspired by user-provided gradient images
+   ───────────────────────────────────────────────── */
+const HEADER_GRADIENTS: Record<string, string> = {
+  free: "radial-gradient(ellipse at 25% 15%, #6B9FF5 0%, transparent 50%), radial-gradient(ellipse at 75% 30%, #E8352E 0%, transparent 55%), radial-gradient(ellipse at 60% 85%, #F07030 0%, transparent 50%), linear-gradient(135deg, #7EA8F0, #D04050, #E87050, #B03580)",
+  starter: "radial-gradient(ellipse at 30% 25%, #8830D0 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, #F070B0 0%, transparent 50%), linear-gradient(160deg, #7B30C8, #A850D0, #D070C0, #F090D0)",
+  growth: "radial-gradient(ellipse at 20% 20%, #7070F8 0%, transparent 50%), radial-gradient(ellipse at 85% 85%, #F06040 0%, transparent 50%), linear-gradient(135deg, #6858E8, #8070F0, #A060C0, #E86848)",
+  enterprise: "radial-gradient(ellipse at 50% 50%, #C890B8 0%, transparent 45%), radial-gradient(ellipse at 80% 80%, #E06040 0%, transparent 40%), linear-gradient(160deg, #384098, #4050A8, #5060B0, #3A3A78)",
+};
+
+/* ─────────────────────────────────────────────────
+   PRICING SECTION — Clean, structured, productized
+   Sharp edges, border-grid, consistent with landing page
    ───────────────────────────────────────────────── */
 export function PricingSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -80,7 +92,7 @@ export function PricingSection() {
             Choose a plan that scales with your hiring needs.
           </p>
 
-          {/* ── BILLING TOGGLE — sharp, no pills ── */}
+          {/* ── BILLING TOGGLE ── */}
           <div className="flex items-center gap-4 mt-8">
             <span
               className={cn(
@@ -120,59 +132,44 @@ export function PricingSection() {
 
         {/* ═══ PRICING GRID — shared border grid ═══ */}
         <div
-          className="grid grid-cols-1 md:grid-cols-3 mx-auto"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 mx-auto"
           style={{
             marginTop: "var(--space-12)",
-            maxWidth: "1080px",
+            maxWidth: "1280px",
             alignItems: "stretch",
           }}
         >
-          <PricingCard
-            name="Starter"
-            description="For small teams / early-stage startups"
-            price={isYearly ? "0" : "0"}
-            features={[
-              "5 active job postings",
-              "Standard AI screening",
-              "Basic email scheduling",
-              "Community support",
-            ]}
-            ctaText="Start free trial"
-            ctaType="secondary"
-          />
-
-          <PricingCard
-            name="Growth"
-            description="Unlock advanced automation for growing teams"
-            price={isYearly ? "119" : "149"}
-            features={[
-              "Unlimited job postings",
-              "Advanced AI evaluation & scoring",
-              "Automated calendar workflows",
-              "Priority 24/7 support",
-              "Custom ATS integrations",
-            ]}
-            ctaText="Get started"
-            ctaType="primary"
-            isPopular
-          />
-
-          <PricingCard
-            name="Enterprise"
-            description="Custom solutions for large-scale operations"
-            price="Custom"
-            features={[
-              "Everything in Growth",
-              "Custom AI training models",
-              "Dedicated account manager",
-              "SSO & advanced security (SOC2)",
-              "White-glove onboarding",
-            ]}
-            ctaText="Contact sales"
-            ctaType="secondary"
-          />
+          {PRICING_PLANS.map((plan) => (
+            <PricingCard
+              key={plan.id}
+              planId={plan.id}
+              name={plan.name}
+              price={formatPrice(plan, isYearly).replace("$", "")}
+              features={plan.features}
+              ctaText={plan.cta}
+              isPopular={plan.highlighted}
+              aiTag={plan.aiTag}
+              inheritsFrom={plan.inheritsFrom}
+            />
+          ))}
         </div>
       </div>
+
+      {/* SVG noise filter for gradient grain texture */}
+      <svg className="absolute w-0 h-0" aria-hidden="true">
+        <defs>
+          <filter id="pricing-noise">
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.65"
+              numOctaves="3"
+              stitchTiles="stitch"
+            />
+            <feColorMatrix type="saturate" values="0" />
+            <feBlend in="SourceGraphic" mode="multiply" />
+          </filter>
+        </defs>
+      </svg>
 
       <style jsx global>{`
         .pricing-card-enter {
@@ -184,100 +181,171 @@ export function PricingSection() {
           opacity: 1;
           transform: translateY(0);
         }
+
+        /* Gradient header box hover behavior */
+        .pricing-header-box {
+          position: relative;
+          overflow: hidden;
+        }
+        .pricing-header-gradient {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+          transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+          z-index: 0;
+        }
+        .pricing-header-noise {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+          background: rgba(255,255,255,0.08);
+          filter: url(#pricing-noise);
+          mix-blend-mode: overlay;
+          transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+          z-index: 1;
+        }
+        .pricing-header-content {
+          position: relative;
+          z-index: 2;
+        }
+
+        /* On card hover → reveal gradient */
+        .pricing-card-hover:hover .pricing-header-gradient {
+          opacity: 1;
+        }
+        .pricing-card-hover:hover .pricing-header-noise {
+          opacity: 1;
+        }
+        .pricing-card-hover:hover .pricing-header-text {
+          color: #ffffff !important;
+        }
+        .pricing-card-hover:hover .pricing-header-subtext {
+          color: rgba(255,255,255,0.6) !important;
+        }
+        .pricing-card-hover:hover .pricing-header-badge {
+          border-color: rgba(255,255,255,0.3) !important;
+          color: rgba(255,255,255,0.85) !important;
+        }
       `}</style>
     </SectionWrapper>
   );
 }
 
 /* ─────────────────────────────────────────────────
-   PRICING CARD — Sharp edges, grid cell borders
+   PRICING CARD — Sharp edges, border-grid cells
+   Header box → CTA → Features → Footer
    ───────────────────────────────────────────────── */
 function PricingCard({
+  planId,
   name,
-  description,
   price,
   features,
   ctaText,
-  ctaType,
   isPopular,
+  aiTag,
+  inheritsFrom,
 }: {
+  planId: string;
   name: string;
-  description: string;
   price: string;
   features: string[];
   ctaText: string;
-  ctaType: "primary" | "secondary";
   isPopular?: boolean;
+  aiTag: string;
+  inheritsFrom?: string;
 }) {
+  const gradient = HEADER_GRADIENTS[planId] || HEADER_GRADIENTS.free;
+
   return (
     <div
       className={cn(
-        "pricing-card-enter relative flex flex-col bg-background transition-colors duration-300 ease-out group",
+        "pricing-card-enter pricing-card-hover relative flex flex-col bg-background",
         "border border-line -mt-px md:mt-0 md:-ml-px first:ml-0 first:mt-0",
-        isPopular && "bg-muted/30",
-        !isPopular && "hover:bg-muted/30"
       )}
-      style={{
-        padding: "var(--space-8)",
-        borderColor: isPopular ? "var(--primary)" : undefined,
-        borderWidth: isPopular ? "2px" : undefined,
-      }}
+      style={{ padding: "var(--space-6)" }}
     >
-      {/* Popular Badge — rectangular */}
-      {isPopular && (
-        <div className="inline-flex self-start bg-primary/10 text-primary text-xs font-semibold px-3 py-1 uppercase tracking-wide mb-4">
-          Most Popular
-        </div>
-      )}
+      {/* ── SECTION 1: Header Box (Plan Name + Price) ── */}
+      <div className="pricing-header-box p-5 mb-5 bg-muted/50">
+        {/* Gradient layer — hidden by default, shown on hover */}
+        <div
+          className="pricing-header-gradient"
+          style={{ background: gradient }}
+        />
+        {/* Noise/grain overlay */}
+        <div className="pricing-header-noise" />
 
-      {/* Header */}
-      <div className="mb-6">
-        <h3 className="text-xl font-semibold text-foreground tracking-tight mb-2">
-          {name}
-        </h3>
-        <p className="text-muted-foreground text-sm" style={{ minHeight: "2.5rem" }}>
-          {description}
-        </p>
-      </div>
-
-      {/* Price */}
-      <div className="mb-8">
-        <div className="flex items-baseline gap-1 transition-all duration-300">
-          {price === "Custom" ? (
-            <span className="text-4xl tracking-tight text-foreground">
-              Custom
-            </span>
-          ) : (
-            <>
-              <span className="text-4xl tracking-tight text-foreground">
-                ${price}
+        {/* Content */}
+        <div className="pricing-header-content">
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="pricing-header-text text-lg font-semibold tracking-tight text-foreground transition-colors duration-500">
+              {name}
+            </h3>
+            {isPopular && (
+              <span className="pricing-header-badge text-[10px] font-semibold uppercase tracking-wider border border-foreground/20 text-foreground/70 px-2 py-0.5 transition-colors duration-500">
+                Popular
               </span>
-              <span className="text-muted-foreground text-sm font-medium">/month</span>
-            </>
-          )}
+            )}
+          </div>
+
+          <div className="flex items-baseline gap-1.5">
+            {price === "Custom" ? (
+              <span className="pricing-header-text text-3xl font-bold tracking-tight text-foreground transition-colors duration-500">
+                Custom
+              </span>
+            ) : (
+              <>
+                <span className="pricing-header-text text-3xl font-bold tracking-tight leading-none text-foreground transition-colors duration-500">
+                  ${price}
+                </span>
+                <span className="pricing-header-subtext text-sm font-normal text-muted-foreground transition-colors duration-500">
+                  per month
+                </span>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* CTA Button — sharp rectangular */}
+      {/* ── SECTION 2: CTA Button ── */}
       <SharpButton
-        variant={ctaType === "primary" ? "primary" : "outline"}
-        className="w-full mb-8"
+        variant={isPopular ? "primary" : "outline"}
+        className="w-full mb-6"
+        shine
       >
         {ctaText}
       </SharpButton>
 
-      {/* Features List */}
-      <div className="flex flex-col flex-1" style={{ gap: "var(--space-4)" }}>
+      {/* ── SECTION 3: Features List ── */}
+      <div className="flex flex-col flex-1">
+        {inheritsFrom && (
+          <div className="flex items-center gap-2 py-3 border-b border-dashed border-line">
+            <span className="text-[13px] text-muted-foreground leading-relaxed">
+              Everything in {inheritsFrom}, plus
+            </span>
+            <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground/60" strokeWidth={2} />
+          </div>
+        )}
         {features.map((feature, i) => (
-          <div key={i} className="flex items-start gap-3">
-            <div className="mt-0.5 shrink-0 w-5 h-5 bg-primary/10 flex items-center justify-center">
-              <Check className="w-3 h-3 text-primary" strokeWidth={3} />
-            </div>
-            <span className="text-sm text-foreground leading-snug">
+          <div
+            key={i}
+            className={cn(
+              "flex items-start gap-3 py-3",
+              i < features.length - 1 && "border-b border-dashed border-line"
+            )}
+          >
+            <Check className="w-4 h-4 text-foreground/40 shrink-0 mt-0.5" strokeWidth={2} />
+            <span className="text-[13px] text-foreground/80 leading-relaxed">
               {feature}
             </span>
           </div>
         ))}
+      </div>
+
+      {/* ── SECTION 4: Footer (Credits) ── */}
+      <div className="mt-6 pt-4 border-t border-line">
+        <p className="text-[13px] text-muted-foreground">
+          {aiTag}
+        </p>
       </div>
     </div>
   );

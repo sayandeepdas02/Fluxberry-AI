@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Check, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SHINE_CLASSES } from "@/components/shared/layout-primitives";
 
 /* ═══════════════════════════════════════════════
    FORM DATA TYPES

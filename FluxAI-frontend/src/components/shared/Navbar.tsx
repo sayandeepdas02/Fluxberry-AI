@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SHINE_CLASSES } from "@/components/shared/layout-primitives";
 
 /* ─────────────────────────────────────────────────
    NAV ITEMS
@@ -108,7 +109,8 @@ export function Navbar() {
                 "cursor-pointer font-medium text-white",
                 "border border-black bg-black",
                 "hover:bg-black/90 active:scale-[0.98]",
-                "transition-all duration-200 ease-out rounded-none"
+                "transition-all duration-200 ease-out rounded-none",
+                SHINE_CLASSES
               )}
               style={{
                 padding: "4px 12px",
@@ -124,7 +126,8 @@ export function Navbar() {
                 "cursor-pointer font-medium text-white",
                 "border border-[#5561c8] bg-[#5561c8]",
                 "hover:opacity-90 active:scale-[0.98]",
-                "transition-all duration-200 ease-out rounded-none"
+                "transition-all duration-200 ease-out rounded-none",
+                SHINE_CLASSES
               )}
               style={{
                 padding: "4px 12px",
@@ -198,7 +201,10 @@ export function Navbar() {
                 onClick={() => setIsMobileOpen(false)}
               >
                 <button
-                  className="w-full text-white font-medium cursor-pointer hover:bg-black/90 transition-colors duration-200 rounded-none bg-black"
+                  className={cn(
+                    "w-full text-white font-medium cursor-pointer hover:bg-black/90 transition-colors duration-200 rounded-none bg-black",
+                    SHINE_CLASSES
+                  )}
                   style={{
                     height: "40px",
                     fontSize: "var(--text-body-sm)",
@@ -213,7 +219,10 @@ export function Navbar() {
                 onClick={() => setIsMobileOpen(false)}
               >
                 <button
-                  className="w-full text-white font-medium cursor-pointer hover:opacity-90 transition-opacity duration-200 rounded-none"
+                  className={cn(
+                    "w-full text-white font-medium cursor-pointer hover:opacity-90 transition-opacity duration-200 rounded-none",
+                    SHINE_CLASSES
+                  )}
                   style={{
                     backgroundColor: "#5561c8",
                     height: "40px",
