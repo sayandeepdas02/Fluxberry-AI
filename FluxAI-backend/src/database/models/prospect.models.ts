@@ -19,6 +19,13 @@ export interface IProspect extends Document {
     source: string
     status: 'new' | 'contacted' | 'replied' | 'converted'
     convertedCandidateId?: Types.ObjectId
+    aiFitCache?: {
+        jobId: Types.ObjectId
+        score: number
+        breakdown: any
+        insights: string[]
+        updatedAt: Date
+    }
     isDeleted: boolean
     createdAt: Date
     updatedAt: Date
@@ -39,6 +46,13 @@ const ProspectSchema = new Schema<IProspect>({
     source: { type: String, default: 'manual' },
     status: { type: String, enum: ['new', 'contacted', 'replied', 'converted'], default: 'new' },
     convertedCandidateId: { type: Schema.Types.ObjectId, ref: 'Candidate' },
+    aiFitCache: {
+        jobId: { type: Schema.Types.ObjectId, ref: 'Job' },
+        score: { type: Number },
+        breakdown: { type: Schema.Types.Mixed },
+        insights: [{ type: String }],
+        updatedAt: { type: Date }
+    },
     isDeleted: { type: Boolean, default: false },
 }, { timestamps: true })
 

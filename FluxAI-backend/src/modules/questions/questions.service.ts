@@ -152,25 +152,26 @@ export class QuestionsService {
     }
 
     /**
-     * Get questions by IDs or slugs (for validation).
-     * Supports both MongoDB ObjectIds and string slugs.
+     * Get questions by IDs (strict ObjectId only — no slug fallback).
+     * Throws 400 if any ID is not a valid ObjectId.
      */
     async getByIds(ids: string[]): Promise<QuestionResponse[]> {
         if (ids.length === 0) return []
-        const objectId = (await import('mongoose')).Types.ObjectId
-        const validObjectIds: unknown[] = []
-        const slugIds: string[] = []
-        for (const id of ids) {
-            if (objectId.isValid(id) && String(new objectId(id)) === id) {
-                validObjectIds.push(id)
-            } else {
-                slugIds.push(id)
-            }
+        const { Types } = await import('mongoose')
+
+        const invalid = ids.filter(
+            id => !Types.ObjectId.isValid(id) || String(new Types.ObjectId(id)) !== id
+        )
+        if (invalid.length > 0) {
+            const error = new Error(
+                `Invalid question IDs: [${invalid.join(', ')}]. All IDs must be valid database ObjectIds.`
+            ) as Error & { statusCode: number; code: string }
+            error.statusCode = 400
+            error.code = 'INVALID_QUESTION_IDS'
+            throw error
         }
-        const orConditions: Record<string, unknown>[] = []
-        if (validObjectIds.length) orConditions.push({ _id: { $in: validObjectIds } })
-        if (slugIds.length) orConditions.push({ slug: { $in: slugIds } })
-        const questions = await Question.find(orConditions.length ? { $or: orConditions } : { _id: { $in: [] } })
+
+        const questions = await Question.find({ _id: { $in: ids } })
         return questions.map((q) => this.formatQuestion(q))
     }
 

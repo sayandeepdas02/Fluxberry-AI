@@ -13,29 +13,30 @@ import {
 } from '../../database/models/index.js'
 
 /**
- * Build a query that matches questions by either _id (if valid ObjectId) or slug.
- * This is needed because frontend may send mock IDs like 'dbms-1' that are slugs, not ObjectIds.
+ * Build a strict _id query — only valid ObjectIds are accepted.
+ * Rejects slugs and mock IDs immediately with a clear error.
  */
-function buildQuestionQuery(ids: string[]): Record<string, unknown> {
+function buildStrictIdQuery(ids: string[], context: string): Record<string, unknown> {
     if (ids.length === 0) return { _id: { $in: [] } }
 
-    const validObjectIds: string[] = []
-    const slugIds: string[] = []
+    const invalid = ids.filter(
+        id => !mongoose.Types.ObjectId.isValid(id) || String(new mongoose.Types.ObjectId(id)) !== id
+    )
 
-    for (const id of ids) {
-        if (mongoose.Types.ObjectId.isValid(id) && String(new mongoose.Types.ObjectId(id)) === id) {
-            validObjectIds.push(id)
-        } else {
-            slugIds.push(id)
-        }
+    if (invalid.length > 0) {
+        const error = new Error(
+            `Invalid question IDs in ${context}: [${invalid.join(', ')}]. ` +
+            `All question IDs must be valid database ObjectIds. ` +
+            `Mock or slug-based IDs (e.g. "dbms-1") are no longer supported.`
+        ) as Error & { statusCode: number; code: string }
+        error.statusCode = 400
+        error.code = 'INVALID_QUESTION_IDS'
+        throw error
     }
 
-    const orConditions: Record<string, unknown>[] = []
-    if (validObjectIds.length) orConditions.push({ _id: { $in: validObjectIds } })
-    if (slugIds.length) orConditions.push({ slug: { $in: slugIds } })
-
-    return orConditions.length > 0 ? { $or: orConditions } : { _id: { $in: [] } }
+    return { _id: { $in: ids } }
 }
+
 import {
     StartAttemptInput,
     SubmitRoundInput,
@@ -134,7 +135,7 @@ export class AttemptsService {
             if (r.roundType === 'MCQ') {
                 const qIds = [...(config.singleCorrectQuestionIds || []), ...(config.multiCorrectQuestionIds || [])]
                 if (qIds.length > 0) {
-                    const qs = await Question.find(buildQuestionQuery(qIds)).lean()
+                    const qs = await Question.find(buildStrictIdQuery(qIds, 'MCQ round')).lean()
                     questionSnapshots = qs.map(q => ({
                         id: q._id.toString(),
                         type: 'MCQ',
@@ -152,7 +153,7 @@ export class AttemptsService {
             } else if (r.roundType === 'DSA') {
                 const qIds = config.questionIds || []
                 if (qIds.length > 0) {
-                    const qs = await Question.find(buildQuestionQuery(qIds)).lean()
+                    const qs = await Question.find(buildStrictIdQuery(qIds, 'DSA round')).lean()
                     questionSnapshots = qs.map(q => ({
                         id: q._id.toString(),
                         type: 'DSA',

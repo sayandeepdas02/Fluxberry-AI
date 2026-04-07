@@ -12,6 +12,7 @@ router.get('/', (req, res, next) => prospectsController.list(req, res, next))
 router.post('/', (req, res, next) => prospectsController.create(req, res, next))
 router.post('/bulk', (req, res, next) => prospectsController.createBulk(req, res, next))
 router.get('/:id', (req, res, next) => prospectsController.getById(req, res, next))
+router.get('/:id/fit', (req, res, next) => prospectsController.getProspectFit(req, res, next))
 router.patch('/:id', (req, res, next) => prospectsController.update(req, res, next))
 router.post('/:id/convert', (req, res, next) => prospectsController.convertToCandidate(req, res, next))
 

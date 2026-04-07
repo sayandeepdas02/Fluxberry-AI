@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express'
 import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
 import { prospectService } from './prospects.service.js'
+import { prospectsScoringService } from './prospects.scoring.js'
 
 class ProspectsController {
     // ── Prospects ────────────────────────────────────────
@@ -16,6 +17,13 @@ class ProspectsController {
             const prospect = await prospectService.getById(req.params.id, req.user!.organizationId as string)
             if (!prospect) return res.error('NOT_FOUND', 'Prospect not found', null, 404)
             res.success(prospect)
+        } catch (err) { next(err) }
+    }
+
+    async getProspectFit(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+        try {
+            const fit = await prospectsScoringService.evaluateProspectFit(req.params.id, req.user!.organizationId as string)
+            res.success(fit || { score: 0, insights: ['No active jobs available for comparison.'] })
         } catch (err) { next(err) }
     }
 

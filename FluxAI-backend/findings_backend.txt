@@ -1,0 +1,50 @@
+src/database/seed.ts: * Seed questions so backend has the same IDs as the frontend mock bank.
+src/database/models/index.ts:    /** Optional stable id for lookup (e.g. seed IDs matching frontend mock bank) */
+src/__tests__/token-validator.test.ts:jest.mock('../../src/database/models/index', () => ({
+src/__tests__/token-validator.test.ts:            status: jest.fn().mockReturnThis(),
+src/__tests__/token-validator.test.ts:        jest.clearAllMocks()
+src/__tests__/token-validator.test.ts:        (Offer.findOne as jest.Mock).mockReturnValue({
+src/__tests__/token-validator.test.ts:            select: jest.fn().mockResolvedValue(null)
+src/__tests__/token-validator.test.ts:            ; (Offer.findOne as jest.Mock).mockReturnValue({
+src/__tests__/token-validator.test.ts:                select: jest.fn().mockResolvedValue({ tokenExpiresAt: pastDate })
+src/__tests__/token-validator.test.ts:            ; (Offer.findOne as jest.Mock).mockReturnValue({
+src/__tests__/token-validator.test.ts:                select: jest.fn().mockResolvedValue({ tokenUsedAt: new Date() })
+src/__tests__/token-validator.test.ts:            ; (Offer.findOne as jest.Mock).mockReturnValue({
+src/__tests__/token-validator.test.ts:                select: jest.fn().mockResolvedValue({ tokenExpiresAt: futureDate, tokenUsedAt: null })
+src/scripts/seed-questions.ts: * Populates the Question collection with mock data from the frontend question bank.
+src/scripts/seed-questions.ts:// MCQ Bank (matching frontend mock)
+src/scripts/seed-questions.ts:// DSA Bank (matching frontend mock)
+src/scripts/verify-offer-flow.ts:        // 1. Setup Dummy Data
+src/scripts/verify-offer-flow.ts:        console.log('1. Setting up dummy data...')
+src/scripts/verify-offer-flow.ts:        console.log('   ✅ Dummy data created')
+src/jobs/processors/notification.processor.ts:            // TODO: Implement result email
+src/jobs/processors/ats-screening.processor.ts:        // Threshold events use job's scoringConfig (not hardcoded values)
+src/jobs/processors/resume-parsing.processor.ts:        // TODO: Integrate a real PDF parsing service here
+src/modules/ai-interview/services/llm.service.ts:            apiKey: process.env.OPENAI_API_KEY || 'dummy-key-to-allow-startup',
+src/modules/ats-screening/decision.service.ts: * All threshold comparisons read from Job.scoringConfig (no hardcoded 80/60).
+src/modules/ats-screening/decision.service.ts: * Uses job-level thresholds instead of hardcoded values.
+src/modules/ats-screening/scoring-v2/types.ts:    'todo app', 'todo list', 'calculator', 'hello world',
+src/modules/ats-screening/__tests__/worker.integration.test.ts:    function buildMockJob(overrides: Partial<{ attemptsMade: number; attempts: number }> = {}) {
+src/modules/ats-screening/__tests__/worker.integration.test.ts:        await processAtsScreeningJob(buildMockJob());
+src/modules/ats-screening/__tests__/worker.integration.test.ts:        await processAtsScreeningJob(buildMockJob());
+src/modules/ats-screening/__tests__/worker.integration.test.ts:        const mockJob = buildMockJob({ attemptsMade: 0, attempts: 5 });
+src/modules/ats-screening/__tests__/worker.integration.test.ts:        await expect(processAtsScreeningJob(mockJob)).rejects.toThrow(/Resume not parsed yet/);
+src/modules/ats-screening/__tests__/worker.integration.test.ts:        const mockJob = buildMockJob({ attemptsMade: 4, attempts: 5 });
+src/modules/ats-screening/__tests__/worker.integration.test.ts:        await expect(processAtsScreeningJob(mockJob)).resolves.toBeUndefined();
+src/modules/ats-screening/__tests__/worker.integration.test.ts:        const mockJob = buildMockJob({ attemptsMade: 0 });
+src/modules/ats-screening/__tests__/worker.integration.test.ts:        await expect(processAtsScreeningJob(mockJob)).resolves.toBeUndefined();
+src/modules/ats-screening/__tests__/worker.integration.test.ts:        await processAtsScreeningJob(buildMockJob());
+src/modules/ats-screening/__tests__/worker.integration.test.ts:        await processAtsScreeningJob(buildMockJob());
+src/modules/ats-screening/__tests__/scoring-v2.test.ts: * - Full pipeline orchestration (mocked embeddings)
+src/modules/ats-screening/__tests__/scoring-v2.test.ts:// Mock Embedding Service
+src/modules/ats-screening/__tests__/scoring-v2.test.ts:// Mock embedding service to avoid real API calls in tests.
+src/modules/ats-screening/__tests__/scoring-v2.test.ts:jest.mock('../scoring-v2/embedding.service.js', () => {
+src/modules/ats-screening/__tests__/scoring-v2.test.ts:    const embeddingServiceMock = {
+src/modules/ats-screening/__tests__/scoring-v2.test.ts:    return { embeddingService: embeddingServiceMock, EmbeddingServiceImpl: jest.fn() };
+src/modules/ats-screening/__tests__/scoring-v2.test.ts:            [{ name: 'Todo App', description: 'A basic todo app with CRUD operations and local storage for task management' }],
+src/modules/ats-screening/stats.service.ts:        // Resolve thresholds from Job.scoringConfig (no hardcoded 80/60)
+src/modules/rounds/rounds.validators.ts:    // TODO: Validate agent exists in agent registry
+src/modules/attempts/attempts.service.ts: * This is needed because frontend may send mock IDs like 'dbms-1' that are slugs, not ObjectIds.
+src/modules/jobs/job-parser.service.ts:            if (!apiKey || apiKey.includes('dummy')) {
+src/services/ai-voice/voiceStream.service.ts:        // 2. Plumb Stream into a mock/real LiveKit transmission interface.
+src/services/ai-voice/voiceStream.service.ts:            // mockLiveKitAudioIngress.write(chunk);

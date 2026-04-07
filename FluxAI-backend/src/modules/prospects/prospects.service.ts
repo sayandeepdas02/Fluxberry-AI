@@ -3,7 +3,7 @@ import { Prospect, IProspect, ProspectList, IProspectList, Campaign, ICampaign, 
 import { Candidate } from '../../database/models/index.js'
 import { eventBus, DomainEvent } from '../../common/services/event-bus.service.js'
 import { activityService } from '../activity/activity.service.js'
-import { emailTemplateService } from '../email/email-templates.service.js'
+import { campaignQueue } from './workers/campaign.worker.js'
 
 interface ListProspectsQuery {
     page?: number
@@ -203,48 +203,38 @@ class ProspectService {
 
         let sent = 0
         const prospects = list.prospectIds as unknown as IProspect[]
-
-        for (const prospect of prospects) {
-            try {
-                // Create message record
-                await Message.create({
-                    campaignId: campaign._id,
-                    prospectId: prospect._id,
-                    status: 'queued',
-                })
-
-                // Send via email service
-                await emailTemplateService.sendEmail(
-                    campaign.templateId.toString(),
-                    organizationId,
-                    prospect.email,
-                    {
-                        firstName: prospect.firstName,
-                        lastName: prospect.lastName,
-                        company: prospect.company || '',
-                        role: prospect.role || '',
-                    }
-                )
-
-                // Update message + prospect status
-                await Message.findOneAndUpdate(
-                    { campaignId: campaign._id, prospectId: prospect._id },
-                    { status: 'sent', sentAt: new Date() }
-                )
-
-                if (prospect.status === 'new') {
-                    await Prospect.findByIdAndUpdate(prospect._id, { status: 'contacted' })
-                }
-
-                sent++
-            } catch (err) {
-                // Log error but continue
-                console.error(`[Campaign] Failed to send to ${prospect.email}:`, err)
+        
+        const jobs = prospects.map(prospect => ({
+            name: 'send-email',
+            data: {
+                campaignId: campaign._id.toString(),
+                prospectId: prospect._id.toString(),
+                organizationId,
+                templateId: campaign.templateId.toString(),
+                prospectEmail: prospect.email,
+                firstName: prospect.firstName,
+                lastName: prospect.lastName,
+                company: prospect.company || '',
+                role: prospect.role || ''
+            },
+            opts: {
+                jobId: `${campaign._id}-${prospect._id}`,
+                attempts: 3,
+                backoff: { type: 'exponential', delay: 2000 }
             }
-        }
+        }))
 
-        campaign.status = 'completed'
-        campaign.stats.sent = sent
+        await campaignQueue.addBulk(jobs)
+
+        // Pre-create pending messages for UI state
+        const messageDocs = prospects.map(p => ({
+            campaignId: campaign._id,
+            prospectId: p._id,
+            status: 'queued'
+        }))
+        await Message.insertMany(messageDocs, { ordered: false }).catch(() => {})
+
+        campaign.status = 'sending' // Will remain sending. A separate cron can mark completed.
         await campaign.save()
 
         await activityService.log({
@@ -254,10 +244,10 @@ class ProspectService {
             eventType: 'CAMPAIGN_SENT',
             actorType: 'user',
             performedBy: userId,
-            metadata: { sent, total: prospects.length },
+            metadata: { enqueued: prospects.length },
         })
 
-        return { sent, total: prospects.length }
+        return { enqueued: prospects.length, total: prospects.length }
     }
 
     async getCampaignById(campaignId: string, organizationId: string) {
