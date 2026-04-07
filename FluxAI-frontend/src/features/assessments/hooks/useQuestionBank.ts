@@ -19,7 +19,7 @@ export function useQuestionBank(options: UseQuestionBankOptions = {}) {
         setIsLoading(true)
         setError(null)
         try {
-            const result = await questionsApi.list({ type: 'MCQ', limit: 100, ...params })
+            const result = await questionsApi.list({ limit: 100, ...params })
             setQuestions(result.data)
             setTotal(result.total)
         } catch (e: any) {

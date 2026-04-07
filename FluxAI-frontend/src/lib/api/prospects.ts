@@ -72,6 +72,9 @@ export const prospectsApi = {
     getById: (id: string): Promise<ApiResponse<Prospect>> =>
         apiClient.get(`/prospects/${id}`),
 
+    getFitAnalysis: (id: string): Promise<ApiResponse<any>> =>
+        apiClient.get(`/prospects/${id}/fit`),
+
     create: (data: Partial<Prospect>): Promise<ApiResponse<Prospect>> =>
         apiClient.post('/prospects', data),
 

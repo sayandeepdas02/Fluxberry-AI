@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils"
 import { assessmentsApi, type RoundConfigInput } from "@/lib/api/assessments"
 import { MCQSelector } from "@/features/assessments/components/mcq-selector"
 import { DSASelector } from "@/features/assessments/components/dsa-selector"
-import { dsaBank } from "@/features/assessments/mocks/question-bank"
 import { AIRoundConfigForm, AI_ROUND_CONFIG_DEFAULT, type AIRoundConfig } from "./ai-round-config-form"
 import { useQuestionBank } from "@/features/assessments/hooks/useQuestionBank"
 
@@ -19,6 +18,9 @@ export function ConfigureAssessment({ assessmentId }: { assessmentId: string }) 
 
     // Load MCQ questions from API (org + global)
     const { questions: mcqQuestions, isLoading: mcqLoading } = useQuestionBank({ type: 'MCQ' })
+
+    // Load DSA questions from API (org + global)
+    const { questions: dsaQuestions, isLoading: dsaLoading } = useQuestionBank({ type: 'DSA' })
 
     // Round Toggle State
     const [rounds, setRounds] = useState({
@@ -298,6 +300,8 @@ export function ConfigureAssessment({ assessmentId }: { assessmentId: string }) 
                 open={showDsaModal}
                 onOpenChange={setShowDsaModal}
                 initialSelection={dsaConfig}
+                questions={dsaQuestions}
+                isLoading={dsaLoading}
                 onSave={(ids) => {
                     setDsaConfig(ids)
                     setShowDsaModal(false)

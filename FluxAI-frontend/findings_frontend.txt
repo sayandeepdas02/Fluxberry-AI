@@ -1,0 +1,37 @@
+src/app/[companySlug]/careers/page.tsx:// Mock Testimonials (Keep for now as we don't have this in DB)
+src/features/candidate/components/test-taker/secure-shell.tsx:    // Mock proctoring events - keep existing logic
+src/features/pipeline/components/candidate-drawer.tsx:                    {/* Section: Timeline (Mock) */}
+src/features/assessments/components/dsa-selector.tsx:import { dsaBank } from "@/features/assessments/mocks/question-bank"
+src/features/assessments/components/configure-assessment.tsx:import { dsaBank } from "@/features/assessments/mocks/question-bank"
+src/features/assessments/components/assessment-review.tsx:    // Mock Configuration Data (simulating what was set in Configure step)
+src/features/landing/components/product-showcase.tsx:        mockup: <ApplicationMockup />
+src/features/landing/components/product-showcase.tsx:        mockup: <AIScreeningMockup />
+src/features/landing/components/product-showcase.tsx:        mockup: <SchedulingMockup />
+src/features/landing/components/product-showcase.tsx:        mockup: <OnboardingMockup />
+src/features/landing/components/product-showcase.tsx:                {activeTab.content.mockup}
+src/features/landing/components/product-showcase.tsx:   MOCKUP COMPONENTS — All sharp, no rounded corners
+src/features/landing/components/product-showcase.tsx:const MockupContainer = ({ children }: { children: React.ReactNode }) => (
+src/features/landing/components/product-showcase.tsx:function ApplicationMockup() {
+src/features/landing/components/product-showcase.tsx:    <MockupContainer>
+src/features/landing/components/product-showcase.tsx:    </MockupContainer>
+src/features/landing/components/product-showcase.tsx:function AIScreeningMockup() {
+src/features/landing/components/product-showcase.tsx:    <MockupContainer>
+src/features/landing/components/product-showcase.tsx:    </MockupContainer>
+src/features/landing/components/product-showcase.tsx:function SchedulingMockup() {
+src/features/landing/components/product-showcase.tsx:    <MockupContainer>
+src/features/landing/components/product-showcase.tsx:    </MockupContainer>
+src/features/landing/components/product-showcase.tsx:function OnboardingMockup() {
+src/features/landing/components/product-showcase.tsx:    <MockupContainer>
+src/features/landing/components/product-showcase.tsx:    </MockupContainer>
+src/features/landing/components/products.tsx:              <MockDashboard />
+src/features/landing/components/products.tsx:   MOCK DASHBOARD
+src/features/landing/components/products.tsx:function MockDashboard() {
+src/features/dashboard/components/horizontal-bar-chart.tsx:                        // Mocking the "pills" look - say each pill is 20%? or just a visual segmented bar
+src/features/dashboard/components/sidebar.tsx:    // Mock workspaces — in a real app these come from the user object
+src/features/talent-prospect/hooks/use-talent-search.ts:// Large static mock database mimicking Apollo's global search index
+src/features/talent-prospect/hooks/use-talent-search.ts:const MOCK_PROSPECTS: ProspectCandidate[] = [
+src/features/talent-prospect/hooks/use-talent-search.ts:    const [db, setDb] = useState<ProspectCandidate[]>(MOCK_PROSPECTS);
+src/features/talent-prospect/hooks/use-talent-search.ts:    // Dynamic AI Query translation mock
+src/features/talent-prospect/hooks/use-talent-search.ts:        // Mock pushing candidate directly to ATS pool
+src/features/interviews/components/InterviewList.tsx:                                        {/* TODO: Populate candidate/job details on backend or fetch here */}
+src/components/ui/bento-card.tsx:      {/* Visual Mockup Area */}

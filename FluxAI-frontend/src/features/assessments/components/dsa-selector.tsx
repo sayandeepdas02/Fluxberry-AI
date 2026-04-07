@@ -5,19 +5,22 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { AlertCircle, CheckCircle2, Code2 } from "lucide-react"
+import { AlertCircle, CheckCircle2, Code2, Loader2 } from "lucide-react"
 import { useState } from "react"
-import { dsaBank } from "@/features/assessments/mocks/question-bank"
 import { cn } from "@/lib/utils"
+import type { Question } from "@/lib/api/questions"
 
 interface DSASelectorProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     onSave: (selectedIds: string[]) => void
     initialSelection: string[]
+    /** DSA questions loaded from the API — passed by configure-assessment */
+    questions: Question[]
+    isLoading?: boolean
 }
 
-export function DSASelector({ open, onOpenChange, onSave, initialSelection }: DSASelectorProps) {
+export function DSASelector({ open, onOpenChange, onSave, initialSelection, questions, isLoading }: DSASelectorProps) {
     const [selected, setSelected] = useState<string[]>(initialSelection)
 
     const isValid = selected.length === 4
@@ -47,10 +50,10 @@ export function DSASelector({ open, onOpenChange, onSave, initialSelection }: DS
                     <span className="text-neutral-300">|</span>
                     <div className="text-neutral-500 text-xs flex gap-2">
                         {selected.map(id => {
-                            const q = dsaBank.find(x => x.id === id)
+                            const q = questions.find(x => x.id === id)
                             return q ? (
                                 <Badge key={id} variant="outline" className="text-[10px] font-normal h-5 border-neutral-300">
-                                    {q.difficulty}
+                                    {q.difficulty.charAt(0) + q.difficulty.slice(1).toLowerCase()}
                                 </Badge>
                             ) : null
                         })}
@@ -59,8 +62,20 @@ export function DSASelector({ open, onOpenChange, onSave, initialSelection }: DS
 
                 {/* Question List */}
                 <ScrollArea className="flex-1 rounded-md mt-2">
+                    {isLoading && (
+                        <div className="flex items-center justify-center py-12">
+                            <Loader2 className="w-5 h-5 animate-spin text-green-500" />
+                        </div>
+                    )}
+                    {!isLoading && questions.length === 0 && (
+                        <p className="text-center text-sm text-neutral-500 py-12">
+                            No DSA questions found. <a href="/dashboard/interviews/question-bank" target="_blank" className="text-green-600 underline">Create questions in the Question Bank</a>.
+                        </p>
+                    )}
                     <div className="space-y-3 p-1">
-                        {dsaBank.map(q => (
+                        {questions.map(q => {
+                            const diffLabel = q.difficulty.charAt(0) + q.difficulty.slice(1).toLowerCase()
+                            return (
                             <div
                                 key={q.id}
                                 className={cn(
@@ -79,11 +94,11 @@ export function DSASelector({ open, onOpenChange, onSave, initialSelection }: DS
                                         <div className="flex items-center gap-2">
                                             <p className="font-medium text-sm text-neutral-900">{q.title}</p>
                                             <Badge variant="outline" className={cn("text-xs",
-                                                q.difficulty === 'Easy' ? 'bg-green-50 text-green-700 border-green-200' :
-                                                    q.difficulty === 'Medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                                                q.difficulty === 'EASY' ? 'bg-green-50 text-green-700 border-green-200' :
+                                                    q.difficulty === 'MEDIUM' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
                                                         'bg-red-50 text-red-700 border-red-200'
                                             )}>
-                                                {q.difficulty}
+                                                {diffLabel}
                                             </Badge>
                                         </div>
                                     </div>
@@ -93,13 +108,14 @@ export function DSASelector({ open, onOpenChange, onSave, initialSelection }: DS
                                                 {t}
                                             </Badge>
                                         ))}
+                                        {!q.organizationId && <span className="text-[10px] text-neutral-400 ml-1">· Global</span>}
                                     </div>
                                 </div>
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                     <Button variant="ghost" size="sm" className="h-8 text-xs">Preview</Button>
                                 </div>
                             </div>
-                        ))}
+                        )})}
                     </div>
                 </ScrollArea>
 
