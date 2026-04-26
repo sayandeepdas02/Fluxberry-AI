@@ -72,16 +72,23 @@ export function SignUpForm() {
     };
 
     const handleGoogleSuccess = async (credentialResponse: any) => {
-        setIsLoading(true);
-        setError(null);
         if (credentialResponse.credential) {
-            const result = await googleLogin(credentialResponse.credential);
-            if (result.success && result.user) {
-                router.push("/dashboard");
-            } else {
-                setError(result.error || "Google signup failed");
+            setIsLoading(true);
+            setError(null);
+            try {
+                const result = await googleLogin(credentialResponse.credential);
+                if (result.success && result.user) {
+                    router.push("/dashboard");
+                } else {
+                    setError(result.error || "Google signup failed");
+                    setIsLoading(false);
+                }
+            } catch (err) {
+                setError("An unexpected error occurred during Google signup");
                 setIsLoading(false);
             }
+        } else {
+            setError("Google signup failed: No credential returned");
         }
     };
 

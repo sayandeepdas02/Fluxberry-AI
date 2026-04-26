@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.email) {
-        return new NextResponse("Unauthorized", { status: 401 })
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     await connectDB();
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     const user = await User.findOne({ email: session.user.email })
 
     if (!user) {
-        return new NextResponse("User not found", { status: 404 })
+        return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
     try {
@@ -55,34 +55,41 @@ export async function POST(req: Request) {
         return NextResponse.json(job)
     } catch (error) {
         console.error(error)
-        return new NextResponse("Internal Error", { status: 500 })
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
     }
 }
 
 export async function GET(req: Request) {
-    const session = await getServerSession(authOptions)
+    try {
+        const session = await getServerSession(authOptions)
 
-    if (!session?.user?.email) {
-        return new NextResponse("Unauthorized", { status: 401 })
+        if (!session?.user?.email) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+
+        await connectDB();
+
+        const user = await User.findOne({ email: session.user.email })
+
+        if (!user) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 })
+        }
+
+        const jobs = await Job.find({ userId: user._id } as any).sort({ createdAt: -1 });
+
+        const jobsWithCounts = await Promise.all(jobs.map(async (job) => {
+            const candidateCount = await Candidate.countDocuments({ jobId: job._id } as any);
+            return {
+                ...job.toObject(),
+                id: job._id.toString(),
+                _count: { candidates: candidateCount }
+            };
+        }));
+
+        return NextResponse.json(jobsWithCounts)
+    } catch (error) {
+        console.error("GET Jobs Error:", error)
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
     }
-
-    await connectDB();
-
-    const user = await User.findOne({ email: session.user.email })
-
-    if (!user) return new NextResponse("User not found", { status: 404 })
-
-    const jobs = await Job.find({ userId: user._id } as any).sort({ createdAt: -1 });
-
-    const jobsWithCounts = await Promise.all(jobs.map(async (job) => {
-        const candidateCount = await Candidate.countDocuments({ jobId: job._id } as any);
-        return {
-            ...job.toObject(),
-            id: job._id.toString(),
-            _count: { candidates: candidateCount }
-        };
-    }));
-
-    return NextResponse.json(jobsWithCounts)
 }
 

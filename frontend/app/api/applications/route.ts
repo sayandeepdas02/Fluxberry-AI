@@ -15,9 +15,9 @@ export async function POST(req: Request) {
     } catch (error: any) {
         console.error(error)
         if (error.message === "Job not found") {
-            return new NextResponse("Job not found", { status: 404 })
+            return NextResponse.json({ error: "Job not found" }, { status: 404 })
         }
-        return new NextResponse("Internal Error", { status: 500 })
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
     }
 }
 

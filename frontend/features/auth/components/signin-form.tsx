@@ -38,16 +38,23 @@ export function SignInForm() {
     };
 
     const handleGoogleSuccess = async (credentialResponse: any) => {
-        setIsLoading(true);
-        setError(null);
         if (credentialResponse.credential) {
-            const result = await googleLogin(credentialResponse.credential);
-            if (result.success && result.user) {
-                router.push("/dashboard");
-            } else {
-                setError(result.error || "Google login failed");
+            setIsLoading(true);
+            setError(null);
+            try {
+                const result = await googleLogin(credentialResponse.credential);
+                if (result.success && result.user) {
+                    router.push("/dashboard");
+                } else {
+                    setError(result.error || "Google login failed");
+                    setIsLoading(false);
+                }
+            } catch (err) {
+                setError("An unexpected error occurred during Google login");
                 setIsLoading(false);
             }
+        } else {
+            setError("Google login failed: No credential returned");
         }
     };
 

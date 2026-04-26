@@ -1,84 +1,435 @@
+export type Difficulty = "Easy" | "Medium" | "Hard";
+
+export interface BankQuestion {
+    id: string;
+    text: string;
+    options: string[];
+    correctAnswer: string;
+    difficulty: Difficulty;
+    category: string;
+}
+
+export const CURATED_QUESTION_BANK: BankQuestion[] = [
+    // ─── EASY (1–10) ───────────────────────────────────────────────────────────
+    {
+        id: "q1",
+        text: "What is the output of typeof null in JavaScript?",
+        options: ['"null"', '"object"', '"undefined"', '"number"'],
+        correctAnswer: '"object"',
+        difficulty: "Easy",
+        category: "JavaScript"
+    },
+    {
+        id: "q2",
+        text: "Which method converts a JSON string to an object in JavaScript?",
+        options: ["JSON.parse()", "JSON.stringify()", "JSON.toObject()", "JSON.convert()"],
+        correctAnswer: "JSON.parse()",
+        difficulty: "Easy",
+        category: "JavaScript"
+    },
+    {
+        id: "q3",
+        text: "Which Python data type is immutable?",
+        options: ["List", "Dictionary", "Tuple", "Set"],
+        correctAnswer: "Tuple",
+        difficulty: "Easy",
+        category: "Python"
+    },
+    {
+        id: "q4",
+        text: "What does npm init do?",
+        options: ["Installs dependencies", "Creates package.json", "Runs Node server", "Compiles JS code"],
+        correctAnswer: "Creates package.json",
+        difficulty: "Easy",
+        category: "Node.js"
+    },
+    {
+        id: "q5",
+        text: "Which HTTP method is used to update a resource?",
+        options: ["GET", "POST", "PUT", "OPTIONS"],
+        correctAnswer: "PUT",
+        difficulty: "Easy",
+        category: "HTTP"
+    },
+    {
+        id: "q6",
+        text: "In Express.js, what is req.params used for?",
+        options: ["Query params", "Body data", "URL parameters", "Headers"],
+        correctAnswer: "URL parameters",
+        difficulty: "Easy",
+        category: "Express.js"
+    },
+    {
+        id: "q7",
+        text: "What is the default port for HTTP?",
+        options: ["3000", "8080", "80", "443"],
+        correctAnswer: "80",
+        difficulty: "Easy",
+        category: "HTTP"
+    },
+    {
+        id: "q8",
+        text: "Which keyword is used to handle async operations in JS?",
+        options: ["wait", "async/await", "defer", "promiseOnly"],
+        correctAnswer: "async/await",
+        difficulty: "Easy",
+        category: "JavaScript"
+    },
+    {
+        id: "q9",
+        text: "In Python, which keyword defines a function?",
+        options: ["func", "function", "def", "lambda"],
+        correctAnswer: "def",
+        difficulty: "Easy",
+        category: "Python"
+    },
+    {
+        id: "q10",
+        text: "What is JWT mainly used for?",
+        options: ["Styling UI", "Database indexing", "Authentication", "Routing"],
+        correctAnswer: "Authentication",
+        difficulty: "Easy",
+        category: "Security"
+    },
+    // ─── MEDIUM (11–30) ────────────────────────────────────────────────────────
+    {
+        id: "q11",
+        text: "What will [] + [] return in JS?",
+        options: ["[]", '""', "undefined", "null"],
+        correctAnswer: '""',
+        difficulty: "Medium",
+        category: "JavaScript"
+    },
+    {
+        id: "q12",
+        text: "What is closure in JavaScript?",
+        options: ["Function inside loop", "Function with preserved lexical scope", "Object method", "Promise chain"],
+        correctAnswer: "Function with preserved lexical scope",
+        difficulty: "Medium",
+        category: "JavaScript"
+    },
+    {
+        id: "q13",
+        text: 'Which HTTP status code means "Unauthorized"?',
+        options: ["401", "403", "404", "500"],
+        correctAnswer: "401",
+        difficulty: "Medium",
+        category: "HTTP"
+    },
+    {
+        id: "q14",
+        text: "What does middleware do in Express?",
+        options: ["Handles DB queries", "Modifies request/response", "Compiles JS", "Routes static files"],
+        correctAnswer: "Modifies request/response",
+        difficulty: "Medium",
+        category: "Express.js"
+    },
+    {
+        id: "q15",
+        text: "In Node.js, what is the event loop responsible for?",
+        options: ["Memory management", "Handling async callbacks", "Compiling JS", "Managing threads"],
+        correctAnswer: "Handling async callbacks",
+        difficulty: "Medium",
+        category: "Node.js"
+    },
+    {
+        id: "q16",
+        text: "What is the difference between == and ===?",
+        options: ["No difference", "Type coercion vs strict comparison", "Memory allocation", "Speed difference only"],
+        correctAnswer: "Type coercion vs strict comparison",
+        difficulty: "Medium",
+        category: "JavaScript"
+    },
+    {
+        id: "q17",
+        text: "In Python, what does *args represent?",
+        options: ["Keyword args", "Variable positional arguments", "Default args", "Static args"],
+        correctAnswer: "Variable positional arguments",
+        difficulty: "Medium",
+        category: "Python"
+    },
+    {
+        id: "q18",
+        text: "What is REST?",
+        options: ["Database system", "Architectural style for APIs", "Programming language", "Authentication method"],
+        correctAnswer: "Architectural style for APIs",
+        difficulty: "Medium",
+        category: "Backend"
+    },
+    {
+        id: "q19",
+        text: "What is process.env used for?",
+        options: ["Access OS environment variables", "Manage threads", "Handle routing", "Logging"],
+        correctAnswer: "Access OS environment variables",
+        difficulty: "Medium",
+        category: "Node.js"
+    },
+    {
+        id: "q20",
+        text: "What does res.status(200).json() do?",
+        options: ["Redirects", "Sends JSON response", "Logs response", "Ends server"],
+        correctAnswer: "Sends JSON response",
+        difficulty: "Medium",
+        category: "Express.js"
+    },
+    {
+        id: "q21",
+        text: "What is CORS?",
+        options: ["Security mechanism", "Database query", "Routing method", "Logging tool"],
+        correctAnswer: "Security mechanism",
+        difficulty: "Medium",
+        category: "Security"
+    },
+    {
+        id: "q22",
+        text: "Which DB is NoSQL?",
+        options: ["MySQL", "PostgreSQL", "MongoDB", "SQLite"],
+        correctAnswer: "MongoDB",
+        difficulty: "Medium",
+        category: "Database"
+    },
+    {
+        id: "q23",
+        text: "What is indexing in DB?",
+        options: ["Data duplication", "Faster lookup mechanism", "Backup process", "Logging system"],
+        correctAnswer: "Faster lookup mechanism",
+        difficulty: "Medium",
+        category: "Database"
+    },
+    {
+        id: "q24",
+        text: "What is hashing used for in auth?",
+        options: ["Encryption", "Password storage", "Routing", "Logging"],
+        correctAnswer: "Password storage",
+        difficulty: "Medium",
+        category: "Security"
+    },
+    {
+        id: "q25",
+        text: "Which authentication type is stateless?",
+        options: ["Session auth", "JWT auth", "Cookies", "Cache"],
+        correctAnswer: "JWT auth",
+        difficulty: "Medium",
+        category: "Security"
+    },
+    {
+        id: "q26",
+        text: "What does next() do in Express?",
+        options: ["Ends response", "Calls next middleware", "Logs request", "Sends error"],
+        correctAnswer: "Calls next middleware",
+        difficulty: "Medium",
+        category: "Express.js"
+    },
+    {
+        id: "q27",
+        text: "What is SSR in Next.js?",
+        options: ["Static rendering", "Server-side rendering", "Styling system", "Routing mechanism"],
+        correctAnswer: "Server-side rendering",
+        difficulty: "Medium",
+        category: "Next.js"
+    },
+    {
+        id: "q28",
+        text: "What is useEffect used for?",
+        options: ["Routing", "Side effects", "State storage", "Styling"],
+        correctAnswer: "Side effects",
+        difficulty: "Medium",
+        category: "React"
+    },
+    {
+        id: "q29",
+        text: "What is rate limiting?",
+        options: ["DB indexing", "Restricting API usage", "Routing", "Caching"],
+        correctAnswer: "Restricting API usage",
+        difficulty: "Medium",
+        category: "Backend"
+    },
+    {
+        id: "q30",
+        text: "What does bcrypt do?",
+        options: ["Encrypt data", "Hash passwords", "Manage tokens", "Compress data"],
+        correctAnswer: "Hash passwords",
+        difficulty: "Medium",
+        category: "Security"
+    },
+    // ─── HARD (31–50) ──────────────────────────────────────────────────────────
+    {
+        id: "q31",
+        text: "What is the output of: console.log(0.1 + 0.2 === 0.3)?",
+        options: ["true", "false", "undefined", "error"],
+        correctAnswer: "false",
+        difficulty: "Hard",
+        category: "JavaScript"
+    },
+    {
+        id: "q32",
+        text: "What is a race condition?",
+        options: ["Fast DB query", "Concurrent execution issue", "API error", "Routing bug"],
+        correctAnswer: "Concurrent execution issue",
+        difficulty: "Hard",
+        category: "Systems"
+    },
+    {
+        id: "q33",
+        text: "What is CAP theorem?",
+        options: ["Cache API Protocol", "Consistency, Availability, Partition tolerance", "Compute Allocation Protocol", "None of the above"],
+        correctAnswer: "Consistency, Availability, Partition tolerance",
+        difficulty: "Hard",
+        category: "Database"
+    },
+    {
+        id: "q34",
+        text: "What is the purpose of the cluster module in Node.js?",
+        options: ["DB management", "Multi-core scaling", "Routing", "Logging"],
+        correctAnswer: "Multi-core scaling",
+        difficulty: "Hard",
+        category: "Node.js"
+    },
+    {
+        id: "q35",
+        text: "What is the N+1 query problem?",
+        options: ["Too many DB connections", "Inefficient repeated queries", "Cache issue", "API timeout"],
+        correctAnswer: "Inefficient repeated queries",
+        difficulty: "Hard",
+        category: "Database"
+    },
+    {
+        id: "q36",
+        text: "What is idempotency?",
+        options: ["Same request → same result", "Fast API", "DB locking", "Stateless system"],
+        correctAnswer: "Same request → same result",
+        difficulty: "Hard",
+        category: "Backend"
+    },
+    {
+        id: "q37",
+        text: "What is CSRF?",
+        options: ["Auth bypass attack", "SQL injection", "XSS variant", "Cache issue"],
+        correctAnswer: "Auth bypass attack",
+        difficulty: "Hard",
+        category: "Security"
+    },
+    {
+        id: "q38",
+        text: "What is XSS?",
+        options: ["DB attack", "Script injection", "Auth failure", "Routing issue"],
+        correctAnswer: "Script injection",
+        difficulty: "Hard",
+        category: "Security"
+    },
+    {
+        id: "q39",
+        text: "What is eventual consistency?",
+        options: ["Immediate consistency", "Delayed consistency", "No consistency", "Strong consistency"],
+        correctAnswer: "Delayed consistency",
+        difficulty: "Hard",
+        category: "Database"
+    },
+    {
+        id: "q40",
+        text: "What does await do internally?",
+        options: ["Blocks thread", "Uses event loop & promises", "Creates thread", "Stops execution permanently"],
+        correctAnswer: "Uses event loop & promises",
+        difficulty: "Hard",
+        category: "JavaScript"
+    },
+    {
+        id: "q41",
+        text: "What is a cold start in serverless?",
+        options: ["Cache miss", "Initial function latency", "DB failure", "Routing delay"],
+        correctAnswer: "Initial function latency",
+        difficulty: "Hard",
+        category: "Backend"
+    },
+    {
+        id: "q42",
+        text: "What is connection pooling?",
+        options: ["DB backup", "Reusing DB connections", "Cache system", "API routing"],
+        correctAnswer: "Reusing DB connections",
+        difficulty: "Hard",
+        category: "Database"
+    },
+    {
+        id: "q43",
+        text: "What is a monolith?",
+        options: ["Distributed system", "Single codebase app", "Microservice", "API gateway"],
+        correctAnswer: "Single codebase app",
+        difficulty: "Hard",
+        category: "Architecture"
+    },
+    {
+        id: "q44",
+        text: "What is microservices architecture?",
+        options: ["Single app", "Independent services", "DB system", "Frontend pattern"],
+        correctAnswer: "Independent services",
+        difficulty: "Hard",
+        category: "Architecture"
+    },
+    {
+        id: "q45",
+        text: "What is GraphQL?",
+        options: ["DB", "Query language for APIs", "Cache", "Auth system"],
+        correctAnswer: "Query language for APIs",
+        difficulty: "Hard",
+        category: "Backend"
+    },
+    {
+        id: "q46",
+        text: "What is load balancing?",
+        options: ["DB indexing", "Distributing traffic", "Routing", "Logging"],
+        correctAnswer: "Distributing traffic",
+        difficulty: "Hard",
+        category: "Systems"
+    },
+    {
+        id: "q47",
+        text: "What is a reverse proxy?",
+        options: ["Client proxy", "Server-side proxy", "DB proxy", "Cache proxy"],
+        correctAnswer: "Server-side proxy",
+        difficulty: "Hard",
+        category: "Systems"
+    },
+    {
+        id: "q48",
+        text: "What is OAuth?",
+        options: ["Encryption", "Authorization protocol", "Database", "Routing system"],
+        correctAnswer: "Authorization protocol",
+        difficulty: "Hard",
+        category: "Security"
+    },
+    {
+        id: "q49",
+        text: "What is the purpose of Redis?",
+        options: ["Persistent DB", "In-memory cache", "Compiler", "Routing engine"],
+        correctAnswer: "In-memory cache",
+        difficulty: "Hard",
+        category: "Database"
+    },
+    {
+        id: "q50",
+        text: "What is the difference between throttling and debouncing?",
+        options: ["Same thing", "Rate control techniques", "DB optimization", "Routing logic"],
+        correctAnswer: "Rate control techniques",
+        difficulty: "Hard",
+        category: "JavaScript"
+    },
+];
+
+// Legacy format used by auto-generate — kept for backward compat
 export const QUESTION_TEMPLATES: Record<string, any[]> = {
+    "Frontend": CURATED_QUESTION_BANK
+        .filter(q => ["JavaScript", "React", "Next.js"].includes(q.category))
+        .map(q => ({ text: q.text, options: q.options, correctAnswer: q.correctAnswer })),
+    "Backend": CURATED_QUESTION_BANK
+        .filter(q => ["Backend", "Express.js", "Node.js", "HTTP"].includes(q.category))
+        .map(q => ({ text: q.text, options: q.options, correctAnswer: q.correctAnswer })),
+    "Full Stack": CURATED_QUESTION_BANK
+        .map(q => ({ text: q.text, options: q.options, correctAnswer: q.correctAnswer })),
     "Data Structures & Algorithms": [
         { text: "What is the time complexity of binary search?", options: ["O(n)", "O(log n)", "O(n log n)", "O(1)"], correctAnswer: "O(log n)" },
         { text: "Which data structure uses FIFO?", options: ["Stack", "Queue", "Tree", "Graph"], correctAnswer: "Queue" },
         { text: "Which traversal gives sorted output in BST?", options: ["Preorder", "Postorder", "Inorder", "Level order"], correctAnswer: "Inorder" },
         { text: "Time complexity of quicksort (average)?", options: ["O(n²)", "O(n log n)", "O(log n)", "O(n)"], correctAnswer: "O(n log n)" },
         { text: "Which DS is used for recursion?", options: ["Queue", "Stack", "Heap", "Tree"], correctAnswer: "Stack" },
-        { text: "Worst case of quicksort?", options: ["O(n)", "O(log n)", "O(n log n)", "O(n²)"], correctAnswer: "O(n²)" },
-        { text: "Hash table average lookup time?", options: ["O(n)", "O(log n)", "O(1)", "O(n log n)"], correctAnswer: "O(1)" },
-        { text: "Which is not a linear DS?", options: ["Array", "Stack", "Graph", "Queue"], correctAnswer: "Graph" },
-        { text: "Space complexity of merge sort?", options: ["O(1)", "O(n)", "O(log n)", "O(n²)"], correctAnswer: "O(n)" },
-        { text: "Detect cycle in graph uses?", options: ["BFS", "DFS", "Both", "None"], correctAnswer: "Both" },
-        { text: "Heap is used in?", options: ["DFS", "Dijkstra", "BFS", "Sorting only"], correctAnswer: "Dijkstra" },
-        { text: "Best DS for LRU cache?", options: ["Array", "Linked List + HashMap", "Stack", "Tree"], correctAnswer: "Linked List + HashMap" },
-        { text: "What is a balanced BST?", options: ["Equal nodes", "Height difference ≤1", "Sorted tree", "Binary tree"], correctAnswer: "Height difference ≤1" },
-        { text: "Graph with no cycles?", options: ["DAG", "Tree", "Both", "None"], correctAnswer: "Both" },
-        { text: "Which sorting is stable?", options: ["Quick", "Heap", "Merge", "Selection"], correctAnswer: "Merge" },
-        { text: "BFS uses?", options: ["Stack", "Queue", "Heap", "Array"], correctAnswer: "Queue" },
-        { text: "Stack overflow occurs when?", options: ["Empty", "Full", "Both", "None"], correctAnswer: "Full" },
-        { text: "Linked list access time?", options: ["O(1)", "O(log n)", "O(n)", "O(n log n)"], correctAnswer: "O(n)" },
-        { text: "Which DS for undo operation?", options: ["Queue", "Stack", "Heap", "Graph"], correctAnswer: "Stack" },
-        { text: "Height of balanced BST?", options: ["O(n)", "O(log n)", "O(1)", "O(n²)"], correctAnswer: "O(log n)" },
-        { text: "Which uses priority queue?", options: ["BFS", "Dijkstra", "DFS", "Merge"], correctAnswer: "Dijkstra" },
-        { text: "What is collision in hashing?", options: ["Same key", "Same index", "Same value", "None"], correctAnswer: "Same index" },
-        { text: "Which DS for shortest path?", options: ["Stack", "Queue", "Graph", "Tree"], correctAnswer: "Graph" },
-        { text: "Which is divide & conquer?", options: ["BFS", "QuickSort", "DFS", "Linear Search"], correctAnswer: "QuickSort" },
-        { text: "Time complexity of heap insert?", options: ["O(1)", "O(log n)", "O(n)", "O(n log n)"], correctAnswer: "O(log n)" }
     ],
-    "DBMS": [
-        { text: "Primary key is?", options: ["Unique + Not null", "Only unique", "Only not null", "None"], correctAnswer: "Unique + Not null" },
-        { text: "SQL stands for?", options: ["Structured Query Language", "Simple Query Language", "System Query Language", "None"], correctAnswer: "Structured Query Language" },
-        { text: "Normalization reduces?", options: ["Redundancy", "Speed", "Data", "Queries"], correctAnswer: "Redundancy" },
-        { text: "Which is NoSQL?", options: ["MySQL", "PostgreSQL", "MongoDB", "Oracle"], correctAnswer: "MongoDB" },
-        { text: "JOIN combines?", options: ["Rows", "Columns", "Tables", "DBs"], correctAnswer: "Tables" },
-        { text: "ACID property A = ?", options: ["Atomicity", "Accuracy", "Access", "Allocation"], correctAnswer: "Atomicity" },
-        { text: "Index improves?", options: ["Insert", "Read", "Delete", "None"], correctAnswer: "Read" },
-        { text: "Foreign key is?", options: ["Unique", "Reference key", "Primary", "None"], correctAnswer: "Reference key" },
-        { text: "Which is DDL?", options: ["SELECT", "INSERT", "CREATE", "UPDATE"], correctAnswer: "CREATE" },
-        { text: "Which normal form removes partial dependency?", options: ["1NF", "2NF", "3NF", "BCNF"], correctAnswer: "2NF" }
-    ],
-    "OS": [
-        { text: "OS manages?", options: ["Hardware", "Software", "Both", "None"], correctAnswer: "Both" },
-        { text: "Process is?", options: ["Program in execution", "File", "Thread", "None"], correctAnswer: "Program in execution" },
-        { text: "Deadlock needs?", options: ["Mutual exclusion", "Hold & wait", "No preemption", "All"], correctAnswer: "All" },
-        { text: "Context switch is?", options: ["Process switch", "Memory change", "Disk swap", "None"], correctAnswer: "Process switch" },
-        { text: "Virtual memory uses?", options: ["RAM", "Disk", "Cache", "CPU"], correctAnswer: "Disk" },
-        { text: "Scheduling algorithm?", options: ["FCFS", "SJF", "Round Robin", "All"], correctAnswer: "All" }
-    ],
-    "Networking": [
-        { text: "HTTP is?", options: ["Stateless", "Stateful", "Both", "None"], correctAnswer: "Stateless" },
-        { text: "HTTPS uses?", options: ["SSL/TLS", "FTP", "TCP", "UDP"], correctAnswer: "SSL/TLS" },
-        { text: "TCP is?", options: ["Reliable", "Unreliable", "Fast", "None"], correctAnswer: "Reliable" },
-        { text: "DNS does?", options: ["IP → Domain", "Domain → IP", "Both", "None"], correctAnswer: "Domain → IP" }
-    ],
-    "Backend": [
-        { text: "REST API is?", options: ["Stateless", "Stateful", "Both", "None"], correctAnswer: "Stateless" },
-        { text: "HTTP status 200?", options: ["Error", "Success", "Redirect", "Fail"], correctAnswer: "Success" },
-        { text: "Middleware in Node?", options: ["DB", "Function", "API", "Server"], correctAnswer: "Function" },
-        { text: "JWT is used for?", options: ["Auth", "DB", "Cache", "Logs"], correctAnswer: "Auth" },
-        { text: "Which DB is relational?", options: ["MongoDB", "MySQL", "Redis", "Firebase"], correctAnswer: "MySQL" }
-    ],
-    "Frontend": [
-        { text: "Which is not JS framework?", options: ["React", "Angular", "Vue", "Django"], correctAnswer: "Django" },
-        { text: "useState is?", options: ["Hook", "API", "DB", "Class"], correctAnswer: "Hook" },
-        { text: "Virtual DOM improves?", options: ["Speed", "UI", "Memory", "None"], correctAnswer: "Speed" },
-        { text: "CSS Flexbox is for?", options: ["Layout", "DB", "Logic", "API"], correctAnswer: "Layout" },
-        { text: "Closure means?", options: ["Function + scope", "Loop", "Object", "None"], correctAnswer: "Function + scope" },
-        { text: "Promise is?", options: ["Sync", "Async", "DB", "None"], correctAnswer: "Async" },
-        { text: "== vs === ?", options: ["Same", "Type check", "No diff", "None"], correctAnswer: "Type check" },
-        { text: "Event bubbling?", options: ["Child → Parent", "Parent → Child", "Both", "None"], correctAnswer: "Child → Parent" },
-        { text: "LocalStorage is?", options: ["Server", "Browser", "DB", "API"], correctAnswer: "Browser" },
-        { text: "React key prop?", options: ["Styling", "Unique ID", "State", "None"], correctAnswer: "Unique ID" },
-        { text: "DOM stands for?", options: ["Document Object Model", "Data Object Model", "None", "Both"], correctAnswer: "Document Object Model" },
-        { text: "CSS position absolute?", options: ["Fixed", "Relative to parent", "Static", "None"], correctAnswer: "Relative to parent" },
-        { text: "Async/Await is?", options: ["Sync", "Async", "Loop", "None"], correctAnswer: "Async" },
-        { text: "useEffect used for?", options: ["Side effects", "Styling", "Routing", "None"], correctAnswer: "Side effects" },
-        { text: "Props are?", options: ["Immutable", "Mutable", "Both", "None"], correctAnswer: "Immutable" },
-        { text: "State is?", options: ["Mutable", "Immutable", "Both", "None"], correctAnswer: "Mutable" },
-        { text: "JSON stands for?", options: ["JavaScript Object Notation", "Java Syntax Object Notation", "None", "Both"], correctAnswer: "JavaScript Object Notation" },
-        { text: "Arrow function uses?", options: ["Lexical this", "Dynamic this", "Both", "None"], correctAnswer: "Lexical this" },
-        { text: "NPM is?", options: ["Package manager", "DB", "API", "None"], correctAnswer: "Package manager" },
-        { text: "SPA means?", options: ["Single Page App", "Simple Page App", "Server Page App", "None"], correctAnswer: "Single Page App" }
-    ]
 };

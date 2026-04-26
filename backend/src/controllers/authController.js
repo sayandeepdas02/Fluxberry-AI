@@ -70,31 +70,54 @@ exports.login = async (req, res) => {
 exports.googleLogin = async (req, res) => {
     try {
         const { credential } = req.body;
+        
+        if (!credential) {
+            return res.status(400).json({ success: false, error: { message: 'Google credential is required' } });
+        }
+
         const ticket = await client.verifyIdToken({
             idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID,
         });
+        
         const payload = ticket.getPayload();
-        const { email, name } = payload;
+        if (!payload) {
+            return res.status(400).json({ success: false, error: { message: 'Invalid Google token' } });
+        }
+
+        const { email, name, picture, sub: googleId } = payload;
 
         let user = await User.findOne({ email });
+        
         if (!user) {
-            const randomPassword = await bcrypt.hash(Date.now().toString(), 10);
+            // Create a new user if they don't exist
+            // Using googleId or a random string as a placeholder password
+            const randomPassword = await bcrypt.hash(Math.random().toString(36).slice(-10), 10);
             user = await User.create({
                 name,
                 email,
-                password: randomPassword
+                password: randomPassword,
+                company: 'Personal', // Default company
+                companyName: 'Personal',
             });
         }
 
         res.status(200).json({
             success: true,
             data: {
-                user: { id: user._id, name: user.name, email: user.email },
+                user: { 
+                    id: user._id, 
+                    name: user.name, 
+                    email: user.email,
+                    company: user.company,
+                    companyName: user.companyName
+                },
                 tokens: { accessToken: generateToken(user._id) }
             }
         });
     } catch (error) {
-        res.status(500).json({ success: false, error: { message: error.message } });
+        console.error('Google Login Error:', error);
+        res.status(500).json({ success: false, error: { message: 'Authentication failed: ' + error.message } });
     }
 };
 

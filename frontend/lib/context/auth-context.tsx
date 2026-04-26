@@ -76,7 +76,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (response.success && response.data) {
             setUser(response.data.user)
-            await signIn('credentials', { fluxToken: response.data.tokens.accessToken, redirect: false })
+            const result = await signIn('credentials', { 
+                fluxToken: response.data.tokens.accessToken, 
+                redirect: false 
+            })
+            
+            if (result?.error) {
+                return { success: false, error: "Authentication session failed: " + result.error }
+            }
+            
             return { success: true, user: response.data.user }
         }
 
@@ -91,7 +99,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (response.success && response.data) {
             setUser(response.data.user)
-            await signIn('credentials', { fluxToken: response.data.tokens.accessToken, redirect: false })
+            const result = await signIn('credentials', { 
+                fluxToken: response.data.tokens.accessToken, 
+                redirect: false 
+            })
+            
+            if (result?.error) {
+                return { success: false, error: "Login session failed: " + result.error }
+            }
+            
             return { success: true, user: response.data.user }
         }
 
@@ -106,7 +122,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (response.success && response.data) {
             setUser(response.data.user)
-            await signIn('credentials', { fluxToken: response.data.tokens.accessToken, redirect: false })
+            const result = await signIn('credentials', { 
+                fluxToken: response.data.tokens.accessToken, 
+                redirect: false 
+            })
+            
+            if (result?.error) {
+                return { success: false, error: "Signup session failed: " + result.error }
+            }
+            
             return { success: true }
         }
 
