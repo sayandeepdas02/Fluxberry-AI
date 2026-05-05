@@ -121,7 +121,10 @@ class ApiClient {
                         this.isRefreshing = false
                     }
                 } else if (response.status === 401) {
-                    if (typeof window !== 'undefined') window.dispatchEvent(new Event('auth:unauthorized'))
+                    const isThrottled = errCode === 'TOO_MANY_REQUESTS'
+                    if (!isThrottled && typeof window !== 'undefined') {
+                        window.dispatchEvent(new Event('auth:unauthorized'))
+                    }
                 }
 
                 if (!response.ok) { 

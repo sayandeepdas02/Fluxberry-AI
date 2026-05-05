@@ -13,7 +13,7 @@ import {
 import { SignupInput, LoginInput, AuthResponse, AuthUser, AuthTokens, JwtPayload } from './auth.types.js'
 
 const SALT_ROUNDS = 10
-const ACCESS_EXPIRES_IN = 15 * 60 // 15 minutes
+const ACCESS_EXPIRES_IN = 60 * 60 // 1 hour
 const REFRESH_EXPIRES_IN = 7 * 24 * 60 * 60 // 7 days
 
 const googleClient = new OAuth2Client()

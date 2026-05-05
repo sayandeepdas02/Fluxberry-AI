@@ -17,6 +17,7 @@ const ENV_CONFIG: EnvConfig = {
     ],
     requiredInServer: [
         'PORT',
+        'GOOGLE_CLIENT_ID',
     ],
     requiredInWorker: [
         'RESEND_API_KEY',

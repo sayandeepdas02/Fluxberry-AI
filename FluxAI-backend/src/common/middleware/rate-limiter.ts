@@ -17,7 +17,7 @@ export const apiLimiter = rateLimit({
 
 export const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    limit: 20, // Limit login attempts
+    limit: 100, // Limit login/refresh attempts (increased to prevent logout on multi-tab)
     standardHeaders: 'draft-7',
     legacyHeaders: false,
     message: {
