@@ -9,16 +9,6 @@ import { useAnalytics } from "@/features/dashboard/hooks/use-analytics"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AlertTriangle } from "lucide-react"
 
-
-// Static campaign data — no backend entity for campaigns yet (tracked in roadmap)
-const campaignPerformanceData = [
-    { name: 'Senior Dev Outreach', value: 45 },
-    { name: 'Q1 Hiring Drive', value: 30 },
-    { name: 'University Mixer', value: 15 },
-    { name: 'Tech Talk Series', value: 8 },
-    { name: 'Other', value: 2 },
-]
-
 export function AnalyticsView() {
     const { kpis, trends, demographics, isLoading, error } = useAnalytics()
 
@@ -55,17 +45,20 @@ export function AnalyticsView() {
         )
     }
 
-    // Transform trends for LineChart
-    // Assuming trends is [{ date: '2024-01-01', value: 10 }, ...]
-    // We need to map to "months" (or labels) and "thisYear"
     const formattedTrends = {
         months: trends.length > 0 ? trends.map(t => {
             const d = new Date(t.date)
             return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-        }) : ['No Data'],
-        thisYear: trends.length > 0 ? trends.map(t => t.value) : [0],
-        lastYear: trends.length > 0 ? trends.map(() => 0) : [0], // No historical data yet
+        }) : [],
+        thisYear: trends.length > 0 ? trends.map(t => t.value) : [],
+        lastYear: [] as number[], // Historical period not yet available
     }
+
+    // Application sources for the horizontal bar chart
+    const sourceData = demographics?.device?.map(d => ({
+        name: d.label,
+        value: d.value,
+    })) ?? []
 
     // Fallback if KPIs are null
     const safeKpis = kpis || {
@@ -116,10 +109,10 @@ export function AnalyticsView() {
                     />
                 </div>
 
-                {/* Campaign Performance (Horizontal Bar) */}
+                {/* Application Sources (Horizontal Bar) */}
                 <div className="lg:col-span-1">
                     <HorizontalBarChart
-                        data={campaignPerformanceData}
+                        data={sourceData}
                     />
                 </div>
             </div>
@@ -127,10 +120,10 @@ export function AnalyticsView() {
             {/* Secondary Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
-                    <VerticalBarChart data={demographics?.device.map(d => ({ device: d.label, count: d.value })) || []} />
+                    <VerticalBarChart data={sourceData.map(d => ({ device: d.name, count: d.value }))} />
                 </div>
                 <div className="lg:col-span-1">
-                    <DonutChart data={demographics?.location.map(d => ({ country: d.label, percentage: d.percentage })) || []} />
+                    <DonutChart data={demographics?.location?.map(d => ({ country: d.label, percentage: d.percentage })) || []} />
                 </div>
             </div>
 
