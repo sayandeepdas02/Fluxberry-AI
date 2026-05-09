@@ -1,17 +1,14 @@
 /**
  * ATS Scoring Engine — Strategy Registry
  *
- * Supports both V1 (rule-based) and V2 (semantic) strategies.
- * The registry resolves the correct engine by version string.
- *
- * V1: Synchronous, rule-based scoring (wrapped in Promise for interface compat)
- * V2: Async, embedding-powered semantic scoring
+ * V2 (semantic) is the only supported strategy.
+ * Processors should call scoringService.score() directly instead of this registry.
+ * This registry is kept for any external callers that depend on the IScoringStrategy interface.
  */
 
 import { IResumeParsedData } from './models/resume-profile.model.js';
 import { IJobScreeningProfile } from './models/job-screening-profile.model.js';
 import { IScoreBreakdown } from './models/screening-result.model.js';
-import * as ScoringV1 from './scoringEngine.js';
 import * as ScoringV2Engine from './scoring-v2/scoring-engine-v2.js';
 import { V2JobContext, V2ScoreBreakdown, DEFAULT_V2_WEIGHTS } from './scoring-v2/types.js';
 
@@ -28,8 +25,7 @@ export interface ScoreConfigWeights {
     experienceWeight: number;
     projectWeight: number;
     educationWeight: number;
-    bonusWeight?: number;       // V1
-    signalBoostWeight?: number; // V2
+    signalBoostWeight?: number;
 }
 
 export interface ScoreConfig {
@@ -61,52 +57,6 @@ export interface IScoringStrategy {
     calculateConfidence(
         parsedData: IResumeParsedData | undefined,
     ): Promise<number>;
-}
-
-// ──────────────────────────────────────────────────────────────
-// Weight Normalization Helper
-// ──────────────────────────────────────────────────────────────
-
-/**
- * Normalize ScoreConfigWeights to the strict V1 engine format.
- * Always ensures bonusWeight is a number (falls back to signalBoostWeight or 0).
- */
-function toV1Weights(w: ScoreConfigWeights): {
-    skillWeight: number; experienceWeight: number; projectWeight: number;
-    educationWeight: number; bonusWeight: number;
-} {
-    return {
-        skillWeight:      w.skillWeight,
-        experienceWeight: w.experienceWeight,
-        projectWeight:    w.projectWeight,
-        educationWeight:  w.educationWeight,
-        bonusWeight:      w.bonusWeight ?? w.signalBoostWeight ?? 0.05,
-    };
-}
-
-// ──────────────────────────────────────────────────────────────
-// V1 Strategy (Rule-Based — sync wrapped in Promise)
-// ──────────────────────────────────────────────────────────────
-
-class ScoringStrategyV1 implements IScoringStrategy {
-    version = '1.0.0';
-    description = 'Standard rule-based evaluation';
-
-    async evaluateHardGates(parsedData: IResumeParsedData | undefined, config: ScoreConfig) {
-        return ScoringV1.HardGate(parsedData, config.hardGates);
-    }
-
-    async generateBreakdown(parsedData: IResumeParsedData | undefined, config: ScoreConfig) {
-        return ScoringV1.generateScoreBreakdown(parsedData, { ...config, weights: toV1Weights(config.weights) });
-    }
-
-    async calculateFinalScore(breakdown: IScoreBreakdown, weights: ScoreConfig['weights']) {
-        return ScoringV1.FinalWeightedScore(breakdown, toV1Weights(weights));
-    }
-
-    async calculateConfidence(parsedData: IResumeParsedData | undefined) {
-        return ScoringV1.ConfidenceScore(parsedData);
-    }
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -183,12 +133,8 @@ class ScoringStrategyV2 implements IScoringStrategy {
         return result.breakdown;
     }
 
-    async calculateFinalScore(breakdown: IScoreBreakdown, _weights: ScoreConfig['weights']) {
-        if (this._cachedResult) {
-            return this._cachedResult.finalScore;
-        }
-        // Fallback: use V1 calculation with normalized weights
-        return ScoringV1.FinalWeightedScore(breakdown, toV1Weights(_weights));
+    async calculateFinalScore(_breakdown: IScoreBreakdown, _weights: ScoreConfig['weights']) {
+        return this._cachedResult?.finalScore ?? 0;
     }
 
     async calculateConfidence(parsedData: IResumeParsedData | undefined) {
@@ -207,7 +153,6 @@ class ScoringEngineRegistryClass {
     private strategies: Map<string, IScoringStrategy> = new Map();
 
     constructor() {
-        this.register(new ScoringStrategyV1());
         this.register(new ScoringStrategyV2());
     }
 
@@ -218,14 +163,11 @@ class ScoringEngineRegistryClass {
     getEngine(version: string): IScoringStrategy {
         const strategy = this.strategies.get(version);
         if (!strategy) {
-            console.warn(`[ScoringRegistry] Version ${version} not found. Falling back to 1.0.0.`);
-            return this.strategies.get('1.0.0')!;
-        }
-        // For V2, return a fresh instance to avoid cross-candidate cache collisions
-        if (version === '2.0.0') {
+            console.warn(`[ScoringRegistry] Version ${version} not found. Falling back to 2.0.0.`);
             return new ScoringStrategyV2();
         }
-        return strategy;
+        // Return a fresh instance to avoid cross-candidate cache collisions
+        return new ScoringStrategyV2();
     }
 }
 

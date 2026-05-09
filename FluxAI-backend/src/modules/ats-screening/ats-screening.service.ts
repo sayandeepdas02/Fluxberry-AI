@@ -18,6 +18,7 @@ import { copilotService }  from './copilot.service.js'
 import { ScreeningResult, ScreeningStatus, deriveStatusPriority } from './models/screening-result.model.js'
 import { enqueueResumeParsingJob } from '../../jobs/queues/index.js'
 import { Candidate } from '../../database/models/index.js'
+import { AppError } from '../../common/errors/index.js'
 
 export class AtsScreeningService {
     // ─────────────────────────────────────────────
@@ -83,18 +84,18 @@ export class AtsScreeningService {
 
     async retryParseFailed(jobId: string, candidateId: string, orgId: string) {
         const result = await ScreeningResult.findOne({ candidateId, jobId, organizationId: orgId })
-        if (!result) throw { code: 'NOT_FOUND', message: 'Result not found' }
+        if (!result) throw AppError.notFound('Screening result')
 
         if (
             result.status !== ScreeningStatus.PARSE_FAILED &&
             result.status !== ScreeningStatus.ERROR
         ) {
-            throw { code: 'INVALID_STATUS', message: `Cannot retry ${result.status}` }
+            throw AppError.badRequest(`Cannot retry a result with status: ${result.status}`)
         }
 
         const candidate = await Candidate.findById(candidateId)
         if (!candidate?.resumeUrl) {
-            throw { code: 'NO_RESUME', message: 'Candidate has no resume URL to parse' }
+            throw AppError.badRequest('Candidate has no resume URL to parse')
         }
 
         // Reset status so it can be re-processed
@@ -139,9 +140,10 @@ export class AtsScreeningService {
     async updateWeights(
         jobId: string,
         orgId: string,
-        weights: { skills: number; experience: number; projects: number; education: number; signalBoost: number }
+        weights: { skills: number; experience: number; projects: number; education: number; signalBoost: number },
+        performedBy?: string
     ) {
-        return scoringService.updateWeights(jobId, orgId, weights)
+        return scoringService.updateWeights(jobId, orgId, weights, performedBy)
     }
 
     // ─────────────────────────────────────────────
@@ -160,7 +162,7 @@ export class AtsScreeningService {
         action: 'SHORTLISTED' | 'REVIEW' | 'REJECTED'
     ) {
         const result = await ScreeningResult.findOne({ candidateId, jobId, organizationId: orgId })
-        if (!result) throw { code: 'NOT_FOUND', message: 'Result not found' }
+        if (!result) throw AppError.notFound('Screening result')
         return (decisionService as any).captureFeedbackSignal(jobId, candidateId, orgId, userId, action, result)
     }
 

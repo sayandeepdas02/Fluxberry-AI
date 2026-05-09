@@ -8,7 +8,6 @@ import {
     ScreeningStatus,
     deriveStatusPriority,
 } from '../../modules/ats-screening/models/screening-result.model.js'
-import { ScoringEngineRegistry } from '../../modules/ats-screening/scoring-registry.js'
 import { isParsedDataValid, atsLogContext } from '../../modules/ats-screening/ats-parse-guard.js'
 import { fluxEvents, DomainEvent } from '../../common/services/events.service.js'
 import { V2JobContext } from '../../modules/ats-screening/scoring-v2/types.js'
@@ -16,10 +15,9 @@ import { embeddingService } from '../../modules/ats-screening/scoring-v2/embeddi
 import {
     DEFAULT_SCORING_CONFIG,
     fromLegacyProfile,
-    toLegacyWeights,
-    toLegacyWeightsV2,
     type IScoringConfig,
 } from '../../modules/ats-screening/scoring-config.types.js'
+import { scoringService } from '../../modules/ats-screening/scoring.service.js'
 import { copilotService } from '../../modules/ats-screening/copilot.service.js'
 
 // ─────────────────────────────────────────────
@@ -71,26 +69,6 @@ async function resolveJobScoringConfig(
     return { ...DEFAULT_SCORING_CONFIG }
 }
 
-/** Map IScoringConfig → ScoreConfig for the scoring engine (handles old vs new weight naming). */
-function buildScoreConfig(scoringConfig: IScoringConfig): import('../../modules/ats-screening/scoring-registry.js').ScoreConfig {
-    const { weights } = scoringConfig
-    return {
-        weights: {
-            skillWeight:      weights.skills,
-            experienceWeight: weights.experience,
-            projectWeight:    weights.projects,
-            educationWeight:  weights.education,
-            // Always include both so V1 and V2 engines are both satisfied
-            bonusWeight:       weights.signalBoost,
-            signalBoostWeight: weights.signalBoost,
-        },
-        hardGates: {
-            minimumSkills:          scoringConfig.hardGates.requiredSkills,
-            minimumExperienceYears: scoringConfig.hardGates.minimumExperienceYears,
-            requiredEducationLevel: scoringConfig.hardGates.requiredEducationLevel,
-        },
-    }
-}
 
 // ─────────────────────────────────────────────
 // Processor
@@ -218,32 +196,24 @@ export async function processAtsScreeningJob(job: BullJob<AtsScreeningJobData>) 
             }
         }
 
-        // ── Step 6: Run Scoring Engine ────────────────────────────────────
-        const scoringVersion = scoringConfig.version === 'v1' ? '1.0.0' : DEFAULT_SCORING_VERSION
-        const engine         = ScoringEngineRegistry.getEngine(scoringVersion)
-        const scoreConfig    = buildScoreConfig(scoringConfig)
+        // ── Step 6: Run Scoring Engine (V2) ──────────────────────────────
+        const scoringVersion = DEFAULT_SCORING_VERSION
+        const {
+            hardGatePassed, hardGateReason,
+            breakdown: scoreBreakdown,
+            finalScore,
+            confidence: confidenceScore,
+            insights,
+            skillMatchDetails,
+        } = await scoringService.score(parsedData, scoringConfig, jobContext)
 
-        const gateResult      = await engine.evaluateHardGates(parsedData, scoreConfig, jobContext)
-        const scoreBreakdown  = await engine.generateBreakdown(parsedData, scoreConfig, jobContext)
-        const finalScore      = await engine.calculateFinalScore(scoreBreakdown, scoreConfig.weights)
-        const confidenceScore = await engine.calculateConfidence(parsedData)
-
-        const resolvedStatus = gateResult.passed ? ScreeningStatus.PASSED : ScreeningStatus.FAILED_GATE
+        const gateResult = { passed: hardGatePassed, reason: hardGateReason }
+        const resolvedStatus = hardGatePassed ? ScreeningStatus.PASSED : ScreeningStatus.FAILED_GATE
 
         console.log(
             `[ATS Screening] Scoring complete | score=${finalScore} status=${resolvedStatus}`,
             logCtx
         )
-
-        // Extract V2-specific fields if available
-        const v2Breakdown = scoreBreakdown as any
-        const insights: string[] = v2Breakdown?.insights || []
-        const skillMatchDetails: { skill: string; bestMatch: string; similarity: number }[] =
-            (v2Breakdown?.skillMatchDetails || []).map((d: any) => ({
-                skill: d.skill,
-                bestMatch: d.bestMatch,
-                similarity: d.similarity,
-            }))
 
         // ── Step 7: Persist Full Result ───────────────────────────────────
         const screeningResult = await upsertResult(candidateId, jobId, organizationId, {
