@@ -6,6 +6,8 @@ import { ListApplicationsQuery, UpdateStageInput, BulkUpdateInput, CreateApplica
 import { auditService } from '../../common/utils/audit.service.js'
 import { eventBus, DomainEvent } from '../../common/services/event-bus.service.js'
 import { activityService } from '../activity/activity.service.js'
+import { AppError } from '../../common/errors/index.js'
+import { createPaginatedResponse } from '../../common/dto/pagination.dto.js'
 
 class ApplicationsService {
     async create(organizationId: string, input: CreateApplicationInput, userId: string): Promise<IJobApplication> {
@@ -14,10 +16,9 @@ class ApplicationsService {
             organizationId,
             jobId: input.jobId,
             candidateId: input.candidateId,
-            isDeleted: false,
         })
         if (existing) {
-            throw { code: 'CONFLICT', message: 'Candidate has already applied to this job' }
+            throw AppError.conflict('Candidate has already applied to this job')
         }
 
         const application = await JobApplication.create({
@@ -55,11 +56,11 @@ class ApplicationsService {
         jobId: string,
         organizationId: string,
         query: ListApplicationsQuery & { stageId?: string }
-    ): Promise<{ applications: any[]; total: number; page: number; limit: number }> {
+    ) {
         const { page = 1, limit = 20, stage, stageId, search, sort = '-appliedAt' } = query
         const skip = (page - 1) * limit
 
-        const filter: any = { jobId, organizationId, deletedAt: null, isDeleted: false }
+        const filter: any = { jobId, organizationId }
 
         if (stageId) {
             filter.currentStageId = stageId
@@ -100,17 +101,15 @@ class ApplicationsService {
             JobApplication.countDocuments(filter),
         ])
 
-        return { applications, total, page, limit }
+        return createPaginatedResponse(applications, total, page, limit)
     }
 
     async getById(id: string, organizationId: string): Promise<IJobApplication> {
-        const application = await JobApplication.findOne({ _id: id, organizationId, deletedAt: null })
+        const application = await JobApplication.findOne({ _id: id, organizationId })
             .populate('candidateId', 'firstName lastName email phone resumeUrl')
             .populate('jobId', 'title status')
             .populate('currentStageId', 'name type color order')
-        if (!application) {
-            throw { code: 'NOT_FOUND', message: 'Application not found' }
-        }
+        if (!application) throw AppError.notFound('Application')
         return application
     }
 
@@ -121,15 +120,13 @@ class ApplicationsService {
         userId: string
     ): Promise<IJobApplication> {
         const application = await JobApplication.findOne({ _id: id, organizationId })
-        if (!application) {
-            throw { code: 'NOT_FOUND', message: 'Application not found' }
-        }
+        if (!application) throw AppError.notFound('Application')
 
         const previousStage = application.status
         const newStage = input.stage as ApplicationStatusType
 
         if (previousStage === newStage) {
-            throw { code: 'VALIDATION_ERROR', message: 'Application is already in this stage' }
+            throw AppError.badRequest('Application is already in this stage')
         }
 
         // Update application status
@@ -187,15 +184,10 @@ class ApplicationsService {
         userId: string
     ): Promise<IJobApplication> {
         const application = await JobApplication.findOne({ _id: applicationId, organizationId })
-        if (!application) {
-            throw { code: 'NOT_FOUND', message: 'Application not found' }
-        }
+        if (!application) throw AppError.notFound('Application')
 
-        // Validate the target stage exists and belongs to this job
         const targetStage = await PipelineStage.findOne({ _id: stageId, jobId: application.jobId })
-        if (!targetStage) {
-            throw { code: 'VALIDATION_ERROR', message: 'Target stage not found for this job' }
-        }
+        if (!targetStage) throw AppError.badRequest('Target stage not found for this job')
 
         const previousStage = application.status
         const previousStageId = application.currentStageId
@@ -319,10 +311,7 @@ class ApplicationsService {
         if (applications.length !== applicationIds.length) {
             const foundIds = new Set(applications.map((a) => a._id.toString()))
             const missing = applicationIds.filter((id) => !foundIds.has(id))
-            throw {
-                code: 'VALIDATION_ERROR',
-                message: `Applications not found or not in org: ${missing.join(', ')}`,
-            }
+            throw AppError.badRequest(`Applications not found or not in org: ${missing.join(', ')}`)
         }
 
         const targetStage: ApplicationStatusType =

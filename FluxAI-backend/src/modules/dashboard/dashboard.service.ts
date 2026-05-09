@@ -16,7 +16,7 @@ class DashboardService {
 
         return {
             kpis,
-            recentCandidates: recentCandidates.candidates
+            recentCandidates: recentCandidates.data
         }
     }
 

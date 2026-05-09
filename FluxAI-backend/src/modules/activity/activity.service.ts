@@ -1,5 +1,6 @@
 import { ActivityLog, IActivityLog } from '../../database/models/index.js'
 import { ListActivityQuery, ActivityFilter } from './activity.types.js'
+import { createPaginatedResponse } from '../../common/dto/pagination.dto.js'
 
 class ActivityService {
     /**
@@ -33,7 +34,7 @@ class ActivityService {
     /**
      * Query activities with pagination
      */
-    async list(organizationId: string, query: ListActivityQuery): Promise<{ activities: IActivityLog[], total: number, page: number, limit: number }> {
+    async list(organizationId: string, query: ListActivityQuery) {
         const { page = 1, limit = 50, entityType, entityId, actorType } = query
         const skip = (page - 1) * limit
         
@@ -52,7 +53,7 @@ class ActivityService {
             ActivityLog.countDocuments(filter)
         ])
 
-        return { activities, total, page, limit }
+        return createPaginatedResponse(activities, total, page, limit)
     }
 }
 

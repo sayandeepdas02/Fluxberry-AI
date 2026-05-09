@@ -3,13 +3,15 @@ import { ScreeningResult } from '../ats-screening/models/screening-result.model.
 import { CreateCandidateInput, UpdateCandidateInput, ListCandidatesQuery, CreateNoteInput } from './candidates.types.js'
 import { eventBus, DomainEvent } from '../../common/services/event-bus.service.js'
 import { activityService } from '../activity/activity.service.js'
+import { AppError } from '../../common/errors/index.js'
+import { createPaginatedResponse } from '../../common/dto/pagination.dto.js'
 
 class CandidatesService {
     async create(organizationId: string, input: CreateCandidateInput, userId: string): Promise<ICandidate> {
         // Check if candidate exists in this org
         const existing = await Candidate.findOne({ organizationId, email: input.email })
         if (existing) {
-            throw { code: 'CONFLICT', message: 'Candidate with this email already exists in this organization' }
+            throw AppError.conflict('Candidate with this email already exists in this organization')
         }
 
         const candidate = await Candidate.create({
@@ -36,11 +38,11 @@ class CandidatesService {
         return candidate
     }
 
-    async list(organizationId: string, query: ListCandidatesQuery): Promise<{ candidates: ICandidate[], total: number, page: number, totalPages: number }> {
+    async list(organizationId: string, query: ListCandidatesQuery) {
         const { page = 1, limit = 20, search, source, jobId, stage, dateFrom, dateTo, tags } = query
         const skip = (page - 1) * limit
 
-        const filter: any = { organizationId, isDeleted: false, deletedAt: null }
+        const filter: any = { organizationId }
 
         if (source) {
             filter.source = source
@@ -95,19 +97,12 @@ class CandidatesService {
             Candidate.countDocuments(filter)
         ])
 
-        return {
-            candidates,
-            total,
-            page,
-            totalPages: Math.ceil(total / limit)
-        }
+        return createPaginatedResponse(candidates, total, page, limit)
     }
 
     async getById(id: string, organizationId: string): Promise<ICandidate> {
         const candidate = await Candidate.findOne({ _id: id, organizationId })
-        if (!candidate) {
-            throw { code: 'NOT_FOUND', message: 'Candidate not found' }
-        }
+        if (!candidate) throw AppError.notFound('Candidate')
         return candidate
     }
 
@@ -117,21 +112,20 @@ class CandidatesService {
     async getDetail(id: string, organizationId: string) {
         const candidate = await this.getById(id, organizationId)
 
-        const [applications, notes, history] = await Promise.all([
-            JobApplication.find({ candidateId: id, organizationId })
-                .populate('jobId', 'title status department location')
-                .sort({ submittedAt: -1 })
-                .lean(),
+        // Fetch applications first so we can reuse applicationIds for StageHistory — avoids double query
+        const applications = await JobApplication.find({ candidateId: id, organizationId })
+            .populate('jobId', 'title status department location')
+            .sort({ submittedAt: -1 })
+            .lean()
+
+        const applicationIds = applications.map((a: any) => a._id)
+
+        const [notes, history] = await Promise.all([
             CandidateNote.find({ candidateId: id, organizationId })
                 .populate('authorId', 'firstName lastName email')
                 .sort({ createdAt: -1 })
                 .lean(),
-            StageHistory.find({ organizationId })
-                .where('applicationId')
-                .in(
-                    (await JobApplication.find({ candidateId: id, organizationId }).select('_id').lean())
-                        .map(a => a._id)
-                )
+            StageHistory.find({ applicationId: { $in: applicationIds }, organizationId })
                 .populate('changedBy', 'firstName lastName')
                 .sort({ changedAt: -1 })
                 .lean(),
@@ -182,9 +176,7 @@ class CandidatesService {
             { $set: input },
             { new: true }
         )
-        if (!candidate) {
-            throw { code: 'NOT_FOUND', message: 'Candidate not found' }
-        }
+        if (!candidate) throw AppError.notFound('Candidate')
 
         eventBus.emit(DomainEvent.CANDIDATE_UPDATED, {
             organizationId,
@@ -233,7 +225,7 @@ class CandidatesService {
         // Verify FileAsset belongs to this candidate
         const file = await FileAsset.findById(fileId)
         if (!file || file.ownerType !== 'CANDIDATE' || file.ownerId !== candidateId || file.fileType !== 'RESUME') {
-            throw { statusCode: 400, code: 'INVALID_FILE', message: 'Invalid or mismatched file asset' }
+            throw AppError.badRequest('Invalid or mismatched file asset')
         }
 
         // Build the resume URL — use S3 if configured, local fallback otherwise
@@ -247,7 +239,7 @@ class CandidatesService {
             { $set: { resumeUrl } },
             { new: true }
         )
-        if (!updated) throw { code: 'NOT_FOUND', message: 'Candidate not found' }
+        if (!updated) throw AppError.notFound('Candidate')
         return updated
     }
 }

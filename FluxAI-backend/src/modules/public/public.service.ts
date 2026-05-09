@@ -1,4 +1,5 @@
 import { Organization, Assessment, Job, Candidate, JobApplication, AuditLog } from '../../database/models/index.js'
+import { AppError } from '../../common/errors/index.js'
 import { jobsService } from '../jobs/jobs.service.js'
 import { getJudge0LanguageId, runCode as judge0RunCode } from '../../services/judge0/judge0.client.js'
 import { validateApplicationData } from '../../common/utils/application-schema.validator.js'
@@ -95,7 +96,7 @@ class PublicService {
         const organization = await Organization.findOne({ slug }).select('name slug logoUrl website branding')
 
         if (!organization) {
-            throw { code: 'NOT_FOUND', message: 'Company not found' }
+            throw AppError.notFound('Company')
         }
 
         return organization
@@ -111,7 +112,7 @@ class PublicService {
             limit: 100
         })
 
-        return result.jobs
+        return result.data
     }
 
     async getJob(slug: string, jobId: string) {
@@ -121,7 +122,7 @@ class PublicService {
             const job = await jobsService.getById(jobId, organization.id)
             return job
         } catch (error) {
-            throw { code: 'NOT_FOUND', message: 'Job not found' }
+            throw AppError.notFound('Job')
         }
     }
 
@@ -133,7 +134,7 @@ class PublicService {
             .populate('organizationId', 'name slug logoUrl website branding')
 
         if (!job) {
-            throw { code: 'NOT_FOUND', message: 'Job not found' }
+            throw AppError.notFound('Job')
         }
 
         // Return public-safe fields only
@@ -167,29 +168,15 @@ class PublicService {
     }) {
         // 1. Find the job
         const job = await Job.findOne({ publicSlug: slug, status: 'PUBLISHED' })
-        if (!job) {
-            const error = new Error('Job not found or no longer accepting applications') as Error & { statusCode: number; code: string }
-            error.statusCode = 404
-            error.code = 'NOT_FOUND'
-            throw error
-        }
+        if (!job) throw AppError.notFound('Job')
 
-        // 2. Validate application data against the schema
         const validation = validateApplicationData(job.applicationSchema, body.applicationData || {})
         if (!validation.valid) {
-            const error = new Error('Application validation failed') as Error & { statusCode: number; code: string; details: unknown }
-            error.statusCode = 400
-            error.code = 'VALIDATION_ERROR'
-            error.details = validation.errors
-            throw error
+            throw AppError.validation('Application validation failed', validation.errors)
         }
 
-        // 3. Validate email
         if (!body.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
-            const error = new Error('Valid email is required') as Error & { statusCode: number; code: string }
-            error.statusCode = 400
-            error.code = 'VALIDATION_ERROR'
-            throw error
+            throw AppError.validation('Valid email is required')
         }
 
         const orgId = job.organizationId.toString()
@@ -206,10 +193,7 @@ class PublicService {
                 candidateId: existingCandidate._id,
             })
             if (existingApplication) {
-                const error = new Error('You have already applied for this position') as Error & { statusCode: number; code: string }
-                error.statusCode = 409
-                error.code = 'DUPLICATE_APPLICATION'
-                throw error
+                throw AppError.conflict('You have already applied for this position')
             }
         }
 
@@ -280,29 +264,16 @@ class PublicService {
     async requestResumeUploadUrl(slug: string, body: { mimeType: string; size: number }) {
         // Verify job exists and is published
         const job = await Job.findOne({ publicSlug: slug, status: 'PUBLISHED' })
-        if (!job) {
-            const error = new Error('Job not found') as Error & { statusCode: number; code: string }
-            error.statusCode = 404
-            error.code = 'NOT_FOUND'
-            throw error
-        }
+        if (!job) throw AppError.notFound('Job')
 
-        // Validate file size (5MB max)
         const MAX_RESUME_SIZE = 5 * 1024 * 1024
         if (body.size > MAX_RESUME_SIZE) {
-            const error = new Error('Resume must be less than 5MB') as Error & { statusCode: number; code: string }
-            error.statusCode = 400
-            error.code = 'FILE_TOO_LARGE'
-            throw error
+            throw AppError.badRequest('Resume must be less than 5MB')
         }
 
-        // Validate MIME type
         const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
         if (!allowedTypes.includes(body.mimeType)) {
-            const error = new Error('Only PDF and DOCX files are allowed') as Error & { statusCode: number; code: string }
-            error.statusCode = 400
-            error.code = 'INVALID_MIME_TYPE'
-            throw error
+            throw AppError.badRequest('Only PDF and DOCX files are allowed')
         }
 
         const extension = body.mimeType === 'application/pdf' ? 'pdf' : 'docx'
@@ -324,16 +295,16 @@ class PublicService {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const mongoose = await import('mongoose')
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            throw { code: 'INVALID_INPUT', message: 'Invalid assessment ID' }
+            throw AppError.badRequest('Invalid assessment ID')
         }
 
         const assessment = await Assessment.findById(id).select('title organizationId rounds status')
         if (!assessment) {
-            throw { code: 'NOT_FOUND', message: 'Assessment not found' }
+            throw AppError.notFound('Assessment')
         }
 
         if (assessment.status !== 'ACTIVE') {
-            throw { code: 'INVALID_STATUS', message: 'Assessment is not active' }
+            throw AppError.badRequest('Assessment is not active')
         }
 
         return {

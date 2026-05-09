@@ -3,6 +3,7 @@ import {
     OrganizationOnboardingConfig, JobApplication, ApplicationStatus, Candidate
 } from '../../database/models/index.js'
 import mongoose from 'mongoose'
+import { createPaginatedResponse } from '../../common/dto/pagination.dto.js'
 
 export class CandidateOnboardingService {
 
@@ -166,14 +167,7 @@ export class CandidateOnboardingService {
             entityId: new mongoose.Types.ObjectId(onboardingId)
         })
 
-        return {
-            timeline: logs,
-            pagination: {
-                total,
-                page,
-                pages: Math.ceil(total / limit)
-            }
-        }
+        return createPaginatedResponse(logs, total, page, limit)
     }
 }
 
