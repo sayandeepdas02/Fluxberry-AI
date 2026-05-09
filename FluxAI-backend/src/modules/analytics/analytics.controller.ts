@@ -1,6 +1,5 @@
 import { Response, NextFunction } from 'express'
 import { analyticsService } from './analytics.service.js'
-import { successResponse } from '../../common/utils/api-response.js'
 import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
 
 export class AnalyticsController {
@@ -18,7 +17,7 @@ export class AnalyticsController {
             }
 
             const data = await analyticsService.getKPIs(organizationId, jobId)
-            res.json(successResponse(data))
+            res.success(data)
         } catch (error) {
             next(error)
         }
@@ -39,7 +38,7 @@ export class AnalyticsController {
             }
 
             const data = await analyticsService.getApplicationVolume(organizationId, timeframe, jobId)
-            res.json(successResponse(data))
+            res.success(data)
         } catch (error) {
             next(error)
         }
@@ -61,10 +60,10 @@ export class AnalyticsController {
             const sourceData = await analyticsService.getSourcePerformance(organizationId, jobId)
 
             // For now, location is empty as defined in service
-            res.json(successResponse({
+            res.success({
                 device: sourceData, // Mapping source to device for backward compatibility or UI expectation
                 location: []
-            }))
+            })
         } catch (error) {
             next(error)
         }
@@ -84,7 +83,7 @@ export class AnalyticsController {
             }
 
             const data = await analyticsService.getFunnelMetrics(organizationId, jobId)
-            res.json(successResponse(data))
+            res.success(data)
         } catch (error) {
             next(error)
         }
@@ -104,7 +103,7 @@ export class AnalyticsController {
             }
 
             const data = await analyticsService.getTimeToHire(organizationId, jobId)
-            res.json(successResponse(data))
+            res.success(data)
         } catch (error) {
             next(error)
         }
@@ -124,7 +123,7 @@ export class AnalyticsController {
 
             const { onboardingAnalyticsService } = await import('./onboarding-analytics.service.js')
             const data = await onboardingAnalyticsService.getOnboardingMetrics(organizationId)
-            res.json(successResponse(data))
+            res.success(data)
         } catch (error) {
             next(error)
         }
@@ -144,7 +143,7 @@ export class AnalyticsController {
             }
 
             const data = await analyticsService.getAtsEfficiencyMetrics(organizationId, jobId)
-            res.json(successResponse(data))
+            res.success(data)
         } catch (error) {
             next(error)
         }

@@ -1,6 +1,5 @@
 import { TTSService } from './tts.service';
-import { SpeechSessionManager } from '../voice/SpeechSessionManager';
-import { VoiceSessionManager } from './voiceSessionManager';
+import { voiceSessionService } from '../voice/voiceSessionService';
 import { Server as SocketIOServer } from 'socket.io';
 
 export class VoiceStreamService {
@@ -34,11 +33,11 @@ export class VoiceStreamService {
         for await (const chunk of audioStream) {
 
             // Check for explicit interruption every chunk ~ 50ms gaps
-            const speechSession = await SpeechSessionManager.getInstance().getSession(interviewId);
-            if (speechSession && speechSession.speakingState) {
+            const speechSession = await voiceSessionService.getSession(interviewId);
+            if (speechSession?.candidateSpeakingState) {
                 // Interruption Detected!
                 console.log(`[VoiceStream] INTERRUPTED BY CANDIDATE - Terminating early. ${interviewId}`);
-                await VoiceSessionManager.setSpeakingState(interviewId, speechId, false);
+                await voiceSessionService.setAiSpeaking(interviewId, speechId, false);
 
                 if (VoiceStreamService.ioInstance) {
                     VoiceStreamService.ioInstance.to(interviewId).emit('AI_SPEECH_INTERRUPTED', { speechId });

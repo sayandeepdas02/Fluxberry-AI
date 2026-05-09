@@ -1,4 +1,6 @@
 import { Job, IJob, AuditLog, JobApplication } from '../../database/models/index.js'
+import { AppError } from '../../common/errors/index.js'
+import { createPaginatedResponse } from '../../common/dto/pagination.dto.js'
 import { ListJobsQuery, CreateJobInput, UpdateJobInput } from './jobs.types.js'
 import { pipelineService } from './pipeline.service.js'
 import { normalizeSkills } from '../ats-screening/scoring-v2/skill-normalizer.js'
@@ -173,7 +175,7 @@ class JobsService {
         return job
     }
 
-    async list(organizationId: string, query: ListJobsQuery): Promise<{ jobs: IJob[], total: number, page: number, totalPages: number }> {
+    async list(organizationId: string, query: ListJobsQuery) {
         const { page = 1, limit = 20, status, search } = query
         const skip = (page - 1) * limit
 
@@ -198,18 +200,13 @@ class JobsService {
             Job.countDocuments(filter)
         ])
 
-        return {
-            jobs,
-            total,
-            page,
-            totalPages: Math.ceil(total / limit)
-        }
+        return createPaginatedResponse(jobs, total, page, limit)
     }
 
     async getById(id: string, organizationId: string): Promise<IJob> {
         const job = await Job.findOne({ _id: id, organizationId })
         if (!job) {
-            throw { code: 'NOT_FOUND', message: 'Job not found' }
+            throw AppError.notFound('Job')
         }
         return job
     }
@@ -217,14 +214,11 @@ class JobsService {
     async update(id: string, organizationId: string, input: UpdateJobInput, userId?: string): Promise<IJob> {
         const existing = await Job.findOne({ _id: id, organizationId })
         if (!existing) {
-            throw { code: 'NOT_FOUND', message: 'Job not found' }
+            throw AppError.notFound('Job')
         }
 
         if (existing.status === 'CLOSED') {
-            const error = new Error('Cannot edit a closed job. Reopen it first.') as Error & { statusCode: number; code: string }
-            error.statusCode = 400
-            error.code = 'INVALID_STATUS'
-            throw error
+            throw AppError.badRequest('Cannot edit a closed job. Reopen it first.')
         }
 
         const previousValue = { title: existing.title, status: existing.status }
@@ -269,7 +263,7 @@ class JobsService {
             { new: true }
         )
         if (!job) {
-            throw { code: 'NOT_FOUND', message: 'Job not found' }
+            throw AppError.notFound('Job')
         }
 
         await this.logAudit({
@@ -319,34 +313,23 @@ class JobsService {
     async publish(id: string, organizationId: string, userId: string): Promise<IJob> {
         const job = await Job.findOne({ _id: id, organizationId })
         if (!job) {
-            throw { code: 'NOT_FOUND', message: 'Job not found' }
+            throw AppError.notFound('Job')
         }
 
         if (job.status === 'PUBLISHED') {
-            const error = new Error('Job is already published') as Error & { statusCode: number; code: string }
-            error.statusCode = 400
-            error.code = 'ALREADY_PUBLISHED'
-            throw error
+            throw AppError.conflict('Job is already published')
         }
 
         if (job.status === 'CLOSED') {
-            const error = new Error('Cannot publish a closed job') as Error & { statusCode: number; code: string }
-            error.statusCode = 400
-            error.code = 'INVALID_STATUS'
-            throw error
+            throw AppError.badRequest('Cannot publish a closed job')
         }
 
-        // Validate required fields for publishing
         const missing: string[] = []
         if (!job.title) missing.push('title')
         if (!job.description) missing.push('description')
 
         if (missing.length > 0) {
-            const error = new Error(`Cannot publish: missing required fields: ${missing.join(', ')}`) as Error & { statusCode: number; code: string; details: string[] }
-            error.statusCode = 400
-            error.code = 'PUBLISH_VALIDATION_FAILED'
-            error.details = missing
-            throw error
+            throw AppError.validation(`Cannot publish: missing required fields: ${missing.join(', ')}`, missing)
         }
 
         // Generate unique slug
@@ -391,14 +374,11 @@ class JobsService {
     async close(id: string, organizationId: string, userId: string): Promise<IJob> {
         const job = await Job.findOne({ _id: id, organizationId })
         if (!job) {
-            throw { code: 'NOT_FOUND', message: 'Job not found' }
+            throw AppError.notFound('Job')
         }
 
         if (job.status === 'CLOSED') {
-            const error = new Error('Job is already closed') as Error & { statusCode: number; code: string }
-            error.statusCode = 400
-            error.code = 'ALREADY_CLOSED'
-            throw error
+            throw AppError.conflict('Job is already closed')
         }
 
         const previousStatus = job.status
@@ -434,7 +414,7 @@ class JobsService {
     async softDelete(id: string, organizationId: string, userId: string): Promise<IJob> {
         const job = await Job.findOne({ _id: id, organizationId })
         if (!job) {
-            throw { code: 'NOT_FOUND', message: 'Job not found' }
+            throw AppError.notFound('Job')
         }
 
         const previousStatus = job.status
@@ -459,7 +439,7 @@ class JobsService {
     async getBySlug(slug: string): Promise<IJob> {
         const job = await Job.findOne({ publicSlug: slug, status: 'PUBLISHED' })
         if (!job) {
-            throw { code: 'NOT_FOUND', message: 'Job not found' }
+            throw AppError.notFound('Job')
         }
         return job
     }

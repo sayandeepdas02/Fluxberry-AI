@@ -1,15 +1,12 @@
 'use client'
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { jobsApi, Job, CreateJobInput, UpdateJobInput, ListJobsQuery } from '@/lib/api/jobs'
-import { toast } from 'sonner'
+import { ApiError } from '@/lib/api/client'
+import { useApiMutation } from '@/lib/hooks/use-api-mutation'
+import { jobKeys } from '@/lib/query/queryKeys'
 
-// Query key factory — typed, consistent, prevents cache collisions
-export const jobKeys = {
-    all: ['jobs'] as const,
-    list: (query?: ListJobsQuery) => [...jobKeys.all, 'list', query ?? {}] as const,
-    detail: (id: string) => [...jobKeys.all, 'detail', id] as const,
-}
+export { jobKeys }
 
 export function useJobs(initialQuery?: ListJobsQuery) {
     const queryClient = useQueryClient()
@@ -23,7 +20,7 @@ export function useJobs(initialQuery?: ListJobsQuery) {
         queryKey: jobKeys.list(initialQuery),
         queryFn: async () => {
             const res = await jobsApi.list(initialQuery)
-            if (!res.success) throw new Error(res.error?.message ?? 'Failed to fetch jobs')
+            if (!res.success) throw new ApiError(res.error?.message ?? 'Failed to fetch jobs', res.error?.code ?? 'UNKNOWN', res.error?.details)
             return res
         },
     })
@@ -34,7 +31,7 @@ export function useJobs(initialQuery?: ListJobsQuery) {
     const totalPages: number = data?.meta?.totalPages ?? 0
     const error: string | null = rawError ? (rawError as Error).message : null
 
-    const createJob = useMutation({
+    const createJob = useApiMutation({
         mutationFn: async (input: CreateJobInput) => {
             const res = await jobsApi.create(input)
             if (!res.success) {
@@ -42,18 +39,15 @@ export function useJobs(initialQuery?: ListJobsQuery) {
                 if (res.error?.code === 'VALIDATION_ERROR' && Array.isArray(res.error.details)) {
                     msg = res.error.details.map((d: any) => d.message).join(', ')
                 }
-                throw new Error(msg)
+                throw new ApiError(msg, res.error?.code ?? 'UNKNOWN', res.error?.details)
             }
             return res.data!
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: jobKeys.all })
-            toast.success('Job created successfully')
-        },
-        onError: (err: Error) => toast.error(err.message),
+        successMessage: 'Job created successfully',
+        invalidateKeys: [jobKeys.all],
     })
 
-    const updateJob = useMutation({
+    const updateJob = useApiMutation({
         mutationFn: async ({ id, input }: { id: string; input: UpdateJobInput }) => {
             const res = await jobsApi.update(id, input)
             if (!res.success) {
@@ -61,57 +55,47 @@ export function useJobs(initialQuery?: ListJobsQuery) {
                 if (res.error?.code === 'VALIDATION_ERROR' && Array.isArray(res.error.details)) {
                     msg = res.error.details.map((d: any) => d.message).join(', ')
                 }
-                throw new Error(msg)
+                throw new ApiError(msg, res.error?.code ?? 'UNKNOWN', res.error?.details)
             }
             return res.data!
         },
+        successMessage: 'Job updated successfully',
         onSuccess: (updated) => {
             // Optimistic cache update — no extra network round-trip
             queryClient.setQueriesData({ queryKey: jobKeys.all }, (old: any) => {
                 if (!old?.data) return old
                 return { ...old, data: old.data.map((j: Job) => j._id === updated._id ? updated : j) }
             })
-            toast.success('Job updated successfully')
         },
-        onError: (err: Error) => toast.error(err.message),
     })
 
-    const publishJob = useMutation({
+    const publishJob = useApiMutation({
         mutationFn: async (id: string) => {
             const res = await jobsApi.publish(id)
-            if (!res.success) throw new Error(res.error?.message ?? 'Failed to publish job')
+            if (!res.success) throw new ApiError(res.error?.message ?? 'Failed to publish job', res.error?.code ?? 'UNKNOWN', res.error?.details)
             return res.data!
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: jobKeys.all })
-            toast.success('Job published')
-        },
-        onError: (err: Error) => toast.error(err.message),
+        successMessage: 'Job published',
+        invalidateKeys: [jobKeys.all],
     })
 
-    const closeJob = useMutation({
+    const closeJob = useApiMutation({
         mutationFn: async (id: string) => {
             const res = await jobsApi.close(id)
-            if (!res.success) throw new Error(res.error?.message ?? 'Failed to close job')
+            if (!res.success) throw new ApiError(res.error?.message ?? 'Failed to close job', res.error?.code ?? 'UNKNOWN', res.error?.details)
             return res.data!
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: jobKeys.all })
-            toast.success('Job closed')
-        },
-        onError: (err: Error) => toast.error(err.message),
+        successMessage: 'Job closed',
+        invalidateKeys: [jobKeys.all],
     })
 
-    const deleteJob = useMutation({
+    const deleteJob = useApiMutation({
         mutationFn: async (id: string) => {
             const res = await jobsApi.delete(id)
-            if (!res.success) throw new Error(res.error?.message ?? 'Failed to delete job')
+            if (!res.success) throw new ApiError(res.error?.message ?? 'Failed to delete job', res.error?.code ?? 'UNKNOWN', res.error?.details)
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: jobKeys.all })
-            toast.success('Job deleted')
-        },
-        onError: (err: Error) => toast.error(err.message),
+        successMessage: 'Job deleted',
+        invalidateKeys: [jobKeys.all],
     })
 
     // ── Backward-compatible surface (callers unchanged) ──────────────────────

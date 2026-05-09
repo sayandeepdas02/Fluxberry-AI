@@ -1,5 +1,5 @@
 import { createClient, LiveTranscriptionEvents } from '@deepgram/sdk';
-import { SpeechSessionManager } from './SpeechSessionManager';
+import { voiceSessionService } from './voiceSessionService';
 import { TranscriptEmitter } from './transcriptEmitter';
 
 export class DeepgramService {
@@ -13,8 +13,6 @@ export class DeepgramService {
             return null;
         }
 
-        const sessionManager = SpeechSessionManager.getInstance();
-
         const connection = this.deepgramClient.listen.live({
             model: 'nova-2',
             language: 'en',
@@ -26,7 +24,7 @@ export class DeepgramService {
 
         connection.on(LiveTranscriptionEvents.Open, () => {
             console.log(`[Deepgram] Connection opened for interview ${interviewId}`);
-            sessionManager.updateSession(interviewId, { deepgramConnection: connection as any });
+            voiceSessionService.setDeepgramConnection(interviewId, connection);
         });
 
         connection.on(LiveTranscriptionEvents.Transcript, (data) => {

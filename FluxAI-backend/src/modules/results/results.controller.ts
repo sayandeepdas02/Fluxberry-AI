@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
 import { resultsService } from './results.service.js'
-import { successResponse } from '../../common/utils/api-response.js'
 import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
 
 export class ResultsController {
@@ -18,7 +17,7 @@ export class ResultsController {
 
             const { assessmentId } = req.params
             const results = await resultsService.getAssessmentResults(assessmentId, organizationId)
-            res.json(successResponse(results))
+            res.success(results)
         } catch (error) {
             next(error)
         }
@@ -32,7 +31,7 @@ export class ResultsController {
         try {
             const { attemptId } = req.params
             const result = await resultsService.getAttemptResult(attemptId)
-            res.json(successResponse(result))
+            res.success(result)
         } catch (error) {
             next(error)
         }

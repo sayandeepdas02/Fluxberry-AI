@@ -1,7 +1,8 @@
 "use client"
 
 import { PageContainer } from "@/components/dashboard/page-container"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
+import { useApiMutation } from "@/lib/hooks/use-api-mutation"
 import { jobsApi, Job, CreateJobInput } from "@/lib/api/jobs"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -18,7 +19,6 @@ import {
     Globe, Lock, Archive, MoreHorizontal, CheckCircle, XCircle,
 } from "lucide-react"
 import { useState, useMemo } from "react"
-import { toast } from "sonner"
 import { format } from "date-fns"
 import { useRouter } from "next/navigation"
 
@@ -30,7 +30,6 @@ const STATUS_STYLES: Record<string, { label: string; class: string }> = {
 
 export default function ManageJobsPage() {
     const router = useRouter()
-    const queryClient = useQueryClient()
     const [search, setSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState('')
     const [page, setPage] = useState(1)
@@ -47,31 +46,22 @@ export default function ManageJobsPage() {
     const jobs = (response?.data || []) as Job[]
     const total = (response as any)?.meta?.total || jobs.length
 
-    const publishMutation = useMutation({
+    const publishMutation = useApiMutation({
         mutationFn: (id: string) => jobsApi.publish(id),
-        onSuccess: () => {
-            toast.success('Job published')
-            queryClient.invalidateQueries({ queryKey: ['jobs'] })
-        },
-        onError: () => toast.error('Failed to publish job'),
+        successMessage: 'Job published',
+        invalidateKeys: [['jobs']],
     })
 
-    const deleteMutation = useMutation({
+    const deleteMutation = useApiMutation({
         mutationFn: (id: string) => jobsApi.delete(id),
-        onSuccess: () => {
-            toast.success('Job deleted')
-            queryClient.invalidateQueries({ queryKey: ['jobs'] })
-        },
-        onError: () => toast.error('Failed to delete job'),
+        successMessage: 'Job deleted',
+        invalidateKeys: [['jobs']],
     })
 
-    const closeMutation = useMutation({
+    const closeMutation = useApiMutation({
         mutationFn: (id: string) => jobsApi.close(id),
-        onSuccess: () => {
-            toast.success('Job closed')
-            queryClient.invalidateQueries({ queryKey: ['jobs'] })
-        },
-        onError: () => toast.error('Failed to close job'),
+        successMessage: 'Job closed',
+        invalidateKeys: [['jobs']],
     })
 
     return (

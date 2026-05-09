@@ -8,6 +8,7 @@ import {
     RoundStatusType,
     AttemptStatusType,
 } from '../../database/models/index.js'
+import { AppError } from '../../common/errors/index.js'
 import {
     RoundResultResponse,
     CandidateResultSummary,
@@ -17,38 +18,64 @@ import {
 
 export class ResultsService {
     /**
-     * Get all results for an assessment
-     * Returns candidate list with scores and proctoring flags
+     * Get all results for an assessment.
+     * Batch-loads candidates, evaluations, and proctoring counts to prevent N+1.
      */
     async getAssessmentResults(
         assessmentId: string,
         organizationId: string
     ): Promise<AssessmentResultsResponse> {
-        // Verify assessment belongs to org
         const assessment = await Assessment.findOne({ _id: assessmentId, organizationId })
+        if (!assessment) throw AppError.notFound('Assessment')
 
-        if (!assessment) {
-            const error = new Error('Assessment not found') as Error & { statusCode: number; code: string }
-            error.statusCode = 404
-            error.code = 'NOT_FOUND'
-            throw error
+        const attempts = await AssessmentAttempt.find({ assessmentId }).sort({ createdAt: -1 }).lean()
+
+        if (attempts.length === 0) {
+            return {
+                assessmentId,
+                assessmentTitle: assessment.title,
+                totalCandidates: 0,
+                completedCount: 0,
+                results: [],
+            }
         }
 
-        // Get all attempts
-        const attempts = await AssessmentAttempt.find({ assessmentId })
-            .sort({ createdAt: -1 })
+        // Batch-fetch all related data in parallel — no N+1
+        const candidateIds = [...new Set(attempts.map(a => a.candidateId.toString()))]
+        const attemptIds = attempts.map(a => a._id)
 
-        const results: CandidateResultSummary[] = []
+        const [candidates, allEvaluations, proctoringCounts] = await Promise.all([
+            Candidate.find({ _id: { $in: candidateIds } })
+                .select('firstName lastName email')
+                .lean(),
+            Evaluation.find({ attemptId: { $in: attemptIds } }).lean(),
+            ProctoringEvent.aggregate([
+                { $match: { attemptId: { $in: attemptIds } } },
+                { $group: { _id: '$attemptId', count: { $sum: 1 } } },
+            ]),
+        ])
 
-        for (const attempt of attempts) {
-            const candidate = await Candidate.findById(attempt.candidateId)
-            const evaluations = await Evaluation.find({ attemptId: attempt._id })
-            const eventCount = await ProctoringEvent.countDocuments({ attemptId: attempt._id })
+        // Build O(1) lookup maps
+        const candidateMap = new Map(candidates.map(c => [c._id.toString(), c]))
+        const evaluationsByAttempt = new Map<string, typeof allEvaluations>()
+        for (const ev of allEvaluations) {
+            const key = ev.attemptId.toString()
+            if (!evaluationsByAttempt.has(key)) evaluationsByAttempt.set(key, [])
+            evaluationsByAttempt.get(key)!.push(ev)
+        }
+        const proctoringByAttempt = new Map<string, number>(
+            proctoringCounts.map((p: any) => [p._id.toString(), p.count])
+        )
+
+        const results: CandidateResultSummary[] = attempts.map(attempt => {
+            const candidate = candidateMap.get(attempt.candidateId.toString())
+            const evaluations = evaluationsByAttempt.get(attempt._id.toString()) ?? []
+            const eventCount = proctoringByAttempt.get(attempt._id.toString()) ?? 0
 
             const totalScore = evaluations.reduce((sum, e) => sum + e.score, 0)
             const maxScore = evaluations.reduce((sum, e) => sum + e.maxScore, 0)
 
-            results.push({
+            return {
                 candidateId: attempt.candidateId.toString(),
                 candidateEmail: candidate?.email ?? 'unknown',
                 candidateName: candidate?.firstName && candidate?.lastName
@@ -62,40 +89,36 @@ export class ResultsService {
                 proctoringFlags: eventCount,
                 startedAt: attempt.startedAt ?? null,
                 submittedAt: attempt.submittedAt ?? null,
-            })
-        }
+            }
+        })
 
         return {
             assessmentId,
             assessmentTitle: assessment.title,
             totalCandidates: attempts.length,
-            completedCount: attempts.filter((a) => a.status === 'COMPLETED').length,
+            completedCount: attempts.filter(a => a.status === 'COMPLETED').length,
             results,
         }
     }
 
     /**
-     * Get detailed result for a single attempt
+     * Get detailed result for a single attempt.
+     * Parallel fetches to avoid sequential waterfall.
      */
     async getAttemptResult(attemptId: string): Promise<AttemptResultResponse> {
         const attempt = await AssessmentAttempt.findById(attemptId)
+        if (!attempt) throw AppError.notFound('Attempt')
 
-        if (!attempt) {
-            const error = new Error('Attempt not found') as Error & { statusCode: number; code: string }
-            error.statusCode = 404
-            error.code = 'NOT_FOUND'
-            throw error
-        }
+        // Parallel fetch — no waterfall
+        const [assessment, candidate, evaluations, events] = await Promise.all([
+            Assessment.findById(attempt.assessmentId).lean(),
+            Candidate.findById(attempt.candidateId).select('email firstName lastName').lean(),
+            Evaluation.find({ attemptId }).sort({ roundType: 1 }).lean(),
+            ProctoringEvent.find({ attemptId }).lean(),
+        ])
 
-        const assessment = await Assessment.findById(attempt.assessmentId)
-        const candidate = await Candidate.findById(attempt.candidateId)
-        const evaluations = await Evaluation.find({ attemptId }).sort({ roundType: 1 })
-        const events = await ProctoringEvent.find({ attemptId })
-
-        // Build round results
-        const rounds: RoundResultResponse[] = attempt.rounds.map((round) => {
-            const evaluation = evaluations.find((e) => e.roundType === round.roundType)
-
+        const rounds: RoundResultResponse[] = attempt.rounds.map(round => {
+            const evaluation = evaluations.find(e => e.roundType === round.roundType)
             return {
                 roundType: round.roundType as RoundTypeValue,
                 status: round.status as RoundStatusType,
@@ -108,10 +131,8 @@ export class ResultsService {
             }
         })
 
-        // Build proctoring summary
         const bySeverity: Record<string, number> = {}
         const byType: Record<string, number> = {}
-
         for (const event of events) {
             bySeverity[event.severity] = (bySeverity[event.severity] || 0) + 1
             byType[event.eventType] = (byType[event.eventType] || 0) + 1

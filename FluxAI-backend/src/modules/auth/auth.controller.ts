@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
 import { authService } from './auth.service.js'
 import { signupSchema, loginSchema, googleAuthSchema } from './auth.types.js'
-import { successResponse } from '../../common/utils/api-response.js'
 import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
+import { AppError } from '../../common/errors/index.js'
 
 export class AuthController {
     private setRefreshCookie(res: Response, refreshToken: string) {
@@ -27,7 +27,7 @@ export class AuthController {
             const input = signupSchema.parse(req.body)
             const result = await authService.signup(input)
             this.setRefreshCookie(res, result.tokens.refreshToken)
-            res.status(201).json(successResponse({ user: result.user, tokens: { accessToken: result.tokens.accessToken, expiresIn: result.tokens.expiresIn } }))
+            res.success({ user: result.user, tokens: { accessToken: result.tokens.accessToken, expiresIn: result.tokens.expiresIn } }, 201)
         } catch (error) {
             next(error)
         }
@@ -41,7 +41,7 @@ export class AuthController {
             const input = loginSchema.parse(req.body)
             const result = await authService.login(input)
             this.setRefreshCookie(res, result.tokens.refreshToken)
-            res.json(successResponse({ user: result.user, tokens: { accessToken: result.tokens.accessToken, expiresIn: result.tokens.expiresIn } }))
+            res.success({ user: result.user, tokens: { accessToken: result.tokens.accessToken, expiresIn: result.tokens.expiresIn } })
         } catch (error) {
             next(error)
         }
@@ -55,7 +55,7 @@ export class AuthController {
             const input = googleAuthSchema.parse(req.body)
             const result = await authService.googleAuth(input)
             this.setRefreshCookie(res, result.tokens.refreshToken)
-            res.json(successResponse({ user: result.user, tokens: { accessToken: result.tokens.accessToken, expiresIn: result.tokens.expiresIn } }))
+            res.success({ user: result.user, tokens: { accessToken: result.tokens.accessToken, expiresIn: result.tokens.expiresIn } })
         } catch (error) {
             next(error)
         }
@@ -68,12 +68,11 @@ export class AuthController {
         try {
             const token = req.cookies?.refreshToken
             if (!token) {
-                res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'No refresh token provided' } })
-                return
+                throw AppError.unauthorized('No refresh token provided')
             }
             const tokens = await authService.refreshToken(token)
             this.setRefreshCookie(res, tokens.refreshToken)
-            res.json(successResponse({ tokens: { accessToken: tokens.accessToken, expiresIn: tokens.expiresIn } }))
+            res.success({ tokens: { accessToken: tokens.accessToken, expiresIn: tokens.expiresIn } })
         } catch (error) {
             this.clearRefreshCookie(res)
             next(error)
@@ -85,7 +84,7 @@ export class AuthController {
      */
     async logout(_req: Request, res: Response): Promise<void> {
         this.clearRefreshCookie(res)
-        res.json(successResponse({ message: 'Logged out successfully' }))
+        res.success({ message: 'Logged out successfully' })
     }
 
     /**
@@ -94,11 +93,10 @@ export class AuthController {
     async me(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
         try {
             if (!req.user?.id) {
-                res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } })
-                return
+                throw AppError.unauthorized('Not authenticated')
             }
             const user = await authService.getCurrentUser(req.user.id)
-            res.json(successResponse(user))
+            res.success(user)
         } catch (error) {
             next(error)
         }
@@ -110,12 +108,11 @@ export class AuthController {
     async deleteAccount(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
         try {
             if (!req.user?.id) {
-                res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } })
-                return
+                throw AppError.unauthorized('Not authenticated')
             }
             await authService.deleteAccount(req.user.id)
             this.clearRefreshCookie(res)
-            res.json(successResponse({ message: 'Account deleted successfully' }))
+            res.success({ message: 'Account deleted successfully' })
         } catch (error) {
             next(error)
         }

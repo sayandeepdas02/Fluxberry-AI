@@ -1,4 +1,6 @@
 import { Types } from 'mongoose'
+import { AppError } from '../../common/errors/index.js'
+import { createPaginatedResponse } from '../../common/dto/pagination.dto.js'
 import { Prospect, IProspect, ProspectList, IProspectList, Campaign, ICampaign, Message, IMessage } from '../../database/models/prospect.models.js'
 import { Candidate } from '../../database/models/index.js'
 import { eventBus, DomainEvent } from '../../common/services/event-bus.service.js'
@@ -42,7 +44,7 @@ class ProspectService {
             Prospect.countDocuments(filter),
         ])
 
-        return { prospects, total, page, limit, totalPages: Math.ceil(total / limit) }
+        return createPaginatedResponse(prospects, total, page, limit)
     }
 
     async getById(id: string, organizationId: string) {
@@ -92,8 +94,8 @@ class ProspectService {
     // ── Convert to ATS Candidate ─────────────────────────────────
     async convertToCandidate(prospectId: string, organizationId: string, userId: string) {
         const prospect = await Prospect.findOne({ _id: prospectId, organizationId })
-        if (!prospect) throw { code: 'NOT_FOUND', message: 'Prospect not found' }
-        if (prospect.status === 'converted') throw { code: 'CONFLICT', message: 'Already converted' }
+        if (!prospect) throw AppError.notFound('Prospect')
+        if (prospect.status === 'converted') throw AppError.conflict('Already converted')
 
         // Check if candidate already exists
         const existing = await Candidate.findOne({ organizationId, email: prospect.email })
@@ -193,10 +195,10 @@ class ProspectService {
         const campaign = await Campaign.findOne({ _id: campaignId, organizationId })
             .populate('listId')
             .populate('templateId')
-        if (!campaign) throw { code: 'NOT_FOUND', message: 'Campaign not found' }
+        if (!campaign) throw AppError.notFound('Campaign')
 
         const list = await ProspectList.findById(campaign.listId).populate('prospectIds')
-        if (!list) throw { code: 'NOT_FOUND', message: 'List not found' }
+        if (!list) throw AppError.notFound('List')
 
         campaign.status = 'sending'
         await campaign.save()

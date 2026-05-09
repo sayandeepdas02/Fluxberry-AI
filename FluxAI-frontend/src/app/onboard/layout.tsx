@@ -2,6 +2,7 @@
 
 import { OnboardingProvider } from "@/features/onboarding/hooks/onboarding-context";
 import { ProtectedRoute } from "@/lib/context/protected-route";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
 
 export default function OnboardingLayout({
     children,
@@ -9,10 +10,12 @@ export default function OnboardingLayout({
     children: React.ReactNode;
 }) {
     return (
-        <ProtectedRoute requireIncompleteOnboarding={true}>
-            <OnboardingProvider>
-                {children}
-            </OnboardingProvider>
-        </ProtectedRoute>
+        <ErrorBoundary section="Onboarding">
+            <ProtectedRoute requireIncompleteOnboarding={true}>
+                <OnboardingProvider>
+                    {children}
+                </OnboardingProvider>
+            </ProtectedRoute>
+        </ErrorBoundary>
     );
 }

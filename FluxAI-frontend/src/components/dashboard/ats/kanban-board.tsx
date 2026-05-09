@@ -14,7 +14,8 @@ import {
     DragOverEvent,
 } from '@dnd-kit/core'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useApiMutation } from '@/lib/hooks/use-api-mutation'
 import { applicationsApi, JobApplicationResponse } from '@/lib/api/applications'
 import { pipelineApi } from '@/lib/api/pipeline'
 import { KanbanColumn } from './kanban-column'
@@ -22,7 +23,6 @@ import { KanbanCard } from './kanban-card'
 import { useCandidatesStore } from '@/lib/store/candidates-store'
 import { Loader2 } from 'lucide-react'
 import { CandidateDrawer } from '../candidates/candidate-drawer'
-import { toast } from 'sonner'
 
 export function KanbanBoard({ jobId }: { jobId: string }) {
     const queryClient = useQueryClient()
@@ -65,7 +65,7 @@ export function KanbanBoard({ jobId }: { jobId: string }) {
     )
 
     // Mutation with proper error handling + rollback
-    const moveStageMutation = useMutation({
+    const moveStageMutation = useApiMutation({
         mutationFn: ({ appId, targetStageId }: { appId: string, targetStageId: string }) =>
             applicationsApi.moveStage(appId, targetStageId),
         onMutate: async () => {
@@ -74,18 +74,14 @@ export function KanbanBoard({ jobId }: { jobId: string }) {
             // Snapshot current data for rollback
             previousDataRef.current = queryClient.getQueryData(['applications', jobId])
         },
-        onError: (_err, _vars, _ctx) => {
+        onError: () => {
             // Rollback to snapshot
             if (previousDataRef.current) {
                 queryClient.setQueryData(['applications', jobId], previousDataRef.current)
             }
-            toast.error('Failed to move candidate', {
-                description: 'The stage change has been reverted. Please try again.',
-            })
         },
-        onSuccess: () => {
-            toast.success('Stage updated', { duration: 2000 })
-        },
+        errorMessage: 'Failed to move candidate — the stage change has been reverted. Please try again.',
+        successMessage: 'Stage updated',
         onSettled: () => {
             // Always refetch after mutation settles to ensure consistency
             queryClient.invalidateQueries({ queryKey: ['applications', jobId] })

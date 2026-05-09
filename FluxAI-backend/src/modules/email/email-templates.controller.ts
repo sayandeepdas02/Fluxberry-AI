@@ -1,77 +1,71 @@
-import { Request, Response } from 'express'
+import { Response, NextFunction } from 'express'
 import { emailTemplateService } from './email-templates.service.js'
 import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
+import { AppError } from '../../common/errors/index.js'
 
 export class EmailTemplateController {
-    async create(req: Request, res: Response) {
+    async create(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const { organizationId } = (req as AuthenticatedRequest).user!
+            const { organizationId } = req.user!
             const template = await emailTemplateService.create(organizationId!, req.body)
-            res.status(201).json(template)
-        } catch (error: any) {
-            res.status(500).json({ message: error.message })
+            res.success(template, 201)
+        } catch (error) {
+            next(error)
         }
     }
 
-    async list(req: Request, res: Response) {
+    async list(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const { organizationId } = (req as AuthenticatedRequest).user!
+            const { organizationId } = req.user!
             const templates = await emailTemplateService.list(organizationId!)
-            res.json(templates)
-        } catch (error: any) {
-            res.status(500).json({ message: error.message })
+            res.success(templates)
+        } catch (error) {
+            next(error)
         }
     }
 
-    async getById(req: Request, res: Response) {
+    async getById(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const { organizationId } = (req as AuthenticatedRequest).user!
-            const { id } = req.params
-            const template = await emailTemplateService.getById(id, organizationId!)
-            if (!template) return res.status(404).json({ message: 'Template not found' })
-            res.json(template)
-        } catch (error: any) {
-            res.status(500).json({ message: error.message })
+            const { organizationId } = req.user!
+            const template = await emailTemplateService.getById(req.params.id, organizationId!)
+            if (!template) throw AppError.notFound('Template')
+            res.success(template)
+        } catch (error) {
+            next(error)
         }
     }
 
-    async update(req: Request, res: Response) {
+    async update(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const { organizationId } = (req as AuthenticatedRequest).user!
-            const { id } = req.params
-            const template = await emailTemplateService.update(id, organizationId!, req.body)
-            if (!template) return res.status(404).json({ message: 'Template not found' })
-            res.json(template)
-        } catch (error: any) {
-            res.status(500).json({ message: error.message })
+            const { organizationId } = req.user!
+            const template = await emailTemplateService.update(req.params.id, organizationId!, req.body)
+            if (!template) throw AppError.notFound('Template')
+            res.success(template)
+        } catch (error) {
+            next(error)
         }
     }
 
-    async delete(req: Request, res: Response) {
+    async delete(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const { organizationId } = (req as AuthenticatedRequest).user!
-            const { id } = req.params
-            const success = await emailTemplateService.delete(id, organizationId!)
-            if (!success) return res.status(404).json({ message: 'Template not found' })
+            const { organizationId } = req.user!
+            const success = await emailTemplateService.delete(req.params.id, organizationId!)
+            if (!success) throw AppError.notFound('Template')
             res.status(204).send()
-        } catch (error: any) {
-            res.status(500).json({ message: error.message })
+        } catch (error) {
+            next(error)
         }
     }
 
-    async send(req: Request, res: Response) {
+    async send(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const { organizationId } = (req as AuthenticatedRequest).user!
-            const { id } = req.params
+            const { organizationId } = req.user!
             const { to, variables } = req.body as { to: string; variables?: Record<string, string> }
-
-            if (!to) return res.status(400).json({ message: '"to" email address is required' })
-
-            const result = await emailTemplateService.sendEmail(id, organizationId!, to, variables ?? {})
-            res.json({ success: true, ...result })
-        } catch (error: any) {
-            const status = error.statusCode || 500
-            res.status(status).json({ success: false, message: error.message })
+            if (!to) throw AppError.badRequest('"to" email address is required')
+            const result = await emailTemplateService.sendEmail(req.params.id, organizationId!, to, variables ?? {})
+            res.success(result)
+        } catch (error) {
+            next(error)
         }
     }
 }

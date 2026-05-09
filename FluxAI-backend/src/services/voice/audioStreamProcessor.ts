@@ -1,20 +1,18 @@
 import { TurnDetectionService } from './turnDetection.service';
 import { DeepgramService } from './deepgram.service';
-import { SpeechSessionManager } from './SpeechSessionManager';
+import { voiceSessionService } from './voiceSessionService';
 // Note: Actual media ingress requires @livekit/rtc-node. Using generic TS interfaces for the bridge.
 export interface NodeAudioStream { on: (event: string, cb: any) => void; }
 
 export class AudioStreamProcessor {
 
     public static async attachToLiveKitRoom(interviewId: string, candidateId: string, room: any) {
-        const sessionManager = SpeechSessionManager.getInstance();
-
         room.on('trackSubscribed', (track: any, publication: any, participant: any) => {
             if (track.kind === 'audio' && participant.identity === candidateId) {
                 console.log(`[AudioProcessor] Subscribed to candidate audio in room ${interviewId}`);
 
                 // Create the session
-                sessionManager.createSession(interviewId, candidateId, participant.identity);
+                voiceSessionService.createSession(interviewId, candidateId, participant.identity).catch(console.error);
 
                 // Setup Turn Detection timeouts
                 TurnDetectionService.resetInactivityWarning(interviewId);
@@ -51,7 +49,7 @@ export class AudioStreamProcessor {
         room.on('participantDisconnected', (participant: any) => {
             if (participant.identity === candidateId) {
                 console.log(`[AudioProcessor] Candidate disconnected from ${interviewId}, killing deepgram connection`);
-                sessionManager.removeSession(interviewId);
+                voiceSessionService.removeSession(interviewId).catch(console.error);
             }
         });
     }

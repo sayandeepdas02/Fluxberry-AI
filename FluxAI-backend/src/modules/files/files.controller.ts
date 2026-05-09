@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { filesService } from './files.service.js'
 import { requestUploadUrlSchema, attachResumeSchema, attachVideoSchema } from './files.types.js'
-import { successResponse } from '../../common/utils/api-response.js'
+import { AppError } from '../../common/errors/index.js'
 
 export class FilesController {
     /**
@@ -16,11 +16,7 @@ export class FilesController {
             const { candidateId, organizationId } = req.body as { candidateId?: string; organizationId?: string }
 
             if (!candidateId) {
-                res.status(400).json({
-                    success: false,
-                    error: { code: 'MISSING_CANDIDATE', message: 'candidateId is required' },
-                })
-                return
+                throw AppError.badRequest('candidateId is required')
             }
 
             const result = await filesService.requestUploadUrl(
@@ -30,7 +26,7 @@ export class FilesController {
                 organizationId
             )
 
-            res.status(201).json(successResponse(result))
+            res.success(result, 201)
         } catch (error) {
             next(error)
         }
@@ -47,15 +43,11 @@ export class FilesController {
             const { candidateId } = req.body as { candidateId?: string }
 
             if (!candidateId) {
-                res.status(400).json({
-                    success: false,
-                    error: { code: 'MISSING_CANDIDATE', message: 'candidateId is required' },
-                })
-                return
+                throw AppError.badRequest('candidateId is required')
             }
 
             const result = await filesService.attachResume(attemptId, input.fileId, candidateId)
-            res.json(successResponse(result))
+            res.success(result)
         } catch (error) {
             next(error)
         }
@@ -72,11 +64,7 @@ export class FilesController {
             const { candidateId } = req.body as { candidateId?: string }
 
             if (!candidateId) {
-                res.status(400).json({
-                    success: false,
-                    error: { code: 'MISSING_CANDIDATE', message: 'candidateId is required' },
-                })
-                return
+                throw AppError.badRequest('candidateId is required')
             }
 
             const result = await filesService.attachVideo(
@@ -86,7 +74,7 @@ export class FilesController {
                 candidateId,
                 input.questionIndex
             )
-            res.json(successResponse(result))
+            res.success(result)
         } catch (error) {
             next(error)
         }

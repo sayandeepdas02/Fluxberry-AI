@@ -6,6 +6,8 @@
  */
 
 import { AuditLog, Job as JobModel } from '../../database/models/index.js'
+import { AppError } from '../../common/errors/index.js'
+import { createPaginatedResponse } from '../../common/dto/pagination.dto.js'
 import { ScreeningResult, ScreeningStatus, deriveStatusPriority } from './models/screening-result.model.js'
 import { JobScreeningProfile } from './models/job-screening-profile.model.js'
 import { ResumeProfile } from './models/resume-profile.model.js'
@@ -210,20 +212,12 @@ export class DecisionService {
             }
         })
 
-        return {
-            data: candidates,
-            pagination: {
-                total,
-                page,
-                limit,
-                pages: Math.ceil(total / limit)
-            }
-        }
+        return createPaginatedResponse(candidates, total, page, limit)
     }
 
     async getCandidateBreakdown(jobId: string, candidateId: string, orgId: string) {
         const result = await ScreeningResult.findOne({ candidateId, jobId, organizationId: orgId })
-        if (!result) throw { code: 'NOT_FOUND', message: 'Result not found' }
+        if (!result) throw AppError.notFound('Screening result')
 
         const thresholds = await resolveThresholds(jobId, orgId)
 
@@ -260,11 +254,9 @@ export class DecisionService {
                 reason:    result.manualOverride.reason,
                 updatedAt: result.manualOverride.updatedAt,
             } : null,
-            ...(isV2 && {
-                insights:          (result as any).insights || result.scoreBreakdown?.insights || [],
-                skillMatchDetails: (result as any).skillMatchDetails || result.scoreBreakdown?.skillMatchDetails || [],
-                signalBoostScore:  result.scoreBreakdown?.signalBoostScore || 0,
-            }),
+            insights:          result.scoreBreakdown?.insights ?? [],
+            skillMatchDetails: result.scoreBreakdown?.skillMatchDetails ?? [],
+            signalBoostScore:  result.scoreBreakdown?.signalBoostScore ?? 0,
         }
     }
 
@@ -335,7 +327,7 @@ export class DecisionService {
         reason: string
     ) {
         const result = await ScreeningResult.findOne({ candidateId, jobId, organizationId: orgId })
-        if (!result) throw { code: 'NOT_FOUND', message: 'Result not found' }
+        if (!result) throw AppError.notFound('Screening result')
 
         const thresholds = await resolveThresholds(jobId, orgId)
 

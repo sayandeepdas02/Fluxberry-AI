@@ -1,7 +1,8 @@
 "use client"
 
 import { PageContainer } from "@/components/dashboard/page-container"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
+import { useApiMutation } from "@/lib/hooks/use-api-mutation"
 import { prospectsApi, ProspectList, Prospect } from "@/lib/api/prospects"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -25,7 +26,6 @@ const STATUS_ORDER: Record<string, number> = { replied: 0, contacted: 1, new: 2,
 type SortKey = 'recent' | 'replied' | 'contacted' | 'name'
 
 export default function TalentListsPage() {
-    const queryClient = useQueryClient()
     const [selectedListId, setSelectedListId] = useState<string | null>(null)
     const [showCreateForm, setShowCreateForm] = useState(false)
     const [newListName, setNewListName] = useState('')
@@ -46,26 +46,22 @@ export default function TalentListsPage() {
     })
     const listDetail = listDetailResponse?.data
 
-    const createMutation = useMutation({
+    const createMutation = useApiMutation({
         mutationFn: (data: { name: string; description?: string }) => prospectsApi.createList(data),
+        successMessage: 'List created',
+        invalidateKeys: [['prospect-lists']],
         onSuccess: () => {
-            toast.success('List created')
             setShowCreateForm(false)
             setNewListName('')
             setNewListDesc('')
-            queryClient.invalidateQueries({ queryKey: ['prospect-lists'] })
         },
-        onError: () => toast.error('Failed to create list'),
     })
 
-    const removeMutation = useMutation({
+    const removeMutation = useApiMutation({
         mutationFn: ({ listId, prospectIds }: { listId: string; prospectIds: string[] }) =>
             prospectsApi.removeFromList(listId, prospectIds),
-        onSuccess: () => {
-            toast.success('Removed from list')
-            queryClient.invalidateQueries({ queryKey: ['prospect-list', selectedListId] })
-            queryClient.invalidateQueries({ queryKey: ['prospect-lists'] })
-        },
+        successMessage: 'Removed from list',
+        invalidateKeys: [['prospect-list', selectedListId], ['prospect-lists']],
     })
 
     const rawProspects = (listDetail?.prospectIds || []) as Prospect[]

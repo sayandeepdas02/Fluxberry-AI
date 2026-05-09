@@ -1,7 +1,8 @@
 "use client"
 
 import { PageContainer } from "@/components/dashboard/page-container"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { ErrorBoundary } from "@/components/shared/error-boundary"
+import { useApiMutation } from "@/lib/hooks/use-api-mutation"
 import { jobsApi, CreateJobInput } from "@/lib/api/jobs"
 import { Input } from "@/components/ui/input"
 import {
@@ -16,7 +17,6 @@ const STEPS = ['Basics', 'Description', 'Requirements', 'Review']
 
 export default function CreateJobPage() {
     const router = useRouter()
-    const queryClient = useQueryClient()
     const [step, setStep] = useState(0)
 
     // Form state
@@ -28,14 +28,13 @@ export default function CreateJobPage() {
     const [requirements, setRequirements] = useState('')
     const [skills, setSkills] = useState('')
 
-    const createMutation = useMutation({
+    const createMutation = useApiMutation({
         mutationFn: (data: CreateJobInput) => jobsApi.create(data),
+        successMessage: 'Job created successfully',
+        invalidateKeys: [['jobs']],
         onSuccess: () => {
-            toast.success('Job created successfully')
-            queryClient.invalidateQueries({ queryKey: ['jobs'] })
             router.push('/dashboard/jobs/manage')
         },
-        onError: (err: any) => toast.error(err?.message || 'Failed to create job'),
     })
 
     const handleSubmit = () => {
@@ -57,6 +56,7 @@ export default function CreateJobPage() {
 
     return (
         <PageContainer title="Create Job" description="Create a new job posting and start receiving applications.">
+            <ErrorBoundary section="Create Job">
             <div className="mt-6 w-full max-w-2xl mx-auto">
                 {/* Step indicator */}
                 <div className="flex items-center gap-2 mb-8">
@@ -214,6 +214,7 @@ export default function CreateJobPage() {
                     )}
                 </div>
             </div>
+            </ErrorBoundary>
         </PageContainer>
     )
 }

@@ -123,9 +123,10 @@ export function useInterviewSocket({
             )
         })
 
-        socket.io.on("reconnect_failed", () => {
+        const onReconnectFailed = () => {
             onErrorRef.current("Unable to reconnect to interview server. Please refresh the page.")
-        })
+        }
+        socket.io.on("reconnect_failed", onReconnectFailed)
 
         socket.on("session_state", (state) => {
             onSessionStateRef.current({
@@ -173,6 +174,7 @@ export function useInterviewSocket({
         })
 
         return () => {
+            socket.io.off("reconnect_failed", onReconnectFailed)
             socket.emit("leave_session", { sessionId })
             socket.disconnect()
             socketRef.current = null

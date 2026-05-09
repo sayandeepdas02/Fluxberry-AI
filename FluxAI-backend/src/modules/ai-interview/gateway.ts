@@ -175,6 +175,14 @@ export function createGateway(io: SocketIOServer): void {
 
             console.log(`[Gateway] join_session: sessionId=${sessionId} socketId=${socket.id}`)
 
+            // Guard against reconnect race: close any stale session for this ID before creating a new one
+            const existing = sessions.get(sessionId)
+            if (existing) {
+                existing.sttConnection?.close()
+                sessions.delete(sessionId)
+                console.log(`[Gateway] Replaced stale session=${sessionId}`)
+            }
+
             // Get current orchestrator state to send to frontend
             let sessionState
             try {

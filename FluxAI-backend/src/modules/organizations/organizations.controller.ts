@@ -1,7 +1,6 @@
 import { Response, NextFunction } from 'express'
 import { organizationsService } from './organizations.service.js'
 import { updateOrganizationSchema } from './organizations.types.js'
-import { successResponse } from '../../common/utils/api-response.js'
 import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
 
 export class OrganizationsController {
@@ -21,7 +20,7 @@ export class OrganizationsController {
             }
 
             const orgs = await organizationsService.getAll(userId)
-            res.json(successResponse(orgs))
+            res.success(orgs)
         } catch (error) {
             next(error)
         }
@@ -45,7 +44,7 @@ export class OrganizationsController {
             }
 
             const org = await organizationsService.getById(orgId, userId)
-            res.json(successResponse(org))
+            res.success(org)
         } catch (error) {
             next(error)
         }
@@ -69,7 +68,7 @@ export class OrganizationsController {
             }
 
             const org = await organizationsService.getById(organizationId, userId)
-            res.json(successResponse(org))
+            res.success(org)
         } catch (error) {
             next(error)
         }
@@ -94,7 +93,7 @@ export class OrganizationsController {
 
             const input = updateOrganizationSchema.parse(req.body)
             const org = await organizationsService.update(organizationId, userId, input)
-            res.json(successResponse(org))
+            res.success(org)
         } catch (error) {
             next(error)
         }
@@ -118,7 +117,7 @@ export class OrganizationsController {
             }
 
             const members = await organizationsService.getMembers(organizationId, userId)
-            res.json(successResponse(members))
+            res.success(members)
         } catch (error) {
             next(error)
         }
@@ -142,7 +141,7 @@ export class OrganizationsController {
             }
 
             const settings = await organizationsService.getOnboardingSettings(organizationId, userId)
-            res.json(successResponse(settings))
+            res.success(settings)
         } catch (error) {
             next(error)
         }
@@ -168,7 +167,7 @@ export class OrganizationsController {
             const { updateOnboardingSettingsSchema } = await import('./organizations.types.js')
             const input = updateOnboardingSettingsSchema.parse(req.body)
             const settings = await organizationsService.updateOnboardingSettings(organizationId, userId, input)
-            res.json(successResponse(settings))
+            res.success(settings)
         } catch (error) {
             next(error)
         }

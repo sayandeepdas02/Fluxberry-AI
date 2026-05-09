@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { proctoringService } from './proctoring.service.js'
 import { createProctoringEventSchema } from './proctoring.types.js'
-import { successResponse } from '../../common/utils/api-response.js'
 
 export class ProctoringController {
     /**
@@ -13,7 +12,7 @@ export class ProctoringController {
             const { attemptId } = req.params
             const input = createProctoringEventSchema.parse(req.body)
             const event = await proctoringService.logEvent(attemptId, input)
-            res.status(201).json(successResponse(event))
+            res.success(event, 201)
         } catch (error) {
             next(error)
         }
@@ -27,7 +26,7 @@ export class ProctoringController {
         try {
             const { attemptId } = req.params
             const summary = await proctoringService.getSummary(attemptId)
-            res.json(successResponse(summary))
+            res.success(summary)
         } catch (error) {
             next(error)
         }

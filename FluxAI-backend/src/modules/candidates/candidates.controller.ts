@@ -1,7 +1,6 @@
 import { Response, NextFunction } from 'express'
 import { candidatesService } from './candidates.service.js'
 import { createCandidateSchema, updateCandidateSchema, listCandidatesQuerySchema, createNoteSchema } from './candidates.types.js'
-import { successResponse } from '../../common/utils/api-response.js'
 import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
 
 export class CandidatesController {

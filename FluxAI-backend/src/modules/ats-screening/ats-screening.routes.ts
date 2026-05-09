@@ -78,22 +78,22 @@ router.get(
 // to avoid ambiguous param matching.
 router.get(
     '/:jobId/copilot/candidate/:candidateId',
-    (req, res) => copilotController.getCandidateSummary(req as any, res)
+    (req, res, next) => copilotController.getCandidateSummary(req as any, res, next)
 )
 
 router.get(
     '/:jobId/copilot',
-    (req, res) => copilotController.getInsights(req as any, res)
+    (req, res, next) => copilotController.getInsights(req as any, res, next)
 )
 
 router.post(
     '/:jobId/copilot/questions',
-    (req, res) => copilotController.generateQuestions(req as any, res)
+    (req, res, next) => copilotController.generateQuestions(req as any, res, next)
 )
 
 router.post(
     '/:jobId/copilot/chat',
-    (req, res) => copilotController.chat(req as any, res)
+    (req, res, next) => copilotController.chat(req as any, res, next)
 )
 
 export const atsScreeningRoutes = router

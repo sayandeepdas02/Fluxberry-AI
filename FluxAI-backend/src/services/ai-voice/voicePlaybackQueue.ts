@@ -4,8 +4,7 @@ import { AIResponseComposerService } from './aiResponseComposer.service';
 import { VoiceStreamService } from './voiceStream.service';
 import { Server as SocketIOServer } from 'socket.io';
 import { TranscriptEmitter } from '../voice/transcriptEmitter';
-import { VoiceSessionManager } from './voiceSessionManager';
-import { SpeechSessionManager } from '../voice/SpeechSessionManager';
+import { voiceSessionService } from '../voice/voiceSessionService';
 
 // Using standard ioredis connection
 const redisConnection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', { maxRetriesPerRequest: null });
@@ -34,10 +33,8 @@ export class VoiceQueueManager {
             const { interviewId, speechText, speechId } = data;
 
             // 1. Double check interruption
-            const aiSessionInfo = await VoiceSessionManager.getSession(interviewId);
-            // Connect to candidate listen states
-            const candidateSpeechState = await SpeechSessionManager.getInstance().getSession(interviewId);
-            if (candidateSpeechState?.speakingState) {
+            const session = await voiceSessionService.getSession(interviewId);
+            if (session?.candidateSpeakingState) {
                 console.log(`[PlaybackQueue] Dropping TTS generation for ${interviewId}; Candidate is currently speaking over it.`);
                 return;
             }
@@ -46,8 +43,8 @@ export class VoiceQueueManager {
             console.log(`[PlaybackQueue] Composing conversational overlay...`);
             const composedResponse = await AIResponseComposerService.composeConversationalSpeech(interviewId, speechText);
 
-            // 3. Mark actively speaking 
-            await VoiceSessionManager.setSpeakingState(interviewId, speechId, true);
+            // 3. Mark actively speaking
+            await voiceSessionService.setAiSpeaking(interviewId, speechId, true);
 
             // 4. Record permanent Database tracking
             TranscriptEmitter.emitFinal(interviewId, 'AI', composedResponse.composedSpeech);
@@ -64,7 +61,7 @@ export class VoiceQueueManager {
                 console.error(`[PlaybackQueue] Delivery failure:`, err);
             } finally {
                 // 7. Clear conversational lock
-                await VoiceSessionManager.setSpeakingState(interviewId, speechId, false);
+                await voiceSessionService.setAiSpeaking(interviewId, speechId, false);
                 if (VoiceQueueManager.ioInstance) {
                     VoiceQueueManager.ioInstance.to(interviewId).emit('AI_SPEAKING_END');
                 }
