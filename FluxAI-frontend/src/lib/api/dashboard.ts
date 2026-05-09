@@ -20,17 +20,12 @@ export interface DashboardSummary {
 }
 
 export interface ATSAnalytics {
-    totalJobs: number
-    activeJobs: number
-    totalCandidates: number
-    totalApplications: number
-    conversionRates: {
-        appliedToInterview: number
-        interviewToOffer: number
-        offerToHired: number
-    }
-    stageDistribution: Record<string, number>
-    avgTimeInStage: Record<string, number>
+    // KPI-shaped fields from the analytics service spread
+    activeJobs: { label: string; value: number; trend: number; trendDirection: string }
+    totalCandidates: { label: string; value: number; trend: number; trendDirection: string }
+    applications: { label: string; value: number; trend: number; trendDirection: string }
+    awaitingReview: { label: string; value: number; trend: number; trendDirection: string }
+    // Trend / source data appended by dashboard.service
     hiringTrends: { date: string; value: number }[]
     applicationSources: { label: string; value: number; percentage: number }[]
 }
