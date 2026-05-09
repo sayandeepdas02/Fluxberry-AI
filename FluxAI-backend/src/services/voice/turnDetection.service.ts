@@ -1,4 +1,4 @@
-import { SpeechSessionManager } from './SpeechSessionManager';
+import { voiceSessionService } from './voiceSessionService';
 import { TranscriptEmitter } from './transcriptEmitter';
 
 import { interviewOrchestrator } from '../../modules/ai-interview/services/interviewOrchestrator';
@@ -9,20 +9,17 @@ export class TurnDetectionService {
     private static silenceTimers: Map<string, NodeJS.Timeout> = new Map();
     private static warningTimers: Map<string, NodeJS.Timeout> = new Map();
 
-    public static handleSpeechStarted(interviewId: string) {
-        const sessionManager = SpeechSessionManager.getInstance();
-        sessionManager.updateSession(interviewId, {
-            speakingState: true,
-            lastSpeechTimestamp: Date.now()
-        });
-
+    public static handleSpeechStarted(interviewId: string): void {
+        voiceSessionService.setCandidateSpeaking(interviewId, true).catch((err) =>
+            console.error(`[TurnDetection] setCandidateSpeaking error for ${interviewId}:`, err)
+        )
         this.clearTimers(interviewId);
     }
 
-    public static handleSpeechEnded(interviewId: string) {
-        const sessionManager = SpeechSessionManager.getInstance();
-        sessionManager.updateSession(interviewId, { speakingState: false });
-
+    public static handleSpeechEnded(interviewId: string): void {
+        voiceSessionService.setCandidateSpeaking(interviewId, false).catch((err) =>
+            console.error(`[TurnDetection] setCandidateSpeaking error for ${interviewId}:`, err)
+        )
         this.clearTimers(interviewId);
 
         // Start the 600ms grace period timer
@@ -45,8 +42,7 @@ export class TurnDetectionService {
     }
 
     private static async finalizeTurn(interviewId: string) {
-        const sessionManager = SpeechSessionManager.getInstance();
-        const session = sessionManager.getSession(interviewId);
+        const session = await voiceSessionService.getSession(interviewId);
 
         if (!session) return;
 
@@ -57,7 +53,7 @@ export class TurnDetectionService {
             console.log(`[TurnDetection] Turn completed for ${interviewId}`);
 
             // Clear the buffer for the next question
-            sessionManager.clearTranscriptBuffer(interviewId);
+            await voiceSessionService.clearTranscriptBuffer(interviewId);
 
             // Pass the finalized user chunk to the AI Orchestrator to generate the next reply
             try {
