@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useCallback, useState, ReactNode 
 import { useRouter } from 'next/navigation'
 import { User } from '@/lib/api/types'
 import { authApi, LoginInput, SignupInput } from '@/lib/api/auth'
-import { getStoredToken, clearStoredToken } from '@/lib/api/client'
+import { getStoredToken, clearStoredToken, setUnauthorizedHandler } from '@/lib/api/client'
 
 interface AuthContextType {
     user: User | null
@@ -59,21 +59,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, [refreshUser])
 
-    // Global 401 interceptor: any API call that returns 401 triggers an
-    // `auth:unauthorized` event from the API client. We listen here and
-    // auto-logout so the user is never stuck in an expired-token state.
+    // Wire the API client's unauthorized callback to our logout flow.
+    // This fires whenever any API call receives a 401 that isn't a token
+    // refresh — so the user is never stuck in an expired-token state.
     useEffect(() => {
-        const handleUnauthorized = () => {
-            const token = getStoredToken()
-            if (token) {
-                // Only auto-logout if we thought we were authenticated.
-                // Prevents redirect loops on public pages.
+        setUnauthorizedHandler(() => {
+            if (getStoredToken()) {
                 logout()
             }
-        }
-
-        window.addEventListener('auth:unauthorized', handleUnauthorized)
-        return () => window.removeEventListener('auth:unauthorized', handleUnauthorized)
+        })
     }, [logout])
 
     const googleLogin = async (credential: string) => {
