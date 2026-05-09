@@ -51,7 +51,7 @@ class AIInterviewController {
                 return res.status(400).json({ success: false, error: 'Invalid request body', details: parseResult.error.errors })
             }
             const result = await aiInterviewService.startSession(attemptId, parseResult.data)
-            return res.json({ success: true, data: result })
+            return res.success(result )
         } catch (error) { next(error) }
     }
 
@@ -67,7 +67,7 @@ class AIInterviewController {
                 return res.status(400).json({ success: false, error: 'Invalid request body', details: parseResult.error.errors })
             }
             const result = await aiInterviewService.endSession(attemptId, parseResult.data)
-            return res.json({ success: true, data: result })
+            return res.success(result )
         } catch (error) { next(error) }
     }
 
@@ -83,7 +83,7 @@ class AIInterviewController {
                 return res.status(400).json({ success: false, error: 'Invalid request body', details: parseResult.error.errors })
             }
             const result = await aiInterviewService.initUpload(attemptId, parseResult.data)
-            return res.json({ success: true, data: result })
+            return res.success(result )
         } catch (error) { next(error) }
     }
 
@@ -99,7 +99,7 @@ class AIInterviewController {
                 return res.status(400).json({ success: false, error: 'Invalid request body', details: parseResult.error.errors })
             }
             const result = await aiInterviewService.completeUpload(attemptId, parseResult.data)
-            return res.json({ success: true, data: result })
+            return res.success(result )
         } catch (error) { next(error) }
     }
 
@@ -115,7 +115,7 @@ class AIInterviewController {
                 return res.status(400).json({ success: false, error: 'Invalid request body', details: parseResult.error.errors })
             }
             const result = await aiInterviewService.completeSession(attemptId, parseResult.data)
-            return res.json({ success: true, data: result })
+            return res.success(result )
         } catch (error) { next(error) }
     }
 
@@ -127,7 +127,7 @@ class AIInterviewController {
         try {
             const { attemptId } = req.params
             const result = await aiInterviewService.getInterviewResults(attemptId)
-            return res.json({ success: true, data: result })
+            return res.success(result )
         } catch (error) { next(error) }
     }
 
@@ -139,7 +139,7 @@ class AIInterviewController {
         try {
             const { attemptId, questionId } = req.params
             const result = await aiInterviewService.getResponseVideoUrl(attemptId, questionId)
-            return res.json({ success: true, data: result })
+            return res.success(result )
         } catch (error) { next(error) }
     }
 
@@ -151,7 +151,7 @@ class AIInterviewController {
         try {
             const { attemptId } = req.params
             const result = await aiInterviewService.getSessionDetails(attemptId)
-            return res.json({ success: true, data: result })
+            return res.success(result )
         } catch (error) { next(error) }
     }
 
@@ -170,7 +170,7 @@ class AIInterviewController {
                 path: '/',
                 maxAge: 60 * 60 * 1000, // 1 hour
             })
-            return res.json({ success: true, data: result })
+            return res.success(result )
         } catch (error) { next(error) }
     }
 
@@ -212,7 +212,7 @@ class AIInterviewController {
                 return res.status(400).json({ success: false, error: 'Invalid request body', details: parseResult.error.errors })
             }
             const result = await interviewOrchestrator.submitTurn(sessionId, parseResult.data.answer)
-            return res.json({ success: true, data: result })
+            return res.success(result )
         } catch (error) { next(error) }
     }
 
@@ -224,7 +224,7 @@ class AIInterviewController {
         try {
             const { sessionId } = req.params
             const result = await interviewOrchestrator.getSessionState(sessionId)
-            return res.json({ success: true, data: result })
+            return res.success(result )
         } catch (error) { next(error) }
     }
 
@@ -236,7 +236,7 @@ class AIInterviewController {
         try {
             const { sessionId } = req.params
             const result = await interviewOrchestrator.completeSession(sessionId)
-            return res.json({ success: true, data: result })
+            return res.success(result )
         } catch (error) { next(error) }
     }
 }

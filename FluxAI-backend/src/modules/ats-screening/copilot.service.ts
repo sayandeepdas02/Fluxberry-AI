@@ -12,6 +12,7 @@
 
 import { Job as JobModel, Candidate }    from '../../database/models/index.js'
 import { ScreeningResult, ScreeningStatus } from './models/screening-result.model.js'
+import { AppError } from '../../common/errors/index.js'
 import redis from '../../jobs/redis.js'
 import OpenAI from 'openai'
 
@@ -296,9 +297,9 @@ class CopilotService {
                 .lean(),
         ])
 
-        // Populate candidate names for top-10
+        // Populate candidate names for top-10 — org-scoped to prevent cross-tenant data leak
         const candidateIds = top10.map(r => r.candidateId)
-        const candidates   = await Candidate.find({ _id: { $in: candidateIds } })
+        const candidates   = await Candidate.find({ _id: { $in: candidateIds }, organizationId: orgId })
             .select('firstName lastName email skillMatchDetails').lean()
         const candidateMap = new Map(candidates.map(c => [c._id.toString(), c]))
 
@@ -379,7 +380,7 @@ class CopilotService {
                 .select('title requiredSkills').lean(),
         ])
 
-        if (!result) throw { code: 'NOT_FOUND', message: 'Result not found' }
+        if (!result) throw AppError.notFound('Screening result')
 
         const jobTitle  = (job as any)?.title || 'this role'
         const skills    = (job as any)?.requiredSkills || []
@@ -392,7 +393,7 @@ class CopilotService {
         const topWeaknesses  = deriveWeaknesses(breakdown)
         const deterministic  = deriveReasonDeterministic(classification, breakdown, result.finalScore ?? 0)
 
-        const cand = await Candidate.findById(candidateId).select('firstName lastName').lean()
+        const cand = await Candidate.findOne({ _id: candidateId, organizationId: orgId }).select('firstName lastName').lean()
         const name = cand ? `${(cand as any).firstName || ''} ${(cand as any).lastName || ''}`.trim() : 'Candidate'
 
         const summary = await this.generateCandidateSummary(jobTitle, name, breakdown, skills, classification, deterministic)
@@ -414,7 +415,7 @@ class CopilotService {
                 .select('title requiredSkills optionalSkills department').lean(),
         ])
 
-        if (!result || !job) throw { code: 'NOT_FOUND', message: 'Result or job not found' }
+        if (!result || !job) throw AppError.notFound('Screening result or job')
 
         const jobTitle    = (job as any).title || 'Software Engineer'
         const department  = (job as any).department || ''
@@ -484,7 +485,7 @@ class CopilotService {
     async chatWithCopilot(jobId: string, orgId: string, messages: { role: string; content: string }[]): Promise<string> {
         const job = await JobModel.findOne({ _id: jobId, organizationId: orgId })
             .select('title requiredSkills department').lean()
-        if (!job) throw { code: 'NOT_FOUND', message: 'Job not found' }
+        if (!job) throw AppError.notFound('Job')
 
         const top10 = await ScreeningResult.find({
             jobId,
@@ -496,7 +497,7 @@ class CopilotService {
             .lean()
 
         const candidateIds = top10.map(r => r.candidateId)
-        const candidates = await Candidate.find({ _id: { $in: candidateIds } })
+        const candidates = await Candidate.find({ _id: { $in: candidateIds }, organizationId: orgId })
             .select('firstName lastName email').lean()
         const candidateMap = new Map(candidates.map(c => [c._id.toString(), c]))
 
@@ -525,7 +526,7 @@ Instructions:
 3. Be professional and objective.`
 
         const client = this.getOpenAIClient()
-        if (!client) throw { code: 'INTERNAL_ERROR', message: 'OpenAI not configured' }
+        if (!client) throw AppError.serviceUnavailable('OpenAI not configured')
 
         const apiMessages = [
             { role: 'system', content: systemPrompt },
@@ -545,7 +546,7 @@ Instructions:
             return resp.choices[0]?.message?.content?.trim() || "I couldn't generate a response."
         } catch (error) {
             console.error('[Copilot Service] Chat error:', error)
-            throw { code: 'INTERNAL_ERROR', message: 'Failed to communicate with AI model' }
+            throw AppError.internal('Failed to communicate with AI model')
         }
     }
 

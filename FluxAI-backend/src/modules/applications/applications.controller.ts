@@ -6,7 +6,6 @@ import {
     bulkUpdateSchema,
     createApplicationSchema,
 } from './applications.types.js'
-import { successResponse } from '../../common/utils/api-response.js'
 import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
 
 class ApplicationsController {
@@ -44,7 +43,7 @@ class ApplicationsController {
             const { jobId } = req.params
             const query = listApplicationsQuerySchema.parse(req.query)
             const result = await applicationsService.list(jobId, organizationId, query)
-            res.json(successResponse(result))
+            res.success(result)
         } catch (error) {
             next(error)
         }
@@ -63,7 +62,7 @@ class ApplicationsController {
 
             const { id } = req.params
             const application = await applicationsService.getById(id, organizationId)
-            res.json(successResponse(application))
+            res.success(application)
         } catch (error) {
             next(error)
         }
@@ -84,7 +83,7 @@ class ApplicationsController {
             const { id } = req.params
             const input = updateStageSchema.parse(req.body)
             const application = await applicationsService.updateStage(id, organizationId, input, userId)
-            res.json(successResponse(application))
+            res.success(application)
         } catch (error) {
             next(error)
         }
@@ -104,7 +103,7 @@ class ApplicationsController {
 
             const input = bulkUpdateSchema.parse(req.body)
             const result = await applicationsService.bulkUpdate(organizationId, input, userId)
-            res.json(successResponse(result))
+            res.success(result)
         } catch (error) {
             next(error)
         }
@@ -130,7 +129,7 @@ class ApplicationsController {
             }
 
             const application = await applicationsService.moveToStage(id, organizationId, stageId, userId)
-            res.json(successResponse(application))
+            res.success(application)
         } catch (error) {
             next(error)
         }
@@ -155,7 +154,7 @@ class ApplicationsController {
             }
 
             const result = await applicationsService.bulkMoveToStage(organizationId, applicationIds, stageId, userId)
-            res.json(successResponse(result))
+            res.success(result)
         } catch (error) {
             next(error)
         }
@@ -174,7 +173,7 @@ class ApplicationsController {
 
             const { id } = req.params
             const history = await applicationsService.getStageHistory(id, organizationId)
-            res.json(successResponse(history))
+            res.success(history)
         } catch (error) {
             next(error)
         }

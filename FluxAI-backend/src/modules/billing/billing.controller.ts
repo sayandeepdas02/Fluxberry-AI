@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
 import { billingService } from './billing.service.js'
-import { successResponse } from '../../common/utils/api-response.js'
 
 export class BillingController {
 
@@ -16,7 +15,7 @@ export class BillingController {
                 return res.status(403).json({ success: false, error: 'Organization context required' })
             }
             const status = await billingService.getStatus(user.organizationId)
-            res.json(successResponse(status))
+            res.success(status)
         } catch (error) {
             next(error)
         }
@@ -34,7 +33,7 @@ export class BillingController {
             }
             const { appId } = req.params
             const status = await billingService.installApp(user.organizationId, appId)
-            res.json(successResponse(status))
+            res.success(status)
         } catch (error) {
             next(error)
         }
@@ -52,7 +51,7 @@ export class BillingController {
             }
             const { appId } = req.params
             const status = await billingService.uninstallApp(user.organizationId, appId)
-            res.json(successResponse(status))
+            res.success(status)
         } catch (error) {
             next(error)
         }

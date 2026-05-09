@@ -1,86 +1,83 @@
-import { Request, Response } from 'express'
+import { Response, NextFunction } from 'express'
 import { interviewService } from './interviews.service.js'
 import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
+import { AppError } from '../../common/errors/index.js'
 
 export class InterviewController {
-    async createInterview(req: Request, res: Response) {
+    async createInterview(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const { organizationId } = (req as AuthenticatedRequest).user!
+            const { organizationId } = req.user!
             const interview = await interviewService.createInterview(organizationId!, req.body)
-            res.status(201).json(interview)
-        } catch (error: any) {
-            res.status(500).json({ message: error.message })
+            res.success(interview, 201)
+        } catch (error) {
+            next(error)
         }
     }
 
-    async getInterviews(req: Request, res: Response) {
+    async getInterviews(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const { organizationId } = (req as AuthenticatedRequest).user!
+            const { organizationId } = req.user!
             const interviews = await interviewService.getInterviews(organizationId!, req.query)
-            res.json(interviews)
-        } catch (error: any) {
-            res.status(500).json({ message: error.message })
+            res.success(interviews)
+        } catch (error) {
+            next(error)
         }
     }
 
-    async getInterview(req: Request, res: Response) {
+    async getInterview(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const { organizationId } = (req as AuthenticatedRequest).user!
-            const { id } = req.params
-            const interview = await interviewService.getInterview(id, organizationId!)
-            if (!interview) return res.status(404).json({ message: 'Interview not found' })
-            res.json(interview)
-        } catch (error: any) {
-            res.status(500).json({ message: error.message })
+            const { organizationId } = req.user!
+            const interview = await interviewService.getInterview(req.params.id, organizationId!)
+            if (!interview) throw AppError.notFound('Interview')
+            res.success(interview)
+        } catch (error) {
+            next(error)
         }
     }
 
-    async updateInterview(req: Request, res: Response) {
+    async updateInterview(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const { organizationId } = (req as AuthenticatedRequest).user!
-            const { id } = req.params
-            const interview = await interviewService.updateInterview(id, organizationId!, req.body)
-            if (!interview) return res.status(404).json({ message: 'Interview not found' })
-            res.json(interview)
-        } catch (error: any) {
-            res.status(500).json({ message: error.message })
+            const { organizationId } = req.user!
+            const interview = await interviewService.updateInterview(req.params.id, organizationId!, req.body)
+            if (!interview) throw AppError.notFound('Interview')
+            res.success(interview)
+        } catch (error) {
+            next(error)
         }
     }
 
-    async cancelInterview(req: Request, res: Response) {
+    async cancelInterview(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const { organizationId } = (req as AuthenticatedRequest).user!
-            const { id } = req.params
-            const interview = await interviewService.cancelInterview(id, organizationId!)
-            if (!interview) return res.status(404).json({ message: 'Interview not found' })
-            res.json(interview)
-        } catch (error: any) {
-            res.status(500).json({ message: error.message })
+            const { organizationId } = req.user!
+            const interview = await interviewService.cancelInterview(req.params.id, organizationId!)
+            if (!interview) throw AppError.notFound('Interview')
+            res.success(interview)
+        } catch (error) {
+            next(error)
         }
     }
 
-    async submitScorecard(req: Request, res: Response) {
+    async submitScorecard(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const { organizationId, id: userId } = (req as AuthenticatedRequest).user!
+            const { organizationId, id: userId } = req.user!
             const scorecard = await interviewService.submitScorecard(organizationId!, {
                 ...req.body,
-                interviewerId: userId
+                interviewerId: userId,
             })
-            res.status(201).json(scorecard)
-        } catch (error: any) {
-            res.status(500).json({ message: error.message })
+            res.success(scorecard, 201)
+        } catch (error) {
+            next(error)
         }
     }
 
-    async getScorecard(req: Request, res: Response) {
+    async getScorecard(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const { organizationId } = (req as AuthenticatedRequest).user!
-            const { interviewId } = req.params
-            const scorecard = await interviewService.getScorecard(interviewId, organizationId!)
-            if (!scorecard) return res.status(404).json({ message: 'Scorecard not found' })
-            res.json(scorecard)
-        } catch (error: any) {
-            res.status(500).json({ message: error.message })
+            const { organizationId } = req.user!
+            const scorecard = await interviewService.getScorecard(req.params.interviewId, organizationId!)
+            if (!scorecard) throw AppError.notFound('Scorecard')
+            res.success(scorecard)
+        } catch (error) {
+            next(error)
         }
     }
 }

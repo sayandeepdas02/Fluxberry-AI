@@ -1,99 +1,52 @@
-import { Request, Response } from 'express'
+import { Response, NextFunction } from 'express'
 import { copilotService } from './copilot.service.js'
-
-interface AuthRequest extends Request {
-    user?: { _id: string; organizationId: string }
-}
+import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
+import { AppError } from '../../common/errors/index.js'
 
 export class CopilotController {
-    /**
-     * GET /ats/:jobId/copilot
-     * Returns top recommendations + pool insights + suggested actions.
-     * Backend caches 5 minutes in Redis.
-     */
-    async getInsights(req: AuthRequest, res: Response) {
+    async getInsights(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const orgId = req.user!.organizationId
-            const { jobId } = req.params
-            const data = await copilotService.generateCopilotInsights(jobId, orgId)
-            res.json({ success: true, data })
-        } catch (error: any) {
-            console.error('[Copilot] getInsights error:', error)
-            res.status(error.code === 'NOT_FOUND' ? 404 : 500).json({
-                success: false,
-                error: error.message || 'Failed to generate Copilot insights',
-            })
+            const data = await copilotService.generateCopilotInsights(req.params.jobId, req.user!.organizationId!)
+            res.success(data)
+        } catch (error) {
+            next(error)
         }
     }
 
-    /**
-     * GET /ats/:jobId/copilot/candidate/:candidateId
-     * Returns per-candidate AI summary for the breakdown modal.
-     * Backend caches 10 minutes in Redis.
-     */
-    async getCandidateSummary(req: AuthRequest, res: Response) {
+    async getCandidateSummary(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const orgId = req.user!.organizationId
-            const { jobId, candidateId } = req.params
-            const data = await copilotService.getCandidateSummary(jobId, candidateId, orgId)
-            res.json({ success: true, data })
-        } catch (error: any) {
-            console.error('[Copilot] getCandidateSummary error:', error)
-            res.status(error.code === 'NOT_FOUND' ? 404 : 500).json({
-                success: false,
-                error: error.message || 'Failed to generate candidate summary',
-            })
+            const data = await copilotService.getCandidateSummary(
+                req.params.jobId, req.params.candidateId, req.user!.organizationId!
+            )
+            res.success(data)
+        } catch (error) {
+            next(error)
         }
     }
 
-    /**
-     * POST /ats/:jobId/copilot/questions
-     * Body: { candidateId: string }
-     * Returns 5 tailored interview questions. Not cached — fresh per request.
-     */
-    async generateQuestions(req: AuthRequest, res: Response) {
+    async generateQuestions(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const orgId = req.user!.organizationId
-            const { jobId } = req.params
             const { candidateId } = req.body
-
-            if (!candidateId) {
-                return res.status(400).json({ success: false, error: 'candidateId is required' })
-            }
-
-            const questions = await copilotService.generateInterviewQuestions(jobId, candidateId, orgId)
-            res.json({ success: true, data: questions })
-        } catch (error: any) {
-            console.error('[Copilot] generateQuestions error:', error)
-            res.status(error.code === 'NOT_FOUND' ? 404 : 500).json({
-                success: false,
-                error: error.message || 'Failed to generate interview questions',
-            })
+            if (!candidateId) throw AppError.badRequest('candidateId is required')
+            const questions = await copilotService.generateInterviewQuestions(
+                req.params.jobId, candidateId, req.user!.organizationId!
+            )
+            res.success(questions)
+        } catch (error) {
+            next(error)
         }
     }
-    /**
-     * POST /ats/:jobId/copilot/chat
-     * Body: { messages: { role: string; content: string }[] }
-     * Interactive AI recruiter chat with RAG.
-     */
-    async chat(req: AuthRequest, res: Response) {
+
+    async chat(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const orgId = req.user!.organizationId
-            const { jobId } = req.params
             const { messages } = req.body
-
-            if (!messages || !Array.isArray(messages)) {
-                return res.status(400).json({ success: false, error: 'messages array is required' })
-            }
-
-            const responseText = await copilotService.chatWithCopilot(jobId, orgId, messages)
-            res.json({ success: true, data: responseText })
-        } catch (error: any) {
-            console.error('[Copilot] chat error:', error)
-            res.status(error.code === 'NOT_FOUND' ? 404 : 500).json({
-                success: false,
-                error: error.message || 'Failed to generate chat response',
-            })
+            if (!messages || !Array.isArray(messages)) throw AppError.badRequest('messages array is required')
+            const responseText = await copilotService.chatWithCopilot(
+                req.params.jobId, req.user!.organizationId!, messages
+            )
+            res.success(responseText)
+        } catch (error) {
+            next(error)
         }
     }
 }

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { attemptsService } from './attempts.service.js'
 import { startAttemptSchema, submitRoundSchema, submitAnswerSchema } from './attempts.types.js'
-import { successResponse } from '../../common/utils/api-response.js'
+import { AppError } from '../../common/errors/index.js'
 import { RoundTypeValue } from '../../database/models/index.js'
 
 export class AttemptsController {
@@ -14,7 +14,7 @@ export class AttemptsController {
             const { assessmentId } = req.params
             const input = startAttemptSchema.parse(req.body)
             const attempt = await attemptsService.startOrResume(assessmentId, input)
-            res.status(201).json(successResponse(attempt))
+            res.success(attempt, 201)
         } catch (error) {
             next(error)
         }
@@ -27,7 +27,7 @@ export class AttemptsController {
         try {
             const { attemptId } = req.params
             const attempt = await attemptsService.getById(attemptId)
-            res.json(successResponse(attempt))
+            res.success(attempt)
         } catch (error) {
             next(error)
         }
@@ -41,15 +41,11 @@ export class AttemptsController {
             const { attemptId, roundType } = req.params
 
             if (!['MCQ', 'DSA', 'AI'].includes(roundType)) {
-                res.status(400).json({
-                    success: false,
-                    error: { code: 'INVALID_INPUT', message: 'Invalid round type' },
-                })
-                return
+                throw AppError.badRequest('Invalid round type')
             }
 
             const attempt = await attemptsService.startRound(attemptId, roundType as RoundTypeValue)
-            res.json(successResponse(attempt))
+            res.success(attempt)
         } catch (error) {
             next(error)
         }
@@ -63,16 +59,12 @@ export class AttemptsController {
             const { attemptId, roundType } = req.params
 
             if (!['MCQ', 'DSA', 'AI'].includes(roundType)) {
-                res.status(400).json({
-                    success: false,
-                    error: { code: 'INVALID_INPUT', message: 'Invalid round type' },
-                })
-                return
+                throw AppError.badRequest('Invalid round type')
             }
 
             const input = submitRoundSchema.parse(req.body)
             const attempt = await attemptsService.submitRound(attemptId, roundType as RoundTypeValue, input)
-            res.json(successResponse(attempt))
+            res.success(attempt)
         } catch (error) {
             next(error)
         }
@@ -87,15 +79,11 @@ export class AttemptsController {
             const { attemptId, roundType } = req.params
 
             if (!['MCQ', 'DSA', 'AI'].includes(roundType)) {
-                res.status(400).json({
-                    success: false,
-                    error: { code: 'INVALID_INPUT', message: 'Invalid round type' },
-                })
-                return
+                throw AppError.badRequest('Invalid round type')
             }
 
             const questions = await attemptsService.getRoundQuestions(attemptId, roundType as RoundTypeValue)
-            res.json(successResponse(questions))
+            res.success(questions)
         } catch (error) {
             next(error)
         }
@@ -115,15 +103,11 @@ export class AttemptsController {
             const roundIdx = parseInt(roundIndex, 10)
 
             if (isNaN(roundIdx) || roundIdx < 0) {
-                res.status(400).json({
-                    success: false,
-                    error: { code: 'INVALID_INPUT', message: 'Invalid round index' },
-                })
-                return
+                throw AppError.badRequest('Invalid round index')
             }
 
             const result = await attemptsService.getCurrentQuestion(attemptId, roundIdx)
-            res.json(successResponse(result))
+            res.success(result)
         } catch (error) {
             next(error)
         }
@@ -140,15 +124,11 @@ export class AttemptsController {
             const questionIdx = parseInt(questionIndex, 10)
 
             if (isNaN(roundIdx) || roundIdx < 0 || isNaN(questionIdx) || questionIdx < 0) {
-                res.status(400).json({
-                    success: false,
-                    error: { code: 'INVALID_INPUT', message: 'Invalid round or question index' },
-                })
-                return
+                throw AppError.badRequest('Invalid round or question index')
             }
 
             const result = await attemptsService.startQuestion(attemptId, roundIdx, questionIdx)
-            res.json(successResponse(result))
+            res.success(result)
         } catch (error) {
             next(error)
         }
@@ -165,16 +145,12 @@ export class AttemptsController {
             const questionIdx = parseInt(questionIndex, 10)
 
             if (isNaN(roundIdx) || roundIdx < 0 || isNaN(questionIdx) || questionIdx < 0) {
-                res.status(400).json({
-                    success: false,
-                    error: { code: 'INVALID_INPUT', message: 'Invalid round or question index' },
-                })
-                return
+                throw AppError.badRequest('Invalid round or question index')
             }
 
             const input = submitAnswerSchema.parse(req.body)
             const result = await attemptsService.submitAnswer(attemptId, roundIdx, questionIdx, input)
-            res.json(successResponse(result))
+            res.success(result)
         } catch (error) {
             next(error)
         }
@@ -188,11 +164,7 @@ export class AttemptsController {
         try {
             const attemptId = (req as Request & { cookies?: Record<string, string> }).cookies?.fluxai_ribbon_attempt
             if (!attemptId) {
-                res.status(400).json({
-                    success: false,
-                    error: { code: 'NO_COOKIE', message: 'Ribbon callback cookie missing' },
-                })
-                return
+                throw AppError.badRequest('Ribbon callback cookie missing')
             }
             const result = await attemptsService.getRibbonCallbackNextUrl(attemptId)
             res.clearCookie('fluxai_ribbon_attempt', {
@@ -201,7 +173,7 @@ export class AttemptsController {
                 sameSite: 'lax',
                 secure: process.env.NODE_ENV === 'production',
             })
-            res.json(successResponse(result))
+            res.success(result)
         } catch (error) {
             next(error)
         }

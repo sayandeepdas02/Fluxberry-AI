@@ -1,92 +1,73 @@
-import { Request, Response } from 'express'
+import { Response, NextFunction } from 'express'
 import { atsScreeningService } from './ats-screening.service.js'
 import { ScreeningResult, ScreeningStatus, deriveStatusPriority } from './models/screening-result.model.js'
 import { enqueueAtsScreeningJob } from '../../jobs/queues/index.js'
 import { Candidate } from '../../database/models/index.js'
-
-interface AuthRequest extends Request {
-    user?: {
-        _id: string
-        organizationId: string
-    }
-}
+import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
+import { AppError } from '../../common/errors/index.js'
 
 export class AtsScreeningController {
-    async getJobStats(req: AuthRequest, res: Response) {
+    async getJobStats(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const orgId = req.user!.organizationId
-            const { jobId } = req.params
-
-            const stats = await atsScreeningService.getJobScreeningStats(jobId, orgId)
-            res.json({ success: true, ...stats })
+            const stats = await atsScreeningService.getJobScreeningStats(req.params.jobId, req.user!.organizationId!)
+            res.success(stats)
         } catch (error) {
-            console.error('[AtsScreening] getJobStats error:', error)
-            res.status(500).json({ success: false, error: 'Failed to fetch ATS screening stats' })
+            next(error)
         }
     }
 
-    async getCandidatesList(req: AuthRequest, res: Response) {
+    async getCandidatesList(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const orgId = req.user!.organizationId
-            const { jobId } = req.params
+            const orgId = req.user!.organizationId!
             const page = parseInt(req.query.page as string) || 1
             const limit = parseInt(req.query.limit as string) || 20
-
-            // Extract filter params
-            const filters: {
-                search?: string
-                decision?: string
-                scoreMin?: number
-                scoreMax?: number
-            } = {}
-
+            const filters: { search?: string; decision?: string; scoreMin?: number; scoreMax?: number } = {}
             if (req.query.search) filters.search = req.query.search as string
             if (req.query.decision) filters.decision = req.query.decision as string
             if (req.query.scoreMin) filters.scoreMin = parseInt(req.query.scoreMin as string)
             if (req.query.scoreMax) filters.scoreMax = parseInt(req.query.scoreMax as string)
 
-            const result = await atsScreeningService.getCandidatesList(jobId, orgId, page, limit, filters)
-            res.json({ success: true, ...result })
-        } catch (error: any) {
-            console.error('[AtsScreening] getCandidatesList error:', error)
-            res.status(error.code === 'NOT_FOUND' ? 404 : 500).json({ success: false, error: error.message || 'Failed to fetch tracking list' })
+            const result = await atsScreeningService.getCandidatesList(
+                req.params.jobId, orgId, page, limit, filters
+            )
+            res.success(result)
+        } catch (error) {
+            next(error)
         }
     }
 
-    async getCandidateBreakdown(req: AuthRequest, res: Response) {
+    async getCandidateBreakdown(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const orgId = req.user!.organizationId
-            const { jobId, candidateId } = req.params
-
-            const breakdown = await atsScreeningService.getCandidateBreakdown(jobId, candidateId, orgId)
-            res.json({ success: true, breakdown })
-        } catch (error: any) {
-            console.error('[AtsScreening] getCandidateBreakdown error:', error)
-            res.status(error.code === 'NOT_FOUND' ? 404 : 500).json({ success: false, error: error.message || 'Failed to fetch breakdown' })
+            const breakdown = await atsScreeningService.getCandidateBreakdown(
+                req.params.jobId, req.params.candidateId, req.user!.organizationId!
+            )
+            res.success({ breakdown })
+        } catch (error) {
+            next(error)
         }
     }
 
-    async compareCandidates(req: AuthRequest, res: Response) {
+    async compareCandidates(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const orgId = req.user!.organizationId
+            const orgId = req.user!.organizationId!
             const { jobId } = req.params
             const { c1, c2 } = req.query
 
             if (!c1 || !c2 || typeof c1 !== 'string' || typeof c2 !== 'string') {
-                return res.status(400).json({ success: false, error: 'Both c1 and c2 query parameters are required' })
+                throw AppError.badRequest('Both c1 and c2 query parameters are required')
             }
 
             const results = await ScreeningResult.find({
                 jobId,
                 organizationId: orgId,
-                candidateId: { $in: [c1, c2] }
+                candidateId: { $in: [c1, c2] },
             }).lean()
 
             if (results.length !== 2) {
-                return res.status(404).json({ success: false, error: 'One or both candidates not found or unauthorized' })
+                throw AppError.notFound('One or both candidates')
             }
 
-            const candidates = await Candidate.find({ _id: { $in: [c1, c2] } }).lean()
+            const candidates = await Candidate.find({ _id: { $in: [c1, c2] }, organizationId: orgId }).lean()
             const candMap = new Map(candidates.map(c => [c._id.toString(), c]))
 
             const top10Results = await ScreeningResult.find({
@@ -115,21 +96,15 @@ export class AtsScreeningController {
 
             const [breakdown1, breakdown2] = await Promise.all([
                 atsScreeningService.getCandidateBreakdown(jobId, c1, orgId),
-                atsScreeningService.getCandidateBreakdown(jobId, c2, orgId)
+                atsScreeningService.getCandidateBreakdown(jobId, c2, orgId),
             ])
-
-            const breakdowns = {
-                [c1]: breakdown1,
-                [c2]: breakdown2
-            }
-
-            let winnerId = null
-            let reason = 'Candidates are closely matched.'
 
             const r1 = results.find(r => r.candidateId.toString() === c1)!
             const r2 = results.find(r => r.candidateId.toString() === c2)!
             const s1 = r1.finalScore ?? 0
             const s2 = r2.finalScore ?? 0
+            let winnerId: string | null = null
+            let reason = 'Candidates are closely matched.'
 
             if (s1 > s2 + 2) {
                 winnerId = c1
@@ -149,137 +124,99 @@ export class AtsScreeningController {
                 }
             }
 
-            res.json({
-                success: true,
-                data: {
-                    candidates: formattedCandidates,
-                    breakdowns,
-                    recommendation: { winnerId, reason }
-                }
+            res.success({
+                candidates: formattedCandidates,
+                breakdowns: { [c1]: breakdown1, [c2]: breakdown2 },
+                recommendation: { winnerId, reason },
             })
-        } catch (error: any) {
-            console.error('[AtsScreening] compareCandidates error:', error)
-            res.status(500).json({ success: false, error: 'Failed to compare candidates' })
+        } catch (error) {
+            next(error)
         }
     }
 
-    async getJobProfile(req: AuthRequest, res: Response) {
+    async getJobProfile(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const orgId = req.user!.organizationId
-            const { jobId } = req.params
-
-            const profile = await atsScreeningService.getJobProfile(jobId, orgId)
-            res.json({ success: true, profile })
-        } catch (error: any) {
-            console.error('[AtsScreening] getJobProfile error:', error)
-            res.status(error.code === 'NOT_FOUND' ? 404 : 500).json({ success: false, error: error.message || 'Failed to fetch job profile' })
+            const profile = await atsScreeningService.getJobProfile(req.params.jobId, req.user!.organizationId!)
+            res.success({ profile })
+        } catch (error) {
+            next(error)
         }
     }
 
-    async updateJobProfile(req: AuthRequest, res: Response) {
+    async updateJobProfile(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const orgId = req.user!.organizationId
-            const { jobId } = req.params
-            const updateData = req.body
-
-            const profile = await atsScreeningService.updateJobProfile(jobId, orgId, updateData)
-            res.json({ success: true, profile })
-        } catch (error: any) {
-            console.error('[AtsScreening] updateJobProfile error:', error)
-            res.status(error.code === 'NOT_FOUND' ? 404 : 500).json({ success: false, error: error.message || 'Failed to update job profile' })
+            const profile = await atsScreeningService.updateJobProfile(
+                req.params.jobId, req.user!.organizationId!, req.body
+            )
+            res.success({ profile })
+        } catch (error) {
+            next(error)
         }
     }
 
-    // ─── Part 1: Weights ────────────────────────────────────────
-
-    async getWeights(req: AuthRequest, res: Response) {
+    async getWeights(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const orgId = req.user!.organizationId
-            const { jobId } = req.params
-
-            const weights = await atsScreeningService.getWeights(jobId, orgId)
-            res.json({ success: true, weights })
-        } catch (error: any) {
-            console.error('[AtsScreening] getWeights error:', error)
-            res.status(500).json({ success: false, error: error.message || 'Failed to fetch weights' })
+            const weights = await atsScreeningService.getWeights(req.params.jobId, req.user!.organizationId!)
+            res.success({ weights })
+        } catch (error) {
+            next(error)
         }
     }
 
-    async updateWeights(req: AuthRequest, res: Response) {
+    async updateWeights(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const orgId = req.user!.organizationId
-            const { jobId } = req.params
-
-            const weights = await atsScreeningService.updateWeights(jobId, orgId, req.body)
-            res.json({ success: true, weights })
-        } catch (error: any) {
-            console.error('[AtsScreening] updateWeights error:', error)
-            const status = error.code === 'VALIDATION' ? 400 : 500
-            res.status(status).json({ success: false, error: error.message || 'Failed to update weights' })
+            const weights = await atsScreeningService.updateWeights(
+                req.params.jobId, req.user!.organizationId!, req.body, req.user!.id
+            )
+            res.success({ weights })
+        } catch (error) {
+            next(error)
         }
     }
 
-    // ─── Part 5: Feedback ───────────────────────────────────────
-
-    async getFeedbackSummary(req: AuthRequest, res: Response) {
+    async getFeedbackSummary(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const orgId = req.user!.organizationId
-            const { jobId } = req.params
-
-            const summary = await atsScreeningService.getFeedbackSummary(jobId, orgId)
-            res.json({ success: true, summary })
-        } catch (error: any) {
-            console.error('[AtsScreening] getFeedbackSummary error:', error)
-            res.status(500).json({ success: false, error: error.message || 'Failed to fetch feedback summary' })
+            const summary = await atsScreeningService.getFeedbackSummary(req.params.jobId, req.user!.organizationId!)
+            res.success({ summary })
+        } catch (error) {
+            next(error)
         }
     }
 
-    // ─── Existing: Override ─────────────────────────────────────
-
-    async overrideDecision(req: AuthRequest, res: Response) {
+    async overrideDecision(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const orgId = req.user!.organizationId
-            const userId = req.user!._id
-            const { jobId, candidateId } = req.params
             const { decision, reason } = req.body
-
             if (!['SHORTLISTED', 'REVIEW', 'REJECTED'].includes(decision)) {
-                return res.status(400).json({ success: false, error: 'Invalid decision' })
+                throw AppError.badRequest('Invalid decision value')
             }
-
-            const result = await atsScreeningService.overrideDecision(jobId, candidateId, orgId, userId, decision, reason || 'Manual override')
-            res.json({ success: true, result })
-        } catch (error: any) {
-            console.error('[AtsScreening] overrideDecision error:', error)
-            res.status(error.code === 'NOT_FOUND' ? 404 : 500).json({ success: false, error: error.message || 'Failed to override decision' })
+            const result = await atsScreeningService.overrideDecision(
+                req.params.jobId, req.params.candidateId, req.user!.organizationId!,
+                req.user!.id, decision, reason || 'Manual override'
+            )
+            res.success({ result })
+        } catch (error) {
+            next(error)
         }
     }
 
-    // ─── Existing: Bulk Override ────────────────────────────────
-
-    async bulkOverride(req: AuthRequest, res: Response) {
+    async bulkOverride(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const orgId = req.user!.organizationId
-            const userId = req.user!._id
-            const { jobId } = req.params
             const { candidateIds, decision, reason } = req.body
-
             if (!Array.isArray(candidateIds) || candidateIds.length === 0) {
-                return res.status(400).json({ success: false, error: 'candidateIds must be a non-empty array' })
+                throw AppError.badRequest('candidateIds must be a non-empty array')
             }
-
             if (!['SHORTLISTED', 'REVIEW', 'REJECTED'].includes(decision)) {
-                return res.status(400).json({ success: false, error: 'Invalid decision' })
+                throw AppError.badRequest('Invalid decision value')
             }
 
-            const results = []
-            const errors = []
+            const results: { candidateId: string; success: boolean }[] = []
+            const errors: { candidateId: string; error: string }[] = []
 
             for (const candidateId of candidateIds) {
                 try {
                     await atsScreeningService.overrideDecision(
-                        jobId, candidateId, orgId, userId,
-                        decision, reason || `Bulk ${decision.toLowerCase()}`
+                        req.params.jobId, candidateId, req.user!.organizationId!,
+                        req.user!.id, decision, reason || `Bulk ${decision.toLowerCase()}`
                     )
                     results.push({ candidateId, success: true })
                 } catch (err: any) {
@@ -287,52 +224,38 @@ export class AtsScreeningController {
                 }
             }
 
-            res.json({
-                success: true,
-                processed: results.length,
-                failed: errors.length,
-                results,
-                errors,
-            })
-        } catch (error: any) {
-            console.error('[AtsScreening] bulkOverride error:', error)
-            res.status(500).json({ success: false, error: error.message || 'Failed to process bulk override' })
+            res.success({ processed: results.length, failed: errors.length, results, errors })
+        } catch (error) {
+            next(error)
         }
     }
 
-    // ─── Existing: Retry ────────────────────────────────────────
-
-    async retryParseFailed(req: AuthRequest, res: Response) {
+    async retryParseFailed(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const orgId = req.user!.organizationId
             const { jobId, candidateId } = req.params
+            const orgId = req.user!.organizationId!
 
             const result = await ScreeningResult.findOne({ candidateId, jobId, organizationId: orgId })
-            if (!result) {
-                return res.status(404).json({ success: false, error: 'Screening result not found' })
-            }
+            if (!result) throw AppError.notFound('Screening result')
 
             if (result.status !== ScreeningStatus.PARSE_FAILED && result.status !== ScreeningStatus.ERROR) {
-                return res.status(400).json({
-                    success: false,
-                    error: `Cannot retry: candidate is in '${result.status}' state. Only PARSE_FAILED or ERROR candidates can be retried.`
-                })
+                throw AppError.badRequest(
+                    `Cannot retry: candidate is in '${result.status}' state. Only PARSE_FAILED or ERROR candidates can be retried.`
+                )
             }
 
-            // Reset to AWAITING_PARSE so the worker knows to check again
             await ScreeningResult.findOneAndUpdate(
                 { candidateId, jobId, organizationId: orgId },
                 {
                     $set: {
-                        status:         ScreeningStatus.AWAITING_PARSE,
-                        errorReason:    null,
+                        status: ScreeningStatus.AWAITING_PARSE,
+                        errorReason: null,
                         statusPriority: deriveStatusPriority(ScreeningStatus.AWAITING_PARSE),
                     },
-                    $unset: { hardGateFailureReason: '' }
+                    $unset: { hardGateFailureReason: '' },
                 }
             )
 
-            // Re-enqueue screening job — BullMQ deduplication handles if already queued
             await enqueueAtsScreeningJob({
                 type: 'CANDIDATE_APPLIED',
                 applicationId: (result as any).applicationId || candidateId,
@@ -341,11 +264,9 @@ export class AtsScreeningController {
                 organizationId: orgId,
             })
 
-            console.log(`[ATS] Manual retry triggered for candidate=${candidateId} job=${jobId} by user=${req.user!._id}`)
-            res.json({ success: true, message: 'Screening job re-queued. Results will update shortly.' })
-        } catch (error: any) {
-            console.error('[AtsScreening] retryParseFailed error:', error)
-            res.status(500).json({ success: false, error: error.message || 'Failed to retry screening' })
+            res.success({ message: 'Screening job re-queued. Results will update shortly.' })
+        } catch (error) {
+            next(error)
         }
     }
 }
