@@ -1,7 +1,8 @@
 "use client"
 
 import { PageContainer } from "@/components/dashboard/page-container"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
+import { useApiMutation } from "@/lib/hooks/use-api-mutation"
 import { apiClient } from "@/lib/api/client"
 import { ApiResponse } from "@/lib/api/types"
 import { Badge } from "@/components/ui/badge"
@@ -31,7 +32,6 @@ const emailTemplatesApi = {
 const VARIABLE_CHIPS = ['firstName', 'lastName', 'company', 'role']
 
 export default function OutreachTemplatesPage() {
-    const queryClient = useQueryClient()
     const [showEditor, setShowEditor] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
     const [name, setName] = useState('')
@@ -44,32 +44,29 @@ export default function OutreachTemplatesPage() {
     })
     const templates = response?.data || []
 
-    const saveMutation = useMutation({
+    const saveMutation = useApiMutation({
         mutationFn: (data: Partial<EmailTemplate>) => {
             // Auto-detect variables
             const vars = (data.content || '').match(/\{\{(\w+)\}\}/g)?.map(v => v.replace(/\{|\}/g, '')) || []
             const subjVars = (data.subject || '').match(/\{\{(\w+)\}\}/g)?.map(v => v.replace(/\{|\}/g, '')) || []
             const allVars = [...new Set([...vars, ...subjVars])]
-            
+
             if (editingId) {
                 return emailTemplatesApi.update(editingId, { ...data, variables: allVars })
             }
             return emailTemplatesApi.create({ ...data, variables: allVars })
         },
+        successMessage: editingId ? 'Template updated' : 'Template created',
+        invalidateKeys: [['email-templates']],
         onSuccess: () => {
-            toast.success(editingId ? 'Template updated' : 'Template created')
             resetEditor()
-            queryClient.invalidateQueries({ queryKey: ['email-templates'] })
         },
-        onError: () => toast.error('Failed to save template'),
     })
 
-    const deleteMutation = useMutation({
+    const deleteMutation = useApiMutation({
         mutationFn: (id: string) => emailTemplatesApi.delete(id),
-        onSuccess: () => {
-            toast.success('Template deleted')
-            queryClient.invalidateQueries({ queryKey: ['email-templates'] })
-        },
+        successMessage: 'Template deleted',
+        invalidateKeys: [['email-templates']],
     })
 
     const resetEditor = () => {

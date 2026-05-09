@@ -1,7 +1,8 @@
 "use client"
 
 import { PageContainer } from "@/components/dashboard/page-container"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
+import { useApiMutation } from "@/lib/hooks/use-api-mutation"
 import { prospectsApi, Campaign } from "@/lib/api/prospects"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -27,7 +28,6 @@ const STATUS_MAP: Record<string, { label: string; class: string }> = {
 const DAILY_EMAIL_CAP = 200 // Configurable limit
 
 export default function CampaignsPage() {
-    const queryClient = useQueryClient()
     const [showCreate, setShowCreate] = useState(false)
     const [isFollowUp, setIsFollowUp] = useState(false)
     const [followUpParentId, setFollowUpParentId] = useState('')
@@ -84,24 +84,22 @@ export default function CampaignsPage() {
     // Completed campaigns that can have follow-ups
     const completedCampaigns = campaigns.filter(c => c.status === 'completed')
 
-    const createMutation = useMutation({
+    const createMutation = useApiMutation({
         mutationFn: (data: { name: string; listId: string; templateId: string }) =>
             prospectsApi.createCampaign(data),
+        successMessage: isFollowUp ? 'Follow-up campaign created' : 'Campaign created',
+        invalidateKeys: [['campaigns']],
         onSuccess: () => {
-            toast.success(isFollowUp ? 'Follow-up campaign created' : 'Campaign created')
             resetForm()
-            queryClient.invalidateQueries({ queryKey: ['campaigns'] })
         },
-        onError: () => toast.error('Failed to create campaign'),
     })
 
-    const sendMutation = useMutation({
+    const sendMutation = useApiMutation({
         mutationFn: (id: string) => prospectsApi.sendCampaign(id),
+        invalidateKeys: [['campaigns']],
         onSuccess: (res) => {
-            toast.success(`Campaign sent! ${res.data?.sent}/${res.data?.total} emails delivered.`)
-            queryClient.invalidateQueries({ queryKey: ['campaigns'] })
+            toast.success(`Campaign sent! ${res?.sent}/${res?.total} emails delivered.`)
         },
-        onError: () => toast.error('Failed to send campaign'),
     })
 
     const resetForm = () => {

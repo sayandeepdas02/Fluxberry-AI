@@ -1,8 +1,9 @@
 "use client"
 
 import { PageContainer } from "@/components/dashboard/page-container"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { interviewsApi, IInterview, IScorecard } from "@/lib/api/interviews"
+import { useApiMutation } from "@/lib/hooks/use-api-mutation"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import {
@@ -17,7 +18,6 @@ import {
     MessageSquare, CheckCircle, XCircle,
 } from "lucide-react"
 import { useState } from "react"
-import { toast } from "sonner"
 import { format } from "date-fns"
 
 const STATUS_STYLES: Record<string, { label: string; class: string }> = {
@@ -35,7 +35,6 @@ const RECOMMENDATION_STYLES: Record<string, { label: string; class: string }> = 
 }
 
 export default function LiveInterviewsPage() {
-    const queryClient = useQueryClient()
     const [statusFilter, setStatusFilter] = useState('')
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [showScorecard, setShowScorecard] = useState(false)
@@ -67,7 +66,7 @@ export default function LiveInterviewsPage() {
 
     const selected = interviews.find(i => i._id === selectedId)
 
-    const submitScorecardMutation = useMutation({
+    const submitScorecardMutation = useApiMutation({
         mutationFn: () => {
             if (!selectedId) throw new Error('No interview')
             return interviewsApi.submitScorecard(selectedId, {
@@ -77,21 +76,16 @@ export default function LiveInterviewsPage() {
                 privateNotes: scNotes,
             })
         },
-        onSuccess: () => {
-            toast.success('Scorecard submitted')
-            setShowScorecard(false)
-            queryClient.invalidateQueries({ queryKey: ['interviews'] })
-            queryClient.invalidateQueries({ queryKey: ['scorecard', selectedId] })
-        },
-        onError: () => toast.error('Failed to submit scorecard'),
+        successMessage: 'Scorecard submitted',
+        errorMessage: 'Failed to submit scorecard',
+        invalidateKeys: [['interviews'], ['scorecard', selectedId]],
+        onSuccess: () => { setShowScorecard(false) },
     })
 
-    const cancelMutation = useMutation({
+    const cancelMutation = useApiMutation({
         mutationFn: (id: string) => interviewsApi.cancel(id),
-        onSuccess: () => {
-            toast.success('Interview cancelled')
-            queryClient.invalidateQueries({ queryKey: ['interviews'] })
-        },
+        successMessage: 'Interview cancelled',
+        invalidateKeys: [['interviews']],
     })
 
     return (

@@ -1,7 +1,9 @@
 "use client"
 
 import { PageContainer } from "@/components/dashboard/page-container"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { ErrorBoundary } from "@/components/shared/error-boundary"
+import { useQuery } from "@tanstack/react-query"
+import { useApiMutation } from "@/lib/hooks/use-api-mutation"
 import { assessmentsApi, CreateAssessmentInput } from "@/lib/api/assessments"
 import { Assessment } from "@/lib/api/types"
 import { Badge } from "@/components/ui/badge"
@@ -29,7 +31,6 @@ const STATUS_STYLES: Record<string, { label: string; class: string }> = {
 const ROUND_LABELS: Record<string, string> = { MCQ: 'MCQ', DSA: 'DSA', AI: 'AI Interview' }
 
 export default function AssessmentsPage() {
-    const queryClient = useQueryClient()
     const [showCreate, setShowCreate] = useState(false)
     const [title, setTitle] = useState('')
     const [showInvite, setShowInvite] = useState<string | null>(null)
@@ -41,46 +42,41 @@ export default function AssessmentsPage() {
     })
     const assessments = response?.data || []
 
-    const createMutation = useMutation({
+    const createMutation = useApiMutation({
         mutationFn: (input: CreateAssessmentInput) => assessmentsApi.create(input),
+        successMessage: 'Assessment created',
+        invalidateKeys: [['assessments']],
         onSuccess: () => {
-            toast.success('Assessment created')
             setShowCreate(false)
             setTitle('')
-            queryClient.invalidateQueries({ queryKey: ['assessments'] })
         },
-        onError: () => toast.error('Failed to create assessment'),
     })
 
-    const publishMutation = useMutation({
+    const publishMutation = useApiMutation({
         mutationFn: (id: string) => assessmentsApi.publish(id),
-        onSuccess: () => {
-            toast.success('Assessment published')
-            queryClient.invalidateQueries({ queryKey: ['assessments'] })
-        },
-        onError: () => toast.error('Publish failed — ensure rounds are configured'),
+        successMessage: 'Assessment published',
+        invalidateKeys: [['assessments']],
     })
 
-    const cloneMutation = useMutation({
+    const cloneMutation = useApiMutation({
         mutationFn: (id: string) => assessmentsApi.clone(id),
-        onSuccess: () => {
-            toast.success('Assessment cloned')
-            queryClient.invalidateQueries({ queryKey: ['assessments'] })
-        },
+        successMessage: 'Assessment cloned',
+        invalidateKeys: [['assessments']],
     })
 
-    const inviteMutation = useMutation({
+    const inviteMutation = useApiMutation({
         mutationFn: ({ id, emails }: { id: string; emails: string[] }) => assessmentsApi.invite(id, { emails }),
+        invalidateKeys: [['assessments']],
         onSuccess: (res) => {
-            toast.success(`${res.data?.invited || 0} candidates invited`)
+            toast.success(`${res?.invited || 0} candidates invited`)
             setShowInvite(null)
             setInviteEmails('')
         },
-        onError: () => toast.error('Failed to send invites'),
     })
 
     return (
         <PageContainer title="Assessments" description="Create and manage technical assessments for candidate evaluation.">
+            <ErrorBoundary section="Assessments">
             <div className="mt-6 w-full flex flex-col space-y-6">
                 {/* Actions */}
                 <div className="flex items-center justify-between">
@@ -205,6 +201,7 @@ export default function AssessmentsPage() {
                     </div>
                 )}
             </div>
+            </ErrorBoundary>
         </PageContainer>
     )
 }
