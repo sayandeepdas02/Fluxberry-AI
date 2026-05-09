@@ -1,6 +1,7 @@
 "use client"
 
 import { PageContainer } from "@/components/dashboard/page-container"
+import { ErrorBoundary } from "@/components/shared/error-boundary"
 import { useKanbanStore } from "@/lib/store/kanban-store"
 import { useQuery } from "@tanstack/react-query"
 import { jobsApi } from "@/lib/api/jobs"
@@ -58,7 +59,9 @@ export default function PipelinePage() {
                             <p className="text-muted-foreground">Select a job from the dropdown to view its pipeline.</p>
                         </div>
                     ) : (
-                        <KanbanBoard jobId={selectedJobId} />
+                        <ErrorBoundary section="ATS Pipeline">
+                            <KanbanBoard jobId={selectedJobId} />
+                        </ErrorBoundary>
                     )}
                 </div>
             </div>

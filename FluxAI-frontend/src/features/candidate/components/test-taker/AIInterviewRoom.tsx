@@ -104,7 +104,7 @@ export function AIInterviewRoom({ attemptId, onComplete }: AIInterviewRoomProps)
             const audio = playAudioBase64(q.audioBase64)
             if (audio) {
                 audioRef.current = audio
-                audio.addEventListener("ended", () => setIsAISpeaking(false))
+                audio.addEventListener("ended", () => setIsAISpeaking(false), { once: true })
             } else {
                 setIsAISpeaking(false)
             }
