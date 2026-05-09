@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document, Types } from 'mongoose'
 import type { IScoringConfig } from '../../modules/ats-screening/scoring-config.types.js'
+import { softDeletePlugin } from '../plugins/soft-delete.plugin.js'
 
 // Enums
 export const MemberRole = {
@@ -468,8 +469,7 @@ export interface ICandidate extends Document {
     resumeUrl?: string
     parsedResumeData?: Record<string, unknown>
     tags?: string[]
-    isDeleted: boolean
-    deletedAt?: Date
+    deletedAt: Date | null
     createdAt: Date
     updatedAt: Date
 }
@@ -484,13 +484,15 @@ const CandidateSchema = new Schema<ICandidate>({
     resumeUrl: { type: String },
     parsedResumeData: { type: Schema.Types.Mixed },
     tags: [{ type: String }],
-    isDeleted: { type: Boolean, default: false },
     deletedAt: { type: Date, default: null },
 }, { timestamps: true })
+
+CandidateSchema.plugin(softDeletePlugin)
 
 // Compound index for unique email per organization
 CandidateSchema.index({ organizationId: 1, email: 1 }, { unique: true })
 CandidateSchema.index({ organizationId: 1, deletedAt: 1 })
+CandidateSchema.index({ organizationId: 1, createdAt: -1 })
 CandidateSchema.index({ tags: 1 })
 CandidateSchema.index({ firstName: 'text', lastName: 'text', email: 'text', tags: 'text' })
 
@@ -512,9 +514,8 @@ export interface IJobApplication extends Document {
     assignedTo?: Types.ObjectId
     rejectionReason?: string
     lastActivityAt?: Date
-    isDeleted: boolean
     submittedAt: Date
-    deletedAt?: Date
+    deletedAt?: Date | null
     createdAt: Date
     updatedAt: Date
 }
@@ -531,11 +532,11 @@ const JobApplicationSchema = new Schema<IJobApplication>({
     assignedTo: { type: Schema.Types.ObjectId, ref: 'User' },
     rejectionReason: { type: String },
     lastActivityAt: { type: Date, default: Date.now },
-    isDeleted: { type: Boolean, default: false },
     submittedAt: { type: Date, default: Date.now },
     deletedAt: { type: Date, default: null },
 }, { timestamps: true })
 
+JobApplicationSchema.plugin(softDeletePlugin)
 JobApplicationSchema.index({ jobId: 1, candidateId: 1 }, { unique: true })
 JobApplicationSchema.index({ jobId: 1, status: 1 })
 JobApplicationSchema.index({ organizationId: 1, status: 1, deletedAt: 1 })
@@ -750,6 +751,8 @@ const AssessmentSchema = new Schema<IAssessment>({
 }, { timestamps: true })
 
 AssessmentSchema.index({ jobId: 1 })
+AssessmentSchema.index({ organizationId: 1, status: 1 })
+AssessmentSchema.index({ organizationId: 1, createdAt: -1 })
 
 export const Assessment = mongoose.model<IAssessment>('Assessment', AssessmentSchema)
 
@@ -945,6 +948,8 @@ const AssessmentAttemptSchema = new Schema<IAssessmentAttempt>({
 
 AssessmentAttemptSchema.index({ assessmentId: 1, candidateId: 1 }, { unique: true })
 AssessmentAttemptSchema.index({ 'rounds.ribbonInterviewId': 1 }, { sparse: true })
+AssessmentAttemptSchema.index({ assessmentId: 1, status: 1 })
+AssessmentAttemptSchema.index({ candidateId: 1, createdAt: -1 })
 
 export const AssessmentAttempt = mongoose.model<IAssessmentAttempt>('AssessmentAttempt', AssessmentAttemptSchema)
 
@@ -1471,6 +1476,9 @@ const OfferSchema = new Schema<IOffer>({
     }],
 }, { timestamps: true })
 
+OfferSchema.index({ organizationId: 1, status: 1 })
+OfferSchema.index({ organizationId: 1, createdAt: -1 })
+
 export const Offer = mongoose.model<IOffer>('Offer', OfferSchema)
 
 // ============================================
@@ -1619,6 +1627,8 @@ const ActivityLogSchema = new Schema<IActivityLog>({
 }, { timestamps: false })
 
 ActivityLogSchema.index({ entityId: 1, timestamp: -1 })
+ActivityLogSchema.index({ organizationId: 1, timestamp: -1 })
+ActivityLogSchema.index({ organizationId: 1, entityType: 1, entityId: 1 })
 
 export const ActivityLog = mongoose.model<IActivityLog>('ActivityLog', ActivityLogSchema)
 
