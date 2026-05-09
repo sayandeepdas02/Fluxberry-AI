@@ -2,20 +2,18 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { dashboardApi, DashboardSummary, ATSAnalytics } from '@/lib/api/dashboard'
+import { ApiError } from '@/lib/api/client'
 import { toast } from 'sonner'
+import { dashboardKeys } from '@/lib/query/queryKeys'
 
-export const dashboardKeys = {
-    all: ['dashboard'] as const,
-    summary: () => [...dashboardKeys.all, 'summary'] as const,
-    analytics: () => [...dashboardKeys.all, 'analytics'] as const,
-}
+export { dashboardKeys }
 
 export function useDashboard() {
     const summaryQuery = useQuery({
         queryKey: dashboardKeys.summary(),
         queryFn: async () => {
             const res = await dashboardApi.summary()
-            if (!res.success) throw new Error(res.error?.message ?? 'Failed to load dashboard summary')
+            if (!res.success) throw new ApiError(res.error?.message ?? 'Failed to load dashboard summary', res.error?.code ?? 'UNKNOWN', res.error?.details)
             return res.data!
         },
         // Dashboard summary is polled every 60s while the tab is visible
@@ -26,7 +24,7 @@ export function useDashboard() {
         queryKey: dashboardKeys.analytics(),
         queryFn: async () => {
             const res = await dashboardApi.analytics()
-            if (!res.success) throw new Error(res.error?.message ?? 'Failed to load analytics')
+            if (!res.success) throw new ApiError(res.error?.message ?? 'Failed to load analytics', res.error?.code ?? 'UNKNOWN', res.error?.details)
             return res.data!
         },
         staleTime: 2 * 60 * 1000, // Analytics can be 2 min stale

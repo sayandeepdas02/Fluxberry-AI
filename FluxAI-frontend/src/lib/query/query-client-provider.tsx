@@ -2,6 +2,14 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode, useState } from "react";
+import { ApiError } from "@/lib/api/client";
+
+function shouldRetry(failureCount: number, error: unknown): boolean {
+    // Never retry client errors (4xx) — they will not succeed on retry
+    if (error instanceof ApiError && error.isClientError) return false
+    // Retry network/server errors up to 2 times
+    return failureCount < 2
+}
 
 export function ReactQueryProvider({ children }: { children: ReactNode }) {
     const [queryClient] = useState(
@@ -9,18 +17,13 @@ export function ReactQueryProvider({ children }: { children: ReactNode }) {
             new QueryClient({
                 defaultOptions: {
                     queries: {
-                        // Data is considered fresh for 30 seconds — avoids redundant refetches
                         staleTime: 30 * 1000,
-                        // Keep cached data for 5 minutes after component unmounts
                         gcTime: 5 * 60 * 1000,
-                        // Retry failed requests once before showing an error
-                        retry: 1,
+                        retry: shouldRetry,
                         retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
-                        // Refetch on window focus for real-time data freshness
-                        refetchOnWindowFocus: true,
+                        refetchOnWindowFocus: false,
                     },
                     mutations: {
-                        // Do not retry mutations (they may cause duplicate writes)
                         retry: 0,
                     },
                 },
