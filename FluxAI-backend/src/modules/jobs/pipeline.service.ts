@@ -1,3 +1,4 @@
+import { AppError } from '../../common/errors/index.js'
 import {
     PipelineStage, IPipelineStage, PipelineStageType,
     PipelineStageTypeValue
@@ -88,7 +89,7 @@ class PipelineService {
 
         for (const id of stageIds) {
             if (!stageMap.has(id)) {
-                throw { code: 'VALIDATION_ERROR', message: `Stage ${id} does not belong to this job` }
+                throw AppError.badRequest(`Stage ${id} does not belong to this job`)
             }
         }
 
@@ -107,10 +108,10 @@ class PipelineService {
     async removeStage(jobId: string, organizationId: string, stageId: string): Promise<void> {
         const stage = await PipelineStage.findOne({ _id: stageId, jobId, organizationId })
         if (!stage) {
-            throw { code: 'NOT_FOUND', message: 'Stage not found' }
+            throw AppError.notFound('Stage')
         }
         if (stage.isDefault) {
-            throw { code: 'VALIDATION_ERROR', message: 'Cannot remove default pipeline stages' }
+            throw AppError.validation('Cannot remove default pipeline stages')
         }
 
         await stage.deleteOne()
@@ -129,7 +130,7 @@ class PipelineService {
     async getStageById(stageId: string): Promise<IPipelineStage> {
         const stage = await PipelineStage.findById(stageId)
         if (!stage) {
-            throw { code: 'NOT_FOUND', message: 'Pipeline stage not found' }
+            throw AppError.notFound('Pipeline stage')
         }
         return stage
     }
