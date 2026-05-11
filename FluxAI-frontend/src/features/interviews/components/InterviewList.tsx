@@ -85,10 +85,10 @@ export function InterviewList() {
                                     <TableCell>
                                         <div className="flex flex-col">
                                             <span className="font-medium">
-                                                {format(new Date(interview.start), 'MMM d, yyyy')}
+                                                {format(new Date(interview.startTime), 'MMM d, yyyy')}
                                             </span>
                                             <span className="text-xs text-muted-foreground">
-                                                {format(new Date(interview.start), 'h:mm a')} - {format(new Date(interview.end), 'h:mm a')}
+                                                {format(new Date(interview.startTime), 'h:mm a')} - {format(new Date(interview.endTime), 'h:mm a')}
                                             </span>
                                         </div>
                                     </TableCell>
