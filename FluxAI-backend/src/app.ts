@@ -45,6 +45,17 @@ import { billingRoutes } from './modules/billing/billing.routes.js'
 import activityRoutes from './modules/activity/activity.routes.js'
 import prospectsRoutes from './modules/prospects/prospects.routes.js'
 
+// ── Phase 3: Growth Systems ──────────────────────────────────
+import { crmRoutes } from './modules/crm/crm.routes.js'
+import { sourcingRoutes } from './modules/sourcing/sourcing.routes.js'
+import { aiIntelligenceRoutes } from './modules/ai-intelligence/ai-intelligence.routes.js'
+import { workflowV2Routes } from './modules/workflow/workflow-v2.routes.js'
+import { outreachRoutes } from './modules/outreach/outreach.routes.js'
+import { advancedAnalyticsRoutes } from './modules/analytics/advanced-analytics.routes.js'
+import { referralRoutes } from './modules/referrals/referral.routes.js'
+import { candidatePortalRoutes } from './modules/candidate-portal/candidate-portal.routes.js'
+import { collaborationRoutes } from './modules/collaboration/collaboration.routes.js'
+
 export function createApp() {
     const app = express()
 
@@ -192,6 +203,17 @@ export function createApp() {
 
     // Talent Prospect (Outbound Hiring)
     app.use('/api/prospects', prospectsRoutes)
+
+    // ── Phase 3: Growth Systems, AI Intelligence, CRM ────────
+    app.use('/api/crm', crmRoutes)
+    app.use('/api/sourcing', sourcingRoutes)
+    app.use('/api/ai', aiIntelligenceRoutes)
+    app.use('/api/workflow-v2', workflowV2Routes)
+    app.use('/api/outreach', outreachRoutes)
+    app.use('/api/analytics/advanced', advancedAnalyticsRoutes)
+    app.use('/api/referrals', referralRoutes)
+    app.use('/api/candidate-portal', candidatePortalRoutes)
+    app.use('/api/collaboration', collaborationRoutes)
 
     // ============================================
 
