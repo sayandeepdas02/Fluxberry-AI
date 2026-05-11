@@ -138,6 +138,62 @@ export class JobsController {
         }
     }
     /**
+     * POST /api/jobs/:id/duplicate
+     */
+    async duplicate(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const organizationId = req.user?.organizationId
+            if (!organizationId) throw AppError.forbidden('Organization context required')
+            const job = await jobsService.duplicate(req.params.id, organizationId, req.user!.id)
+            res.success(job, 201)
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    /**
+     * POST /api/jobs/:id/repost
+     */
+    async repost(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const organizationId = req.user?.organizationId
+            if (!organizationId) throw AppError.forbidden('Organization context required')
+            const job = await jobsService.repost(req.params.id, organizationId, req.user!.id)
+            res.success(job, 201)
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    /**
+     * POST /api/jobs/:id/archive
+     */
+    async archive(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const organizationId = req.user?.organizationId
+            if (!organizationId) throw AppError.forbidden('Organization context required')
+            const job = await jobsService.archive(req.params.id, organizationId, req.user!.id)
+            res.success(job)
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    /**
+     * POST /api/jobs/:id/unarchive
+     */
+    async unarchive(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const organizationId = req.user?.organizationId
+            if (!organizationId) throw AppError.forbidden('Organization context required')
+            const job = await jobsService.unarchive(req.params.id, organizationId, req.user!.id)
+            res.success(job)
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    /**
      * POST /api/jobs/parse-description
      * AI-powered JD parser — extracts structured fields from free text.
      * Returns a best-effort result; frontend always allows manual override.

@@ -150,4 +150,45 @@ export class AnalyticsController {
     }
 }
 
+    // ── Phase 3 Advanced Analytics ────────────────────────────
+
+    async getHiringVelocity(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const organizationId = req.user?.organizationId
+            if (!organizationId) { res.status(403).json({ success: false }); return }
+            const months = req.query.months ? parseInt(req.query.months as string) : 6
+            const data = await analyticsService.getHiringVelocityTrend(organizationId, months)
+            res.success(data)
+        } catch (error) { next(error) }
+    }
+
+    async getSourceQuality(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const organizationId = req.user?.organizationId
+            if (!organizationId) { res.status(403).json({ success: false }); return }
+            const data = await analyticsService.getSourceQualityScoring(organizationId)
+            res.success(data)
+        } catch (error) { next(error) }
+    }
+
+    async getStageDropoff(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const organizationId = req.user?.organizationId
+            if (!organizationId) { res.status(403).json({ success: false }); return }
+            const jobId = req.query.jobId as string | undefined
+            const data = await analyticsService.getStageDropoffAnalysis(organizationId, jobId)
+            res.success(data)
+        } catch (error) { next(error) }
+    }
+
+    async getRecruiterPerformance(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const organizationId = req.user?.organizationId
+            if (!organizationId) { res.status(403).json({ success: false }); return }
+            const data = await analyticsService.getRecruiterPerformance(organizationId)
+            res.success(data)
+        } catch (error) { next(error) }
+    }
+}
+
 export const analyticsController = new AnalyticsController()

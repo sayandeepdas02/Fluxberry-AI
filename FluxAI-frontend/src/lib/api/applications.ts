@@ -40,6 +40,7 @@ export interface JobApplicationResponse {
     }
     tags?: string[]
     submittedAt: string
+    stageEnteredAt?: string
     createdAt: string
     updatedAt: string
 }

@@ -35,6 +35,10 @@ router.get('/:jobId/applications', (req, res, next) => {
 // Lifecycle routes (ADMIN or OWNER only)
 router.post('/:id/publish', requireOrgAccess('ADMIN'), (req, res, next) => jobsController.publish(req, res, next))
 router.post('/:id/close', requireOrgAccess('ADMIN'), (req, res, next) => jobsController.close(req, res, next))
+router.post('/:id/archive', requireOrgAccess('ADMIN'), (req, res, next) => jobsController.archive(req, res, next))
+router.post('/:id/unarchive', requireOrgAccess('ADMIN'), (req, res, next) => jobsController.unarchive(req, res, next))
+router.post('/:id/duplicate', (req, res, next) => jobsController.duplicate(req, res, next))
+router.post('/:id/repost', requireOrgAccess('ADMIN'), (req, res, next) => jobsController.repost(req, res, next))
 router.delete('/:id', requireOrgAccess('ADMIN'), (req, res, next) => jobsController.delete(req, res, next))
 
 export default router

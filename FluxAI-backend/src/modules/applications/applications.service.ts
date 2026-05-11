@@ -206,6 +206,7 @@ class ApplicationsService {
         // Update application
         application.status = targetStage.type as ApplicationStatusType
         application.currentStageId = targetStage._id
+        application.stageEnteredAt = new Date()
         await application.save()
 
         // Create stage history with stage IDs

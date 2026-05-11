@@ -12,9 +12,10 @@ import { Skeleton } from "@/components/dashboard/skeleton"
 import {
     BarChart3, TrendingUp, TrendingDown, Minus, Users, Briefcase,
     FileText, Clock, Zap, Brain, Lightbulb, ArrowRight, ChevronRight,
-    Target, Award,
+    Target, Award, AlertTriangle, Activity, UserCheck, TrendingUp as VelocityIcon,
 } from "lucide-react"
 import { useState, useMemo } from "react"
+import { aiApi, HiringBottleneck } from "@/lib/api/ai-intelligence"
 
 // ── Helpers ──────────────────────────────────────────────
 function TrendBadge({ trend, direction }: { trend: number; direction: string }) {
@@ -138,6 +139,37 @@ export default function AnalyticsPage() {
         queryFn: () => dashboardApi.analytics(),
     })
     const ats = atsRes?.data
+
+    // Phase 3 — Advanced analytics
+    const { data: velocityRes } = useQuery({
+        queryKey: ['analytics-velocity'],
+        queryFn: () => analyticsApi.getHiringVelocity(6),
+    })
+    const velocityData = velocityRes?.data || []
+
+    const { data: sourceQualityRes } = useQuery({
+        queryKey: ['analytics-source-quality'],
+        queryFn: () => analyticsApi.getSourceQuality(),
+    })
+    const sourceQuality = sourceQualityRes?.data || []
+
+    const { data: dropoffRes } = useQuery({
+        queryKey: ['analytics-dropoff', jobFilter],
+        queryFn: () => analyticsApi.getStageDropoff(jobFilter),
+    })
+    const dropoffData = dropoffRes?.data || []
+
+    const { data: recruiterRes } = useQuery({
+        queryKey: ['analytics-recruiter'],
+        queryFn: () => analyticsApi.getRecruiterPerformance(),
+    })
+    const recruiterData = recruiterRes?.data || []
+
+    const { data: bottlenecksRes } = useQuery({
+        queryKey: ['ai-bottlenecks'],
+        queryFn: () => aiApi.detectBottlenecks(),
+    })
+    const bottlenecks = (bottlenecksRes?.data || []) as HiringBottleneck[]
 
     // Derived stats
     const funnelStages = funnel?.stageDistribution || {}
@@ -300,6 +332,166 @@ export default function AnalyticsPage() {
                         )}
                     </div>
                 </div>
+
+                {/* ── Phase 3: AI Hiring Bottlenecks ──────────────── */}
+                {bottlenecks.length > 0 && (
+                    <div className="border border-line rounded-lg bg-card/50 p-5">
+                        <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                            <Brain className="w-4 h-4 text-violet-400" /> AI Hiring Intelligence
+                        </h3>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            {bottlenecks.map((b, i) => {
+                                const sev = b.severity === 'critical' ? 'text-red-400 bg-red-500/10 border-red-500/20'
+                                    : b.severity === 'high' ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                                    : 'text-blue-400 bg-blue-500/10 border-blue-500/20'
+                                return (
+                                    <div key={i} className={`p-3.5 rounded-lg border ${sev}`}>
+                                        <div className="flex items-start justify-between gap-2">
+                                            <p className="text-xs font-semibold">{b.stage}</p>
+                                            {b.metric && <span className="text-[10px] font-medium opacity-70 shrink-0">{b.metric}</span>}
+                                        </div>
+                                        <p className="text-xs mt-1 opacity-80">{b.issue}</p>
+                                        <p className="text-xs mt-2 font-medium">→ {b.suggestion}</p>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Hiring Velocity Trend ────────────────────────── */}
+                {velocityData.length > 0 && (
+                    <div className="border border-line rounded-lg bg-card/50 p-5">
+                        <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                            <Activity className="w-4 h-4 text-emerald-400" /> Hiring Velocity (Last 6 Months)
+                        </h3>
+                        <div className="flex items-end gap-2 h-32">
+                            {velocityData.map((d, i) => {
+                                const maxDays = Math.max(...velocityData.map(v => v.avgDays), 1)
+                                const h = Math.round((d.avgDays / maxDays) * 100)
+                                return (
+                                    <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
+                                        <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-card border border-line rounded px-1.5 py-0.5 text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                            {d.avgDays}d avg · {d.hires} hired
+                                        </div>
+                                        <div
+                                            className={`w-full rounded-sm transition-all ${d.avgDays > 45 ? 'bg-red-500/60' : d.avgDays > 30 ? 'bg-amber-500/60' : 'bg-emerald-500/60'}`}
+                                            style={{ height: `${h}%` }}
+                                        />
+                                        <span className="text-[9px] text-muted-foreground">{d.month.slice(5)}</span>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                        <div className="flex gap-4 mt-3 text-[10px] text-muted-foreground">
+                            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-500/60 inline-block" /> &lt;30d</span>
+                            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-amber-500/60 inline-block" /> 30-45d</span>
+                            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-red-500/60 inline-block" /> &gt;45d</span>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Source Quality + Stage Dropoff ───────────────── */}
+                {(sourceQuality.length > 0 || dropoffData.length > 0) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Source Quality */}
+                        {sourceQuality.length > 0 && (
+                            <div className="border border-line rounded-lg bg-card/50 p-5">
+                                <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                                    <BarChart3 className="w-4 h-4 text-blue-400" /> Source Quality
+                                </h3>
+                                <div className="space-y-2.5">
+                                    <div className="grid grid-cols-4 text-[10px] text-muted-foreground uppercase tracking-wider mb-3">
+                                        <span>Source</span>
+                                        <span className="text-right">Total</span>
+                                        <span className="text-right">Interview</span>
+                                        <span className="text-right">Hired</span>
+                                    </div>
+                                    {sourceQuality.slice(0, 6).map((s, i) => (
+                                        <div key={i} className="grid grid-cols-4 text-xs items-center">
+                                            <span className="text-muted-foreground truncate">{s.source}</span>
+                                            <span className="text-right">{s.total}</span>
+                                            <span className="text-right text-blue-400">{s.conversionRate}%</span>
+                                            <span className={`text-right font-medium ${s.hireRate > 10 ? 'text-emerald-400' : s.hireRate > 5 ? 'text-amber-400' : 'text-muted-foreground'}`}>
+                                                {s.hireRate}%
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Stage Dropoff */}
+                        {dropoffData.length > 0 && (
+                            <div className="border border-line rounded-lg bg-card/50 p-5">
+                                <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                                    <AlertTriangle className="w-4 h-4 text-amber-400" /> Stage Dropout
+                                </h3>
+                                <div className="space-y-2.5">
+                                    {dropoffData.map((s, i) => (
+                                        <div key={i} className="flex items-center gap-3 text-xs">
+                                            <span className="text-muted-foreground w-24 truncate">{s.stage}</span>
+                                            <div className="flex-1 h-4 bg-muted/30 rounded overflow-hidden">
+                                                <div
+                                                    className={`h-full rounded transition-all ${s.dropoffRate > 60 ? 'bg-red-500/60' : s.dropoffRate > 30 ? 'bg-amber-500/60' : 'bg-emerald-500/60'}`}
+                                                    style={{ width: `${100 - s.dropoffRate}%` }}
+                                                />
+                                            </div>
+                                            <span className={`w-12 text-right font-medium shrink-0 ${s.dropoffRate > 60 ? 'text-red-400' : s.dropoffRate > 30 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                                                {s.dropoffRate}% off
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* ── Recruiter Performance ────────────────────────── */}
+                {recruiterData.length > 0 && (
+                    <div className="border border-line rounded-lg bg-card/50 p-5">
+                        <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                            <UserCheck className="w-4 h-4 text-teal-400" /> Recruiter Performance
+                        </h3>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="text-[10px] text-muted-foreground uppercase tracking-wider border-b border-line/50">
+                                        <th className="text-left pb-2 font-medium">Recruiter</th>
+                                        <th className="text-right pb-2 font-medium">Reviewed</th>
+                                        <th className="text-right pb-2 font-medium">Hired</th>
+                                        <th className="text-right pb-2 font-medium">Hire Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-line/30">
+                                    {recruiterData.map((r, i) => (
+                                        <tr key={i} className="text-xs">
+                                            <td className="py-2.5">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center text-[10px] font-semibold shrink-0">
+                                                        {r.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium">{r.name}</p>
+                                                        <p className="text-[10px] text-muted-foreground">{r.email}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="py-2.5 text-right text-muted-foreground">{r.applicationsReviewed}</td>
+                                            <td className="py-2.5 text-right font-medium text-emerald-400">{r.hired}</td>
+                                            <td className="py-2.5 text-right">
+                                                <span className={`font-bold ${r.hireRate > 10 ? 'text-emerald-400' : r.hireRate > 5 ? 'text-amber-400' : 'text-muted-foreground'}`}>
+                                                    {r.hireRate}%
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
 
                 {/* ── ATS Efficiency (AI Screening) ───────────────── */}
                 {efficiency && (
