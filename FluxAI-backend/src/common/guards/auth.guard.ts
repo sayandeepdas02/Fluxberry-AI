@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
-import { OrganizationMember, MemberRole, MemberRoleType } from '../../database/models/index.js'
+import { OrganizationMember, MemberRole, MemberRoleType, MemberStatus } from '../../database/models/index.js'
 
 export interface AuthenticatedRequest extends Request {
     user?: {
@@ -85,11 +85,18 @@ export function requireOrganization(req: AuthenticatedRequest, res: Response, ne
     next()
 }
 
-// Role hierarchy: OWNER > ADMIN > RECRUITER
+// Role hierarchy: higher number = more permissions
 const ROLE_HIERARCHY: Record<string, number> = {
-    OWNER: 3,
-    ADMIN: 2,
-    RECRUITER: 1,
+    OWNER: 9,
+    SUPER_ADMIN: 8,
+    ADMIN: 7,
+    FINANCE_ADMIN: 4,
+    RECRUITER: 3,
+    HIRING_MANAGER: 3,
+    COORDINATOR: 2,
+    INTERVIEWER: 2,
+    VIEWER: 1,
+    EXTERNAL_COLLABORATOR: 0,
 }
 
 /**
@@ -129,6 +136,23 @@ export function requireOrgAccess(requiredRole?: MemberRoleType) {
             res.status(403).json({
                 success: false,
                 error: { code: 'NOT_MEMBER', message: 'User is not a member of this organization' },
+            })
+            return
+        }
+
+        // Reject suspended or deactivated members
+        if (membership.status === MemberStatus.SUSPENDED) {
+            res.status(403).json({
+                success: false,
+                error: { code: 'ACCOUNT_SUSPENDED', message: 'Your account has been suspended. Contact your organization admin.' },
+            })
+            return
+        }
+
+        if (membership.status === MemberStatus.DEACTIVATED) {
+            res.status(403).json({
+                success: false,
+                error: { code: 'ACCOUNT_DEACTIVATED', message: 'Your account has been deactivated.' },
             })
             return
         }

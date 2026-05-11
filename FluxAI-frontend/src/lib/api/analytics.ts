@@ -71,5 +71,22 @@ export const analyticsApi = {
 
     getAtsEfficiency: async (jobId?: string): Promise<ApiResponse<AtsEfficiencyResponse>> => {
         return apiClient.get('/analytics/ats-efficiency', { jobId })
-    }
+    },
+
+    // Phase 3 — Advanced analytics
+    getHiringVelocity: async (months = 6): Promise<ApiResponse<{ month: string; avgDays: number; hires: number }[]>> => {
+        return apiClient.get('/analytics/hiring-velocity', { months })
+    },
+
+    getSourceQuality: async (): Promise<ApiResponse<{ source: string; total: number; hired: number; interviewed: number; conversionRate: number; hireRate: number }[]>> => {
+        return apiClient.get('/analytics/source-quality')
+    },
+
+    getStageDropoff: async (jobId?: string): Promise<ApiResponse<{ stage: string; entered: number; exited: number; dropoffRate: number; avgDaysInStage: number }[]>> => {
+        return apiClient.get('/analytics/stage-dropoff', { jobId })
+    },
+
+    getRecruiterPerformance: async (): Promise<ApiResponse<{ userId: string; name: string; email: string; applicationsReviewed: number; hired: number; avgTimeToReview: number; hireRate: number }[]>> => {
+        return apiClient.get('/analytics/recruiter-performance')
+    },
 }

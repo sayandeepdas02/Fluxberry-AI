@@ -5,12 +5,25 @@ import { softDeletePlugin } from '../plugins/soft-delete.plugin.js'
 // Enums
 export const MemberRole = {
     OWNER: 'OWNER',
+    SUPER_ADMIN: 'SUPER_ADMIN',
     ADMIN: 'ADMIN',
-    HIRING_MANAGER: 'HIRING_MANAGER',
     RECRUITER: 'RECRUITER',
+    HIRING_MANAGER: 'HIRING_MANAGER',
     INTERVIEWER: 'INTERVIEWER',
+    COORDINATOR: 'COORDINATOR',
+    FINANCE_ADMIN: 'FINANCE_ADMIN',
+    VIEWER: 'VIEWER',
+    EXTERNAL_COLLABORATOR: 'EXTERNAL_COLLABORATOR',
 } as const
 export type MemberRoleType = typeof MemberRole[keyof typeof MemberRole]
+
+export const MemberStatus = {
+    ACTIVE: 'ACTIVE',
+    INVITED: 'INVITED',
+    SUSPENDED: 'SUSPENDED',
+    DEACTIVATED: 'DEACTIVATED',
+} as const
+export type MemberStatusType = typeof MemberStatus[keyof typeof MemberStatus]
 
 export const Plan = {
     FREE: 'free',
@@ -110,6 +123,22 @@ export const JobStatus = {
     CLOSED: 'CLOSED',
 } as const
 export type JobStatusType = typeof JobStatus[keyof typeof JobStatus]
+
+export const JobVisibility = {
+    PUBLIC: 'PUBLIC',
+    PRIVATE: 'PRIVATE',
+    INVITE_ONLY: 'INVITE_ONLY',
+} as const
+export type JobVisibilityType = typeof JobVisibility[keyof typeof JobVisibility]
+
+export interface IApplicationQuestion {
+    id: string
+    label: string
+    type: 'text' | 'textarea' | 'select' | 'checkbox' | 'file'
+    required: boolean
+    options?: string[]
+    placeholder?: string
+}
 
 // Pipeline Stage Type
 export const PipelineStageType = {
@@ -245,6 +274,12 @@ export interface IUser extends Document {
     onboardingCompleted: boolean
     googleAccessToken?: string
     googleRefreshToken?: string
+    emailVerified: boolean
+    emailVerificationToken?: string
+    emailVerificationTokenExpiresAt?: Date
+    passwordResetToken?: string
+    passwordResetTokenExpiresAt?: Date
+    avatarUrl?: string
     createdAt: Date
     updatedAt: Date
 }
@@ -259,6 +294,12 @@ const UserSchema = new Schema<IUser>({
     onboardingCompleted: { type: Boolean, default: false },
     googleAccessToken: { type: String },
     googleRefreshToken: { type: String },
+    emailVerified: { type: Boolean, default: false },
+    emailVerificationToken: { type: String, index: true },
+    emailVerificationTokenExpiresAt: { type: Date },
+    passwordResetToken: { type: String, index: true },
+    passwordResetTokenExpiresAt: { type: Date },
+    avatarUrl: { type: String },
 }, { timestamps: true })
 
 export const User = mongoose.model<IUser>('User', UserSchema)
@@ -272,10 +313,23 @@ export interface IOrganization extends Document {
     slug: string
     logoUrl?: string
     website?: string
+    description?: string
+    industry?: string
+    billingEmail?: string
+    stripeCustomerId?: string
     plan: PlanType
     trialActive: boolean
     trialEndsAt: Date | null
     installedApps: Record<string, { enabled: boolean; installed: boolean; limits?: Record<string, number> }>
+    settings?: {
+        defaultTimezone?: string
+        defaultCurrency?: string
+        requireApprovalForHires?: boolean
+        allowExternalCollaborators?: boolean
+        brandColor?: string
+        ssoEnabled?: boolean
+        mfaRequired?: boolean
+    }
     createdAt: Date
     updatedAt: Date
 }
@@ -286,10 +340,23 @@ const OrganizationSchema = new Schema<IOrganization>({
     slug: { type: String, required: true, unique: true },
     logoUrl: { type: String },
     website: { type: String },
+    description: { type: String },
+    industry: { type: String },
+    billingEmail: { type: String },
+    stripeCustomerId: { type: String, index: true },
     plan: { type: String, enum: Object.values(Plan), default: Plan.FREE },
     trialActive: { type: Boolean, default: false },
     trialEndsAt: { type: Date, default: null },
     installedApps: { type: Schema.Types.Mixed, default: {} },
+    settings: {
+        defaultTimezone: { type: String },
+        defaultCurrency: { type: String },
+        requireApprovalForHires: { type: Boolean, default: false },
+        allowExternalCollaborators: { type: Boolean, default: true },
+        brandColor: { type: String },
+        ssoEnabled: { type: Boolean, default: false },
+        mfaRequired: { type: Boolean, default: false },
+    },
 }, { timestamps: true })
 
 // Auto-stamp 14-day trial for brand-new organizations
@@ -327,6 +394,7 @@ export interface IJob extends Document {
     location?: string
     employmentType: EmploymentTypeValue
     status: JobStatusType
+    visibility: JobVisibilityType
     requirements?: string[]
     requiredSkills?: string[]
     optionalSkills?: string[]
@@ -334,7 +402,14 @@ export interface IJob extends Document {
     scoringConfig?: IScoringConfig
     salaryRange?: { min: number; max: number; currency: string }
     applicationSchema?: Record<string, unknown>
+    applicationQuestions?: IApplicationQuestion[]
+    assignedHiringManagerId?: Types.ObjectId
+    assignedRecruiterId?: Types.ObjectId
     publicSlug?: string
+    expiresAt?: Date
+    isArchived: boolean
+    archivedAt?: Date
+    sourceJobId?: Types.ObjectId
     createdBy?: Types.ObjectId
     publishedAt?: Date
     closedAt?: Date
@@ -342,6 +417,15 @@ export interface IJob extends Document {
     createdAt: Date
     updatedAt: Date
 }
+
+const ApplicationQuestionSchema = new Schema({
+    id: { type: String, required: true },
+    label: { type: String, required: true },
+    type: { type: String, enum: ['text', 'textarea', 'select', 'checkbox', 'file'], required: true },
+    required: { type: Boolean, default: false },
+    options: [{ type: String }],
+    placeholder: { type: String },
+}, { _id: false })
 
 const JobSchema = new Schema<IJob>({
     organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
@@ -351,6 +435,7 @@ const JobSchema = new Schema<IJob>({
     location: { type: String },
     employmentType: { type: String, enum: Object.values(EmploymentType), default: EmploymentType.FULL_TIME },
     status: { type: String, enum: Object.values(JobStatus), default: JobStatus.DRAFT, index: true },
+    visibility: { type: String, enum: Object.values(JobVisibility), default: JobVisibility.PUBLIC, index: true },
     requirements: [{ type: String }],
     requiredSkills: [{ type: String }],
     optionalSkills: [{ type: String }],
@@ -384,7 +469,14 @@ const JobSchema = new Schema<IJob>({
         currency: { type: String, default: 'USD' }
     },
     applicationSchema: { type: Schema.Types.Mixed },
+    applicationQuestions: [ApplicationQuestionSchema],
+    assignedHiringManagerId: { type: Schema.Types.ObjectId, ref: 'User' },
+    assignedRecruiterId: { type: Schema.Types.ObjectId, ref: 'User' },
     publicSlug: { type: String, unique: true, sparse: true },
+    expiresAt: { type: Date },
+    isArchived: { type: Boolean, default: false, index: true },
+    archivedAt: { type: Date },
+    sourceJobId: { type: Schema.Types.ObjectId, ref: 'Job' },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
     publishedAt: { type: Date },
     closedAt: { type: Date },
@@ -392,10 +484,11 @@ const JobSchema = new Schema<IJob>({
 }, { timestamps: true })
 
 // Compound indexes for common query patterns
-JobSchema.index({ organizationId: 1, status: 1, deletedAt: 1 })
+JobSchema.index({ organizationId: 1, status: 1, isArchived: 1, deletedAt: 1 })
 JobSchema.index({ organizationId: 1, department: 1 })
+JobSchema.index({ organizationId: 1, isArchived: 1 })
 // Public listing indexes
-JobSchema.index({ status: 1, createdAt: -1 })          // sorted listing
+JobSchema.index({ status: 1, visibility: 1, createdAt: -1 })
 JobSchema.index({ status: 1, title: 'text', department: 'text' }) // search
 
 export const Job = mongoose.model<IJob>('Job', JobSchema)
@@ -436,22 +529,39 @@ export const PipelineStage = mongoose.model<IPipelineStage>('PipelineStage', Pip
 // ============================================
 export interface IOrganizationMember extends Document {
     _id: Types.ObjectId
-    userId: Types.ObjectId
+    userId: Types.ObjectId | null
     organizationId: Types.ObjectId
     role: MemberRoleType
+    status: MemberStatusType
+    inviteEmail?: string
+    inviteToken?: string
+    inviteTokenExpiresAt?: Date
+    invitedBy?: Types.ObjectId
+    teamId?: Types.ObjectId
+    departmentId?: Types.ObjectId
+    lastActiveAt?: Date
     joinedAt: Date
 }
 
 const OrganizationMemberSchema = new Schema<IOrganizationMember>({
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true },
     role: { type: String, enum: Object.values(MemberRole), default: MemberRole.RECRUITER },
+    status: { type: String, enum: Object.values(MemberStatus), default: MemberStatus.ACTIVE },
+    inviteEmail: { type: String, index: true },
+    inviteToken: { type: String, index: true },
+    inviteTokenExpiresAt: { type: Date },
+    invitedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    teamId: { type: Schema.Types.ObjectId, ref: 'Team' },
+    departmentId: { type: Schema.Types.ObjectId, ref: 'Department' },
+    lastActiveAt: { type: Date },
     joinedAt: { type: Date, default: Date.now },
 })
 
-OrganizationMemberSchema.index({ userId: 1, organizationId: 1 }, { unique: true })
+OrganizationMemberSchema.index({ userId: 1, organizationId: 1 }, { unique: true, sparse: true })
 OrganizationMemberSchema.index({ organizationId: 1 })
 OrganizationMemberSchema.index({ userId: 1 })
+OrganizationMemberSchema.index({ organizationId: 1, status: 1 })
 
 export const OrganizationMember = mongoose.model<IOrganizationMember>('OrganizationMember', OrganizationMemberSchema)
 
@@ -511,9 +621,11 @@ export interface IJobApplication extends Document {
     resumeUrl?: string
     status: ApplicationStatusType
     score?: number
+    matchScore?: number
     assignedTo?: Types.ObjectId
     rejectionReason?: string
     lastActivityAt?: Date
+    stageEnteredAt?: Date
     submittedAt: Date
     deletedAt?: Date | null
     createdAt: Date
@@ -529,9 +641,11 @@ const JobApplicationSchema = new Schema<IJobApplication>({
     resumeUrl: { type: String },
     status: { type: String, enum: Object.values(ApplicationStatus), default: ApplicationStatus.APPLIED },
     score: { type: Number },
+    matchScore: { type: Number },
     assignedTo: { type: Schema.Types.ObjectId, ref: 'User' },
     rejectionReason: { type: String },
     lastActivityAt: { type: Date, default: Date.now },
+    stageEnteredAt: { type: Date, default: Date.now },
     submittedAt: { type: Date, default: Date.now },
     deletedAt: { type: Date, default: null },
 }, { timestamps: true })
@@ -1632,4 +1746,327 @@ ActivityLogSchema.index({ organizationId: 1, entityType: 1, entityId: 1 })
 
 export const ActivityLog = mongoose.model<IActivityLog>('ActivityLog', ActivityLogSchema)
 
+// ============================================
+// TALENT POOL MODEL (Phase 3 — CRM)
+// ============================================
+export interface ITalentPool extends Document {
+    _id: Types.ObjectId
+    organizationId: Types.ObjectId
+    createdBy: Types.ObjectId
+    name: string
+    description?: string
+    color?: string
+    candidateIds: Types.ObjectId[]
+    isSmartList: boolean
+    smartListQuery?: {
+        search?: string
+        tags?: string[]
+        source?: string
+        minScore?: number
+        dateFrom?: Date
+        dateTo?: Date
+    }
+    createdAt: Date
+    updatedAt: Date
+}
+
+const TalentPoolSchema = new Schema<ITalentPool>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+    createdBy:      { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    name:           { type: String, required: true },
+    description:    { type: String },
+    color:          { type: String, default: '#3b82f6' },
+    candidateIds:   [{ type: Schema.Types.ObjectId, ref: 'Candidate' }],
+    isSmartList:    { type: Boolean, default: false },
+    smartListQuery: {
+        search:    { type: String },
+        tags:      [{ type: String }],
+        source:    { type: String },
+        minScore:  { type: Number },
+        dateFrom:  { type: Date },
+        dateTo:    { type: Date },
+    },
+}, { timestamps: true })
+
+TalentPoolSchema.index({ organizationId: 1, createdAt: -1 })
+TalentPoolSchema.index({ organizationId: 1, name: 1 })
+
+export const TalentPool = mongoose.model<ITalentPool>('TalentPool', TalentPoolSchema)
+
+// ============================================
+// SAVED SEARCH MODEL (Phase 3 — CRM)
+// ============================================
+export interface ISavedSearch extends Document {
+    _id: Types.ObjectId
+    organizationId: Types.ObjectId
+    createdBy: Types.ObjectId
+    name: string
+    query: {
+        search?: string
+        tags?: string[]
+        source?: string
+        dateFrom?: string
+        dateTo?: string
+    }
+    alertEnabled: boolean
+    lastRunAt?: Date
+    createdAt: Date
+    updatedAt: Date
+}
+
+const SavedSearchSchema = new Schema<ISavedSearch>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+    createdBy:      { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    name:           { type: String, required: true },
+    query: {
+        search:   { type: String },
+        tags:     [{ type: String }],
+        source:   { type: String },
+        dateFrom: { type: String },
+        dateTo:   { type: String },
+    },
+    alertEnabled: { type: Boolean, default: false },
+    lastRunAt:    { type: Date },
+}, { timestamps: true })
+
+SavedSearchSchema.index({ organizationId: 1, createdAt: -1 })
+
+export const SavedSearch = mongoose.model<ISavedSearch>('SavedSearch', SavedSearchSchema)
+
+// ============================================
+// FOLLOW-UP REMINDER MODEL (Phase 3 — CRM)
+// ============================================
+export interface IFollowUpReminder extends Document {
+    _id: Types.ObjectId
+    organizationId: Types.ObjectId
+    createdBy: Types.ObjectId
+    candidateId: Types.ObjectId
+    applicationId?: Types.ObjectId
+    note: string
+    dueAt: Date
+    done: boolean
+    completedAt?: Date
+    createdAt: Date
+    updatedAt: Date
+}
+
+const FollowUpReminderSchema = new Schema<IFollowUpReminder>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+    createdBy:      { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    candidateId:    { type: Schema.Types.ObjectId, ref: 'Candidate', required: true, index: true },
+    applicationId:  { type: Schema.Types.ObjectId, ref: 'JobApplication' },
+    note:           { type: String, required: true },
+    dueAt:          { type: Date, required: true, index: true },
+    done:           { type: Boolean, default: false, index: true },
+    completedAt:    { type: Date },
+}, { timestamps: true })
+
+FollowUpReminderSchema.index({ organizationId: 1, dueAt: 1, done: 1 })
+FollowUpReminderSchema.index({ organizationId: 1, createdBy: 1, done: 1 })
+
+export const FollowUpReminder = mongoose.model<IFollowUpReminder>('FollowUpReminder', FollowUpReminderSchema)
+
+// ============================================
+// CANDIDATE BOOKMARK MODEL (Phase 3 — CRM)
+// ============================================
+export interface ICandidateBookmark extends Document {
+    _id: Types.ObjectId
+    organizationId: Types.ObjectId
+    userId: Types.ObjectId
+    candidateId: Types.ObjectId
+    note?: string
+    createdAt: Date
+}
+
+const CandidateBookmarkSchema = new Schema<ICandidateBookmark>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+    userId:         { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    candidateId:    { type: Schema.Types.ObjectId, ref: 'Candidate', required: true },
+    note:           { type: String },
+}, { timestamps: { createdAt: true, updatedAt: false } })
+
+CandidateBookmarkSchema.index({ userId: 1, candidateId: 1, organizationId: 1 }, { unique: true })
+CandidateBookmarkSchema.index({ organizationId: 1, userId: 1 })
+
+export const CandidateBookmark = mongoose.model<ICandidateBookmark>('CandidateBookmark', CandidateBookmarkSchema)
+
 export * from './interview-transcript.model'
+
+// ============================================
+// TEAM MODEL (Phase 4 — Workspace Management)
+// ============================================
+export interface ITeam extends Document {
+    _id: Types.ObjectId
+    organizationId: Types.ObjectId
+    name: string
+    description?: string
+    color?: string
+    createdBy: Types.ObjectId
+    createdAt: Date
+    updatedAt: Date
+}
+
+const TeamSchema = new Schema<ITeam>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+    name: { type: String, required: true },
+    description: { type: String },
+    color: { type: String },
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+}, { timestamps: true })
+
+TeamSchema.index({ organizationId: 1, name: 1 }, { unique: true })
+
+export const Team = mongoose.model<ITeam>('Team', TeamSchema)
+
+// ============================================
+// DEPARTMENT MODEL (Phase 4 — Workspace Management)
+// ============================================
+export interface IDepartment extends Document {
+    _id: Types.ObjectId
+    organizationId: Types.ObjectId
+    name: string
+    description?: string
+    managerId?: Types.ObjectId
+    createdAt: Date
+    updatedAt: Date
+}
+
+const DepartmentSchema = new Schema<IDepartment>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+    name: { type: String, required: true },
+    description: { type: String },
+    managerId: { type: Schema.Types.ObjectId, ref: 'User' },
+}, { timestamps: true })
+
+DepartmentSchema.index({ organizationId: 1, name: 1 }, { unique: true })
+
+export const Department = mongoose.model<IDepartment>('Department', DepartmentSchema)
+
+// ============================================
+// SUBSCRIPTION MODEL (Phase 4 — Billing)
+// ============================================
+export const SubscriptionStatus = {
+    ACTIVE: 'active',
+    TRIALING: 'trialing',
+    PAST_DUE: 'past_due',
+    CANCELED: 'canceled',
+    UNPAID: 'unpaid',
+    PAUSED: 'paused',
+} as const
+export type SubscriptionStatusType = typeof SubscriptionStatus[keyof typeof SubscriptionStatus]
+
+export interface ISubscription extends Document {
+    _id: Types.ObjectId
+    organizationId: Types.ObjectId
+    plan: PlanType
+    status: SubscriptionStatusType
+    stripeSubscriptionId?: string
+    stripePriceId?: string
+    stripeCustomerId?: string
+    currentPeriodStart: Date
+    currentPeriodEnd: Date
+    cancelAtPeriodEnd: boolean
+    canceledAt?: Date
+    seats: number
+    usedSeats: number
+    usageMetrics: {
+        activeJobs: number
+        candidatesStored: number
+        aiCreditsUsed: number
+        automationRuns: number
+        apiCalls: number
+    }
+    planLimits: {
+        maxJobs: number
+        maxSeats: number
+        maxCandidates: number
+        aiCreditsPerMonth: number
+        automationRunsPerMonth: number
+        apiCallsPerDay: number
+    }
+    createdAt: Date
+    updatedAt: Date
+}
+
+const SubscriptionSchema = new Schema<ISubscription>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, unique: true },
+    plan: { type: String, enum: Object.values(Plan), required: true },
+    status: { type: String, enum: Object.values(SubscriptionStatus), default: SubscriptionStatus.TRIALING },
+    stripeSubscriptionId: { type: String, index: true },
+    stripePriceId: { type: String },
+    stripeCustomerId: { type: String },
+    currentPeriodStart: { type: Date, required: true },
+    currentPeriodEnd: { type: Date, required: true },
+    cancelAtPeriodEnd: { type: Boolean, default: false },
+    canceledAt: { type: Date },
+    seats: { type: Number, default: 5 },
+    usedSeats: { type: Number, default: 0 },
+    usageMetrics: {
+        activeJobs: { type: Number, default: 0 },
+        candidatesStored: { type: Number, default: 0 },
+        aiCreditsUsed: { type: Number, default: 0 },
+        automationRuns: { type: Number, default: 0 },
+        apiCalls: { type: Number, default: 0 },
+    },
+    planLimits: {
+        maxJobs: { type: Number, default: 3 },
+        maxSeats: { type: Number, default: 5 },
+        maxCandidates: { type: Number, default: 500 },
+        aiCreditsPerMonth: { type: Number, default: 100 },
+        automationRunsPerMonth: { type: Number, default: 50 },
+        apiCallsPerDay: { type: Number, default: 1000 },
+    },
+}, { timestamps: true })
+
+export const Subscription = mongoose.model<ISubscription>('Subscription', SubscriptionSchema)
+
+// ============================================
+// NOTIFICATION MODEL (Phase 4 — Notifications)
+// ============================================
+export const NotificationType = {
+    CANDIDATE_APPLIED: 'CANDIDATE_APPLIED',
+    INTERVIEW_SCHEDULED: 'INTERVIEW_SCHEDULED',
+    INTERVIEW_REMINDER: 'INTERVIEW_REMINDER',
+    APPLICATION_MOVED: 'APPLICATION_MOVED',
+    OFFER_SENT: 'OFFER_SENT',
+    OFFER_ACCEPTED: 'OFFER_ACCEPTED',
+    MEMBER_INVITED: 'MEMBER_INVITED',
+    MEMBER_JOINED: 'MEMBER_JOINED',
+    BILLING_ALERT: 'BILLING_ALERT',
+    TRIAL_ENDING: 'TRIAL_ENDING',
+    AUTOMATION_TRIGGERED: 'AUTOMATION_TRIGGERED',
+    MENTION: 'MENTION',
+    SYSTEM: 'SYSTEM',
+} as const
+export type NotificationTypeValue = typeof NotificationType[keyof typeof NotificationType]
+
+export interface INotification extends Document {
+    _id: Types.ObjectId
+    organizationId: Types.ObjectId
+    userId: Types.ObjectId
+    type: NotificationTypeValue
+    title: string
+    body: string
+    read: boolean
+    readAt?: Date
+    actionUrl?: string
+    data?: Record<string, unknown>
+    createdAt: Date
+}
+
+const NotificationSchema = new Schema<INotification>({
+    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    type: { type: String, enum: Object.values(NotificationType), required: true },
+    title: { type: String, required: true },
+    body: { type: String, required: true },
+    read: { type: Boolean, default: false, index: true },
+    readAt: { type: Date },
+    actionUrl: { type: String },
+    data: { type: Schema.Types.Mixed },
+}, { timestamps: { createdAt: true, updatedAt: false } })
+
+NotificationSchema.index({ userId: 1, organizationId: 1, read: 1 })
+NotificationSchema.index({ userId: 1, createdAt: -1 })
+
+export const Notification = mongoose.model<INotification>('Notification', NotificationSchema)

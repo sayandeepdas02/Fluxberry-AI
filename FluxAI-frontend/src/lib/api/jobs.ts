@@ -1,5 +1,17 @@
 import { apiClient } from './client'
 
+export type JobVisibility = 'PUBLIC' | 'PRIVATE' | 'INVITE_ONLY'
+export type JobStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
+
+export interface ApplicationQuestion {
+    id: string
+    label: string
+    type: 'text' | 'textarea' | 'select' | 'checkbox' | 'file'
+    required: boolean
+    options?: string[]
+    placeholder?: string
+}
+
 export interface Job {
     _id: string
     organizationId: string
@@ -8,7 +20,8 @@ export interface Job {
     department?: string
     location?: string
     employmentType: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERN' | 'OTHER'
-    status: 'DRAFT' | 'PUBLISHED' | 'CLOSED'
+    status: JobStatus
+    visibility: JobVisibility
     requirements?: string[]
     requiredSkills?: string[]
     optionalSkills?: string[]
@@ -35,7 +48,14 @@ export interface Job {
     }
     salaryRange?: { min: number; max: number; currency: string }
     applicationSchema?: ApplicationSchema
+    applicationQuestions?: ApplicationQuestion[]
+    assignedHiringManagerId?: string
+    assignedRecruiterId?: string
     publicSlug?: string
+    expiresAt?: string
+    isArchived: boolean
+    archivedAt?: string
+    sourceJobId?: string
     createdBy?: string
     publishedAt?: string
     closedAt?: string
@@ -62,12 +82,17 @@ export interface CreateJobInput {
     department?: string
     location?: string
     employmentType?: string
+    visibility?: JobVisibility
     requirements?: string[]
     requiredSkills?: string[]
     optionalSkills?: string[]
     experienceRange?: { min: number; max: number }
     salaryRange?: { min: number; max: number; currency: string }
     applicationSchema?: ApplicationSchema
+    applicationQuestions?: ApplicationQuestion[]
+    assignedHiringManagerId?: string
+    assignedRecruiterId?: string
+    expiresAt?: string
     scoringConfig?: {
         version?: 'v1' | 'v2'
         weights?: {
@@ -88,8 +113,10 @@ export type UpdateJobInput = Partial<CreateJobInput>
 export interface ListJobsQuery {
     page?: number
     limit?: number
-    status?: 'DRAFT' | 'PUBLISHED' | 'CLOSED'
+    status?: JobStatus
+    visibility?: JobVisibility
     search?: string
+    archived?: boolean
 }
 
 export interface ListJobsResponse {
@@ -130,6 +157,18 @@ export const jobsApi = {
 
     close: (id: string) =>
         apiClient.post<Job>(`/jobs/${id}/close`),
+
+    archive: (id: string) =>
+        apiClient.post<Job>(`/jobs/${id}/archive`),
+
+    unarchive: (id: string) =>
+        apiClient.post<Job>(`/jobs/${id}/unarchive`),
+
+    duplicate: (id: string) =>
+        apiClient.post<Job>(`/jobs/${id}/duplicate`),
+
+    repost: (id: string) =>
+        apiClient.post<Job>(`/jobs/${id}/repost`),
 
     delete: (id: string) =>
         apiClient.delete<Job>(`/jobs/${id}`),
