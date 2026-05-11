@@ -29,6 +29,7 @@ export interface ATSAnalytics {
     hiringTrends: { date: string; value: number }[]
     applicationSources: { label: string; value: number; percentage: number }[]
     avgTimeInStage?: Record<string, number>
+    stageDistribution?: Record<string, number>
 }
 
 export const dashboardApi = {
