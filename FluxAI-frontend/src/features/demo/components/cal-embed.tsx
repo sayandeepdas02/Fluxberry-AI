@@ -46,15 +46,18 @@ export function CalEmbed() {
     document.head.appendChild(script);
 
     /* ── Queue commands (executed by embed.js once it loads) ── */
-    window.Cal("init", { origin: "https://cal.com" });
+    // Assign to a local const so TypeScript can see it is non-null
+    const cal = window.Cal!;
 
-    window.Cal("inline", {
+    cal("init", { origin: "https://cal.com" });
+
+    cal("inline", {
       elementOrSelector: `#${EMBED_ID}`,
       config: { layout: "month_view" },
       calLink: CAL_LINK,
     });
 
-    window.Cal("ui", {
+    cal("ui", {
       hideEventTypeDetails: false,
       layout: "month_view",
     });
