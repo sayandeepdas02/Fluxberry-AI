@@ -1,73 +1,61 @@
-import { Response } from 'express'
+import { Response, NextFunction } from 'express'
 import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
 import { OfferTemplate } from '../../database/models/index.js'
 import { templateService } from './template.service.js'
+import { AppError } from '../../common/errors/index.js'
 
 export class OffersTemplateController {
-
-    // Create Template
-    async create(req: AuthenticatedRequest, res: Response) {
+    async create(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const organizationId = req.user?.organizationId
-            if (!organizationId) return res.status(403).json({ error: 'Organization context required' })
-
+            const { organizationId } = req.user!
+            if (!organizationId) throw AppError.forbidden('Organization context required')
             const { name, htmlContent, type = 'FULL_TIME', country } = req.body
-
-            // Extract variables
-            const extractedVars = templateService.extractVariables(htmlContent)
-
             const template = await OfferTemplate.create({
                 organizationId,
                 name,
                 htmlContent,
                 type,
                 country,
-                variables: extractedVars,
-                isActive: true
+                variables: templateService.extractVariables(htmlContent),
+                isActive: true,
             })
-
-            res.status(201).json(template)
-        } catch (error: any) {
-            res.status(400).json({ error: error.message })
+            res.success(template, 201)
+        } catch (error) {
+            next(error)
         }
     }
 
-    // List Templates
-    async list(req: AuthenticatedRequest, res: Response) {
+    async list(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            const organizationId = req.user?.organizationId
+            const { organizationId } = req.user!
             const templates = await OfferTemplate.find({ organizationId }).sort({ createdAt: -1 })
-            res.json(templates)
-        } catch (error: any) {
-            res.status(500).json({ error: error.message })
+            res.success(templates)
+        } catch (error) {
+            next(error)
         }
     }
 
-    // Get Template
-    async get(req: AuthenticatedRequest, res: Response) {
+    async get(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
             const template = await OfferTemplate.findOne({
                 _id: req.params.id,
-                organizationId: req.user?.organizationId
+                organizationId: req.user?.organizationId,
             })
-            if (!template) return res.status(404).json({ error: 'Template not found' })
-            res.json(template)
-        } catch (error: any) {
-            res.status(500).json({ error: error.message })
+            if (!template) throw AppError.notFound('Template')
+            res.success(template)
+        } catch (error) {
+            next(error)
         }
     }
 
-    // Update Template
-    async update(req: AuthenticatedRequest, res: Response) {
+    async update(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
             const { name, htmlContent, type, country, isActive } = req.body
             const template = await OfferTemplate.findOne({
                 _id: req.params.id,
-                organizationId: req.user?.organizationId
+                organizationId: req.user?.organizationId,
             })
-
-            if (!template) return res.status(404).json({ error: 'Template not found' })
-
+            if (!template) throw AppError.notFound('Template')
             if (name) template.name = name
             if (htmlContent) {
                 template.htmlContent = htmlContent
@@ -76,11 +64,10 @@ export class OffersTemplateController {
             if (type) template.type = type
             if (country) template.country = country
             if (isActive !== undefined) template.isActive = isActive
-
             await template.save()
-            res.json(template)
-        } catch (error: any) {
-            res.status(400).json({ error: error.message })
+            res.success(template)
+        } catch (error) {
+            next(error)
         }
     }
 }

@@ -1,7 +1,8 @@
 "use client"
 
 import { PageContainer } from "@/components/dashboard/page-container"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
+import { useApiMutation } from "@/lib/hooks/use-api-mutation"
 import { prospectsApi, Prospect } from "@/lib/api/prospects"
 import { jobsApi } from "@/lib/api/jobs"
 import { useProspectStore } from "@/lib/store/prospect-store"
@@ -42,7 +43,6 @@ const STATUS_COLORS: Record<string, string> = {
 
 
 export default function TalentSearchPage() {
-    const queryClient = useQueryClient()
     const {
         selectedProspectId, setSelectedProspect, isDrawerOpen, setDrawerOpen,
         selectedIds, toggleSelect, selectAll, clearSelection,
@@ -96,17 +96,15 @@ export default function TalentSearchPage() {
     const jobs = jobsRes?.data || []
 
     // Convert mutation
-    const convertMutation = useMutation({
+    const convertMutation = useApiMutation({
         mutationFn: (id: string) => prospectsApi.convertToCandidate(id),
-        onSuccess: (res) => {
+        invalidateKeys: [['prospects'], ['prospect', selectedProspectId]],
+        onSuccess: () => {
             const candidateName = prospectDetail ? `${prospectDetail.firstName} ${prospectDetail.lastName}` : 'Prospect'
             const jobTitle = jobs.find(j => j._id === convertJobId)?.title || 'ATS'
             setConvertSuccess({ name: candidateName, jobTitle })
             setShowConvertFlow(false)
-            queryClient.invalidateQueries({ queryKey: ['prospects'] })
-            queryClient.invalidateQueries({ queryKey: ['prospect', selectedProspectId] })
         },
-        onError: () => toast.error('Conversion failed'),
     })
 
     const handleAddToList = () => {

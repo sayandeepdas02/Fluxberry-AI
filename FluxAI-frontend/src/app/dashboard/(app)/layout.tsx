@@ -5,6 +5,8 @@ import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { Topbar } from "@/components/dashboard/topbar";
 import { GlobalSearch } from "@/components/dashboard/global-search";
 import { DashboardCommandPalette } from "@/components/dashboard/command-palette";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
+import { CopilotPanel } from "@/components/dashboard/ai/copilot-panel";
 
 /* ═══════════════════════════════════════════════════
    DASHBOARD APP LAYOUT
@@ -50,9 +52,14 @@ export default function DashboardAppLayout({
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto">
-          {children}
+          <ErrorBoundary section="Dashboard">
+            {children}
+          </ErrorBoundary>
         </main>
       </div>
+
+      {/* AI Copilot floating panel */}
+      <CopilotPanel />
 
       {/* Overlays */}
       <GlobalSearch

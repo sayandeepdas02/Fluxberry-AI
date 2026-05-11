@@ -1,24 +1,47 @@
 import { apiClient } from './client'
 import { ApiResponse } from './types'
 
+export type InterviewType = 'SCREENING' | 'TECHNICAL' | 'BEHAVIORAL' | 'SYSTEM_DESIGN' | 'FINAL'
+export type InterviewStatus = 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'RESCHEDULED' | 'NO_SHOW'
+
 export interface IInterview {
     _id: string
     organizationId: string
-    candidateId: string
-    jobId: string
-    start: string // ISO date
-    end: string // ISO date
-    summary: string
+    candidateId: string | { _id: string; firstName?: string; lastName?: string; email: string }
+    interviewerId: string | { _id: string; firstName?: string; lastName?: string; email: string }
+    jobId: string | { _id: string; title: string }
+    applicationId: string
+    stageId?: string
+    attendees?: string[]
+    title: string
     description?: string
+    type: InterviewType
+    status: InterviewStatus
+    startTime: string
+    endTime: string
+    meetingLink?: string
     location?: string
-    attendees: { email: string; responseStatus?: string }[]
-    status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'RESCHEDULED'
-    googleEventId?: string
-    meetLink?: string
+    calendarEventId?: string
+    feedbackSubmitted: boolean
     scorecardId?: string
-    feedbackSubmitted?: boolean
     createdAt: string
     updatedAt: string
+}
+
+export interface CreateInterviewInput {
+    candidateId: string
+    interviewerId: string
+    jobId: string
+    applicationId: string
+    stageId?: string
+    attendees?: string[]
+    title: string
+    description?: string
+    type: InterviewType
+    startTime: string
+    endTime: string
+    meetingLink?: string
+    location?: string
 }
 
 export interface IScorecard {
@@ -39,25 +62,25 @@ export interface IScorecard {
 }
 
 export const interviewsApi = {
-    list: (query?: any) =>
+    list: (query?: Record<string, string>) =>
         apiClient.get<IInterview[]>('/interviews', query),
 
     getById: (id: string) =>
         apiClient.get<IInterview>(`/interviews/${id}`),
 
-    create: (data: Partial<IInterview>) =>
+    create: (data: CreateInterviewInput) =>
         apiClient.post<IInterview>('/interviews', data),
 
-    update: (id: string, data: Partial<IInterview>) =>
+    update: (id: string, data: Partial<CreateInterviewInput>) =>
         apiClient.patch<IInterview>(`/interviews/${id}`, data),
 
     cancel: (id: string) =>
-        apiClient.post(`/interviews/${id}/cancel`),
+        apiClient.delete<IInterview>(`/interviews/${id}`),
 
     // Scorecards
     getScorecard: (interviewId: string) =>
         apiClient.get<IScorecard>(`/interviews/${interviewId}/scorecard`),
 
     submitScorecard: (interviewId: string, data: Partial<IScorecard>) =>
-        apiClient.post<IScorecard>(`/interviews/${interviewId}/scorecard`, data),
+        apiClient.post<IScorecard>(`/interviews/scorecards`, { ...data, interviewId }),
 }

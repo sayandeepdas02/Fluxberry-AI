@@ -1,6 +1,5 @@
 import { Response, NextFunction } from 'express'
 import { dashboardService } from './dashboard.service.js'
-import { successResponse } from '../../common/utils/api-response.js'
 import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
 
 class DashboardController {
@@ -12,7 +11,7 @@ class DashboardController {
                 return
             }
             const data = await dashboardService.getSummary(organizationId)
-            res.json(successResponse(data))
+            res.success(data)
         } catch (error) {
             next(error)
         }
@@ -26,7 +25,7 @@ class DashboardController {
                 return
             }
             const data = await dashboardService.getAnalytics(organizationId)
-            res.json(successResponse(data))
+            res.success(data)
         } catch (error) {
             next(error)
         }

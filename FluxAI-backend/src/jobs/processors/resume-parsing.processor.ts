@@ -2,8 +2,7 @@ import { Job } from 'bullmq'
 import { Candidate, JobApplication } from '../../database/models/index.js'
 import { ResumeProfile } from '../../modules/ats-screening/models/resume-profile.model.js'
 import { enqueueAtsScreeningJob } from '../queues/index.js'
-import { resumeParsingService } from '../../services/resume-parsing.service.js'
-import { resumeExtractionService } from '../../services/resume-extraction.service.js'
+import { resumeService } from '../../modules/resume/resume.service.js'
 import type { IResumeParsedData } from '../../modules/ats-screening/models/resume-profile.model.js'
 
 export interface ResumeParsingJobData {
@@ -39,20 +38,23 @@ export async function processResumeParsingJob(job: Job<ResumeParsingJobData>): P
     console.log(`[ResumeParsing] Starting resume parse`, logCtx)
 
     try {
-        // ── Step 1: Extract raw text ─────────────────────────────
-        const parseResult = await resumeParsingService.parse(resumeUrl)
+        // ── Steps 1–2: Extract text + structured data ────────────
+        const extractionStart = Date.now()
+        const { parseResult, structuredData } = await resumeService.parseAndExtract(resumeUrl)
+        const extractionDurationMs = Date.now() - extractionStart
 
-        console.log(`[ResumeParsing] Text extraction complete`, {
+        console.log(`[ResumeParsing] Extraction complete`, {
             ...logCtx,
             fileType: parseResult.fileType,
             status: parseResult.status,
             textLength: parseResult.textLength,
             parsingDurationMs: parseResult.parsingDurationMs,
+            extractionDurationMs,
             ...(parseResult.failureReason && { failureReason: parseResult.failureReason }),
         })
 
-        // ── Step 2: Handle non-success statuses ──────────────────
-        if (parseResult.status !== 'PARSED') {
+        // ── Handle non-success statuses ───────────────────────────
+        if (parseResult.status !== 'PARSED' || !structuredData) {
             const failedParsedData: Record<string, unknown> = {
                 rawText: '',
                 parsedAt: new Date().toISOString(),
@@ -63,13 +65,10 @@ export async function processResumeParsingJob(job: Job<ResumeParsingJobData>): P
                 parsingDurationMs: parseResult.parsingDurationMs,
             }
 
-            // Update Candidate (backward compat)
-            await Candidate.findByIdAndUpdate(candidateId, {
-                parsedResumeData: failedParsedData,
-            })
+            await Candidate.findByIdAndUpdate(candidateId, { parsedResumeData: failedParsedData })
 
-            // Also update ResumeProfile so the ATS screening processor
-            // can detect the failure and stop retrying
+            // NOTE: parsedAt is intentionally NOT set — ATS processor uses parsedAt != null
+            // to detect successful parsing. Leaving it null signals "not successfully parsed".
             await ResumeProfile.findOneAndUpdate(
                 { candidateId, organizationId },
                 {
@@ -81,9 +80,6 @@ export async function processResumeParsingJob(job: Job<ResumeParsingJobData>): P
                             education: [],
                             projects: [],
                         } satisfies IResumeParsedData,
-                        // NOTE: parsedAt is intentionally NOT set here.
-                        // The ATS screening processor uses parsedAt != null to determine
-                        // if parsing succeeded. Leaving it null signals "not successfully parsed".
                     },
                 },
                 { upsert: true, new: true }
@@ -93,13 +89,8 @@ export async function processResumeParsingJob(job: Job<ResumeParsingJobData>): P
                 `[ResumeParsing] ⚠️ Parse failed for candidate ${candidateId}: ${parseResult.status}`,
                 { ...logCtx, failureReason: parseResult.failureReason }
             )
-            return // Do NOT throw — this is a permanent failure, not a retry-able one
+            return
         }
-
-        // ── Step 3: Structured extraction via GPT ────────────────
-        const extractionStart = Date.now()
-        const structuredData = await resumeExtractionService.extract(parseResult.rawText)
-        const extractionDurationMs = Date.now() - extractionStart
 
         console.log(`[ResumeParsing] Structured extraction complete`, {
             ...logCtx,
@@ -107,7 +98,6 @@ export async function processResumeParsingJob(job: Job<ResumeParsingJobData>): P
             experienceCount: structuredData.experience?.length ?? 0,
             educationCount: structuredData.education?.length ?? 0,
             projectCount: structuredData.projects?.length ?? 0,
-            extractionDurationMs,
         })
 
         // ── Step 4: Persist to Candidate (backward compat) ──────

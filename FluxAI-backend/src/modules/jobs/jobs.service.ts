@@ -1,4 +1,6 @@
 import { Job, IJob, AuditLog, JobApplication } from '../../database/models/index.js'
+import { AppError } from '../../common/errors/index.js'
+import { createPaginatedResponse } from '../../common/dto/pagination.dto.js'
 import { ListJobsQuery, CreateJobInput, UpdateJobInput } from './jobs.types.js'
 import { pipelineService } from './pipeline.service.js'
 import { normalizeSkills } from '../ats-screening/scoring-v2/skill-normalizer.js'
@@ -173,14 +175,23 @@ class JobsService {
         return job
     }
 
-    async list(organizationId: string, query: ListJobsQuery): Promise<{ jobs: IJob[], total: number, page: number, totalPages: number }> {
-        const { page = 1, limit = 20, status, search } = query
+    async list(organizationId: string, query: ListJobsQuery) {
+        const { page = 1, limit = 20, status, search, visibility, archived } = query
+        const showArchived = archived === true
         const skip = (page - 1) * limit
 
-        const filter: Record<string, unknown> = { organizationId }
+        const filter: Record<string, unknown> = {
+            organizationId,
+            deletedAt: null,
+            isArchived: showArchived,
+        }
 
         if (status) {
             filter.status = status
+        }
+
+        if (visibility) {
+            filter.visibility = visibility
         }
 
         if (search) {
@@ -198,18 +209,13 @@ class JobsService {
             Job.countDocuments(filter)
         ])
 
-        return {
-            jobs,
-            total,
-            page,
-            totalPages: Math.ceil(total / limit)
-        }
+        return createPaginatedResponse(jobs, total, page, limit)
     }
 
     async getById(id: string, organizationId: string): Promise<IJob> {
         const job = await Job.findOne({ _id: id, organizationId })
         if (!job) {
-            throw { code: 'NOT_FOUND', message: 'Job not found' }
+            throw AppError.notFound('Job')
         }
         return job
     }
@@ -217,14 +223,11 @@ class JobsService {
     async update(id: string, organizationId: string, input: UpdateJobInput, userId?: string): Promise<IJob> {
         const existing = await Job.findOne({ _id: id, organizationId })
         if (!existing) {
-            throw { code: 'NOT_FOUND', message: 'Job not found' }
+            throw AppError.notFound('Job')
         }
 
         if (existing.status === 'CLOSED') {
-            const error = new Error('Cannot edit a closed job. Reopen it first.') as Error & { statusCode: number; code: string }
-            error.statusCode = 400
-            error.code = 'INVALID_STATUS'
-            throw error
+            throw AppError.badRequest('Cannot edit a closed job. Reopen it first.')
         }
 
         const previousValue = { title: existing.title, status: existing.status }
@@ -269,7 +272,7 @@ class JobsService {
             { new: true }
         )
         if (!job) {
-            throw { code: 'NOT_FOUND', message: 'Job not found' }
+            throw AppError.notFound('Job')
         }
 
         await this.logAudit({
@@ -319,34 +322,23 @@ class JobsService {
     async publish(id: string, organizationId: string, userId: string): Promise<IJob> {
         const job = await Job.findOne({ _id: id, organizationId })
         if (!job) {
-            throw { code: 'NOT_FOUND', message: 'Job not found' }
+            throw AppError.notFound('Job')
         }
 
         if (job.status === 'PUBLISHED') {
-            const error = new Error('Job is already published') as Error & { statusCode: number; code: string }
-            error.statusCode = 400
-            error.code = 'ALREADY_PUBLISHED'
-            throw error
+            throw AppError.conflict('Job is already published')
         }
 
         if (job.status === 'CLOSED') {
-            const error = new Error('Cannot publish a closed job') as Error & { statusCode: number; code: string }
-            error.statusCode = 400
-            error.code = 'INVALID_STATUS'
-            throw error
+            throw AppError.badRequest('Cannot publish a closed job')
         }
 
-        // Validate required fields for publishing
         const missing: string[] = []
         if (!job.title) missing.push('title')
         if (!job.description) missing.push('description')
 
         if (missing.length > 0) {
-            const error = new Error(`Cannot publish: missing required fields: ${missing.join(', ')}`) as Error & { statusCode: number; code: string; details: string[] }
-            error.statusCode = 400
-            error.code = 'PUBLISH_VALIDATION_FAILED'
-            error.details = missing
-            throw error
+            throw AppError.validation(`Cannot publish: missing required fields: ${missing.join(', ')}`, missing)
         }
 
         // Generate unique slug
@@ -391,14 +383,11 @@ class JobsService {
     async close(id: string, organizationId: string, userId: string): Promise<IJob> {
         const job = await Job.findOne({ _id: id, organizationId })
         if (!job) {
-            throw { code: 'NOT_FOUND', message: 'Job not found' }
+            throw AppError.notFound('Job')
         }
 
         if (job.status === 'CLOSED') {
-            const error = new Error('Job is already closed') as Error & { statusCode: number; code: string }
-            error.statusCode = 400
-            error.code = 'ALREADY_CLOSED'
-            throw error
+            throw AppError.conflict('Job is already closed')
         }
 
         const previousStatus = job.status
@@ -434,7 +423,7 @@ class JobsService {
     async softDelete(id: string, organizationId: string, userId: string): Promise<IJob> {
         const job = await Job.findOne({ _id: id, organizationId })
         if (!job) {
-            throw { code: 'NOT_FOUND', message: 'Job not found' }
+            throw AppError.notFound('Job')
         }
 
         const previousStatus = job.status
@@ -456,10 +445,164 @@ class JobsService {
         return job
     }
 
+    async archive(id: string, organizationId: string, userId: string): Promise<IJob> {
+        const job = await Job.findOne({ _id: id, organizationId, deletedAt: null })
+        if (!job) throw AppError.notFound('Job')
+        if (job.isArchived) throw AppError.conflict('Job is already archived')
+
+        job.isArchived = true
+        job.archivedAt = new Date()
+        await job.save()
+
+        await this.logAudit({
+            organizationId, entityType: 'JOB', entityId: id,
+            action: 'ARCHIVED', previousValue: { isArchived: false }, newValue: { isArchived: true },
+            performedBy: userId,
+        })
+
+        await activityService.log({
+            organizationId, entityType: 'job', entityId: id,
+            eventType: 'JOB_ARCHIVED', actorType: 'user', performedBy: userId,
+            metadata: { title: job.title }
+        })
+
+        return job
+    }
+
+    async unarchive(id: string, organizationId: string, userId: string): Promise<IJob> {
+        const job = await Job.findOne({ _id: id, organizationId, deletedAt: null })
+        if (!job) throw AppError.notFound('Job')
+        if (!job.isArchived) throw AppError.conflict('Job is not archived')
+
+        job.isArchived = false
+        job.archivedAt = undefined
+        await job.save()
+
+        await this.logAudit({
+            organizationId, entityType: 'JOB', entityId: id,
+            action: 'UNARCHIVED', previousValue: { isArchived: true }, newValue: { isArchived: false },
+            performedBy: userId,
+        })
+
+        return job
+    }
+
+    async duplicate(id: string, organizationId: string, userId: string): Promise<IJob> {
+        const source = await Job.findOne({ _id: id, organizationId })
+        if (!source) throw AppError.notFound('Job')
+
+        const newJob = await Job.create({
+            organizationId,
+            title: `${source.title} (Copy)`,
+            description: source.description,
+            department: source.department,
+            location: source.location,
+            employmentType: source.employmentType,
+            visibility: source.visibility,
+            requirements: source.requirements,
+            requiredSkills: source.requiredSkills,
+            optionalSkills: source.optionalSkills,
+            experienceRange: source.experienceRange,
+            scoringConfig: source.scoringConfig,
+            salaryRange: source.salaryRange,
+            applicationSchema: source.applicationSchema,
+            applicationQuestions: source.applicationQuestions,
+            assignedHiringManagerId: source.assignedHiringManagerId,
+            assignedRecruiterId: source.assignedRecruiterId,
+            expiresAt: source.expiresAt,
+            status: 'DRAFT',
+            isArchived: false,
+            sourceJobId: source._id,
+            createdBy: userId,
+        })
+
+        try {
+            await pipelineService.createDefaultStages(newJob._id.toString(), organizationId)
+        } catch (err) {
+            console.error('[JobsService] Failed to create pipeline stages for duplicate:', err)
+        }
+
+        await this.logAudit({
+            organizationId, entityType: 'JOB', entityId: newJob._id.toString(),
+            action: 'DUPLICATED', newValue: { title: newJob.title, sourceJobId: id },
+            performedBy: userId,
+        })
+
+        await activityService.log({
+            organizationId, entityType: 'job', entityId: newJob._id.toString(),
+            eventType: 'JOB_CREATED', actorType: 'user', performedBy: userId,
+            metadata: { title: newJob.title, duplicatedFrom: id }
+        })
+
+        return newJob
+    }
+
+    async repost(id: string, organizationId: string, userId: string): Promise<IJob> {
+        const source = await Job.findOne({ _id: id, organizationId })
+        if (!source) throw AppError.notFound('Job')
+
+        if (source.status !== 'CLOSED') {
+            throw AppError.badRequest('Only closed jobs can be reposted. Close the job first.')
+        }
+
+        const newJob = await Job.create({
+            organizationId,
+            title: source.title,
+            description: source.description,
+            department: source.department,
+            location: source.location,
+            employmentType: source.employmentType,
+            visibility: source.visibility,
+            requirements: source.requirements,
+            requiredSkills: source.requiredSkills,
+            optionalSkills: source.optionalSkills,
+            experienceRange: source.experienceRange,
+            scoringConfig: source.scoringConfig,
+            salaryRange: source.salaryRange,
+            applicationSchema: source.applicationSchema,
+            applicationQuestions: source.applicationQuestions,
+            assignedHiringManagerId: source.assignedHiringManagerId,
+            assignedRecruiterId: source.assignedRecruiterId,
+            status: 'DRAFT',
+            isArchived: false,
+            sourceJobId: source._id,
+            createdBy: userId,
+        })
+
+        try {
+            await pipelineService.createDefaultStages(newJob._id.toString(), organizationId)
+        } catch (err) {
+            console.error('[JobsService] Failed to create pipeline stages for repost:', err)
+        }
+
+        await this.logAudit({
+            organizationId, entityType: 'JOB', entityId: newJob._id.toString(),
+            action: 'REPOSTED', newValue: { title: newJob.title, sourceJobId: id },
+            performedBy: userId,
+        })
+
+        await activityService.log({
+            organizationId, entityType: 'job', entityId: newJob._id.toString(),
+            eventType: 'JOB_CREATED', actorType: 'user', performedBy: userId,
+            metadata: { title: newJob.title, repostedFrom: id }
+        })
+
+        return newJob
+    }
+
     async getBySlug(slug: string): Promise<IJob> {
-        const job = await Job.findOne({ publicSlug: slug, status: 'PUBLISHED' })
+        const job = await Job.findOne({
+            publicSlug: slug,
+            status: 'PUBLISHED',
+            isArchived: false,
+            deletedAt: null,
+        })
         if (!job) {
-            throw { code: 'NOT_FOUND', message: 'Job not found' }
+            throw AppError.notFound('Job')
+        }
+        // Auto-expire: check expiresAt server-side
+        if (job.expiresAt && job.expiresAt < new Date()) {
+            throw AppError.notFound('Job')
         }
         return job
     }

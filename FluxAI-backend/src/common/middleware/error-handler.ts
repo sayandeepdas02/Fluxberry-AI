@@ -2,14 +2,12 @@ import { Request, Response, NextFunction } from 'express'
 import { errorResponse, ErrorCodes } from '../utils/api-response.js'
 import { ZodError } from 'zod'
 import { logger } from '../utils/structured-logger.js'
+import { AppError } from '../errors/app-error.js'
 
-export interface AppError extends Error {
-    statusCode?: number
-    code?: string
-}
+export { AppError }
 
 export function errorHandler(
-    err: AppError,
+    err: Error,
     req: Request,
     res: Response,
     _next: NextFunction
@@ -39,7 +37,7 @@ export function errorHandler(
     }
 
     // Handle known app errors (include details when present)
-    if (err.statusCode) {
+    if (err instanceof AppError) {
         logger.warn('App error', {
             requestId,
             path: req.path,
@@ -48,9 +46,8 @@ export function errorHandler(
             message: err.message,
         } as any)
 
-        const errWithDetails = err as AppError & { details?: unknown }
         res.status(err.statusCode).json({
-            ...errorResponse(err.code || ErrorCodes.INTERNAL_ERROR, err.message, errWithDetails.details),
+            ...errorResponse(err.code || ErrorCodes.INTERNAL_ERROR, err.message, err.details),
             requestId,
         })
         return

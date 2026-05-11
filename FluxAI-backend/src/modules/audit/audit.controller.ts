@@ -1,8 +1,9 @@
 
-import { Request, Response, NextFunction } from 'express'
+import { Response, NextFunction } from 'express'
 import { AuditLog } from '../../database/models/index.js'
-import { successResponse } from '../../common/utils/api-response.js'
 import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
+import { AppError } from '../../common/errors/index.js'
+import { createPaginatedResponse } from '../../common/dto/pagination.dto.js'
 
 class AuditController {
     /**
@@ -13,7 +14,7 @@ class AuditController {
         try {
             const organizationId = req.user?.organizationId
             if (!organizationId) {
-                return next({ code: 'UNAUTHORIZED', message: 'Organization context required' })
+                throw AppError.unauthorized('Organization context required')
             }
 
             const page = parseInt(req.query.page as string) || 1
@@ -37,12 +38,7 @@ class AuditController {
                 AuditLog.countDocuments(filter)
             ])
 
-            res.json(successResponse({
-                logs,
-                total,
-                page,
-                totalPages: Math.ceil(total / limit)
-            }))
+            res.success(createPaginatedResponse(logs, total, page, limit))
         } catch (error) {
             next(error)
         }

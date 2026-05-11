@@ -1,8 +1,9 @@
 "use client"
 
 import { PageContainer } from "@/components/dashboard/page-container"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { interviewsApi, IInterview, IScorecard } from "@/lib/api/interviews"
+import { useApiMutation } from "@/lib/hooks/use-api-mutation"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import {
@@ -13,29 +14,28 @@ import {
     Sheet, SheetContent, SheetHeader, SheetTitle
 } from "@/components/ui/sheet"
 import {
-    Video, Plus, Loader2, Calendar, Clock, User, Star,
-    MessageSquare, CheckCircle, XCircle,
+    Video, Loader2, Calendar, Clock, User, Star,
+    CheckCircle, ExternalLink,
 } from "lucide-react"
 import { useState } from "react"
-import { toast } from "sonner"
 import { format } from "date-fns"
 
 const STATUS_STYLES: Record<string, { label: string; class: string }> = {
-    SCHEDULED: { label: 'Scheduled', class: 'bg-sky-500/10 text-sky-400' },
-    COMPLETED: { label: 'Completed', class: 'bg-emerald-500/10 text-emerald-400' },
-    CANCELLED: { label: 'Cancelled', class: 'bg-red-500/10 text-red-400' },
-    RESCHEDULED: { label: 'Rescheduled', class: 'bg-amber-500/10 text-amber-400' },
+    SCHEDULED:    { label: 'Scheduled',    class: 'bg-sky-500/10 text-sky-400' },
+    COMPLETED:    { label: 'Completed',    class: 'bg-emerald-500/10 text-emerald-400' },
+    CANCELLED:    { label: 'Cancelled',    class: 'bg-red-500/10 text-red-400' },
+    RESCHEDULED:  { label: 'Rescheduled',  class: 'bg-amber-500/10 text-amber-400' },
+    NO_SHOW:      { label: 'No Show',      class: 'bg-zinc-500/10 text-zinc-400' },
 }
 
 const RECOMMENDATION_STYLES: Record<string, { label: string; class: string }> = {
-    STRONG_HIRE: { label: '💚 Strong Hire', class: 'text-emerald-400' },
-    HIRE: { label: '✅ Hire', class: 'text-green-400' },
-    NO_HIRE: { label: '🚫 No Hire', class: 'text-red-400' },
-    STRONG_NO_HIRE: { label: '❌ Strong No Hire', class: 'text-red-500' },
+    STRONG_HIRE:    { label: '💚 Strong Hire',    class: 'text-emerald-400' },
+    HIRE:           { label: '✅ Hire',            class: 'text-green-400' },
+    NO_HIRE:        { label: '🚫 No Hire',         class: 'text-red-400' },
+    STRONG_NO_HIRE: { label: '❌ Strong No Hire',  class: 'text-red-500' },
 }
 
 export default function LiveInterviewsPage() {
-    const queryClient = useQueryClient()
     const [statusFilter, setStatusFilter] = useState('')
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [showScorecard, setShowScorecard] = useState(false)
@@ -55,9 +55,8 @@ export default function LiveInterviewsPage() {
         queryKey: ['interviews', statusFilter],
         queryFn: () => interviewsApi.list(statusFilter ? { status: statusFilter } : undefined),
     })
-    const interviews = response?.data || []
+    const interviews = (response?.data || []) as IInterview[]
 
-    // Get scorecard for selected interview
     const { data: scorecardRes } = useQuery({
         queryKey: ['scorecard', selectedId],
         queryFn: () => interviewsApi.getScorecard(selectedId!),
@@ -67,7 +66,7 @@ export default function LiveInterviewsPage() {
 
     const selected = interviews.find(i => i._id === selectedId)
 
-    const submitScorecardMutation = useMutation({
+    const submitScorecardMutation = useApiMutation({
         mutationFn: () => {
             if (!selectedId) throw new Error('No interview')
             return interviewsApi.submitScorecard(selectedId, {
@@ -77,22 +76,25 @@ export default function LiveInterviewsPage() {
                 privateNotes: scNotes,
             })
         },
-        onSuccess: () => {
-            toast.success('Scorecard submitted')
-            setShowScorecard(false)
-            queryClient.invalidateQueries({ queryKey: ['interviews'] })
-            queryClient.invalidateQueries({ queryKey: ['scorecard', selectedId] })
-        },
-        onError: () => toast.error('Failed to submit scorecard'),
+        successMessage: 'Scorecard submitted',
+        errorMessage: 'Failed to submit scorecard',
+        invalidateKeys: [['interviews'], ['scorecard', selectedId]],
+        onSuccess: () => { setShowScorecard(false) },
     })
 
-    const cancelMutation = useMutation({
+    const cancelMutation = useApiMutation({
         mutationFn: (id: string) => interviewsApi.cancel(id),
-        onSuccess: () => {
-            toast.success('Interview cancelled')
-            queryClient.invalidateQueries({ queryKey: ['interviews'] })
-        },
+        successMessage: 'Interview cancelled',
+        invalidateKeys: [['interviews']],
     })
+
+    function getCandidateName(interview: IInterview) {
+        if (typeof interview.candidateId === 'object' && interview.candidateId !== null) {
+            const c = interview.candidateId as any
+            return c.firstName ? `${c.firstName} ${c.lastName || ''}`.trim() : c.email || 'Unknown'
+        }
+        return 'Unknown'
+    }
 
     return (
         <PageContainer title="Live Interviews" description="Schedule, manage, and score live interviews with real-time feedback.">
@@ -116,14 +118,12 @@ export default function LiveInterviewsPage() {
                     <div className="flex h-64 items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
                 ) : interviews.length === 0 ? (
                     <EmptyState icon={Video} title="No interviews scheduled"
-                        description="Schedule interviews from the candidate pipeline. AI-assisted scorecards will be available after each session." />
+                        description="Schedule interviews from the candidate pipeline. Scorecards will be available after each session." />
                 ) : (
                     <div className="grid gap-3">
                         {interviews.map((interview: IInterview) => {
                             const statusInfo = STATUS_STYLES[interview.status] || STATUS_STYLES.SCHEDULED
-                            const candidateName = (interview.candidateId as any)?.firstName
-                                ? `${(interview.candidateId as any).firstName} ${(interview.candidateId as any).lastName}`
-                                : 'Unknown'
+                            const candidateName = getCandidateName(interview)
 
                             return (
                                 <div key={interview._id}
@@ -133,22 +133,24 @@ export default function LiveInterviewsPage() {
                                     <div className="flex items-start justify-between">
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <h3 className="font-semibold">{interview.summary || 'Interview'}</h3>
+                                                <h3 className="font-semibold">{interview.title}</h3>
                                                 <Badge className={`text-xs ${statusInfo.class}`}>{statusInfo.label}</Badge>
                                             </div>
                                             <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                                                 <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" />{candidateName}</span>
-                                                <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{format(new Date(interview.start), 'MMM dd, yyyy')}</span>
-                                                <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{format(new Date(interview.start), 'HH:mm')}</span>
+                                                <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{format(new Date(interview.startTime), 'MMM dd, yyyy')}</span>
+                                                <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{format(new Date(interview.startTime), 'HH:mm')}</span>
                                                 {interview.feedbackSubmitted && (
                                                     <span className="flex items-center gap-1 text-emerald-400"><CheckCircle className="w-3.5 h-3.5" />Scored</span>
                                                 )}
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            {interview.meetLink && (
-                                                <a href={interview.meetLink} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()}
-                                                    className="px-3 py-1.5 text-xs font-medium bg-blue-500/10 text-blue-400 rounded-md hover:bg-blue-500/20">Join</a>
+                                            {interview.meetingLink && (
+                                                <a href={interview.meetingLink} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()}
+                                                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-blue-500/10 text-blue-400 rounded-md hover:bg-blue-500/20">
+                                                    <ExternalLink className="w-3 h-3" /> Join
+                                                </a>
                                             )}
                                             {interview.status === 'SCHEDULED' && (
                                                 <button onClick={(e) => { e.stopPropagation(); cancelMutation.mutate(interview._id) }}
@@ -170,11 +172,15 @@ export default function LiveInterviewsPage() {
                         <>
                             <div className="p-6 border-b border-line">
                                 <SheetHeader>
-                                    <SheetTitle className="text-xl font-semibold mt-4">{selected.summary || 'Interview'}</SheetTitle>
+                                    <SheetTitle className="text-xl font-semibold mt-4">{selected.title}</SheetTitle>
                                 </SheetHeader>
                                 <div className="flex items-center gap-2 mt-2">
                                     <Badge className={`text-xs ${STATUS_STYLES[selected.status]?.class || ''}`}>{STATUS_STYLES[selected.status]?.label || selected.status}</Badge>
                                     {selected.feedbackSubmitted && <Badge className="bg-emerald-500/10 text-emerald-400 text-xs">Scored</Badge>}
+                                </div>
+                                <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                                    <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{format(new Date(selected.startTime), 'PPP')}</span>
+                                    <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{format(new Date(selected.startTime), 'p')} – {format(new Date(selected.endTime), 'p')}</span>
                                 </div>
                             </div>
 

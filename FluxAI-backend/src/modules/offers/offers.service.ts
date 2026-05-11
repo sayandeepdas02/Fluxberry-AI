@@ -5,6 +5,7 @@ import { templateService } from './template.service.js'
 import { pdfService } from './pdf.service.js'
 import { candidateOnboardingService } from '../onboarding/candidate-onboarding.service.js'
 import { activityService } from '../activity/activity.service.js'
+import { auditService } from '../../common/utils/audit.service.js'
 import { PDFDocument } from 'pdf-lib'
 
 export class OffersService {
@@ -14,7 +15,8 @@ export class OffersService {
         applicationId: string,
         templateId: string,
         filledVariables: Record<string, any>,
-        expiresInDays: number = 7
+        expiresInDays: number = 7,
+        performedBy?: string
     ) {
         const app = await JobApplication.findOne({
             _id: applicationId,
@@ -50,6 +52,15 @@ export class OffersService {
             }]
         })
 
+        auditService.log({
+            organizationId,
+            entityType: 'Offer',
+            entityId: offer._id.toString(),
+            action: 'OFFER_CREATED',
+            newValue: { applicationId, templateId, expiresAt },
+            performedBy,
+        }).catch(() => {})
+
         return offer
     }
 
@@ -73,7 +84,7 @@ export class OffersService {
         return offer
     }
 
-    async sendOfferEmail(offerId: string, organizationId: string) {
+    async sendOfferEmail(offerId: string, organizationId: string, performedBy?: string) {
         const offer = await Offer.findOne({ _id: offerId, organizationId })
         if (!offer) throw new Error('Offer not found')
         if (offer.status !== OfferStatus.DRAFT) throw new Error('Offer must be in DRAFT to send')
@@ -109,6 +120,15 @@ export class OffersService {
             actorType: 'user',
             metadata: { applicationId: offer.applicationId.toString() }
         })
+
+        auditService.log({
+            organizationId: offer.organizationId.toString(),
+            entityType: 'Offer',
+            entityId: offer._id.toString(),
+            action: 'OFFER_SENT',
+            newValue: { applicationId: offer.applicationId.toString() },
+            performedBy,
+        }).catch(() => {})
 
         console.log(`[Email] Sending Offer Link to Candidate: /offer/${rawToken}`)
 
@@ -275,6 +295,14 @@ export class OffersService {
             metadata: { signedAt: signedAt.toISOString() }
         })
 
+        auditService.log({
+            organizationId: offer.organizationId.toString(),
+            entityType: 'Offer',
+            entityId: offer._id.toString(),
+            action: 'OFFER_SIGNED',
+            newValue: { signedAt: signedAt.toISOString(), ipAddress },
+        }).catch(() => {})
+
         await JobApplication.updateOne(
             { _id: offer.applicationId },
             { status: ApplicationStatus.OFFER_ACCEPTED }
@@ -313,6 +341,14 @@ export class OffersService {
             actorType: 'system',
             metadata: { reason }
         })
+
+        auditService.log({
+            organizationId: offer.organizationId.toString(),
+            entityType: 'Offer',
+            entityId: offer._id.toString(),
+            action: 'OFFER_REJECTED',
+            newValue: { reason, ipAddress },
+        }).catch(() => {})
 
         return offer
     }

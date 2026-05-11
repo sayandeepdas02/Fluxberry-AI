@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { ApplicationSchema } from './jobs'
+import type { ApplicationSchema, ApplicationQuestion } from './jobs'
 
 // ──────────────────────────────────────────────────────────────
 // Public types (unauthenticated pages)
@@ -28,7 +28,9 @@ export interface PublicJob {
     requirements?:  string[]
     salaryRange?:   { min: number; max: number; currency: string }
     applicationSchema?: ApplicationSchema
+    applicationQuestions?: ApplicationQuestion[]
     publicSlug?:    string
+    expiresAt?:     string
     publishedAt?:   string
     company?:       PublicCompany
 }

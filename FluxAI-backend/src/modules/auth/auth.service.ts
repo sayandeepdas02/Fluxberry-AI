@@ -1,5 +1,6 @@
 
 import bcrypt from 'bcryptjs'
+import { AppError } from '../../common/errors/index.js'
 import jwt from 'jsonwebtoken'
 import { OAuth2Client } from 'google-auth-library'
 import {
@@ -141,7 +142,7 @@ export class AuthService {
     async deleteAccount(userId: string): Promise<void> {
         const user = await User.findById(userId)
         if (!user) {
-            throw { code: 'NOT_FOUND', message: 'User not found' }
+            throw AppError.notFound('User')
         }
 
         // Hard delete user and memberships

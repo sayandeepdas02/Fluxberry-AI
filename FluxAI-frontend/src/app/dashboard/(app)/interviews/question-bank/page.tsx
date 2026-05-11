@@ -1,7 +1,8 @@
 "use client"
 
 import { PageContainer } from "@/components/dashboard/page-container"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useApiMutation } from "@/lib/hooks/use-api-mutation"
 import { apiClient } from "@/lib/api/client"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -606,13 +607,11 @@ export default function QuestionBankPage() {
         return []
     }, [response])
 
-    const deleteMutation = useMutation({
+    const deleteMutation = useApiMutation({
         mutationFn: (id: string) => questionsApi.delete(id),
-        onSuccess: () => {
-            toast.success('Question deleted')
-            queryClient.invalidateQueries({ queryKey: ['questions'] })
-        },
-        onError: () => toast.error('Failed to delete question'),
+        successMessage: 'Question deleted',
+        errorMessage: 'Failed to delete question',
+        invalidateKeys: [['questions']],
     })
 
     const handleCreate = () => {

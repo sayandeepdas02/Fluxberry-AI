@@ -25,12 +25,21 @@ import { useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/context/auth-context";
 import { useSubscription } from "@/lib/subscription/subscription-context";
+import { useOrganization } from "@/features/dashboard/hooks/use-organization";
+
+const PLAN_LABELS: Record<string, string> = {
+    FREE: "Free Plan",
+    GROWTH: "Growth Plan",
+    SCALE: "Scale Plan",
+    ENTERPRISE: "Enterprise",
+};
 
 export function Sidebar() {
     const router = useRouter();
     const pathname = usePathname();
     const { user, logout } = useAuth();
     const { config, getTrialDaysRemaining, hasAccessToApp } = useSubscription();
+    const { memberCount } = useOrganization();
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -41,7 +50,9 @@ export function Sidebar() {
     const firstName = user?.firstName || "";
     const lastName = user?.lastName || "";
     const userName = firstName || lastName ? `${firstName} ${lastName}`.trim() : "User";
-    const currentPlan = user?.organization?.role ? "Pro Plan" : "Free Plan";
+    const orgSlug = user?.organization?.slug || "";
+    const rawPlan = (user?.organization as any)?.plan as string | undefined;
+    const currentPlan = rawPlan ? (PLAN_LABELS[rawPlan] ?? rawPlan) : "Free Plan";
 
     // Generate initials for avatar
     const getInitials = (name: string) => {
@@ -67,10 +78,7 @@ export function Sidebar() {
 
     const handleLogout = () => {
         setIsDropdownOpen(false);
-        router.push("/");
-        setTimeout(() => {
-            logout();
-        }, 100);
+        logout();
     };
 
     const isActive = (path: string) => {
@@ -172,8 +180,9 @@ export function Sidebar() {
                                 </button>
                             ))}
                             <button
-                                className="w-full flex items-center gap-2.5 px-2 py-2 text-sm text-primary rounded-lg hover:bg-muted transition-colors font-medium"
-                                onClick={() => setIsDropdownOpen(false)}
+                                disabled
+                                title="Multiple workspaces coming soon"
+                                className="w-full flex items-center gap-2.5 px-2 py-2 text-sm text-muted-foreground rounded-lg transition-colors font-medium disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                                 <Plus className="w-4 h-4" />
                                 New workspace
@@ -211,8 +220,12 @@ export function Sidebar() {
 
                 <div className="px-2 text-xs text-muted-foreground flex items-center gap-1.5">
                     <span>{currentPlan}</span>
-                    <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
-                    <span>5 Members</span>
+                    {memberCount > 0 && (
+                        <>
+                            <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
+                            <span>{memberCount} {memberCount === 1 ? "Member" : "Members"}</span>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -458,10 +471,26 @@ export function Sidebar() {
 
             {/* Footer */}
             <div className="p-4 border-t border-line space-y-4">
-                <button className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                    <ExternalLink className="w-4 h-4" />
-                    <span>Public View</span>
-                </button>
+                {orgSlug ? (
+                    <a
+                        href={`/company/${orgSlug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                        <ExternalLink className="w-4 h-4" />
+                        <span>Public View</span>
+                    </a>
+                ) : (
+                    <button
+                        disabled
+                        title="Set up your workspace slug to enable public view"
+                        className="w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium text-muted-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                        <ExternalLink className="w-4 h-4" />
+                        <span>Public View</span>
+                    </button>
+                )}
 
                 <div className="flex items-center gap-2 px-2">
                     <img src="/favicon.png" alt="Fluxberry AI" className="w-5 h-5 rounded-[4px]" />

@@ -6,7 +6,7 @@
  * Legacy JobScreeningProfile is read-only for fallback compatibility.
  */
 
-import { Job as JobModel } from '../../database/models/index.js'
+import { Job as JobModel, AuditLog } from '../../database/models/index.js'
 import { JobScreeningProfile } from './models/job-screening-profile.model.js'
 import {
     DEFAULT_SCORING_CONFIG,
@@ -14,6 +14,10 @@ import {
     type IScoringConfig,
     type IScoringConfigWeights,
 } from './scoring-config.types.js'
+import { AppError } from '../../common/errors/app-error.js'
+import { scoreCandidate } from './scoring-v2/scoring-engine-v2.js'
+import type { V2JobContext, V2ScoringResult } from './scoring-v2/types.js'
+import type { IResumeParsedData } from './models/resume-profile.model.js'
 
 export class ScoringService {
     /**
@@ -60,18 +64,19 @@ export class ScoringService {
     async updateWeights(
         jobId: string,
         orgId: string,
-        weights: { skills: number; experience: number; projects: number; education: number; signalBoost: number }
+        weights: { skills: number; experience: number; projects: number; education: number; signalBoost: number },
+        performedBy?: string
     ): Promise<typeof weights> {
         // Validation
         const values = [weights.skills, weights.experience, weights.projects, weights.education, weights.signalBoost]
         for (const v of values) {
             if (typeof v !== 'number' || v < 0 || v > 1) {
-                throw { code: 'VALIDATION', message: `Each weight must be between 0 and 1. Got: ${v}` }
+                throw AppError.validation(`Each weight must be between 0 and 1. Got: ${v}`)
             }
         }
         const total = values.reduce((sum, v) => sum + v, 0)
         if (Math.abs(total - 1.0) > 0.01) {
-            throw { code: 'VALIDATION', message: `Weights must sum to 1.0. Current sum: ${total.toFixed(2)}` }
+            throw AppError.validation(`Weights must sum to 1.0. Current sum: ${total.toFixed(2)}`)
         }
 
         // Write to Job.scoringConfig.weights
@@ -90,8 +95,17 @@ export class ScoringService {
         )
 
         if (!job) {
-            throw { code: 'NOT_FOUND', message: 'Job not found' }
+            throw AppError.notFound('Job')
         }
+
+        AuditLog.create({
+            organizationId: orgId,
+            entityType: 'Job',
+            entityId: jobId,
+            action: 'SCORING_WEIGHTS_UPDATED',
+            newValue: weights,
+            performedBy,
+        }).catch(() => {})
 
         return job.scoringConfig?.weights ?? weights
     }
@@ -131,6 +145,25 @@ export class ScoringService {
             })
         }
         return profile
+    }
+
+    /**
+     * Score a candidate against a job using V2 semantic engine.
+     * Single entry point for all scoring — replaces direct registry calls in processors.
+     */
+    async score(
+        parsedData: IResumeParsedData | undefined,
+        scoringConfig: IScoringConfig,
+        jobContext: V2JobContext,
+    ): Promise<V2ScoringResult> {
+        const { weights } = scoringConfig
+        return scoreCandidate(parsedData, jobContext, {
+            skillWeight:       weights.skills,
+            experienceWeight:  weights.experience,
+            projectWeight:     weights.projects,
+            educationWeight:   weights.education,
+            signalBoostWeight: weights.signalBoost,
+        })
     }
 
     /**

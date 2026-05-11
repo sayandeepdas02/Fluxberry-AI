@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils"
 import { usePublicJob } from "@/features/public/hooks/use-public-job"
 import { publicApi } from "@/lib/api/public"
 import { toast } from "sonner"
+import type { ApplicationQuestion } from "@/lib/api/jobs"
 
 // ──────────────────────────────────────────────────────────────
 // Types
@@ -23,6 +24,7 @@ interface FormData {
     email: string
     countryCode: string
     phone: string
+    [key: string]: string | boolean  // custom question answers keyed by question id
 }
 
 interface FormErrors {
@@ -218,12 +220,18 @@ export default function JobApplicationPage({ params }: { params: Promise<{ compa
                 ? `${formData.countryCode}${formData.phone.trim()}`
                 : undefined
 
+            // Collect custom question answers from formData
+            const applicationData: Record<string, unknown> = {}
+            for (const q of (job.applicationQuestions ?? [])) {
+                applicationData[q.id] = formData[q.id] ?? ''
+            }
+
             const result = await publicApi.submitApplication(job.publicSlug, {
                 firstName: formData.firstName.trim(),
                 lastName: formData.lastName.trim(),
                 email: formData.email.trim().toLowerCase(),
                 phone,
-                applicationData: {},
+                applicationData,
                 resumeFileId: resume.storageKey,
             })
 
@@ -552,6 +560,59 @@ export default function JobApplicationPage({ params }: { params: Promise<{ compa
                         </div>
 
                         <div className="w-full h-px bg-zinc-100" />
+
+                        {/* Custom Application Questions */}
+                        {(job.applicationQuestions ?? []).length > 0 && (
+                            <div className="space-y-5">
+                                <h2 className="text-lg font-semibold text-zinc-900">Additional Questions</h2>
+                                {(job.applicationQuestions ?? []).map((q: ApplicationQuestion) => (
+                                    <div key={q.id} className="space-y-2">
+                                        <label className="text-sm font-medium text-zinc-900">
+                                            {q.label}
+                                            {q.required && <span className="text-red-500 ml-1">*</span>}
+                                        </label>
+                                        {q.type === 'textarea' ? (
+                                            <Textarea
+                                                placeholder={q.placeholder || ''}
+                                                value={String(formData[q.id] || '')}
+                                                onChange={e => setFormData(prev => ({ ...prev, [q.id]: e.target.value }))}
+                                                required={q.required}
+                                            />
+                                        ) : q.type === 'select' ? (
+                                            <select
+                                                value={String(formData[q.id] || '')}
+                                                onChange={e => setFormData(prev => ({ ...prev, [q.id]: e.target.value }))}
+                                                required={q.required}
+                                                className="w-full border border-zinc-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-orange-400"
+                                            >
+                                                <option value="">Select an option</option>
+                                                {(q.options ?? []).map(opt => (
+                                                    <option key={opt} value={opt}>{opt}</option>
+                                                ))}
+                                            </select>
+                                        ) : q.type === 'checkbox' ? (
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={Boolean(formData[q.id])}
+                                                    onChange={e => setFormData(prev => ({ ...prev, [q.id]: e.target.checked }))}
+                                                    className="rounded"
+                                                />
+                                                <span className="text-sm text-zinc-600">{q.placeholder || 'Yes'}</span>
+                                            </label>
+                                        ) : (
+                                            <Input
+                                                type="text"
+                                                placeholder={q.placeholder || ''}
+                                                value={String(formData[q.id] || '')}
+                                                onChange={e => setFormData(prev => ({ ...prev, [q.id]: e.target.value }))}
+                                                required={q.required}
+                                            />
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
 
                         {/* Submit error banner */}
                         {submitState === "error" && submitError && (

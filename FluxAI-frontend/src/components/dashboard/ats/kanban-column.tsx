@@ -11,9 +11,11 @@ interface KanbanColumnProps {
     stage: PipelineStage
     applications: JobApplicationResponse[]
     onCardClick: (app: JobApplicationResponse) => void
+    selectedIds?: Set<string>
+    onSelect?: (id: string, checked: boolean) => void
 }
 
-export function KanbanColumn({ stage, applications, onCardClick }: KanbanColumnProps) {
+export function KanbanColumn({ stage, applications, onCardClick, selectedIds, onSelect }: KanbanColumnProps) {
     const { setNodeRef, isOver } = useDroppable({
         id: stage._id,
         data: {
@@ -24,7 +26,6 @@ export function KanbanColumn({ stage, applications, onCardClick }: KanbanColumnP
 
     const applicationIds = applications.map(app => app._id)
 
-    // Compute lightweight metrics
     const metrics = useMemo(() => {
         const scored = applications.filter(a => a.matchScore !== undefined && a.matchScore !== null)
         const avgScore = scored.length > 0
@@ -33,12 +34,32 @@ export function KanbanColumn({ stage, applications, onCardClick }: KanbanColumnP
         return { count: applications.length, avgScore }
     }, [applications])
 
+    const allSelected = applications.length > 0 && applications.every(a => selectedIds?.has(a._id))
+    const someSelected = applications.some(a => selectedIds?.has(a._id))
+
+    function handleSelectAll(checked: boolean) {
+        if (!onSelect) return
+        for (const app of applications) {
+            onSelect(app._id, checked)
+        }
+    }
+
     return (
         <div className="flex flex-col w-80 shrink-0 h-full rounded-lg bg-card/20 border border-line overflow-hidden">
             {/* ── Column Header ──────────────────────────────────── */}
             <div className="p-3 border-b border-line bg-card/40">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
+                        {onSelect && (
+                            <input
+                                type="checkbox"
+                                checked={allSelected}
+                                ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected }}
+                                onChange={(e) => handleSelectAll(e.target.checked)}
+                                className="w-3.5 h-3.5 rounded border-line cursor-pointer accent-[hsl(var(--accent))]"
+                                title="Select all in stage"
+                            />
+                        )}
                         <div
                             className="w-2.5 h-2.5 rounded-full"
                             style={{ backgroundColor: stage.color || '#3b82f6' }}
@@ -49,7 +70,6 @@ export function KanbanColumn({ stage, applications, onCardClick }: KanbanColumnP
                         {metrics.count}
                     </div>
                 </div>
-                {/* Stage metrics row */}
                 {metrics.count > 0 && (
                     <div className="flex items-center gap-3 mt-2 text-[11px] text-muted-foreground/70">
                         <span>{metrics.count} {metrics.count === 1 ? 'candidate' : 'candidates'}</span>
@@ -71,8 +91,7 @@ export function KanbanColumn({ stage, applications, onCardClick }: KanbanColumnP
             {/* ── Droppable Area ─────────────────────────────────── */}
             <div
                 ref={setNodeRef}
-                className={`flex-1 p-2 overflow-y-auto space-y-2 transition-colors ${isOver ? 'bg-accent/5 ring-1 ring-inset ring-accent/20' : ''
-                    }`}
+                className={`flex-1 p-2 overflow-y-auto space-y-2 transition-colors ${isOver ? 'bg-accent/5 ring-1 ring-inset ring-accent/20' : ''}`}
             >
                 <SortableContext items={applicationIds} strategy={verticalListSortingStrategy}>
                     {applications.map(app => (
@@ -80,10 +99,12 @@ export function KanbanColumn({ stage, applications, onCardClick }: KanbanColumnP
                             key={app._id}
                             application={app}
                             onClick={() => onCardClick(app)}
+                            isSelected={selectedIds?.has(app._id)}
+                            onSelect={onSelect}
                         />
                     ))}
                 </SortableContext>
-                
+
                 {applications.length === 0 && (
                     <div className="h-24 border-2 border-dashed border-line/50 rounded-lg flex flex-col items-center justify-center text-xs text-muted-foreground select-none gap-1">
                         <span>Drop candidate here</span>

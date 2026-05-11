@@ -1,6 +1,7 @@
 "use client"
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
+import { useApiMutation } from '@/lib/hooks/use-api-mutation'
 import { candidatesApi, Candidate } from '@/lib/api/candidates'
 import { applicationsApi } from '@/lib/api/applications'
 import { useCandidatesStore } from '@/lib/store/candidates-store'
@@ -64,17 +65,15 @@ export function CandidatesTable() {
     const someSelected = selectedIds.size > 0
 
     // ── Bulk Actions Mutations ──────────────────────────────────────
-    const queryClient = useQueryClient()
-
-    const bulkRejectMutation = useMutation({
+    const bulkRejectMutation = useApiMutation({
         mutationFn: (ids: string[]) =>
             applicationsApi.bulkUpdate({ applicationIds: ids, action: 'REJECT' }),
-        onSuccess: (res) => {
-            toast.success(`${res.data?.updated || 0} applications rejected`)
+        successMessage: (res) => `${res.data?.updated || 0} applications rejected`,
+        errorMessage: 'Bulk reject failed. Please try again.',
+        invalidateKeys: [['candidates']],
+        onSuccess: () => {
             clearSelection()
-            queryClient.invalidateQueries({ queryKey: ['candidates'] })
         },
-        onError: () => toast.error('Bulk reject failed. Please try again.'),
     })
 
     // ── Keyboard Navigation ─────────────────────────────────────────

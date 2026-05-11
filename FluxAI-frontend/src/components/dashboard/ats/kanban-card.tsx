@@ -3,16 +3,41 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { JobApplicationResponse } from '@/lib/api/applications'
-import { format } from 'date-fns'
-import { GripVertical } from 'lucide-react'
+import { format, differenceInDays } from 'date-fns'
+import { GripVertical, Clock } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
 interface KanbanCardProps {
     application: JobApplicationResponse
     onClick: () => void
+    isSelected?: boolean
+    onSelect?: (id: string, checked: boolean) => void
 }
 
-export function KanbanCard({ application, onClick }: KanbanCardProps) {
+function AgingBadge({ stageEnteredAt, submittedAt }: { stageEnteredAt?: string; submittedAt: string }) {
+    const referenceDate = stageEnteredAt || submittedAt
+    const days = differenceInDays(new Date(), new Date(referenceDate))
+
+    if (days < 1) return null
+
+    const isStale = days >= 7
+    const isWarning = days >= 3 && days < 7
+
+    return (
+        <span className={cn(
+            'flex items-center gap-0.5 text-[9px] font-medium px-1 py-0.5 rounded',
+            isStale ? 'bg-red-500/10 text-red-400' :
+            isWarning ? 'bg-amber-500/10 text-amber-400' :
+            'bg-muted text-muted-foreground'
+        )}>
+            <Clock className="w-2.5 h-2.5" />
+            {days}d
+        </span>
+    )
+}
+
+export function KanbanCard({ application, onClick, isSelected, onSelect }: KanbanCardProps) {
     const {
         attributes,
         listeners,
@@ -41,16 +66,34 @@ export function KanbanCard({ application, onClick }: KanbanCardProps) {
         <div
             ref={setNodeRef}
             style={style}
-            className={`group flex items-start bg-card/60 backdrop-blur-sm border ${isDragging ? 'border-accent shadow-lg opacity-50 z-50' : 'border-line hover:border-line/80'
-                } rounded-lg p-3 cursor-pointer shadow-sm transition-colors`}
+            className={cn(
+                'group flex items-start bg-card/60 backdrop-blur-sm border rounded-lg p-3 cursor-pointer shadow-sm transition-colors',
+                isDragging ? 'border-accent shadow-lg opacity-50 z-50' :
+                isSelected ? 'border-accent/60 bg-accent/5' :
+                'border-line hover:border-line/80'
+            )}
             onClick={(e) => {
-                // Determine if we clicked the drag handle to avoid double events
-                const target = e.target as HTMLElement;
-                if (!target.closest('.drag-handle')) {
-                    onClick();
+                const target = e.target as HTMLElement
+                if (!target.closest('.drag-handle') && !target.closest('.select-checkbox')) {
+                    onClick()
                 }
             }}
         >
+            {/* Selection checkbox */}
+            {onSelect && (
+                <div
+                    className="select-checkbox mr-2 mt-0.5 shrink-0"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => onSelect(application._id, e.target.checked)}
+                        className="w-3.5 h-3.5 rounded border-line cursor-pointer accent-[hsl(var(--accent))]"
+                    />
+                </div>
+            )}
+
             <div
                 {...attributes}
                 {...listeners}
@@ -64,11 +107,17 @@ export function KanbanCard({ application, onClick }: KanbanCardProps) {
                     <h4 className="font-medium text-sm text-text-primary truncate">
                         {candidateName}
                     </h4>
-                    {application.matchScore !== undefined && (
-                        <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
-                            {application.matchScore}%
-                        </Badge>
-                    )}
+                    <div className="flex items-center gap-1 shrink-0">
+                        <AgingBadge
+                            stageEnteredAt={application.stageEnteredAt}
+                            submittedAt={application.submittedAt}
+                        />
+                        {application.matchScore !== undefined && (
+                            <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
+                                {application.matchScore}%
+                            </Badge>
+                        )}
+                    </div>
                 </div>
 
                 <div className="text-xs text-muted-foreground mt-2">

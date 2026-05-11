@@ -35,6 +35,19 @@ const scoringConfigSchema = z.object({
 }).optional()
 
 // ──────────────────────────────────────────────────────────────
+// Application Question Schema
+// ──────────────────────────────────────────────────────────────
+
+export const applicationQuestionSchema = z.object({
+    id: z.string(),
+    label: z.string().min(1),
+    type: z.enum(['text', 'textarea', 'select', 'checkbox', 'file']),
+    required: z.boolean().default(false),
+    options: z.array(z.string()).optional(),
+    placeholder: z.string().optional(),
+})
+
+// ──────────────────────────────────────────────────────────────
 // Job Schemas
 // ──────────────────────────────────────────────────────────────
 
@@ -45,6 +58,7 @@ export const createJobSchema = z.object({
     location: z.string().optional(),
     employmentType: z.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERN', 'OTHER']).default('FULL_TIME'),
     status: z.enum(['DRAFT', 'PUBLISHED', 'CLOSED']).default('DRAFT'),
+    visibility: z.enum(['PUBLIC', 'PRIVATE', 'INVITE_ONLY']).default('PUBLIC'),
     requirements: z.array(z.string()).optional(),
     requiredSkills: z.array(z.string()).optional(),
     optionalSkills: z.array(z.string()).optional(),
@@ -59,6 +73,10 @@ export const createJobSchema = z.object({
     }).optional(),
     scoringConfig: scoringConfigSchema,
     applicationSchema: z.any().optional(),
+    applicationQuestions: z.array(applicationQuestionSchema).optional(),
+    assignedHiringManagerId: z.string().optional(),
+    assignedRecruiterId: z.string().optional(),
+    expiresAt: z.string().datetime().optional(),
 })
 
 export const updateJobSchema = createJobSchema.partial()
@@ -67,7 +85,9 @@ export const listJobsQuerySchema = z.object({
     page: z.string().optional().transform(val => val ? parseInt(val, 10) : 1),
     limit: z.string().optional().transform(val => val ? parseInt(val, 10) : 20),
     status: z.enum(['DRAFT', 'PUBLISHED', 'CLOSED']).optional(),
+    visibility: z.enum(['PUBLIC', 'PRIVATE', 'INVITE_ONLY']).optional(),
     search: z.string().optional(),
+    archived: z.coerce.boolean().optional(),
 })
 
 export type CreateJobInput = z.infer<typeof createJobSchema>

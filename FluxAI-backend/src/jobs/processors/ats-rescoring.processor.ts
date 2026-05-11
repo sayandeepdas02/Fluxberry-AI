@@ -17,17 +17,15 @@ import { Candidate, AuditLog, Job as JobModel } from '../../database/models/inde
 import { ScreeningResult, ScreeningStatus, deriveStatusPriority } from '../../modules/ats-screening/models/screening-result.model.js'
 import { ResumeProfile } from '../../modules/ats-screening/models/resume-profile.model.js'
 import { JobScreeningProfile } from '../../modules/ats-screening/models/job-screening-profile.model.js'
-import { ScoringEngineRegistry } from '../../modules/ats-screening/scoring-registry.js'
 import { isParsedDataValid } from '../../modules/ats-screening/ats-parse-guard.js'
 import { fluxEvents, DomainEvent } from '../../common/services/events.service.js'
 import { V2JobContext } from '../../modules/ats-screening/scoring-v2/types.js'
 import {
     DEFAULT_SCORING_CONFIG,
     fromLegacyProfile,
-    toLegacyWeights,
-    toLegacyWeightsV2,
     type IScoringConfig,
 } from '../../modules/ats-screening/scoring-config.types.js'
+import { scoringService } from '../../modules/ats-screening/scoring.service.js'
 
 // ──────────────────────────────────────────────────────────────
 // Constants
@@ -63,24 +61,7 @@ export async function processAtsRescoringJob(job: BullMQJob<AtsRescoringJobData>
         console.warn(`[ATS Re-scoring] Using legacy profile fallback for job=${jobId}`)
     }
 
-    const isV2 = scoringConfig.version !== 'v1'
-    const scoringVersion = isV2 ? DEFAULT_VERSION : '1.0.0'
-    const engine         = ScoringEngineRegistry.getEngine(scoringVersion)
-    const scoreConfig = {
-        weights: {
-            skillWeight:       scoringConfig.weights.skills,
-            experienceWeight:  scoringConfig.weights.experience,
-            projectWeight:     scoringConfig.weights.projects,
-            educationWeight:   scoringConfig.weights.education,
-            bonusWeight:       scoringConfig.weights.signalBoost,
-            signalBoostWeight: scoringConfig.weights.signalBoost,
-        },
-        hardGates: {
-            minimumSkills:          scoringConfig.hardGates.requiredSkills,
-            minimumExperienceYears: scoringConfig.hardGates.minimumExperienceYears,
-            requiredEducationLevel: scoringConfig.hardGates.requiredEducationLevel,
-        },
-    }
+    const scoringVersion = DEFAULT_VERSION
 
     // Load JD embedding for V2 (cached in legacy profile)
     const legacyProfileForEmb = await JobScreeningProfile.findOne({ jobId, organizationId })
@@ -149,17 +130,17 @@ export async function processAtsRescoringJob(job: BullMQJob<AtsRescoringJobData>
                         return
                     }
 
-                    // Run scoring
-                    const gateResult      = await engine.evaluateHardGates(parsedData, scoreConfig, jobContext)
-                    const scoreBreakdown  = await engine.generateBreakdown(parsedData, scoreConfig, jobContext)
-                    const finalScore      = await engine.calculateFinalScore(scoreBreakdown, scoreConfig.weights)
-                    const confidenceScore = await engine.calculateConfidence(parsedData)
+                    // Run scoring (V2 via scoringService)
+                    const {
+                        hardGatePassed, hardGateReason,
+                        breakdown: scoreBreakdown,
+                        finalScore,
+                        confidence: confidenceScore,
+                        insights,
+                        skillMatchDetails,
+                    } = await scoringService.score(parsedData, scoringConfig, jobContext)
 
-                    const resolvedStatus = gateResult.passed ? ScreeningStatus.PASSED : ScreeningStatus.FAILED_GATE
-
-                    const v2Breakdown = scoreBreakdown as any
-                    const insights: string[]         = v2Breakdown?.insights || []
-                    const skillMatchDetails: any[]   = (v2Breakdown?.skillMatchDetails || [])
+                    const resolvedStatus = hardGatePassed ? ScreeningStatus.PASSED : ScreeningStatus.FAILED_GATE
 
                     bulkOps.push({
                         updateOne: {
@@ -168,7 +149,7 @@ export async function processAtsRescoringJob(job: BullMQJob<AtsRescoringJobData>
                                 $set: {
                                     status:                resolvedStatus,
                                     statusPriority:        deriveStatusPriority(resolvedStatus),
-                                    hardGateFailureReason: gateResult.reason,
+                                    hardGateFailureReason: hardGateReason,
                                     scoreBreakdown,
                                     finalScore,
                                     confidenceScore,

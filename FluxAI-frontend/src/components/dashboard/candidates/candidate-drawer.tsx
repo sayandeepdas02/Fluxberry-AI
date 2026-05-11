@@ -10,10 +10,16 @@ import {
     SheetTitle,
 } from "@/components/ui/sheet"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Loader2, Mail, Phone, ExternalLink, Sparkles, Briefcase, TrendingUp, TrendingDown, Brain, Shield, AlertTriangle } from 'lucide-react'
+import { Loader2, Mail, Phone, ExternalLink, Sparkles, Briefcase, TrendingUp, TrendingDown, Brain, Shield, AlertTriangle, CalendarPlus, X, Copy, Check, Zap } from 'lucide-react'
 import { CandidateTimeline } from './candidate-timeline'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { format } from 'date-fns'
+import { useState } from 'react'
+import { useApiMutation } from '@/lib/hooks/use-api-mutation'
+import { interviewsApi, CreateInterviewInput } from '@/lib/api/interviews'
+import { aiApi, OutreachDraft, SkillGapAnalysis } from '@/lib/api/ai-intelligence'
 
 // ── AI Summary from real screening data ─────────
 function deriveAISummary(screening: ScreeningData) {
@@ -94,8 +100,248 @@ function deriveAISummary(screening: ScreeningData) {
     return { overallFit, fitScore: Math.round(score), strengths, concerns, recommendation }
 }
 
+// ── AI Insights Tab ──────────────────────────────
+function AiInsightsTab({ candidateId, jobId }: { candidateId: string; jobId?: string }) {
+    const [outreachDraft, setOutreachDraft] = useState<OutreachDraft | null>(null)
+    const [skillGap, setSkillGap] = useState<SkillGapAnalysis | null>(null)
+    const [copied, setCopied] = useState(false)
+
+    const { data: insightsRes, isLoading: loadingInsights } = useQuery({
+        queryKey: ['ai-candidate-insights', candidateId, jobId],
+        queryFn: () => aiApi.getCandidateInsights(candidateId, jobId),
+    })
+    const insights = insightsRes?.data as any
+
+    const outreachMutation = useApiMutation({
+        mutationFn: () => aiApi.generateOutreachDraft(candidateId, jobId!),
+        onSuccess: (data) => setOutreachDraft((data?.data as any) || null),
+    })
+
+    const skillGapMutation = useApiMutation({
+        mutationFn: () => aiApi.getSkillGap(candidateId, jobId!),
+        onSuccess: (data) => setSkillGap((data?.data as any) || null),
+    })
+
+    function copyToClipboard(text: string) {
+        navigator.clipboard.writeText(text).then(() => {
+            setCopied(true)
+            setTimeout(() => setCopied(false), 2000)
+        })
+    }
+
+    if (loadingInsights) {
+        return (
+            <div className="flex h-48 items-center justify-center">
+                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            </div>
+        )
+    }
+
+    return (
+        <div className="space-y-5">
+            {/* Fit summary */}
+            {insights ? (
+                <>
+                    {/* Fit score pill */}
+                    {insights.fitLabel && (
+                        <div className="flex items-center justify-between p-4 bg-card/60 border border-line rounded-lg">
+                            <div>
+                                <p className="text-xs text-muted-foreground uppercase tracking-wider">AI Assessment</p>
+                                <p className="text-sm font-semibold text-foreground mt-1 leading-snug max-w-[260px]">
+                                    {insights.summary || 'No summary available.'}
+                                </p>
+                            </div>
+                            <div className={`shrink-0 px-3 py-1 rounded-full text-xs font-semibold capitalize ${
+                                insights.fitLabel === 'strong' ? 'bg-emerald-500/10 text-emerald-400'
+                                : insights.fitLabel === 'good' ? 'bg-blue-500/10 text-blue-400'
+                                : insights.fitLabel === 'potential' ? 'bg-amber-500/10 text-amber-400'
+                                : 'bg-red-500/10 text-red-400'
+                            }`}>
+                                {insights.fitLabel}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Strengths */}
+                    {insights.strengths?.length > 0 && (
+                        <div>
+                            <h4 className="text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-2 flex items-center gap-1.5">
+                                <TrendingUp className="w-3.5 h-3.5" /> Strengths
+                            </h4>
+                            <ul className="space-y-1.5">
+                                {insights.strengths.map((s: string, i: number) => (
+                                    <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0" />
+                                        {s}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {/* Gaps */}
+                    {insights.gaps?.length > 0 && (
+                        <div>
+                            <h4 className="text-xs font-semibold uppercase tracking-wider text-amber-400 mb-2 flex items-center gap-1.5">
+                                <TrendingDown className="w-3.5 h-3.5" /> Gaps
+                            </h4>
+                            <ul className="space-y-1.5">
+                                {insights.gaps.map((g: string, i: number) => (
+                                    <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
+                                        {g}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {/* Red flags */}
+                    {insights.redFlags?.length > 0 && (
+                        <div>
+                            <h4 className="text-xs font-semibold uppercase tracking-wider text-red-400 mb-2 flex items-center gap-1.5">
+                                <AlertTriangle className="w-3.5 h-3.5" /> Red Flags
+                            </h4>
+                            <ul className="space-y-1.5">
+                                {insights.redFlags.map((r: string, i: number) => (
+                                    <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0" />
+                                        {r}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {/* Recommended action */}
+                    {insights.recommendedAction && (
+                        <div className="p-4 bg-accent/5 border border-accent/10 rounded-lg">
+                            <h4 className="text-xs font-semibold text-accent mb-1.5 flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5" /> Recommended Action
+                            </h4>
+                            <p className="text-sm text-muted-foreground leading-relaxed">{insights.recommendedAction}</p>
+                        </div>
+                    )}
+                </>
+            ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Brain className="w-8 h-8 text-muted-foreground/30 mb-3" />
+                    <p className="text-sm text-muted-foreground">No AI insights available for this candidate yet.</p>
+                </div>
+            )}
+
+            {/* Skill Gap Analysis */}
+            {jobId && (
+                <div className="border border-line rounded-lg overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 bg-card/40 border-b border-line">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Skill Gap Analysis</span>
+                        {!skillGap && (
+                            <button
+                                onClick={() => skillGapMutation.mutate()}
+                                disabled={skillGapMutation.isPending}
+                                className="flex items-center gap-1.5 text-xs text-accent hover:opacity-80 transition-opacity disabled:opacity-40"
+                            >
+                                {skillGapMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
+                                Analyze
+                            </button>
+                        )}
+                    </div>
+                    {skillGap ? (
+                        <div className="p-4 space-y-3">
+                            <div className="flex items-center gap-3">
+                                <div className="flex-1 h-2 bg-muted/30 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-accent rounded-full transition-all duration-700"
+                                        style={{ width: `${skillGap.matchPercentage}%` }}
+                                    />
+                                </div>
+                                <span className="text-sm font-semibold tabular-nums">{skillGap.matchPercentage}%</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">{skillGap.summary}</p>
+                            <div className="flex flex-wrap gap-1.5">
+                                {skillGap.presentSkills.map((s) => (
+                                    <Badge key={s} className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">{s}</Badge>
+                                ))}
+                                {skillGap.missingSkills.map((s) => (
+                                    <Badge key={s} className="text-[10px] bg-red-500/10 text-red-400 border-red-500/20">{s}</Badge>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="px-4 py-3 text-xs text-muted-foreground/60">
+                            Click Analyze to compare candidate skills against the job requirements.
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Outreach Draft */}
+            {jobId && (
+                <div className="border border-line rounded-lg overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 bg-card/40 border-b border-line">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Outreach Draft</span>
+                        {!outreachDraft && (
+                            <button
+                                onClick={() => outreachMutation.mutate()}
+                                disabled={outreachMutation.isPending}
+                                className="flex items-center gap-1.5 text-xs text-accent hover:opacity-80 transition-opacity disabled:opacity-40"
+                            >
+                                {outreachMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                                Generate
+                            </button>
+                        )}
+                    </div>
+                    {outreachDraft ? (
+                        <div className="p-4 space-y-3">
+                            <div>
+                                <p className="text-[10px] text-muted-foreground mb-1">Subject</p>
+                                <p className="text-xs font-medium">{outreachDraft.subject}</p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-muted-foreground mb-1">Body</p>
+                                <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">{outreachDraft.body}</p>
+                            </div>
+                            <button
+                                onClick={() => copyToClipboard(`Subject: ${outreachDraft.subject}\n\n${outreachDraft.body}`)}
+                                className="flex items-center gap-1.5 text-xs text-accent hover:opacity-80 transition-opacity"
+                            >
+                                {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                {copied ? 'Copied!' : 'Copy to clipboard'}
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="px-4 py-3 text-xs text-muted-foreground/60">
+                            Generate a personalized outreach email for this candidate.
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {!jobId && (
+                <p className="text-xs text-muted-foreground/60 text-center italic">
+                    Open from an application to enable Skill Gap Analysis and Outreach Draft generation.
+                </p>
+            )}
+        </div>
+    )
+}
+
 export function CandidateDrawer() {
     const { isDrawerOpen, setDrawerOpen, selectedCandidateId } = useCandidatesStore()
+    const [schedulingAppId, setSchedulingAppId] = useState<string | null>(null)
+    const [interviewForm, setInterviewForm] = useState({
+        type: 'TECHNICAL' as CreateInterviewInput['type'],
+        startTime: '',
+        endTime: '',
+        meetingLink: '',
+    })
+
+    const scheduleInterviewMutation = useApiMutation({
+        mutationFn: (input: CreateInterviewInput) => interviewsApi.create(input),
+        successMessage: 'Interview scheduled',
+        invalidateKeys: [['interviews']],
+        onSuccess: () => { setSchedulingAppId(null) },
+    })
 
     const { data: response, isLoading } = useQuery({
         queryKey: ['candidate', selectedCandidateId],
@@ -108,6 +354,9 @@ export function CandidateDrawer() {
     const aiSummary = data?.screening ? deriveAISummary(data.screening) : null
     const applicationCount = data?.applications?.length || 0
     const hasScreening = !!data?.screening
+    const firstJobId = data?.applications?.[0]
+        ? (typeof data.applications[0].jobId === 'object' ? data.applications[0].jobId._id : data.applications[0].jobId)
+        : undefined
 
     return (
         <Sheet open={isDrawerOpen} onOpenChange={setDrawerOpen}>
@@ -182,6 +431,13 @@ export function CandidateDrawer() {
                                             className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-accent rounded-none px-0 py-3 text-muted-foreground data-[state=active]:text-foreground transition-none"
                                         >
                                             Resume
+                                        </TabsTrigger>
+                                        <TabsTrigger
+                                            value="ai-insights"
+                                            className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-accent rounded-none px-0 py-3 text-muted-foreground data-[state=active]:text-foreground transition-none gap-1.5"
+                                        >
+                                            <Brain className="w-3.5 h-3.5" />
+                                            AI Insights
                                         </TabsTrigger>
                                     </TabsList>
                                 </div>
@@ -341,10 +597,87 @@ export function CandidateDrawer() {
                                                                 Applied: {format(new Date(app.submittedAt), 'MMM dd, yyyy')}
                                                             </p>
                                                         </div>
-                                                        <Badge variant="secondary" className="capitalize">
-                                                            {app.status.toLowerCase()}
-                                                        </Badge>
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge variant="secondary" className="capitalize">
+                                                                {app.status.toLowerCase()}
+                                                            </Badge>
+                                                            <button
+                                                                onClick={() => setSchedulingAppId(schedulingAppId === app._id ? null : app._id)}
+                                                                className="p-1 text-muted-foreground hover:text-accent transition-colors rounded"
+                                                                title="Schedule interview"
+                                                            >
+                                                                {schedulingAppId === app._id ? <X className="w-4 h-4" /> : <CalendarPlus className="w-4 h-4" />}
+                                                            </button>
+                                                        </div>
                                                     </div>
+
+                                                    {/* Schedule Interview Mini-Form */}
+                                                    {schedulingAppId === app._id && (
+                                                        <div className="mt-4 pt-4 border-t border-line space-y-3 animate-in slide-in-from-top-2 duration-200">
+                                                            <p className="text-xs font-medium text-muted-foreground">Schedule Interview</p>
+                                                            <Select
+                                                                value={interviewForm.type}
+                                                                onValueChange={(v) => setInterviewForm(f => ({ ...f, type: v as any }))}
+                                                            >
+                                                                <SelectTrigger className="h-8 text-xs bg-card border-line">
+                                                                    <SelectValue />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="SCREENING">Screening</SelectItem>
+                                                                    <SelectItem value="TECHNICAL">Technical</SelectItem>
+                                                                    <SelectItem value="BEHAVIORAL">Behavioral</SelectItem>
+                                                                    <SelectItem value="SYSTEM_DESIGN">System Design</SelectItem>
+                                                                    <SelectItem value="FINAL">Final Round</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                            <div className="grid grid-cols-2 gap-2">
+                                                                <div>
+                                                                    <p className="text-[10px] text-muted-foreground mb-1">Start</p>
+                                                                    <Input
+                                                                        type="datetime-local"
+                                                                        value={interviewForm.startTime}
+                                                                        onChange={e => setInterviewForm(f => ({ ...f, startTime: e.target.value }))}
+                                                                        className="h-8 text-xs bg-card"
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-[10px] text-muted-foreground mb-1">End</p>
+                                                                    <Input
+                                                                        type="datetime-local"
+                                                                        value={interviewForm.endTime}
+                                                                        onChange={e => setInterviewForm(f => ({ ...f, endTime: e.target.value }))}
+                                                                        className="h-8 text-xs bg-card"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                            <Input
+                                                                placeholder="Meeting link (optional)"
+                                                                value={interviewForm.meetingLink}
+                                                                onChange={e => setInterviewForm(f => ({ ...f, meetingLink: e.target.value }))}
+                                                                className="h-8 text-xs bg-card"
+                                                            />
+                                                            <button
+                                                                onClick={() => {
+                                                                    const jobId = typeof app.jobId === 'object' ? app.jobId._id : app.jobId
+                                                                    scheduleInterviewMutation.mutate({
+                                                                        candidateId: data.candidate._id,
+                                                                        interviewerId: data.candidate._id, // Will be updated to current user in a future iteration
+                                                                        jobId,
+                                                                        applicationId: app._id,
+                                                                        title: `${interviewForm.type.replace('_', ' ')} Interview — ${data.candidate.firstName || ''} ${data.candidate.lastName || ''}`.trim(),
+                                                                        type: interviewForm.type,
+                                                                        startTime: new Date(interviewForm.startTime).toISOString(),
+                                                                        endTime: new Date(interviewForm.endTime).toISOString(),
+                                                                        meetingLink: interviewForm.meetingLink || undefined,
+                                                                    })
+                                                                }}
+                                                                disabled={!interviewForm.startTime || !interviewForm.endTime || scheduleInterviewMutation.isPending}
+                                                                className="w-full py-1.5 text-xs font-medium bg-accent text-accent-foreground rounded-md hover:opacity-90 disabled:opacity-40 transition-opacity"
+                                                            >
+                                                                {scheduleInterviewMutation.isPending ? 'Scheduling…' : 'Schedule'}
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ))
                                         ) : (
@@ -352,6 +685,14 @@ export function CandidateDrawer() {
                                                 No applications found for this candidate.
                                             </p>
                                         )}
+                                    </TabsContent>
+
+                                    {/* ── AI Insights Tab ───────────────────────── */}
+                                    <TabsContent value="ai-insights" className="mt-0">
+                                        <AiInsightsTab
+                                            candidateId={selectedCandidateId!}
+                                            jobId={firstJobId}
+                                        />
                                     </TabsContent>
 
                                     {/* ── Resume Tab ─────────────────────────────── */}

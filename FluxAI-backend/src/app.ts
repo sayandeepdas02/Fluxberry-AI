@@ -44,6 +44,7 @@ import { handleRibbonWebhook } from './modules/webhooks/ribbon.webhook.js'
 import { billingRoutes } from './modules/billing/billing.routes.js'
 import activityRoutes from './modules/activity/activity.routes.js'
 import prospectsRoutes from './modules/prospects/prospects.routes.js'
+import talentCRMRoutes from './modules/talent-crm/talent-crm.routes.js'
 
 // ── Phase 3: Growth Systems ──────────────────────────────────
 import { crmRoutes } from './modules/crm/crm.routes.js'
@@ -205,6 +206,7 @@ export function createApp() {
     app.use('/api/prospects', prospectsRoutes)
 
     // ── Phase 3: Growth Systems, AI Intelligence, CRM ────────
+    app.use('/api/talent-crm', talentCRMRoutes)
     app.use('/api/crm', crmRoutes)
     app.use('/api/sourcing', sourcingRoutes)
     app.use('/api/ai', aiIntelligenceRoutes)

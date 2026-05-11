@@ -29,6 +29,7 @@ import {
   LayoutGrid,
   Globe,
   Settings,
+  Database,
   type LucideIcon,
 } from "lucide-react";
 
@@ -63,6 +64,7 @@ export const mainNavItems: NavItem[] = [
   { label: "Home", href: "/dashboard", icon: Home },
   { label: "Inbox", href: "/dashboard/inbox", icon: Inbox },
   { label: "Candidates", href: "/dashboard/candidates", icon: Users },
+  { label: "Talent CRM", href: "/dashboard/crm", icon: Database },
   { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
   { label: "Referrals", href: "/dashboard/referrals", icon: Gift },
 ];

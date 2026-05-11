@@ -1,7 +1,9 @@
 "use client"
 
 import { PageContainer } from "@/components/dashboard/page-container"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { ErrorBoundary } from "@/components/shared/error-boundary"
+import { useQuery } from "@tanstack/react-query"
+import { useApiMutation } from "@/lib/hooks/use-api-mutation"
 import { apiClient } from "@/lib/api/client"
 import { ApiResponse } from "@/lib/api/types"
 import { assessmentsApi } from "@/lib/api/assessments"
@@ -103,8 +105,6 @@ const RECOMMENDATION_STYLES: Record<string, { label: string; class: string; icon
 }
 
 export default function AIInterviewsPage() {
-    const queryClient = useQueryClient()
-
     // Setup state
     const [showCreate, setShowCreate] = useState(false)
     const [role, setRole] = useState('BACKEND')
@@ -152,51 +152,46 @@ export default function AIInterviewsPage() {
     }
 
     // Create session
-    const createMutation = useMutation({
+    const createMutation = useApiMutation({
         mutationFn: () => apiClient.post<CreateSessionResponse>('/ai-interview/orchestrator/sessions', {
             attemptId,
             aiConfig: { role, difficulty, maxDurationMinutes: parseInt(duration), grillingIntensity: intensity },
         }),
+        successMessage: 'AI Interview session started',
+        errorMessage: 'Failed to create session — ensure an active assessment attempt exists',
         onSuccess: async (res) => {
             if (res.data) {
                 setSessionId(res.data.sessionId)
                 setShowCreate(false)
                 setElapsedSeconds(0)
-                toast.success('AI Interview session started')
                 // Fetch full session state
                 const state = await apiClient.get<OrchestratorSessionState>(`/ai-interview/orchestrator/sessions/${res.data.sessionId}`)
                 if (state.data) setSessionState(state.data)
             }
         },
-        onError: () => toast.error('Failed to create session — ensure an active assessment attempt exists'),
     })
 
     // Submit turn
-    const turnMutation = useMutation({
+    const turnMutation = useApiMutation({
         mutationFn: (answer: string) =>
             apiClient.post<TurnResponse>(`/ai-interview/orchestrator/sessions/${sessionId}/turn`, { answer }),
+        errorMessage: 'Failed to submit answer',
         onMutate: () => setIsThinking(true),
         onSuccess: async (res) => {
             setIsThinking(false)
             setCandidateAnswer('')
-            if (res.data?.isComplete) {
-                // Fetch final state with scores
-                const state = await apiClient.get<OrchestratorSessionState>(`/ai-interview/orchestrator/sessions/${sessionId}`)
-                if (state.data) setSessionState(state.data)
-            } else {
-                // Fetch updated transcript
-                const state = await apiClient.get<OrchestratorSessionState>(`/ai-interview/orchestrator/sessions/${sessionId}`)
-                if (state.data) setSessionState(state.data)
-            }
+            // Fetch updated transcript (handles both complete and in-progress)
+            const state = await apiClient.get<OrchestratorSessionState>(`/ai-interview/orchestrator/sessions/${sessionId}`)
+            if (state.data) setSessionState(state.data)
         },
-        onError: () => { setIsThinking(false); toast.error('Failed to submit answer') },
+        onError: () => { setIsThinking(false) },
     })
 
     // Complete session manually
-    const completeMutation = useMutation({
+    const completeMutation = useApiMutation({
         mutationFn: () => apiClient.post<any>(`/ai-interview/orchestrator/sessions/${sessionId}/complete`),
+        successMessage: 'Interview completed',
         onSuccess: async () => {
-            toast.success('Interview completed')
             const state = await apiClient.get<OrchestratorSessionState>(`/ai-interview/orchestrator/sessions/${sessionId}`)
             if (state.data) setSessionState(state.data)
         },
@@ -226,6 +221,7 @@ export default function AIInterviewsPage() {
 
     return (
         <PageContainer title="AI Interviews" description="AI-powered candidate evaluation — automated, intelligent, and fair.">
+            <ErrorBoundary section="AI Interviews">
             <div className="mt-6 w-full flex flex-col space-y-6">
                 {/* ── No Session / Setup ─────────────────────────── */}
                 {!sessionId && (
@@ -518,6 +514,7 @@ export default function AIInterviewsPage() {
                     </div>
                 )}
             </div>
+            </ErrorBoundary>
         </PageContainer>
     )
 }

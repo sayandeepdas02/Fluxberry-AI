@@ -1,8 +1,9 @@
 "use client"
 
 import { PageContainer } from "@/components/dashboard/page-container"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { jobsApi, Job, CreateJobInput } from "@/lib/api/jobs"
+import { useQuery } from "@tanstack/react-query"
+import { useApiMutation } from "@/lib/hooks/use-api-mutation"
+import { jobsApi, Job } from "@/lib/api/jobs"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { EmptyState } from "@/components/dashboard/empty-state"
@@ -14,64 +15,89 @@ import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select"
 import {
-    Briefcase, Loader2, Plus, Search, Eye, Pencil, Trash2,
-    Globe, Lock, Archive, MoreHorizontal, CheckCircle, XCircle,
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+    DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+    Briefcase, Plus, Search, Globe, Lock, Eye, Archive,
+    ArchiveRestore, Copy, RefreshCw, MoreHorizontal, Trash2,
 } from "lucide-react"
-import { useState, useMemo } from "react"
-import { toast } from "sonner"
+import { useState } from "react"
 import { format } from "date-fns"
 import { useRouter } from "next/navigation"
 
 const STATUS_STYLES: Record<string, { label: string; class: string }> = {
-    DRAFT: { label: 'Draft', class: 'bg-muted text-muted-foreground' },
+    DRAFT:     { label: 'Draft',     class: 'bg-muted text-muted-foreground' },
     PUBLISHED: { label: 'Published', class: 'bg-emerald-500/10 text-emerald-400' },
-    CLOSED: { label: 'Closed', class: 'bg-red-500/10 text-red-400' },
+    CLOSED:    { label: 'Closed',    class: 'bg-red-500/10 text-red-400' },
+}
+
+const VISIBILITY_ICONS: Record<string, React.ReactNode> = {
+    PUBLIC:      <Globe className="w-3 h-3 text-emerald-400" />,
+    PRIVATE:     <Lock className="w-3 h-3 text-amber-400" />,
+    INVITE_ONLY: <Eye className="w-3 h-3 text-blue-400" />,
 }
 
 export default function ManageJobsPage() {
     const router = useRouter()
-    const queryClient = useQueryClient()
     const [search, setSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState('')
+    const [showArchived, setShowArchived] = useState(false)
     const [page, setPage] = useState(1)
 
     const { data: response, isLoading } = useQuery({
-        queryKey: ['jobs', page, statusFilter, search],
+        queryKey: ['jobs', page, statusFilter, search, showArchived],
         queryFn: () => jobsApi.list({
             page, limit: 20,
             status: (statusFilter || undefined) as any,
             search: search || undefined,
+            archived: showArchived,
         }),
     })
 
     const jobs = (response?.data || []) as Job[]
     const total = (response as any)?.meta?.total || jobs.length
 
-    const publishMutation = useMutation({
+    const publishMutation = useApiMutation({
         mutationFn: (id: string) => jobsApi.publish(id),
-        onSuccess: () => {
-            toast.success('Job published')
-            queryClient.invalidateQueries({ queryKey: ['jobs'] })
-        },
-        onError: () => toast.error('Failed to publish job'),
+        successMessage: 'Job published',
+        invalidateKeys: [['jobs']],
     })
 
-    const deleteMutation = useMutation({
-        mutationFn: (id: string) => jobsApi.delete(id),
-        onSuccess: () => {
-            toast.success('Job deleted')
-            queryClient.invalidateQueries({ queryKey: ['jobs'] })
-        },
-        onError: () => toast.error('Failed to delete job'),
-    })
-
-    const closeMutation = useMutation({
+    const closeMutation = useApiMutation({
         mutationFn: (id: string) => jobsApi.close(id),
-        onSuccess: () => {
-            toast.success('Job closed')
-            queryClient.invalidateQueries({ queryKey: ['jobs'] })
-        },
-        onError: () => toast.error('Failed to close job'),
+        successMessage: 'Job closed',
+        invalidateKeys: [['jobs']],
+    })
+
+    const archiveMutation = useApiMutation({
+        mutationFn: (id: string) => jobsApi.archive(id),
+        successMessage: 'Job archived',
+        invalidateKeys: [['jobs']],
+    })
+
+    const unarchiveMutation = useApiMutation({
+        mutationFn: (id: string) => jobsApi.unarchive(id),
+        successMessage: 'Job restored from archive',
+        invalidateKeys: [['jobs']],
+    })
+
+    const duplicateMutation = useApiMutation({
+        mutationFn: (id: string) => jobsApi.duplicate(id),
+        successMessage: 'Job duplicated as draft',
+        invalidateKeys: [['jobs']],
+    })
+
+    const repostMutation = useApiMutation({
+        mutationFn: (id: string) => jobsApi.repost(id),
+        successMessage: 'Job reposted as new draft',
+        invalidateKeys: [['jobs']],
+    })
+
+    const deleteMutation = useApiMutation({
+        mutationFn: (id: string) => jobsApi.delete(id),
+        successMessage: 'Job deleted',
+        invalidateKeys: [['jobs']],
     })
 
     return (
@@ -99,6 +125,17 @@ export default function ManageJobsPage() {
                             <SelectItem value="CLOSED">Closed</SelectItem>
                         </SelectContent>
                     </Select>
+                    <button
+                        onClick={() => { setShowArchived(!showArchived); setPage(1) }}
+                        className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border transition-colors ${
+                            showArchived
+                                ? 'border-amber-500/40 text-amber-400 bg-amber-500/10'
+                                : 'border-line text-muted-foreground hover:text-foreground bg-card'
+                        }`}
+                    >
+                        <Archive className="w-3.5 h-3.5" />
+                        {showArchived ? 'Archived' : 'Show Archived'}
+                    </button>
                     <div className="flex-1" />
                     <button
                         onClick={() => router.push('/dashboard/jobs/create')}
@@ -137,10 +174,10 @@ export default function ManageJobsPage() {
                 {!isLoading && jobs.length === 0 && (
                     <EmptyState
                         icon={Briefcase}
-                        title="No jobs found"
-                        description="Create your first job posting to start attracting candidates."
-                        actionLabel="Create New Job"
-                        onAction={() => router.push('/dashboard/jobs/create')}
+                        title={showArchived ? 'No archived jobs' : 'No jobs found'}
+                        description={showArchived ? 'Archived jobs will appear here.' : 'Create your first job posting to start attracting candidates.'}
+                        actionLabel={showArchived ? undefined : 'Create New Job'}
+                        onAction={showArchived ? undefined : () => router.push('/dashboard/jobs/create')}
                     />
                 )}
 
@@ -152,7 +189,7 @@ export default function ManageJobsPage() {
                                 <TableRow>
                                     <TableHead>Title</TableHead>
                                     <TableHead>Department</TableHead>
-                                    <TableHead>Location</TableHead>
+                                    <TableHead>Visibility</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Applications</TableHead>
                                     <TableHead>Created</TableHead>
@@ -161,13 +198,22 @@ export default function ManageJobsPage() {
                             </TableHeader>
                             <TableBody>
                                 {jobs.map(job => (
-                                    <TableRow key={job._id} className="hover:bg-card/50 transition-colors">
+                                    <TableRow
+                                        key={job._id}
+                                        className="hover:bg-card/50 transition-colors cursor-pointer"
+                                        onClick={() => router.push(`/dashboard/jobs/${job._id}`)}
+                                    >
                                         <TableCell>
                                             <p className="font-medium text-sm">{job.title}</p>
-                                            <p className="text-[11px] text-muted-foreground">{job.employmentType?.replace('_', ' ')}</p>
+                                            <p className="text-[11px] text-muted-foreground">{job.employmentType?.replace('_', ' ')}{job.location ? ` · ${job.location}` : ''}</p>
                                         </TableCell>
                                         <TableCell className="text-sm text-text-secondary">{job.department || '—'}</TableCell>
-                                        <TableCell className="text-sm text-text-secondary">{job.location || '—'}</TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                                {VISIBILITY_ICONS[job.visibility || 'PUBLIC']}
+                                                <span>{(job.visibility || 'PUBLIC').replace('_', ' ').toLowerCase().replace(/^\w/, c => c.toUpperCase())}</span>
+                                            </div>
+                                        </TableCell>
                                         <TableCell>
                                             <Badge className={`text-[10px] ${STATUS_STYLES[job.status]?.class || ''}`}>
                                                 {STATUS_STYLES[job.status]?.label || job.status}
@@ -177,36 +223,51 @@ export default function ManageJobsPage() {
                                         <TableCell className="text-xs text-muted-foreground">
                                             {format(new Date(job.createdAt), 'MMM d, yyyy')}
                                         </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex items-center justify-end gap-1">
-                                                {job.status === 'DRAFT' && (
-                                                    <button
-                                                        onClick={() => publishMutation.mutate(job._id)}
-                                                        disabled={publishMutation.isPending}
-                                                        className="p-1.5 text-emerald-400 hover:bg-emerald-500/10 rounded-md transition-colors"
-                                                        title="Publish"
-                                                    >
-                                                        <Globe className="w-3.5 h-3.5" />
+                                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <button className="p-1.5 rounded-md hover:bg-muted/50 text-muted-foreground transition-colors">
+                                                        <MoreHorizontal className="w-4 h-4" />
                                                     </button>
-                                                )}
-                                                {job.status === 'PUBLISHED' && (
-                                                    <button
-                                                        onClick={() => closeMutation.mutate(job._id)}
-                                                        className="p-1.5 text-amber-400 hover:bg-amber-500/10 rounded-md transition-colors"
-                                                        title="Close"
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="w-48">
+                                                    {job.status === 'DRAFT' && (
+                                                        <DropdownMenuItem onClick={() => publishMutation.mutate(job._id)}>
+                                                            <Globe className="w-3.5 h-3.5 mr-2 text-emerald-400" /> Publish
+                                                        </DropdownMenuItem>
+                                                    )}
+                                                    {job.status === 'PUBLISHED' && (
+                                                        <DropdownMenuItem onClick={() => closeMutation.mutate(job._id)}>
+                                                            <Archive className="w-3.5 h-3.5 mr-2 text-amber-400" /> Close Job
+                                                        </DropdownMenuItem>
+                                                    )}
+                                                    {job.status === 'CLOSED' && (
+                                                        <DropdownMenuItem onClick={() => repostMutation.mutate(job._id)}>
+                                                            <RefreshCw className="w-3.5 h-3.5 mr-2 text-blue-400" /> Repost as Draft
+                                                        </DropdownMenuItem>
+                                                    )}
+                                                    <DropdownMenuItem onClick={() => duplicateMutation.mutate(job._id)}>
+                                                        <Copy className="w-3.5 h-3.5 mr-2" /> Duplicate
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    {job.isArchived ? (
+                                                        <DropdownMenuItem onClick={() => unarchiveMutation.mutate(job._id)}>
+                                                            <ArchiveRestore className="w-3.5 h-3.5 mr-2 text-emerald-400" /> Restore from Archive
+                                                        </DropdownMenuItem>
+                                                    ) : (
+                                                        <DropdownMenuItem onClick={() => archiveMutation.mutate(job._id)}>
+                                                            <Archive className="w-3.5 h-3.5 mr-2" /> Archive
+                                                        </DropdownMenuItem>
+                                                    )}
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem
+                                                        onClick={() => deleteMutation.mutate(job._id)}
+                                                        className="text-red-400 focus:text-red-400"
                                                     >
-                                                        <Archive className="w-3.5 h-3.5" />
-                                                    </button>
-                                                )}
-                                                <button
-                                                    onClick={() => deleteMutation.mutate(job._id)}
-                                                    disabled={deleteMutation.isPending}
-                                                    className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
-                                                    title="Delete"
-                                                >
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                </button>
-                                            </div>
+                                                        <Trash2 className="w-3.5 h-3.5 mr-2" /> Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
                                 ))}

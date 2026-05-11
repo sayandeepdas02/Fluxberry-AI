@@ -1,6 +1,7 @@
 import { Types } from 'mongoose'
 import { Prospect } from '../../database/models/prospect.models.js'
 import { Job } from '../../database/models/index.js'
+import { AppError } from '../../common/errors/index.js'
 import { scoreCandidate } from '../ats-screening/scoring-v2/scoring-engine-v2.js'
 import { IResumeParsedData } from '../ats-screening/models/resume-profile.model.js'
 import { V2JobContext } from '../ats-screening/scoring-v2/types.js'
@@ -13,7 +14,7 @@ export class ProspectsScoringService {
     async evaluateProspectFit(prospectId: string, organizationId: string) {
         const prospect = await Prospect.findOne({ _id: prospectId, organizationId, isDeleted: false })
         if (!prospect) {
-            throw { code: 'NOT_FOUND', message: 'Prospect not found' }
+            throw AppError.notFound('Prospect')
         }
 
         // Return cached result if fresh enough (e.g. less than 24 hours old)

@@ -1,4 +1,4 @@
-import { Job, Candidate, AssessmentAttempt, AnalyticsSnapshot, JobApplication, StageHistory, ApplicationStatus } from '../../database/models/index.js'
+import { Job, Candidate, AssessmentAttempt, AnalyticsSnapshot, JobApplication, StageHistory, ApplicationStatus, OrganizationMember, User } from '../../database/models/index.js'
 import { ScreeningResult } from '../ats-screening/models/screening-result.model.js'
 import { KPIData, AnalyticsTrendData, DemographicsData } from './analytics.types.js'
 import { redisConnection } from '../../jobs/redis.js'
@@ -356,6 +356,229 @@ class AnalyticsService {
             totalScreened,
             scoreDistribution: chartData
         }
+
+        await this.setCache(cacheKey, result)
+        return result
+    }
+}
+
+    // ── Phase 3: Advanced Analytics ──────────────────────────────
+
+    async getHiringVelocityTrend(organizationId: string, months = 6): Promise<{ month: string; avgDays: number; hires: number }[]> {
+        const cacheKey = this.getCacheKey(organizationId, `velocity:${months}`)
+        const cached = await this.getCached(cacheKey)
+        if (cached) return cached as any
+
+        const cutoff = new Date()
+        cutoff.setMonth(cutoff.getMonth() - months)
+
+        const pipeline = await JobApplication.aggregate([
+            {
+                $match: {
+                    organizationId: new mongoose.Types.ObjectId(organizationId),
+                    status: ApplicationStatus.HIRED,
+                    updatedAt: { $gte: cutoff },
+                }
+            },
+            {
+                $addFields: {
+                    daysToHire: {
+                        $divide: [
+                            { $subtract: ['$updatedAt', '$submittedAt'] },
+                            1000 * 60 * 60 * 24,
+                        ]
+                    },
+                    month: { $dateToString: { format: '%Y-%m', date: '$updatedAt' } }
+                }
+            },
+            {
+                $group: {
+                    _id: '$month',
+                    avgDays: { $avg: '$daysToHire' },
+                    hires: { $sum: 1 },
+                }
+            },
+            { $sort: { _id: 1 } },
+        ])
+
+        const result = pipeline.map((p: any) => ({
+            month: p._id,
+            avgDays: Math.round(p.avgDays || 0),
+            hires: p.hires,
+        }))
+
+        await this.setCache(cacheKey, result)
+        return result
+    }
+
+    async getSourceQualityScoring(organizationId: string): Promise<{
+        source: string
+        total: number
+        hired: number
+        interviewed: number
+        conversionRate: number
+        hireRate: number
+    }[]> {
+        const cacheKey = this.getCacheKey(organizationId, 'sourceQuality')
+        const cached = await this.getCached(cacheKey)
+        if (cached) return cached as any
+
+        const pipeline = await JobApplication.aggregate([
+            { $match: { organizationId: new mongoose.Types.ObjectId(organizationId) } },
+            {
+                $lookup: {
+                    from: 'candidates',
+                    localField: 'candidateId',
+                    foreignField: '_id',
+                    as: 'candidate',
+                }
+            },
+            { $unwind: '$candidate' },
+            {
+                $group: {
+                    _id: { $ifNull: ['$candidate.source', 'Direct'] },
+                    total: { $sum: 1 },
+                    hired: {
+                        $sum: { $cond: [{ $eq: ['$status', ApplicationStatus.HIRED] }, 1, 0] }
+                    },
+                    interviewed: {
+                        $sum: { $cond: [{ $in: ['$status', [ApplicationStatus.INTERVIEW, ApplicationStatus.OFFER_SENT, ApplicationStatus.HIRED]] }, 1, 0] }
+                    },
+                }
+            },
+            { $sort: { total: -1 } },
+        ])
+
+        const result = pipeline.map((p: any) => ({
+            source: p._id,
+            total: p.total,
+            hired: p.hired,
+            interviewed: p.interviewed,
+            conversionRate: p.total > 0 ? Math.round((p.interviewed / p.total) * 100) : 0,
+            hireRate: p.total > 0 ? Math.round((p.hired / p.total) * 100) : 0,
+        }))
+
+        await this.setCache(cacheKey, result)
+        return result
+    }
+
+    async getStageDropoffAnalysis(organizationId: string, jobId?: string): Promise<{
+        stage: string
+        entered: number
+        exited: number
+        dropoffRate: number
+        avgDaysInStage: number
+    }[]> {
+        const cacheKey = this.getCacheKey(organizationId, 'stageDropoff', jobId)
+        const cached = await this.getCached(cacheKey)
+        if (cached) return cached as any
+
+        const matchStage: Record<string, unknown> = { organizationId: new mongoose.Types.ObjectId(organizationId) }
+        if (jobId) matchStage.jobId = new mongoose.Types.ObjectId(jobId)
+
+        const pipeline = await StageHistory.aggregate([
+            { $match: matchStage },
+            {
+                $group: {
+                    _id: '$toStage',
+                    entered: { $sum: 1 },
+                    avgTimeMs: { $avg: '$timeInStageMs' },
+                }
+            },
+            { $sort: { _id: 1 } },
+        ])
+
+        const stageOrder = [
+            ApplicationStatus.APPLIED,
+            ApplicationStatus.SCREENING,
+            ApplicationStatus.INTERVIEW,
+            ApplicationStatus.OFFER_SENT,
+            ApplicationStatus.HIRED,
+        ]
+
+        const stageCounts: Record<string, number> = {}
+        pipeline.forEach((p: any) => { stageCounts[p._id] = p.entered })
+
+        const result = stageOrder.map((stage, i) => {
+            const entered = stageCounts[stage] || 0
+            const nextStage = stageOrder[i + 1]
+            const exited = nextStage ? (stageCounts[nextStage] || 0) : entered
+            const avgMs = pipeline.find((p: any) => p._id === stage)?.avgTimeMs || 0
+
+            return {
+                stage,
+                entered,
+                exited: Math.min(exited, entered),
+                dropoffRate: entered > 0 ? Math.round(((entered - Math.min(exited, entered)) / entered) * 100) : 0,
+                avgDaysInStage: Math.round(avgMs / (1000 * 60 * 60 * 24)) || 0,
+            }
+        }).filter(s => s.entered > 0)
+
+        await this.setCache(cacheKey, result)
+        return result
+    }
+
+    async getRecruiterPerformance(organizationId: string): Promise<{
+        userId: string
+        name: string
+        email: string
+        applicationsReviewed: number
+        hired: number
+        avgTimeToReview: number
+        hireRate: number
+    }[]> {
+        const cacheKey = this.getCacheKey(organizationId, 'recruiterPerformance')
+        const cached = await this.getCached(cacheKey)
+        if (cached) return cached as any
+
+        // Get all members of the org
+        const members = await OrganizationMember.find({ organizationId: new mongoose.Types.ObjectId(organizationId) })
+            .populate('userId', 'firstName lastName email')
+            .lean()
+
+        // For each member, count applications they're assigned to or stage-changed
+        const memberIds = members.map((m: any) => m.userId?._id || m.userId)
+
+        const [assignedStats] = await Promise.all([
+            JobApplication.aggregate([
+                {
+                    $match: {
+                        organizationId: new mongoose.Types.ObjectId(organizationId),
+                        assignedTo: { $in: memberIds },
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$assignedTo',
+                        applicationsReviewed: { $sum: 1 },
+                        hired: {
+                            $sum: { $cond: [{ $eq: ['$status', ApplicationStatus.HIRED] }, 1, 0] }
+                        },
+                    }
+                }
+            ])
+        ])
+
+        const statsByUser: Record<string, { applicationsReviewed: number; hired: number }> = {}
+        assignedStats.forEach((s: any) => {
+            statsByUser[s._id.toString()] = { applicationsReviewed: s.applicationsReviewed, hired: s.hired }
+        })
+
+        const result = members.map((m: any) => {
+            const user = m.userId as any
+            const uid = (user?._id || user)?.toString()
+            const stats = statsByUser[uid] || { applicationsReviewed: 0, hired: 0 }
+            return {
+                userId: uid,
+                name: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Unknown',
+                email: user?.email || '',
+                applicationsReviewed: stats.applicationsReviewed,
+                hired: stats.hired,
+                avgTimeToReview: 0,
+                hireRate: stats.applicationsReviewed > 0 ? Math.round((stats.hired / stats.applicationsReviewed) * 100) : 0,
+            }
+        }).filter(r => r.applicationsReviewed > 0)
+            .sort((a, b) => b.hired - a.hired)
 
         await this.setCache(cacheKey, result)
         return result

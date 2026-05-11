@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
 import { questionsService } from './questions.service.js'
 import { listQuestionsQuerySchema, createQuestionBodySchema, updateQuestionBodySchema } from './questions.types.js'
-import { successResponse } from '../../common/utils/api-response.js'
 import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
+import { AppError } from '../../common/errors/index.js'
 
 export class QuestionsController {
     /**
@@ -14,7 +14,7 @@ export class QuestionsController {
             const query = listQuestionsQuerySchema.parse(req.query)
             const organizationId = (req as AuthenticatedRequest).user?.organizationId ?? undefined
             const result = await questionsService.list(query, organizationId ?? undefined)
-            res.json(successResponse(result))
+            res.success(result)
         } catch (error) {
             next(error)
         }
@@ -27,7 +27,7 @@ export class QuestionsController {
         try {
             const { id } = req.params
             const question = await questionsService.getById(id)
-            res.json(successResponse(question))
+            res.success(question)
         } catch (error) {
             next(error)
         }
@@ -42,11 +42,10 @@ export class QuestionsController {
             const body = createQuestionBodySchema.parse(req.body)
             const organizationId = (req as AuthenticatedRequest).user?.organizationId
             if (!organizationId) {
-                res.status(403).json({ success: false, error: { message: 'Organization required to create questions' } })
-                return
+                throw AppError.forbidden('Organization required to create questions')
             }
             const question = await questionsService.create(body, organizationId)
-            res.status(201).json(successResponse(question))
+            res.success(question, 201)
         } catch (error) {
             next(error)
         }
@@ -62,11 +61,10 @@ export class QuestionsController {
             const body = updateQuestionBodySchema.parse(req.body)
             const organizationId = (req as AuthenticatedRequest).user?.organizationId
             if (!organizationId) {
-                res.status(403).json({ success: false, error: { message: 'Organization required' } })
-                return
+                throw AppError.forbidden('Organization required')
             }
             const question = await questionsService.update(id, body, organizationId)
-            res.json(successResponse(question))
+            res.success(question)
         } catch (error) {
             next(error)
         }
@@ -81,11 +79,10 @@ export class QuestionsController {
             const { id } = req.params
             const organizationId = (req as AuthenticatedRequest).user?.organizationId
             if (!organizationId) {
-                res.status(403).json({ success: false, error: { message: 'Organization required' } })
-                return
+                throw AppError.forbidden('Organization required')
             }
             await questionsService.delete(id, organizationId)
-            res.json(successResponse({ deleted: true }))
+            res.success({ deleted: true })
         } catch (error) {
             next(error)
         }

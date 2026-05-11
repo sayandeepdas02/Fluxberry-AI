@@ -1,8 +1,8 @@
 import { Response, NextFunction } from 'express'
 import { assessmentsService } from './assessments.service.js'
 import { createAssessmentSchema, updateAssessmentSchema, roundConfigSchema, inviteCandidatesSchema } from './assessments.types.js'
-import { successResponse } from '../../common/utils/api-response.js'
 import { AuthenticatedRequest } from '../../common/guards/auth.guard.js'
+import { AppError } from '../../common/errors/index.js'
 
 export class AssessmentsController {
     /**
@@ -12,13 +12,12 @@ export class AssessmentsController {
         try {
             const organizationId = req.user?.organizationId
             if (!organizationId) {
-                res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
-                return
+                throw AppError.forbidden('Organization context required')
             }
 
             const input = createAssessmentSchema.parse(req.body)
             const assessment = await assessmentsService.create(organizationId, input)
-            res.status(201).json(successResponse(assessment))
+            res.success(assessment, 201)
         } catch (error) {
             next(error)
         }
@@ -31,12 +30,11 @@ export class AssessmentsController {
         try {
             const organizationId = req.user?.organizationId
             if (!organizationId) {
-                res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
-                return
+                throw AppError.forbidden('Organization context required')
             }
 
             const result = await assessmentsService.list(organizationId)
-            res.json(successResponse(result))
+            res.success(result)
         } catch (error) {
             next(error)
         }
@@ -49,13 +47,12 @@ export class AssessmentsController {
         try {
             const organizationId = req.user?.organizationId
             if (!organizationId) {
-                res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
-                return
+                throw AppError.forbidden('Organization context required')
             }
 
             const { id } = req.params
             const assessment = await assessmentsService.getById(id, organizationId)
-            res.json(successResponse(assessment))
+            res.success(assessment)
         } catch (error) {
             next(error)
         }
@@ -68,14 +65,13 @@ export class AssessmentsController {
         try {
             const organizationId = req.user?.organizationId
             if (!organizationId) {
-                res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
-                return
+                throw AppError.forbidden('Organization context required')
             }
 
             const { id } = req.params
             const input = updateAssessmentSchema.parse(req.body)
             const assessment = await assessmentsService.update(id, organizationId, input)
-            res.json(successResponse(assessment))
+            res.success(assessment)
         } catch (error) {
             next(error)
         }
@@ -88,14 +84,13 @@ export class AssessmentsController {
         try {
             const organizationId = req.user?.organizationId
             if (!organizationId) {
-                res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
-                return
+                throw AppError.forbidden('Organization context required')
             }
 
             const { id } = req.params
             const input = roundConfigSchema.parse(req.body)
             const assessment = await assessmentsService.configureRounds(id, organizationId, input)
-            res.json(successResponse(assessment))
+            res.success(assessment)
         } catch (error) {
             next(error)
         }
@@ -108,13 +103,12 @@ export class AssessmentsController {
         try {
             const organizationId = req.user?.organizationId
             if (!organizationId) {
-                res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
-                return
+                throw AppError.forbidden('Organization context required')
             }
 
             const { id } = req.params
             const assessment = await assessmentsService.publish(id, organizationId)
-            res.json(successResponse(assessment))
+            res.success(assessment)
         } catch (error) {
             next(error)
         }
@@ -128,14 +122,13 @@ export class AssessmentsController {
         try {
             const organizationId = req.user?.organizationId
             if (!organizationId) {
-                res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
-                return
+                throw AppError.forbidden('Organization context required')
             }
 
             const { id } = req.params
             const input = inviteCandidatesSchema.parse(req.body)
             const result = await assessmentsService.inviteCandidates(id, organizationId, input)
-            res.status(200).json(successResponse(result))
+            res.success(result)
         } catch (error) {
             next(error)
         }
@@ -148,13 +141,12 @@ export class AssessmentsController {
         try {
             const organizationId = req.user?.organizationId
             if (!organizationId) {
-                res.status(403).json({ success: false, error: { code: 'NO_ORG', message: 'User must belong to an organization' } })
-                return
+                throw AppError.forbidden('Organization context required')
             }
             const { id } = req.params
             const titleOverride: string | undefined = typeof req.body?.title === 'string' ? req.body.title : undefined
             const assessment = await assessmentsService.clone(id, organizationId, titleOverride)
-            res.status(201).json(successResponse(assessment))
+            res.success(assessment, 201)
         } catch (error) {
             next(error)
         }
