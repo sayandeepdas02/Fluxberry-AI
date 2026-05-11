@@ -103,7 +103,11 @@ export function Navbar() {
 
         {/* ── RIGHT: Minimal Auth / Action ── */}
         <div className="hidden md:flex items-center gap-[16px]">
-          <Link href="/demo">
+          <a
+            href="https://cal.com/dsayandeep/fluxberry-ai-intro-call-with-sayandeep"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <button
               className={cn(
                 "cursor-pointer font-medium text-white",
@@ -119,7 +123,7 @@ export function Navbar() {
             >
               Book a Demo
             </button>
-          </Link>
+          </a>
           <Link href="/signup">
             <button
               className={cn(
@@ -195,8 +199,10 @@ export function Navbar() {
             ))}
 
             <div className="pt-3 mt-2 border-t border-line space-y-2">
-              <Link
-                href="/demo"
+              <a
+                href="https://cal.com/dsayandeep/fluxberry-ai-intro-call-with-sayandeep"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="block"
                 onClick={() => setIsMobileOpen(false)}
               >
@@ -212,7 +218,7 @@ export function Navbar() {
                 >
                   Book a Demo
                 </button>
-              </Link>
+              </a>
               <Link
                 href="/signup"
                 className="block"
