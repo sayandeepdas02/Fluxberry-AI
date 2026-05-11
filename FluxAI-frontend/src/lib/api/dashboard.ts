@@ -28,6 +28,7 @@ export interface ATSAnalytics {
     // Trend / source data appended by dashboard.service
     hiringTrends: { date: string; value: number }[]
     applicationSources: { label: string; value: number; percentage: number }[]
+    avgTimeInStage?: Record<string, number>
 }
 
 export const dashboardApi = {
