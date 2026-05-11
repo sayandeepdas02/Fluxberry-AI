@@ -365,18 +365,18 @@ OrganizationSchema.pre('save', async function () {
     if (this.isNew) {
         const trialEnd = new Date()
         trialEnd.setDate(trialEnd.getDate() + 14)
-        ;(this as any).trialActive = true
-        ;(this as any).trialEndsAt = trialEnd
+            ; (this as any).trialActive = true
+            ; (this as any).trialEndsAt = trialEnd
 
-        // Enable all core + add-on apps during trial
-        ;(this as any).installedApps = {
-            job_board: { enabled: true, installed: true },
-            ats_screening: { enabled: true, installed: true, limits: { resumes: 1000 } },
-            onboarding: { enabled: true, installed: true },
-            interview_agent: { enabled: true, installed: true },
-            talent_prospect: { enabled: true, installed: true, limits: { credits: 50 } },
-            analytics: { enabled: true, installed: true },
-        }
+            // Enable all core + add-on apps during trial
+            ; (this as any).installedApps = {
+                job_board: { enabled: true, installed: true },
+                ats_screening: { enabled: true, installed: true, limits: { resumes: 1000 } },
+                onboarding: { enabled: true, installed: true },
+                interview_agent: { enabled: true, installed: true },
+                talent_prospect: { enabled: true, installed: true, limits: { credits: 50 } },
+                analytics: { enabled: true, installed: true },
+            }
     }
 })
 
@@ -446,19 +446,19 @@ const JobSchema = new Schema<IJob>({
     scoringConfig: {
         version: { type: String, enum: ['v1', 'v2'], default: 'v2' },
         weights: {
-            skills:      { type: Number, default: 0.35 },
-            experience:  { type: Number, default: 0.30 },
-            projects:    { type: Number, default: 0.20 },
-            education:   { type: Number, default: 0.10 },
+            skills: { type: Number, default: 0.35 },
+            experience: { type: Number, default: 0.30 },
+            projects: { type: Number, default: 0.20 },
+            education: { type: Number, default: 0.10 },
             signalBoost: { type: Number, default: 0.05 },
         },
         thresholds: {
-            shortlist:  { type: Number, default: 80 },
-            review:     { type: Number, default: 60 },
+            shortlist: { type: Number, default: 80 },
+            review: { type: Number, default: 60 },
             autoReject: { type: Number, default: 0 },
         },
         hardGates: {
-            requiredSkills:         [{ type: String }],
+            requiredSkills: [{ type: String }],
             minimumExperienceYears: { type: Number, default: 0 },
             requiredEducationLevel: { type: String },
         },
@@ -579,6 +579,17 @@ export interface ICandidate extends Document {
     resumeUrl?: string
     parsedResumeData?: Record<string, unknown>
     tags?: string[]
+    // CRM Expansion Fields
+    socialProfiles?: {
+        linkedin?: string
+        github?: string
+        twitter?: string
+        portfolio?: string
+    }
+    enrichmentData?: Record<string, unknown>
+    enrichedAt?: Date
+    dedupHash?: string
+    isDeleted: boolean
     deletedAt: Date | null
     createdAt: Date
     updatedAt: Date
@@ -594,6 +605,17 @@ const CandidateSchema = new Schema<ICandidate>({
     resumeUrl: { type: String },
     parsedResumeData: { type: Schema.Types.Mixed },
     tags: [{ type: String }],
+    // CRM Expansion Fields
+    socialProfiles: {
+        linkedin: { type: String },
+        github: { type: String },
+        twitter: { type: String },
+        portfolio: { type: String },
+    },
+    enrichmentData: { type: Schema.Types.Mixed },
+    enrichedAt: { type: Date },
+    dedupHash: { type: String, index: true },
+    isDeleted: { type: Boolean, default: false },
     deletedAt: { type: Date, default: null },
 }, { timestamps: true })
 

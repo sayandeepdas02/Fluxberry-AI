@@ -17,7 +17,7 @@ export interface IProspect extends Document {
     skills?: string[]
     linkedinUrl?: string
     source: string
-    status: 'new' | 'contacted' | 'replied' | 'converted'
+    status: 'new' | 'contacted' | 'replied' | 'converted' | 'nurturing' | 'not_interested'
     convertedCandidateId?: Types.ObjectId
     aiFitCache?: {
         jobId: Types.ObjectId
@@ -26,6 +26,22 @@ export interface IProspect extends Document {
         insights: string[]
         updatedAt: Date
     }
+    // CRM Expansion Fields
+    tags?: string[]
+    bookmarkedBy?: Types.ObjectId[]
+    pipelineStage?: string
+    leadScore?: number
+    lastContactedAt?: Date
+    nextFollowUpAt?: Date
+    socialProfiles?: {
+        linkedin?: string
+        github?: string
+        twitter?: string
+        portfolio?: string
+    }
+    enrichmentData?: Record<string, unknown>
+    enrichedAt?: Date
+    notes?: string
     isDeleted: boolean
     createdAt: Date
     updatedAt: Date
@@ -44,7 +60,7 @@ const ProspectSchema = new Schema<IProspect>({
     skills: [{ type: String }],
     linkedinUrl: { type: String },
     source: { type: String, default: 'manual' },
-    status: { type: String, enum: ['new', 'contacted', 'replied', 'converted'], default: 'new' },
+    status: { type: String, enum: ['new', 'contacted', 'replied', 'converted', 'nurturing', 'not_interested'], default: 'new' },
     convertedCandidateId: { type: Schema.Types.ObjectId, ref: 'Candidate' },
     aiFitCache: {
         jobId: { type: Schema.Types.ObjectId, ref: 'Job' },
@@ -53,11 +69,31 @@ const ProspectSchema = new Schema<IProspect>({
         insights: [{ type: String }],
         updatedAt: { type: Date }
     },
+    // CRM Expansion Fields
+    tags: [{ type: String }],
+    bookmarkedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    pipelineStage: { type: String },
+    leadScore: { type: Number, default: 0 },
+    lastContactedAt: { type: Date },
+    nextFollowUpAt: { type: Date },
+    socialProfiles: {
+        linkedin: { type: String },
+        github: { type: String },
+        twitter: { type: String },
+        portfolio: { type: String },
+    },
+    enrichmentData: { type: Schema.Types.Mixed },
+    enrichedAt: { type: Date },
+    notes: { type: String },
     isDeleted: { type: Boolean, default: false },
 }, { timestamps: true })
 
 ProspectSchema.index({ organizationId: 1, email: 1 }, { unique: true })
 ProspectSchema.index({ organizationId: 1, status: 1 })
+ProspectSchema.index({ organizationId: 1, tags: 1 })
+ProspectSchema.index({ organizationId: 1, leadScore: -1 })
+ProspectSchema.index({ organizationId: 1, nextFollowUpAt: 1 })
+ProspectSchema.index({ firstName: 'text', lastName: 'text', email: 'text', company: 'text', skills: 'text' })
 
 export const Prospect = mongoose.model<IProspect>('Prospect', ProspectSchema)
 
