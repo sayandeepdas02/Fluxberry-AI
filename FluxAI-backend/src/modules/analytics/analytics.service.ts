@@ -360,7 +360,6 @@ class AnalyticsService {
         await this.setCache(cacheKey, result)
         return result
     }
-}
 
     // ── Phase 3: Advanced Analytics ──────────────────────────────
 

@@ -33,6 +33,7 @@ class DashboardService {
             hiringTrends: trends,
             applicationSources: demographics,
             stageDistribution: funnel.stageDistribution,
+            conversionRates: funnel.conversionRates,
         }
     }
 }

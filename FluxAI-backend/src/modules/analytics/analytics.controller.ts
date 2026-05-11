@@ -148,7 +148,6 @@ export class AnalyticsController {
             next(error)
         }
     }
-}
 
     // ── Phase 3 Advanced Analytics ────────────────────────────
 

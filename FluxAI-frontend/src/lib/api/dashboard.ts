@@ -19,17 +19,26 @@ export interface DashboardSummary {
     }[]
 }
 
+export interface ConversionRates {
+    appliedToInterview: number
+    interviewToOffer: number
+    offerToHired: number
+}
+
 export interface ATSAnalytics {
-    // KPI-shaped fields from the analytics service spread
-    activeJobs: { label: string; value: number; trend: number; trendDirection: string }
-    totalCandidates: { label: string; value: number; trend: number; trendDirection: string }
-    applications: { label: string; value: number; trend: number; trendDirection: string }
-    awaitingReview: { label: string; value: number; trend: number; trendDirection: string }
-    // Trend / source data appended by dashboard.service
+    // KPI fields (spread from analytics.getKPIs)
+    activeJobs: KPIData
+    totalCandidates: KPIData
+    applications: KPIData
+    awaitingReview: KPIData
+    // Trend + source data
     hiringTrends: { date: string; value: number }[]
     applicationSources: { label: string; value: number; percentage: number }[]
-    avgTimeInStage?: Record<string, number>
+    // Funnel data (from analytics.getFunnelMetrics)
     stageDistribution?: Record<string, number>
+    conversionRates?: ConversionRates
+    // Per-stage average time in days (optional — only present if backend computes it)
+    avgTimeInStage?: Record<string, number>
 }
 
 export const dashboardApi = {
