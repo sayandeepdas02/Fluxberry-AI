@@ -85,20 +85,21 @@ export function InterviewList() {
                                     <TableCell>
                                         <div className="flex flex-col">
                                             <span className="font-medium">
-                                                {format(new Date(interview.start), 'MMM d, yyyy')}
+                                                {format(new Date(interview.startTime), 'MMM d, yyyy')}
                                             </span>
                                             <span className="text-xs text-muted-foreground">
-                                                {format(new Date(interview.start), 'h:mm a')} - {format(new Date(interview.end), 'h:mm a')}
+                                                {format(new Date(interview.startTime), 'h:mm a')} - {format(new Date(interview.endTime), 'h:mm a')}
                                             </span>
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        {/* Ideally we fetch name, or if populated */}
-                                        {/* For now assuming backend might populate or we use IDs if not */}
-                                        <span className="font-medium">{interview.candidateId}</span>
-                                        {/* TODO: Populate candidate/job details on backend or fetch here */}
+                                        <span className="font-medium">
+                                            {interview.candidateId.firstName
+                                                ? `${interview.candidateId.firstName} ${interview.candidateId.lastName || ''}`.trim()
+                                                : interview.candidateId.email}
+                                        </span>
                                     </TableCell>
-                                    <TableCell>{interview.summary}</TableCell>
+                                    <TableCell>{interview.title}</TableCell>
                                     <TableCell>
                                         <Badge variant={interview.status === 'COMPLETED' ? 'default' : 'outline'}>
                                             {interview.status}

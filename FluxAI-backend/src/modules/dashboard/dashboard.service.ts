@@ -21,16 +21,19 @@ class DashboardService {
     }
 
     async getAnalytics(organizationId: string) {
-        const [atsAnalytics, trends, demographics] = await Promise.all([
+        const [atsAnalytics, trends, demographics, funnel] = await Promise.all([
             analyticsService.getKPIs(organizationId),
             analyticsService.getApplicationVolume(organizationId, 'month'),
             analyticsService.getSourcePerformance(organizationId),
+            analyticsService.getFunnelMetrics(organizationId),
         ])
 
         return {
             ...atsAnalytics,
             hiringTrends: trends,
             applicationSources: demographics,
+            stageDistribution: funnel.stageDistribution,
+            conversionRates: funnel.conversionRates,
         }
     }
 }

@@ -68,7 +68,7 @@ export default function AssessmentsPage() {
         mutationFn: ({ id, emails }: { id: string; emails: string[] }) => assessmentsApi.invite(id, { emails }),
         invalidateKeys: [['assessments']],
         onSuccess: (res) => {
-            toast.success(`${res?.invited || 0} candidates invited`)
+            toast.success(`${res?.data?.invited || 0} candidates invited`)
             setShowInvite(null)
             setInviteEmails('')
         },

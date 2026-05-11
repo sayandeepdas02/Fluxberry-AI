@@ -98,7 +98,7 @@ export default function CampaignsPage() {
         mutationFn: (id: string) => prospectsApi.sendCampaign(id),
         invalidateKeys: [['campaigns']],
         onSuccess: (res) => {
-            toast.success(`Campaign sent! ${res?.sent}/${res?.total} emails delivered.`)
+            toast.success(`Campaign sent! ${res?.data?.sent}/${res?.data?.total} emails delivered.`)
         },
     })
 
