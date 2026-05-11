@@ -110,11 +110,15 @@ export function Hero() {
             }}
           >
             {/* Secondary: Book a Demo */}
-            <Link href="/demo">
+            <a
+              href="https://cal.com/dsayandeep/fluxberry-ai-intro-call-with-sayandeep"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <SharpButton shine className="!bg-black !text-white !border-black hover:!bg-black/90">
                 Book a Demo
               </SharpButton>
-            </Link>
+            </a>
 
             {/* Primary: Start free trial */}
             <Link href="/signup">

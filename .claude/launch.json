@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "FluxAI Frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "FluxAI-frontend", "run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "FluxAI API",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "FluxAI-backend", "run", "dev:api"],
+      "port": 5001
+    },
+    {
+      "name": "FluxAI Worker",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "FluxAI-backend", "run", "dev:worker"],
+      "port": 0
+    }
+  ]
+}
