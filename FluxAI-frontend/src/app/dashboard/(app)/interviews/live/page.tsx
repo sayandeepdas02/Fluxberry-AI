@@ -89,11 +89,8 @@ export default function LiveInterviewsPage() {
     })
 
     function getCandidateName(interview: IInterview) {
-        if (typeof interview.candidateId === 'object' && interview.candidateId !== null) {
-            const c = interview.candidateId as any
-            return c.firstName ? `${c.firstName} ${c.lastName || ''}`.trim() : c.email || 'Unknown'
-        }
-        return 'Unknown'
+        const c = interview.candidateId
+        return c.firstName ? `${c.firstName} ${c.lastName || ''}`.trim() : c.email || 'Unknown'
     }
 
     return (

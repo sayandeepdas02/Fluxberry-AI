@@ -4,12 +4,26 @@ import { ApiResponse } from './types'
 export type InterviewType = 'SCREENING' | 'TECHNICAL' | 'BEHAVIORAL' | 'SYSTEM_DESIGN' | 'FINAL'
 export type InterviewStatus = 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'RESCHEDULED' | 'NO_SHOW'
 
+// Sub-types always present after backend populate (list + getById always populate)
+export interface PopulatedPerson {
+    _id: string
+    firstName?: string
+    lastName?: string
+    email: string
+}
+
+export interface PopulatedJob {
+    _id: string
+    title: string
+}
+
+// API response shape — candidateId / interviewerId / jobId are always populated objects
 export interface IInterview {
     _id: string
     organizationId: string
-    candidateId: string | { _id: string; firstName?: string; lastName?: string; email: string }
-    interviewerId: string | { _id: string; firstName?: string; lastName?: string; email: string }
-    jobId: string | { _id: string; title: string }
+    candidateId: PopulatedPerson
+    interviewerId: PopulatedPerson
+    jobId: PopulatedJob
     applicationId: string
     stageId?: string
     attendees?: string[]
@@ -26,6 +40,23 @@ export interface IInterview {
     scorecardId?: string
     createdAt: string
     updatedAt: string
+}
+
+// Form state for create/edit — IDs are plain strings, not populated objects
+export interface InterviewFormData {
+    candidateId?: string
+    interviewerId?: string
+    jobId?: string
+    applicationId?: string
+    title?: string
+    description?: string
+    type?: InterviewType
+    status?: InterviewStatus
+    startTime?: string
+    endTime?: string
+    meetingLink?: string
+    location?: string
+    attendees?: string[]
 }
 
 export interface CreateInterviewInput {

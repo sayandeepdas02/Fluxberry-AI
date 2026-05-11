@@ -93,12 +93,13 @@ export function InterviewList() {
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        {/* Ideally we fetch name, or if populated */}
-                                        {/* For now assuming backend might populate or we use IDs if not */}
-                                        <span className="font-medium">{interview.candidateId}</span>
-                                        {/* TODO: Populate candidate/job details on backend or fetch here */}
+                                        <span className="font-medium">
+                                            {interview.candidateId.firstName
+                                                ? `${interview.candidateId.firstName} ${interview.candidateId.lastName || ''}`.trim()
+                                                : interview.candidateId.email}
+                                        </span>
                                     </TableCell>
-                                    <TableCell>{interview.summary}</TableCell>
+                                    <TableCell>{interview.title}</TableCell>
                                     <TableCell>
                                         <Badge variant={interview.status === 'COMPLETED' ? 'default' : 'outline'}>
                                             {interview.status}

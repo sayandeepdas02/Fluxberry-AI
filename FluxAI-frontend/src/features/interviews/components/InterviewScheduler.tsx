@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { interviewsApi, IInterview } from '@/lib/api/interviews'
+import { interviewsApi, InterviewFormData } from '@/lib/api/interviews'
 import { candidatesApi, Candidate } from '@/lib/api/candidates'
 import { jobsApi, Job } from '@/lib/api/jobs'
 import { organizationsApi, OrganizationMember } from '@/lib/api/organizations'
@@ -32,10 +32,8 @@ export function InterviewScheduler() {
     const [interviewers, setInterviewers] = useState<OrganizationMember[]>([])
 
     // Form State
-    const [formData, setFormData] = useState<Partial<IInterview>>({
-        summary: '',
-        start: '',
-        end: '',
+    const [formData, setFormData] = useState<InterviewFormData>({
+        title: '',
         attendees: [],
         status: 'SCHEDULED'
     })
@@ -73,10 +71,22 @@ export function InterviewScheduler() {
         try {
             const res = await interviewsApi.getById(interviewId)
             if (res.success && res.data) {
-                setFormData(res.data)
-                // Convert ISO strings to local datetime string for input
-                if (res.data.start) setStartDate(format(new Date(res.data.start), "yyyy-MM-dd'T'HH:mm"))
-                if (res.data.end) setEndDate(format(new Date(res.data.end), "yyyy-MM-dd'T'HH:mm"))
+                const d = res.data
+                setFormData({
+                    candidateId: d.candidateId._id,
+                    interviewerId: d.interviewerId._id,
+                    jobId: d.jobId._id,
+                    applicationId: d.applicationId,
+                    title: d.title,
+                    description: d.description,
+                    type: d.type,
+                    status: d.status,
+                    meetingLink: d.meetingLink,
+                    location: d.location,
+                    attendees: d.attendees,
+                })
+                setStartDate(format(new Date(d.startTime), "yyyy-MM-dd'T'HH:mm"))
+                setEndDate(format(new Date(d.endTime), "yyyy-MM-dd'T'HH:mm"))
             }
         } catch (error) {
             toast.error('Failed to load interview')
@@ -93,13 +103,14 @@ export function InterviewScheduler() {
         setLoading(true)
         const payload = {
             ...formData,
-            start: new Date(startDate).toISOString(),
-            end: new Date(endDate).toISOString(),
+            startTime: new Date(startDate).toISOString(),
+            endTime: new Date(endDate).toISOString(),
         }
 
         try {
             if (isNew) {
-                await interviewsApi.create(payload)
+                // Runtime guard above ensures required fields are present
+                await interviewsApi.create(payload as Parameters<typeof interviewsApi.create>[0])
                 toast.success('Interview scheduled')
             } else if (id) {
                 await interviewsApi.update(id, payload)
@@ -113,14 +124,13 @@ export function InterviewScheduler() {
         }
     }
 
-    // Handle multi-select for attendees (interviewers)
-    const toggleAttendee = (email: string) => {
+    // Handle multi-select for attendees (stored as member _id strings)
+    const toggleAttendee = (memberId: string) => {
         const current = formData.attendees || []
-        const exists = current.find(a => a.email === email)
-        if (exists) {
-            setFormData({ ...formData, attendees: current.filter(a => a.email !== email) })
+        if (current.includes(memberId)) {
+            setFormData({ ...formData, attendees: current.filter(id => id !== memberId) })
         } else {
-            setFormData({ ...formData, attendees: [...current, { email }] })
+            setFormData({ ...formData, attendees: [...current, memberId] })
         }
     }
 
@@ -185,8 +195,8 @@ export function InterviewScheduler() {
                     <div className="grid gap-2">
                         <Label>Interview Summary/Title</Label>
                         <Input
-                            value={formData.summary}
-                            onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
+                            value={formData.title || ''}
+                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                             placeholder="e.g. Technical Screen with John"
                         />
                     </div>
@@ -217,8 +227,8 @@ export function InterviewScheduler() {
                                 <div key={member._id} className="flex items-center space-x-2">
                                     <Checkbox
                                         id={member._id}
-                                        checked={formData.attendees?.some(a => a.email === member.email)}
-                                        onCheckedChange={() => toggleAttendee(member.email)}
+                                        checked={formData.attendees?.includes(member._id) ?? false}
+                                        onCheckedChange={() => toggleAttendee(member._id)}
                                     />
                                     <Label htmlFor={member._id}>{member.firstName} {member.lastName}</Label>
                                 </div>
@@ -229,8 +239,8 @@ export function InterviewScheduler() {
                     <div className="grid gap-2">
                         <Label>Meeting Link (Optional)</Label>
                         <Input
-                            value={formData.meetLink || ''}
-                            onChange={(e) => setFormData({ ...formData, meetLink: e.target.value })}
+                            value={formData.meetingLink || ''}
+                            onChange={(e) => setFormData({ ...formData, meetingLink: e.target.value })}
                             placeholder="https://meet.google.com/..."
                         />
                     </div>
