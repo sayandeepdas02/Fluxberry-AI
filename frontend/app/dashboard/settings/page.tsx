@@ -140,7 +140,7 @@ export default function SettingsPage() {
             if (!res.ok) throw new Error("Failed to delete account")
 
             alert("Account deleted successfully.")
-            signOut({ callbackUrl: "/login" })
+            signOut({ callbackUrl: "/" })
         } catch (error) {
             console.error(error)
             alert("Failed to delete account.")

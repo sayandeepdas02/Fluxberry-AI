@@ -22,7 +22,7 @@ export function Hero() {
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-                    <Link href="/register">
+                    <Link href="/dashboard">
                         <Button size="lg" className="h-12 px-8 text-base shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all">
                             Start Hiring Smarter
                             <ArrowRight className="ml-2 h-4 w-4" />

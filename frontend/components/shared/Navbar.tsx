@@ -54,14 +54,6 @@ export function Navbar() {
         {/* ── RIGHT PILL ── */}
         <div className="hidden md:flex items-center gap-[6px] h-[52px] bg-[#F0F0F0] rounded-full p-[5px] border border-black/[0.04] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
 
-          {/* Sign In */}
-          <Link href="/login">
-            <button className="h-[42px] px-5 rounded-full bg-white border border-black/[0.08] font-mono text-[11.5px] font-medium uppercase tracking-[0.08em] text-black/80 flex items-center gap-1.5 hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
-              Sign In
-              <span className="text-[13px] leading-none">↗</span>
-            </button>
-          </Link>
-
           {/* Book a Demo */}
           <Link href="/demo">
             <button className="h-[42px] px-6 rounded-full bg-[#f64124] font-mono text-[11.5px] font-medium uppercase tracking-[0.08em] text-white flex items-center gap-1.5 hover:bg-[#e53a1e] transition-colors duration-200 cursor-pointer shadow-sm">
@@ -107,11 +99,6 @@ export function Navbar() {
             </Link>
           ))}
           <div className="pt-3 mt-2 border-t border-black/[0.06] space-y-2">
-            <Link href="/login" className="block" onClick={() => setIsOpen(false)}>
-              <button className="w-full h-[44px] rounded-full border border-black/10 font-mono text-[12px] font-medium uppercase tracking-[0.08em] text-black/80 hover:bg-black/[0.02] transition-colors cursor-pointer">
-                Sign In ↗
-              </button>
-            </Link>
             <Link href="/demo" className="block" onClick={() => setIsOpen(false)}>
               <button className="w-full h-[44px] rounded-full bg-[#f64124] text-white font-mono text-[12px] font-medium uppercase tracking-[0.08em] hover:bg-[#e53a1e] transition-colors cursor-pointer">
                 Book a Demo ↗
