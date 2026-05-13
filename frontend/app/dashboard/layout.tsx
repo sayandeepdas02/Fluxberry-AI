@@ -1,22 +1,12 @@
-import { getServerSession } from "next-auth"
-import { redirect } from "next/navigation"
-import { authOptions } from "../api/auth/[...nextauth]/route"
 import { DashboardNav } from "@/components/dashboard/dashboard-nav"
 import Link from "next/link"
 import { TopNav } from "@/components/dashboard/top-nav"
-import Image from "next/image"
 
-export default async function DashboardLayout({
+export default function DashboardLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
-    const session = await getServerSession(authOptions)
-
-    if (!session) {
-        redirect("/login")
-    }
-
     return (
         <div className="flex min-h-screen bg-[#FAFAFA]">
             {/* Sidebar Desktop */}

@@ -12,7 +12,7 @@ export function CTA() {
                     Join 1,000+ companies hiring the best talent with Interview AI. Start your free 14-day trial today.
                 </p>
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
-                    <Link href="/register">
+                    <Link href="/dashboard">
                         <Button size="lg" variant="secondary" className="h-12 px-8 text-primary font-semibold">
                             Start Free Trial
                         </Button>

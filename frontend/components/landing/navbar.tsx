@@ -39,11 +39,8 @@ export function Navbar() {
                     <Link href="https://github.com/sayandeepdas02" target="_blank" className="text-slate-600 hover:text-primary transition-colors">
                         <Github className="h-5 w-5" />
                     </Link>
-                    <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-primary hidden sm:block">
-                        Log in
-                    </Link>
-                    <Link href="/register">
-                        <Button>Start Free Trial</Button>
+                    <Link href="/dashboard">
+                        <Button>Get Started</Button>
                     </Link>
                 </div>
             </div>
