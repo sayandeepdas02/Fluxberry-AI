@@ -5,7 +5,7 @@ import { create } from "zustand";
    Manages sidebar UI state with localStorage persistence
    ═══════════════════════════════════════════════════ */
 
-const STORAGE_KEY = "flexberry-sidebar-state";
+const STORAGE_KEY = "fluxberry-sidebar-state";
 
 interface SidebarPersistedState {
   isCollapsed: boolean;

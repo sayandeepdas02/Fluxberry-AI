@@ -124,7 +124,7 @@ export function Navbar() {
               Book a Demo
             </button>
           </a>
-          <Link href="/signup">
+          <Link href="/onboard/step-1">
             <button
               className={cn(
                 "cursor-pointer font-medium text-white",
@@ -220,7 +220,7 @@ export function Navbar() {
                 </button>
               </a>
               <Link
-                href="/signup"
+                href="/onboard/step-1"
                 className="block"
                 onClick={() => setIsMobileOpen(false)}
               >

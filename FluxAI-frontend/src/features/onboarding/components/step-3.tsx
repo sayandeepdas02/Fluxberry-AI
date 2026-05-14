@@ -7,8 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useOnboarding } from "@/features/onboarding/hooks/onboarding-context";
-import { onboardingApi } from "@/lib/api/onboarding";
-import { useAuth } from "@/lib/context/auth-context";
 import { OnboardingShell } from "./onboarding-shell";
 import { Upload, X, Loader2 } from "lucide-react";
 
@@ -30,7 +28,6 @@ function getInitials(name: string): string {
 export function OnboardingStep3() {
     const router = useRouter();
     const { data, updateData } = useOnboarding();
-    const { refreshUser } = useAuth();
 
     const [workspaceName, setWorkspaceName] = useState(data.workspaceName || data.companyName || "");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -104,22 +101,8 @@ export function OnboardingStep3() {
 
         try {
             updateData({ workspaceName, workspaceLogo: logoPreview || undefined });
-
-            // Legacy compat: backend expects 'ats' | 'hire' | 'both'
-            const response = await onboardingApi.complete({
-                fullName: data.fullName,
-                companyRole: data.role,
-                companyWebsite: data.companyWebsite,
-                productSelection: "both",
-                workspaceName: workspaceName.trim(),
-            });
-
-            if (response.success) {
-                await refreshUser();
-                router.push("/dashboard");
-            } else {
-                setSubmitError(response.error?.message || "Failed to complete onboarding.");
-            }
+            // Auth/onboarding API bypassed for testing — go straight to dashboard
+            router.push("/dashboard");
         } catch {
             setSubmitError("An error occurred. Please try again.");
         } finally {

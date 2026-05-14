@@ -19,7 +19,7 @@ export default function MarketplacePage() {
                 <EmptyState
                     icon={LayoutGrid}
                     title="Marketplace coming soon"
-                    description="Browse integrations and tools to extend your Flexberry AI platform capabilities."
+                    description="Browse integrations and tools to extend your Fluxberry AI platform capabilities."
                     actionLabel="View Waitlist"
                 />
             </div>
