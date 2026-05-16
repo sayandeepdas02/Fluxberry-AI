@@ -5,10 +5,10 @@
  * Falls back to deterministic scoring when OpenAI is unavailable.
  */
 
-import { Job as JobModel, Candidate } from '../../../database/models/index.js'
-import { ScreeningResult, ScreeningStatus } from '../../../modules/ats-screening/models/screening-result.model.js'
-import { AIRankingResult, IAIRankingEntry } from '../../../database/models/ai-intelligence.models.js'
-import { embeddingService } from '../../../modules/ats-screening/scoring-v2/embedding.service.js'
+import { Job as JobModel, Candidate } from '../../database/models/index.js'
+import { ScreeningResult, ScreeningStatus } from '../../modules/ats-screening/models/screening-result.model.js'
+import { AIRankingResult, IAIRankingEntry } from '../../database/models/ai-intelligence.models.js'
+import { embeddingService } from '../../modules/ats-screening/scoring-v2/embedding.service.js'
 import { Types } from 'mongoose'
 
 class AIRankingService {

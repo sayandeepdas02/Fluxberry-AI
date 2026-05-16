@@ -46,7 +46,7 @@ export function OnboardingStep1() {
 
             {/* Header */}
             <div className="mb-7">
-                <h1 className="text-xl font-semibold tracking-tight mb-1.5">Welcome to Fluxberry</h1>
+                <h1 className="text-xl font-semibold tracking-tight mb-1.5">Welcome to Fluxberry AI</h1>
                 <p className="text-sm text-muted-foreground leading-snug">
                     Let's get your account set up in a few quick steps.
                 </p>

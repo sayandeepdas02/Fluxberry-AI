@@ -7,15 +7,23 @@ import { aiPipelineService } from '../../ai/intelligence/ai-pipeline.service.js'
 import { aiOutreachService } from '../../ai/intelligence/ai-outreach.service.js'
 import { aiResumeAnalysisService } from '../../ai/intelligence/ai-resume-analysis.service.js'
 
-// Optional: import the main-branch service if it exists
+// Optional: import the main-branch service if it exists (lazy-loaded on first use)
 let aiIntelligenceService: any = null
-try { aiIntelligenceService = (await import('./ai-intelligence.service.js')).aiIntelligenceService } catch {}
+let _aiSvcInitialized = false
+async function resolveAIIntelligenceService() {
+    if (!_aiSvcInitialized) {
+        try { aiIntelligenceService = (await import('./ai-intelligence.service.js')).aiIntelligenceService } catch {}
+        _aiSvcInitialized = true
+    }
+    return aiIntelligenceService
+}
 
 export class AIIntelligenceController {
 
     // ── Candidate Insights (main branch service) ─────────────
     async getCandidateInsights(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
+            await resolveAIIntelligenceService()
             const orgId = req.user?.organizationId
             if (!orgId) throw AppError.forbidden('Organization context required')
             if (!aiIntelligenceService) throw AppError.internal('AI Intelligence service not available')
@@ -29,6 +37,7 @@ export class AIIntelligenceController {
     // ── Outreach Draft (both versions) ───────────────────────
     async generateOutreachDraft(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
+            await resolveAIIntelligenceService()
             const orgId = req.user?.organizationId
             if (!orgId) throw AppError.forbidden('Organization context required')
             const { jobId } = req.body
@@ -65,6 +74,7 @@ export class AIIntelligenceController {
 
     async getRankedCandidates(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
+            await resolveAIIntelligenceService()
             const orgId = req.user?.organizationId
             if (!orgId) throw AppError.forbidden('Organization context required')
             if (aiIntelligenceService) {
@@ -108,6 +118,7 @@ export class AIIntelligenceController {
 
     async getSkillGap(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
+            await resolveAIIntelligenceService()
             const orgId = req.user?.organizationId
             if (!orgId) throw AppError.forbidden('Organization context required')
             const { jobId } = req.query
@@ -154,6 +165,7 @@ export class AIIntelligenceController {
 
     async detectBottlenecks(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
+            await resolveAIIntelligenceService()
             const orgId = req.user?.organizationId
             if (!orgId) throw AppError.forbidden('Organization context required')
             if (aiIntelligenceService) {
@@ -185,6 +197,7 @@ export class AIIntelligenceController {
 
     async getPipelineOptimizations(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
+            await resolveAIIntelligenceService()
             const orgId = req.user?.organizationId
             if (!orgId) throw AppError.forbidden('Organization context required')
             if (aiIntelligenceService) {
@@ -199,6 +212,7 @@ export class AIIntelligenceController {
     // ── Copilot Chat ─────────────────────────────────────────
     async copilotChat(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
+            await resolveAIIntelligenceService()
             const orgId = req.user?.organizationId
             if (!orgId) throw AppError.forbidden('Organization context required')
             if (!aiIntelligenceService) throw AppError.internal('Copilot service not available')

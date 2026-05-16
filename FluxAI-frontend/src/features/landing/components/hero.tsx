@@ -121,7 +121,7 @@ export function Hero() {
             </a>
 
             {/* Primary: Start free trial */}
-            <Link href="/signup">
+            <Link href="/onboard/step-1">
               <SharpButton variant="primary" shine>
                 Start free trial
                 <ArrowRight className="w-4 h-4 ml-2" />

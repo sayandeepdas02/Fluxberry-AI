@@ -4,7 +4,7 @@
  * Detects bottlenecks, suggests optimizations, forecasts timelines.
  */
 
-import { JobApplication, ApplicationStatus, Job as JobModel, StageHistory } from '../../../database/models/index.js'
+import { JobApplication, ApplicationStatus, Job as JobModel, StageHistory } from '../../database/models/index.js'
 import mongoose from 'mongoose'
 
 interface BottleneckResult {

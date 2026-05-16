@@ -4,8 +4,8 @@
  * Uses embedding similarity with deterministic fallback.
  */
 
-import { Job as JobModel, Candidate, JobApplication } from '../../../database/models/index.js'
-import { embeddingService } from '../../../modules/ats-screening/scoring-v2/embedding.service.js'
+import { Job as JobModel, Candidate, JobApplication } from '../../database/models/index.js'
+import { embeddingService } from '../../modules/ats-screening/scoring-v2/embedding.service.js'
 import { Types } from 'mongoose'
 
 interface MatchResult {

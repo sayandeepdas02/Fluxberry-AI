@@ -12,7 +12,7 @@ export function FAQ() {
       answer: "Cypher helps teams design, build, and deploy practical AI solutions. We work across strategy, implementation, and optimization to ensure AI fits real business workflows and delivers measurable value."
     },
     {
-      question: "HOW IS FLUXBERRY DIFFERENT FROM A TRADITIONAL ATS?",
+      question: "HOW IS FLUXBERRY AI DIFFERENT FROM A TRADITIONAL ATS?",
       answer: "Cypher is built for startups, SMEs, and tech-forward teams looking to use AI in a reliable, production-ready way—without experimenting blindly or relying on one-off tools."
     },
     {

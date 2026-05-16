@@ -89,7 +89,7 @@ export function FinalCTASection() {
           }}
         >
           {/* Primary CTA */}
-          <Link href="/signup" className="pointer-events-auto">
+          <Link href="/onboard/step-1" className="pointer-events-auto">
             <SharpButton
               variant="primary"
               className="!bg-white !text-[#3B429F] !border-white hover:!bg-white/90 font-semibold pointer-events-auto"

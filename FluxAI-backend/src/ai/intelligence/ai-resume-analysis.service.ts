@@ -5,8 +5,8 @@
  */
 
 import OpenAI from 'openai'
-import { Job as JobModel, Candidate } from '../../../database/models/index.js'
-import { ScreeningResult } from '../../../modules/ats-screening/models/screening-result.model.js'
+import { Job as JobModel, Candidate } from '../../database/models/index.js'
+import { ScreeningResult } from '../../modules/ats-screening/models/screening-result.model.js'
 
 interface SkillGap {
     skill: string

@@ -17,7 +17,7 @@ const faqs = [
   },
   {
     question: "Can I integrate it with my existing ATS?",
-    answer: "Yes, Fluxberry seamlessly integrates with major ATS platforms like Greenhouse, Workday, and Lever via our native API."
+    answer: "Yes, Fluxberry AI seamlessly integrates with major ATS platforms like Greenhouse, Workday, and Lever via our native API."
   },
   {
     question: "Is there a free trial available?",

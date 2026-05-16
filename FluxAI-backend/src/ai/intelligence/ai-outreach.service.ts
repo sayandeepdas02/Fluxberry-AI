@@ -5,9 +5,9 @@
  */
 
 import OpenAI from 'openai'
-import { Prospect } from '../../../database/models/prospect.models.js'
-import { Job as JobModel } from '../../../database/models/index.js'
-import { AIOutreachDraft } from '../../../database/models/ai-intelligence.models.js'
+import { Prospect } from '../../database/models/prospect.models.js'
+import { Job as JobModel } from '../../database/models/index.js'
+import { AIOutreachDraft } from '../../database/models/ai-intelligence.models.js'
 import { Types } from 'mongoose'
 
 class AIOutreachService {
