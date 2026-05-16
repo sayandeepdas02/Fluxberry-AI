@@ -13,7 +13,7 @@
 
 import { useEffect, useRef, useCallback, useState } from "react"
 import { io, Socket } from "socket.io-client"
-import { getStoredToken } from "@/lib/api/client"
+import { getAccessToken } from "@/lib/context/auth-context"
 
 const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 const BACKEND_WS = process.env.NEXT_PUBLIC_BACKEND_WS || NEXT_PUBLIC_API_URL.replace('/api', '')
@@ -93,7 +93,7 @@ export function useInterviewSocket({
         const socket = io(`${BACKEND_WS}/ai-interview`, {
             transports: ["websocket", "polling"],
             withCredentials: true,
-            auth: { token: getStoredToken() || '' },
+            auth: { token: getAccessToken() || '' },
         })
 
         socketRef.current = socket

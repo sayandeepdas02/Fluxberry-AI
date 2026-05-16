@@ -1,34 +1,22 @@
 import { ApiResponse } from './types'
+import { getAccessToken } from '@/lib/context/auth-context'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 const REQUEST_TIMEOUT_MS = 30_000
 
-const TOKEN_KEY = 'fluxai_token'
-
-// Pluggable auth callback — wire this up in your auth context / provider
-// so sign-out logic stays out of this module.
+// Pluggable sign-out callback — wired by AuthProvider on mount
 let onUnauthorized: (() => void) | null = null
+// Token updater — wired by AuthProvider so the module-level token stays current after refresh
+let onTokenRefreshed: ((token: string) => void) | null = null
 
 export function setUnauthorizedHandler(handler: () => void): void {
     onUnauthorized = handler
 }
 
-export function getStoredToken(): string | null {
-    if (typeof window === 'undefined') return null
-    return localStorage.getItem(TOKEN_KEY)
+export function setTokenRefreshedHandler(handler: (token: string) => void): void {
+    onTokenRefreshed = handler
 }
 
-export function setStoredToken(token: string): void {
-    if (typeof window === 'undefined') return
-    localStorage.setItem(TOKEN_KEY, token)
-}
-
-export function clearStoredToken(): void {
-    if (typeof window === 'undefined') return
-    localStorage.removeItem(TOKEN_KEY)
-}
-
-/** Thrown by query / mutation functions so callers can distinguish error types. */
 export class ApiError extends Error {
     public readonly code: string
     public readonly details?: unknown
@@ -40,7 +28,6 @@ export class ApiError extends Error {
         this.details = details
     }
 
-    /** True for errors that are the caller's fault (4xx) and should not be retried. */
     get isClientError(): boolean {
         const clientCodes = [
             'NOT_FOUND', 'UNAUTHORIZED', 'FORBIDDEN', 'CONFLICT',
@@ -59,7 +46,6 @@ async function parseResponseBody(response: Response): Promise<unknown> {
     if (contentType.includes('application/json')) {
         return response.json()
     }
-    // Non-JSON body (HTML error pages, plain text from proxies/CDN)
     const text = await response.text().catch(() => '')
     return {
         success: false,
@@ -110,14 +96,13 @@ class ApiClient {
         options: RequestInit = {},
         tokenOverride?: string
     ): Promise<ApiResponse<T>> {
-        const token = tokenOverride !== undefined ? tokenOverride : getStoredToken()
+        const token = tokenOverride !== undefined ? tokenOverride : getAccessToken()
 
         const headers: Record<string, string> = {
             'X-Request-ID': generateRequestId(),
             ...(options.headers as Record<string, string>),
         }
 
-        // Let the browser set Content-Type (with boundary) for FormData
         if (!(options.body instanceof FormData)) {
             headers['Content-Type'] = 'application/json'
         }
@@ -160,9 +145,10 @@ class ApiClient {
                         })
                         const refreshData = await parseResponseBody(refreshRes) as any
 
-                        if (refreshRes.ok && refreshData?.success && refreshData?.data?.tokens) {
+                        if (refreshRes.ok && refreshData?.success && refreshData?.data?.tokens?.accessToken) {
                             const newToken = refreshData.data.tokens.accessToken
-                            setStoredToken(newToken)
+                            // Update the module-level token in auth-context
+                            onTokenRefreshed?.(newToken)
                             this.processQueue(null, newToken)
 
                             response = await this.fetchWithTimeout(`${this.baseUrl}${endpoint}`, {
@@ -176,7 +162,6 @@ class ApiClient {
                         }
                     } catch (refreshErr) {
                         this.processQueue(refreshErr, null)
-                        clearStoredToken()
                         onUnauthorized?.()
                         return { success: false, error: { code: 'UNAUTHORIZED', message: 'Session expired' } }
                     } finally {

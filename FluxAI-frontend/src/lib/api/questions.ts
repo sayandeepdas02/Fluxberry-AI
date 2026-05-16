@@ -1,8 +1,4 @@
-/**
- * Question Bank API Client
- */
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'
+import { apiClient } from './client'
 
 export interface MCQDetails {
     options: string[]
@@ -53,51 +49,36 @@ export interface ListQuestionsParams {
     offset?: number
 }
 
-async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
-    const res = await fetch(`${API_BASE}${path}`, {
-        ...options,
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json',
-            ...(options?.headers ?? {}),
-        },
-    })
-    const body = await res.json()
-    if (!res.ok || !body.success) {
-        throw new Error(body.error?.message ?? 'API Error')
-    }
-    return body.data as T
-}
-
 export const questionsApi = {
-    list(params: ListQuestionsParams = {}): Promise<QuestionListResponse> {
-        const q = new URLSearchParams()
-        if (params.type) q.set('type', params.type)
-        if (params.difficulty) q.set('difficulty', params.difficulty)
-        if (params.topic) q.set('topic', params.topic)
-        if (params.search) q.set('search', params.search)
-        if (params.limit != null) q.set('limit', String(params.limit))
-        if (params.offset != null) q.set('offset', String(params.offset))
-        return apiFetch<QuestionListResponse>(`/api/questions?${q.toString()}`)
+    async list(params: ListQuestionsParams = {}): Promise<QuestionListResponse> {
+        const queryParams: Record<string, string> = {}
+        if (params.type) queryParams.type = params.type
+        if (params.difficulty) queryParams.difficulty = params.difficulty
+        if (params.topic) queryParams.topic = params.topic
+        if (params.search) queryParams.search = params.search
+        if (params.limit != null) queryParams.limit = String(params.limit)
+        if (params.offset != null) queryParams.offset = String(params.offset)
+
+        const res = await apiClient.get<QuestionListResponse>('/questions', queryParams)
+        if (!res.success || !res.data) throw new Error(res.error?.message ?? 'API Error')
+        return res.data
     },
 
-    create(input: CreateQuestionInput): Promise<Question> {
-        return apiFetch<Question>('/api/questions', {
-            method: 'POST',
-            body: JSON.stringify(input),
-        })
+    async create(input: CreateQuestionInput): Promise<Question> {
+        const res = await apiClient.post<Question>('/questions', input)
+        if (!res.success || !res.data) throw new Error(res.error?.message ?? 'API Error')
+        return res.data
     },
 
-    update(id: string, input: UpdateQuestionInput): Promise<Question> {
-        return apiFetch<Question>(`/api/questions/${id}`, {
-            method: 'PATCH',
-            body: JSON.stringify(input),
-        })
+    async update(id: string, input: UpdateQuestionInput): Promise<Question> {
+        const res = await apiClient.patch<Question>(`/questions/${id}`, input)
+        if (!res.success || !res.data) throw new Error(res.error?.message ?? 'API Error')
+        return res.data
     },
 
-    delete(id: string): Promise<{ deleted: boolean }> {
-        return apiFetch<{ deleted: boolean }>(`/api/questions/${id}`, {
-            method: 'DELETE',
-        })
+    async delete(id: string): Promise<{ deleted: boolean }> {
+        const res = await apiClient.delete<{ deleted: boolean }>(`/questions/${id}`)
+        if (!res.success || !res.data) throw new Error(res.error?.message ?? 'API Error')
+        return res.data
     },
 }

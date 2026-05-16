@@ -39,12 +39,12 @@ export function DashboardSidebar() {
 
           <Separator className="opacity-30" />
 
-          {/* Products section */}
-          <SidebarSection title="Products">
+          {/* Product sections */}
+          <div className="space-y-0.5">
             {productSections.map((section) => (
               <CollapsibleMenu key={section.id} section={section} />
             ))}
-          </SidebarSection>
+          </div>
 
           <Separator className="opacity-30" />
 

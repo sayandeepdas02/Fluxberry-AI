@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/context/auth-context";
 import { GoogleLogin } from "@react-oauth/google";
 
@@ -12,11 +12,9 @@ import { Button } from "@/components/ui/button";
 
 export function SignInForm() {
     const router = useRouter();
-    const { login, googleLogin } = useAuth();
-    const [formData, setFormData] = useState({
-        email: "",
-        password: "",
-    });
+    const searchParams = useSearchParams();
+    const { login, loginWithGoogle } = useAuth();
+    const [formData, setFormData] = useState({ email: "", password: "" });
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -31,31 +29,25 @@ export function SignInForm() {
         setIsLoading(true);
         setError(null);
 
-        const result = await login(formData);
+        const result = await login(formData.email, formData.password);
 
-        if (result.success && result.user) {
-            if (result.user.onboardingCompleted) {
-                router.push("/dashboard");
-            } else {
-                router.push("/onboard/step-1");
-            }
+        if (result.success) {
+            const returnUrl = searchParams.get("returnUrl");
+            router.push(returnUrl || "/dashboard");
         } else {
-            setError(result.error || "Invalid credentials");
+            setError(result.error || "Invalid email or password");
             setIsLoading(false);
         }
     };
 
-    const handleGoogleSuccess = async (credentialResponse: any) => {
+    const handleGoogleSuccess = async (credentialResponse: { credential?: string }) => {
         setIsLoading(true);
         setError(null);
         if (credentialResponse.credential) {
-            const result = await googleLogin(credentialResponse.credential);
-            if (result.success && result.user) {
-                if (result.user.onboardingCompleted) {
-                    router.push("/dashboard");
-                } else {
-                    router.push("/onboard/step-1");
-                }
+            const result = await loginWithGoogle(credentialResponse.credential);
+            if (result.success) {
+                const returnUrl = searchParams.get("returnUrl");
+                router.push(returnUrl || "/dashboard");
             } else {
                 setError(result.error || "Google login failed");
                 setIsLoading(false);
@@ -99,18 +91,16 @@ export function SignInForm() {
                 <div className="flex-1 border-t border-line"></div>
             </div>
 
-            {/* Error Message */}
+            {/* Inline error */}
             {error && (
                 <div className="mb-6 p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm">
                     {error}
                 </div>
             )}
 
-            {/* Form Fields Grid */}
             <div className="space-y-4">
-                {/* Email */}
                 <div className="space-y-2">
-                    <Label htmlFor="email">Work Email</Label>
+                    <Label htmlFor="email">Email</Label>
                     <Input
                         id="email"
                         type="email"
@@ -119,15 +109,17 @@ export function SignInForm() {
                         onChange={handleChange}
                         required
                         disabled={isLoading}
-                        placeholder="name@company.com"
+                        autoComplete="email"
                     />
                 </div>
 
-                {/* Password */}
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="password">Password</Label>
-                        <Link href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors hover:underline">
+                        <Link
+                            href="#"
+                            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
                             Forgot password?
                         </Link>
                     </div>
@@ -139,21 +131,20 @@ export function SignInForm() {
                         onChange={handleChange}
                         required
                         disabled={isLoading}
+                        autoComplete="current-password"
                     />
                 </div>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-line flex flex-col gap-4">
-                <Button
-                    type="submit"
-                    className="w-full flex"
-                    disabled={isLoading}
-                >
+            <div className="pt-6 border-t border-line mt-6 flex flex-col gap-4">
+                <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
-                
                 <p className="text-sm text-center text-muted-foreground">
-                    Don't have an account? <Link href="/signup" className="text-foreground hover:text-primary underline transition-colors">Sign up</Link>
+                    Don&apos;t have an account?{" "}
+                    <Link href="/signup" className="text-foreground hover:text-primary underline transition-colors">
+                        Sign up
+                    </Link>
                 </p>
             </div>
         </form>

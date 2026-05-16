@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 
 export function SignUpForm() {
     const router = useRouter();
-    const { signup, googleLogin } = useAuth();
+    const { signup, loginWithGoogle } = useAuth();
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
@@ -68,30 +68,27 @@ export function SignUpForm() {
         });
 
         if (result.success) {
-            router.push("/onboard/step-1");
+            router.push("/onboarding/setup");
         } else {
             setError(result.error || "Signup failed");
             setIsLoading(false);
         }
     };
 
-    const handleGoogleSuccess = async (credentialResponse: any) => {
+    const handleGoogleSuccess = async (credentialResponse: { credential?: string }) => {
         setIsLoading(true);
         setError(null);
         if (credentialResponse.credential) {
-            const result = await googleLogin(credentialResponse.credential);
-            if (result.success && result.user) {
-                if (result.user.onboardingCompleted) {
-                    router.push("/dashboard");
-                } else {
-                    router.push("/onboard/step-1");
-                }
+            const result = await loginWithGoogle(credentialResponse.credential);
+            if (result.success) {
+                router.push("/onboarding/setup");
             } else {
                 setError(result.error || "Google signup failed");
                 setIsLoading(false);
             }
         }
     };
+
 
     const handleGoogleError = () => {
         setError("Google signup was unsuccessful");

@@ -44,9 +44,10 @@ export class OnboardingService {
             // Update organization name with workspace name
             const organization = await Organization.findById(membership.organizationId)
             if (organization) {
-                organization.name = input.workspaceName
-                // Also update slug if name changed significantly
-                organization.slug = input.workspaceName.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+                if (input.workspaceName) {
+                    organization.name = input.workspaceName
+                    organization.slug = input.workspaceName.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+                }
                 if (input.companyWebsite) {
                     organization.website = input.companyWebsite
                 }

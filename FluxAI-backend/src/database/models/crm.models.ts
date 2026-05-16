@@ -1,9 +1,11 @@
+/**
+ * CRM models — single source of truth for TalentPool, SavedSearch,
+ * CandidateBookmark, FollowUpReminder, and RelationshipLog.
+ * models/index.ts re-exports these; do not define them there.
+ */
 import mongoose, { Schema, Document, Types } from 'mongoose'
 
-/* ════════════════════════════════════════════════════
-   TALENT POOL — Static or Smart (query-based) grouping
-   ════════════════════════════════════════════════════ */
-
+// ── TalentPool ────────────────────────────────────────────────────────────────
 export const TalentPoolType = {
     STATIC: 'static',
     SMART: 'smart',
@@ -16,9 +18,7 @@ export interface ITalentPool extends Document {
     name: string
     description?: string
     type: TalentPoolTypeValue
-    /** MongoDB query object for smart pools (auto-populated) */
     smartQuery?: Record<string, unknown>
-    /** Manually added candidate IDs (static pools) */
     candidateIds: Types.ObjectId[]
     tags: string[]
     ownerId: Types.ObjectId
@@ -30,13 +30,13 @@ export interface ITalentPool extends Document {
 
 const TalentPoolSchema = new Schema<ITalentPool>({
     organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
-    name: { type: String, required: true },
-    description: { type: String },
-    type: { type: String, enum: Object.values(TalentPoolType), default: TalentPoolType.STATIC },
-    smartQuery: { type: Schema.Types.Mixed },
-    candidateIds: [{ type: Schema.Types.ObjectId, ref: 'Candidate' }],
-    tags: [{ type: String }],
-    ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    name:           { type: String, required: true },
+    description:    { type: String },
+    type:           { type: String, enum: Object.values(TalentPoolType), default: TalentPoolType.STATIC },
+    smartQuery:     { type: Schema.Types.Mixed },
+    candidateIds:   [{ type: Schema.Types.ObjectId, ref: 'Candidate' }],
+    tags:           [{ type: String }],
+    ownerId:        { type: Schema.Types.ObjectId, ref: 'User', required: true },
     candidateCount: { type: Number, default: 0 },
     lastRefreshedAt: { type: Date },
 }, { timestamps: true })
@@ -45,19 +45,14 @@ TalentPoolSchema.index({ organizationId: 1, name: 1 })
 TalentPoolSchema.index({ organizationId: 1, ownerId: 1 })
 TalentPoolSchema.index({ organizationId: 1, tags: 1 })
 
-export const TalentPool = mongoose.model<ITalentPool>('TalentPool', TalentPoolSchema)
+export const TalentPool = (mongoose.models.TalentPool as mongoose.Model<ITalentPool>) || mongoose.model<ITalentPool>('TalentPool', TalentPoolSchema)
 
-/* ════════════════════════════════════════════════════
-   SAVED SEARCH — Reusable candidate search filters
-   ════════════════════════════════════════════════════ */
-
+// ── SavedSearch ───────────────────────────────────────────────────────────────
 export interface ISavedSearch extends Document {
     _id: Types.ObjectId
     organizationId: Types.ObjectId
     name: string
-    /** Full query parameters (skills, location, experience, etc.) */
     query: Record<string, unknown>
-    /** Applied filter state for UI restoration */
     filters: Record<string, unknown>
     resultCount: number
     createdBy: Types.ObjectId
@@ -68,22 +63,19 @@ export interface ISavedSearch extends Document {
 
 const SavedSearchSchema = new Schema<ISavedSearch>({
     organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
-    name: { type: String, required: true },
-    query: { type: Schema.Types.Mixed, required: true },
-    filters: { type: Schema.Types.Mixed, default: {} },
-    resultCount: { type: Number, default: 0 },
-    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    lastRunAt: { type: Date },
+    name:           { type: String, required: true },
+    query:          { type: Schema.Types.Mixed, required: true },
+    filters:        { type: Schema.Types.Mixed, default: {} },
+    resultCount:    { type: Number, default: 0 },
+    createdBy:      { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    lastRunAt:      { type: Date },
 }, { timestamps: true })
 
 SavedSearchSchema.index({ organizationId: 1, createdBy: 1 })
 
-export const SavedSearch = mongoose.model<ISavedSearch>('SavedSearch', SavedSearchSchema)
+export const SavedSearch = (mongoose.models.SavedSearch as mongoose.Model<ISavedSearch>) || mongoose.model<ISavedSearch>('SavedSearch', SavedSearchSchema)
 
-/* ════════════════════════════════════════════════════
-   CANDIDATE BOOKMARK — Per-recruiter bookmarks
-   ════════════════════════════════════════════════════ */
-
+// ── CandidateBookmark ─────────────────────────────────────────────────────────
 export interface ICandidateBookmark extends Document {
     _id: Types.ObjectId
     organizationId: Types.ObjectId
@@ -95,20 +87,17 @@ export interface ICandidateBookmark extends Document {
 
 const CandidateBookmarkSchema = new Schema<ICandidateBookmark>({
     organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
-    candidateId: { type: Schema.Types.ObjectId, ref: 'Candidate', required: true },
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    notes: { type: String },
+    candidateId:    { type: Schema.Types.ObjectId, ref: 'Candidate', required: true },
+    userId:         { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    notes:          { type: String },
 }, { timestamps: { createdAt: true, updatedAt: false } })
 
 CandidateBookmarkSchema.index({ organizationId: 1, userId: 1 })
 CandidateBookmarkSchema.index({ organizationId: 1, candidateId: 1, userId: 1 }, { unique: true })
 
-export const CandidateBookmark = mongoose.model<ICandidateBookmark>('CandidateBookmark', CandidateBookmarkSchema)
+export const CandidateBookmark = (mongoose.models.CandidateBookmark as mongoose.Model<ICandidateBookmark>) || mongoose.model<ICandidateBookmark>('CandidateBookmark', CandidateBookmarkSchema)
 
-/* ════════════════════════════════════════════════════
-   FOLLOW-UP REMINDER — Recruiter task scheduling
-   ════════════════════════════════════════════════════ */
-
+// ── FollowUpReminder ──────────────────────────────────────────────────────────
 export const ReminderStatus = {
     PENDING: 'pending',
     COMPLETED: 'completed',
@@ -142,25 +131,22 @@ export interface IFollowUpReminder extends Document {
 
 const FollowUpReminderSchema = new Schema<IFollowUpReminder>({
     organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
-    candidateId: { type: Schema.Types.ObjectId, ref: 'Candidate', required: true },
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    dueAt: { type: Date, required: true },
-    status: { type: String, enum: Object.values(ReminderStatus), default: ReminderStatus.PENDING },
-    note: { type: String },
-    type: { type: String, enum: Object.values(ReminderType), default: ReminderType.FOLLOWUP },
-    completedAt: { type: Date },
+    candidateId:    { type: Schema.Types.ObjectId, ref: 'Candidate', required: true },
+    userId:         { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    dueAt:          { type: Date, required: true },
+    status:         { type: String, enum: Object.values(ReminderStatus), default: ReminderStatus.PENDING },
+    note:           { type: String },
+    type:           { type: String, enum: Object.values(ReminderType), default: ReminderType.FOLLOWUP },
+    completedAt:    { type: Date },
 }, { timestamps: true })
 
 FollowUpReminderSchema.index({ organizationId: 1, userId: 1, status: 1 })
-FollowUpReminderSchema.index({ dueAt: 1, status: 1 }) // For cron-based overdue checks
+FollowUpReminderSchema.index({ dueAt: 1, status: 1 })
 FollowUpReminderSchema.index({ organizationId: 1, candidateId: 1 })
 
-export const FollowUpReminder = mongoose.model<IFollowUpReminder>('FollowUpReminder', FollowUpReminderSchema)
+export const FollowUpReminder = (mongoose.models.FollowUpReminder as mongoose.Model<IFollowUpReminder>) || mongoose.model<IFollowUpReminder>('FollowUpReminder', FollowUpReminderSchema)
 
-/* ════════════════════════════════════════════════════
-   RELATIONSHIP LOG — Interaction history with candidates
-   ════════════════════════════════════════════════════ */
-
+// ── RelationshipLog ───────────────────────────────────────────────────────────
 export const InteractionType = {
     EMAIL: 'email',
     CALL: 'call',
@@ -186,16 +172,16 @@ export interface IRelationshipLog extends Document {
 }
 
 const RelationshipLogSchema = new Schema<IRelationshipLog>({
-    organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
-    candidateId: { type: Schema.Types.ObjectId, ref: 'Candidate', required: true },
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    organizationId:  { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+    candidateId:     { type: Schema.Types.ObjectId, ref: 'Candidate', required: true },
+    userId:          { type: Schema.Types.ObjectId, ref: 'User', required: true },
     interactionType: { type: String, enum: Object.values(InteractionType), required: true },
-    summary: { type: String, required: true },
-    metadata: { type: Schema.Types.Mixed },
-    occurredAt: { type: Date, default: Date.now },
+    summary:         { type: String, required: true },
+    metadata:        { type: Schema.Types.Mixed },
+    occurredAt:      { type: Date, default: Date.now },
 }, { timestamps: { createdAt: true, updatedAt: false } })
 
 RelationshipLogSchema.index({ organizationId: 1, candidateId: 1, occurredAt: -1 })
 RelationshipLogSchema.index({ organizationId: 1, userId: 1 })
 
-export const RelationshipLog = mongoose.model<IRelationshipLog>('RelationshipLog', RelationshipLogSchema)
+export const RelationshipLog = (mongoose.models.RelationshipLog as mongoose.Model<IRelationshipLog>) || mongoose.model<IRelationshipLog>('RelationshipLog', RelationshipLogSchema)
